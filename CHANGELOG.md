@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Preferences dialog with General, Appearance, and About sections.
 - Command palette opened with Ctrl+P for quick app actions.
 - Keyboard shortcut for opening Preferences with Ctrl+,.
+- Git status bar with branch switching, stash management, and repository state.
+- Refresh the current folder with Ctrl+R.
 
 ### Changed
 - Much faster directory listing, recursive search, and delete scans, especially in very large folders, thanks to a new native core.
