@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'dart:io';
 import 'dart:isolate';
 import '../models/file_entry.dart';
+import 'waydir_core_loader.dart';
 
 class _BatchMsg {
   final List<FileEntry> entries;
@@ -182,6 +183,25 @@ class RecursiveSearch {
       }
       lastProgressMs = nowMs;
       mainPort.send(_ProgressMsg(scannedDirs, dir));
+    }
+
+    // Fast path: the native (Rust) parallel walker. Returns all matches in
+    // one buffer; we chunk it back into the same batch protocol the UI
+    // already consumes. Falls back to the Dart walker on any failure.
+    if (!isCancelled()) {
+      final blob = WaydirCoreLoader.search(root, query, includeHidden);
+      if (blob != null) {
+        final all = FileEntryCodec.decode(blob);
+        for (var i = 0; i < all.length; i += batchSize) {
+          if (isCancelled()) break;
+          final end = (i + batchSize < all.length) ? i + batchSize : all.length;
+          mainPort.send(_BatchMsg(all.sublist(i, end)));
+          await Future.delayed(Duration.zero);
+        }
+        sendProgress(null, force: true);
+        mainPort.send(const _DoneMsg());
+        return;
+      }
     }
 
     FileEntry makeEntry(FileSystemEntity entity, String name, bool isDir) {
