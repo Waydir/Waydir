@@ -288,6 +288,12 @@ class _FileListState extends State<FileList> {
                       padding: EdgeInsets.zero,
                       itemCount: widget.files.length,
                       itemExtent: _itemExt,
+                      // We supply our own RepaintBoundary per row; the keep
+                      // alive / semantics / repaint wrappers ListView adds by
+                      // default are pure overhead at 10k+ rows.
+                      addAutomaticKeepAlives: false,
+                      addRepaintBoundaries: false,
+                      addSemanticIndexes: false,
                       itemBuilder: (context, i) => RepaintBoundary(
                         child: Padding(
                           padding: EdgeInsets.only(bottom: _rowG),
