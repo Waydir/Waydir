@@ -122,6 +122,13 @@ class AppShortcuts {
       alt: true,
     ),
     ShortcutDef(
+      id: 'refresh',
+      label: () => '',
+      group: ShortcutGroup.navigation,
+      key: LogicalKeyboardKey.keyR,
+      ctrl: true,
+    ),
+    ShortcutDef(
       id: 'cursor_up',
       label: () => '',
       group: ShortcutGroup.navigation,

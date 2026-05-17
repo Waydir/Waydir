@@ -1011,6 +1011,11 @@ class _WaydirPageState extends State<WaydirPage> {
       return KeyEventResult.handled;
     }
 
+    if (ctrl && !shift && AppShortcuts.isKey('refresh', key)) {
+      store.refresh();
+      return KeyEventResult.handled;
+    }
+
     if (AppShortcuts.isKey('delete', key)) {
       _confirmAndDelete(forcePermanent: shift);
       return KeyEventResult.handled;

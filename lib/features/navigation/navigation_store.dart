@@ -16,6 +16,7 @@ import '../../core/platform/platform_paths.dart';
 import '../../core/platform/trash_location.dart';
 import '../../core/settings/settings_store.dart';
 import '../../i18n/strings.g.dart';
+import '../git/git_status_store.dart';
 import '../operations/operation_store.dart';
 
 enum ClipboardMode { copy, cut }
@@ -35,6 +36,7 @@ class NavigationStore {
   final clipboardPaths = signal<Set<String>>({});
   final clipboardMode = signal<ClipboardMode?>(null);
   final OperationStore operationStore;
+  final gitStatus = GitStatusStore();
   final loadError = signal<String?>(null);
   final renamingPath = signal<String?>(null);
   final renameError = signal<String?>(null);
@@ -49,6 +51,7 @@ class NavigationStore {
   final foldersFirst = signal<bool>(true);
   int _sortLoadToken = 0;
   void Function()? _sortDefaultsDisposer;
+  void Function()? _gitStatusDisposer;
 
   bool get isTrashView => isTrashPath(currentPath.value);
   bool get isTrashRoot => currentPath.value == kTrashPath;
@@ -132,6 +135,13 @@ class NavigationStore {
     loadDirectory(startPath);
     _setupShowHiddenEffect();
     _setupSortDefaultsEffect();
+    _setupGitStatusEffect();
+  }
+
+  void _setupGitStatusEffect() {
+    _gitStatusDisposer = effect(() {
+      gitStatus.watchPath(currentPath.value);
+    });
   }
 
   void _setupSortDefaultsEffect() {
@@ -421,6 +431,9 @@ class NavigationStore {
           path,
           (changed, fullReload) => _onWatcherEvent(path, changed, fullReload),
         );
+        // Covers manual refresh of the same dir (currentPath unchanged, so
+        // the git effect wouldn't re-run on its own).
+        gitStatus.watchPath(path);
       }
     } catch (e) {
       if (token != _loadToken) return;
@@ -506,6 +519,9 @@ class NavigationStore {
     bool fullReload,
   ) async {
     if (path != currentPath.value) return;
+    // Working-tree changed under the watched dir — refresh git too
+    // (debounced inside the store).
+    gitStatus.watchPath(path);
     if (fullReload) {
       _onExternalChange(path);
       return;
@@ -755,6 +771,9 @@ class NavigationStore {
     _showHiddenDisposer = null;
     _sortDefaultsDisposer?.call();
     _sortDefaultsDisposer = null;
+    _gitStatusDisposer?.call();
+    _gitStatusDisposer = null;
+    gitStatus.dispose();
     _searchDebounce?.cancel();
     _searchUiFlush?.cancel();
     _searchHandle?.cancel();
