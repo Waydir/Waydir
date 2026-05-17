@@ -23,7 +23,7 @@ jobs:
             clang cmake ninja-build pkg-config \
             libgtk-3-dev liblzma-dev libstdc++-12-dev \
             libarchive13 libarchive-dev \
-            rpm fakeroot \
+            rpm fakeroot patchelf \
             libfuse2 desktop-file-utils
 
       - name: Vendor libarchive
@@ -66,6 +66,10 @@ jobs:
       - name: Package deb / rpm / appimage via fastforge
         run: |
           export PATH="$PATH":"$HOME/.pub-cache/bin"
+          # Bundled libraries (libarchive + deps, Flutter engine) ship inside
+          # the package; do not let rpmbuild emit host-soname Requires for them
+          # (e.g. Debian's libbz2.so.1.0 which Fedora cannot satisfy).
+          echo '%__requires_exclude_from ^/usr/share/[^/]+/lib/' > "$HOME/.rpmmacros"
           fastforge package --platform linux --targets deb,rpm
 
       - name: Upload artifacts
