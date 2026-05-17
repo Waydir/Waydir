@@ -51,15 +51,31 @@ Requirements:
 - Dart 3.10+
 - Rust (stable) — `waydir_core` is a hard dependency: directory listing,
   recursive search and delete enumeration run exclusively in native Rust,
-  there is no Dart fallback.
+  there is no Dart fallback. Install via [rustup](https://rustup.rs) or your
+  distro package manager (`dnf install rust cargo`, `apt install rustc cargo`).
 
 ```bash
 git clone https://github.com/mikolajbadyl/waydir.git
 cd waydir
 flutter pub get
-scripts/build_waydir_core.sh   # required before run/test
+cargo build --release --manifest-path rust/waydir_core/Cargo.toml
 flutter run -d linux
 ```
+
+Notes on the native helper:
+
+- The build **must** be `--release`; the dev loader only looks for
+  `rust/waydir_core/target/release/libwaydir_core.{so,dylib,dll}`. A debug
+  build is ignored.
+- Run `flutter run` / `flutter test` from the repo root — the dev search path
+  is resolved relative to the current working directory.
+- The library is cached per process, so after editing `rust/waydir_core` you
+  must rebuild and **restart** the app (hot reload won't pick it up).
+- `scripts/build_waydir_core.sh` does the release build *and* vendors the
+  artifact into `third_party/waydir_core/<platform>/` for the packaged build.
+  It's only needed when testing a bundled binary; plain `cargo build` above is
+  enough for `flutter run`/`flutter test`. On Windows use
+  `scripts/build_waydir_core_windows.ps1`.
 
 Run checks before opening a PR:
 

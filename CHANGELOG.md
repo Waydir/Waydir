@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Keyboard shortcut for opening Preferences with Ctrl+,.
 
 ### Changed
+- Much faster directory listing, recursive search, and delete scans, especially in very large folders, thanks to a new native core.
 - Show Hidden Files from the View menu now applies globally to all open panes and tabs.
 - Simplified the sidebar collapse button to an icon-only control.
 
