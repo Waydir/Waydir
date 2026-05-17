@@ -9,6 +9,7 @@ import '../../features/files/file_view.dart'
         FileMenuActionCallback;
 import '../../features/files/rubber_band_layer.dart'
     show RubberBandSelectCallback;
+import '../git/git_status_bar.dart';
 import '../navigation/navigation_store.dart';
 import '../navigation/search_bar_widget.dart';
 import '../navigation/toolbar.dart';
@@ -75,6 +76,12 @@ class PaneView extends StatelessWidget {
                   );
                 }),
               ),
+              Watch((_) {
+                final gitStore = pane.tabs.activeTab.value.store.gitStatus;
+                final status = gitStore.status.value;
+                if (status == null) return const SizedBox.shrink();
+                return GitStatusBar(status: status, store: gitStore);
+              }),
             ],
           ),
           if (!isActive)

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 void showPopup({
   required BuildContext context,
@@ -60,10 +61,25 @@ class _PopupOverlayState extends State<PopupOverlay>
   void initState() {
     super.initState();
     _controller.forward();
+    if (widget.autoDismiss) {
+      HardwareKeyboard.instance.addHandler(_onKey);
+    }
+  }
+
+  bool _onKey(KeyEvent event) {
+    if (event is KeyDownEvent &&
+        event.logicalKey == LogicalKeyboardKey.escape) {
+      _dismiss();
+      return true;
+    }
+    return false;
   }
 
   @override
   void dispose() {
+    if (widget.autoDismiss) {
+      HardwareKeyboard.instance.removeHandler(_onKey);
+    }
     _controller.dispose();
     super.dispose();
   }

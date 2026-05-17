@@ -347,6 +347,12 @@ class TranslationsKeybindingsEn {
 	/// en: 'Go forward'
 	String get goForward => 'Go forward';
 
+	/// en: 'Refresh'
+	String get refresh => 'Refresh';
+
+	/// en: 'Quick look'
+	String get quickLook => 'Quick look';
+
 	/// en: 'Move up'
 	String get cursorUp => 'Move up';
 
@@ -1502,6 +1508,8 @@ extension on Translations {
 			'keybindings.goUp' => 'Go up',
 			'keybindings.goBack' => 'Go back',
 			'keybindings.goForward' => 'Go forward',
+			'keybindings.refresh' => 'Refresh',
+			'keybindings.quickLook' => 'Quick look',
 			'keybindings.cursorUp' => 'Move up',
 			'keybindings.cursorDown' => 'Move down',
 			'keybindings.newTab' => 'New tab',

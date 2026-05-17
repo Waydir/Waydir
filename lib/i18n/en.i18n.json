@@ -171,6 +171,8 @@
     "goUp": "Go up",
     "goBack": "Go back",
     "goForward": "Go forward",
+    "refresh": "Refresh",
+    "quickLook": "Quick look",
     "cursorUp": "Move up",
     "cursorDown": "Move down",
     "newTab": "New tab",
