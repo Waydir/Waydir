@@ -14,6 +14,7 @@ import '../terminal/terminal.dart';
 import '../../i18n/strings.g.dart';
 import 'fs_worker_pool.dart';
 import 'safe_file_replace.dart';
+import 'waydir_core_loader.dart';
 import 'trash_service.dart';
 
 sealed class RenameResult {
@@ -889,7 +890,15 @@ class FileSystemService {
             ErrorMessage(path: src, message: t.errors.notFound),
           );
         } else if (type == FileSystemEntityType.directory) {
-          walk(src);
+          final native = WaydirCoreLoader.enumerate(src, postorder: false);
+          if (native != null) {
+            for (final e in FileEntryCodec.decode(native)) {
+              allPaths.add(e.path);
+              totalFiles++;
+            }
+          } else {
+            walk(src);
+          }
           allPaths.add(src);
           totalFiles++;
         } else {

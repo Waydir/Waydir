@@ -25,6 +25,11 @@ typedef _ListNative =
 typedef _ListDart =
     Pointer<Uint8> Function(Pointer<Utf8>, bool, Pointer<IntPtr>);
 
+typedef _EnumNative =
+    Pointer<Uint8> Function(Pointer<Utf8>, Bool, Pointer<IntPtr>);
+typedef _EnumDart =
+    Pointer<Uint8> Function(Pointer<Utf8>, bool, Pointer<IntPtr>);
+
 typedef _FreeNative = Void Function(Pointer<Uint8>, IntPtr);
 typedef _FreeDart = void Function(Pointer<Uint8>, int);
 
@@ -103,6 +108,30 @@ class WaydirCoreLoader {
       return null;
     } finally {
       calloc.free(pathPtr);
+      calloc.free(outLen);
+    }
+  }
+
+  /// Recursive enumeration for delete pre-scans. [postorder] yields
+  /// deepest-first ordering. Returns a FileEntryCodec buffer or null.
+  static Uint8List? enumerate(String root, {bool postorder = true}) {
+    final lib = load();
+    if (lib == null) return null;
+    final fn = lib.lookupFunction<_EnumNative, _EnumDart>('waydir_enumerate');
+    final free = lib.lookupFunction<_FreeNative, _FreeDart>('waydir_free');
+    final rootPtr = root.toNativeUtf8();
+    final outLen = calloc<IntPtr>();
+    try {
+      final buf = fn(rootPtr, postorder, outLen);
+      if (buf == nullptr) return null;
+      final len = outLen.value;
+      final copy = Uint8List.fromList(buf.asTypedList(len));
+      free(buf, len);
+      return copy;
+    } catch (_) {
+      return null;
+    } finally {
+      calloc.free(rootPtr);
       calloc.free(outLen);
     }
   }
