@@ -279,8 +279,7 @@ class GitStatusStore {
     var dir = Directory(path);
     for (var i = 0; i < 64; i++) {
       final marker = '${dir.path}${Platform.pathSeparator}.git';
-      if (FileSystemEntity.typeSync(marker) !=
-          FileSystemEntityType.notFound) {
+      if (FileSystemEntity.typeSync(marker) != FileSystemEntityType.notFound) {
         return true;
       }
       final parent = dir.parent;
@@ -306,11 +305,7 @@ class GitStatusStore {
   Future<List<StashEntry>> stashes() async {
     final root = status.value?.root;
     if (root == null) return const [];
-    final result = await _git(root, [
-      'stash',
-      'list',
-      '--format=%gd%x1f%gs',
-    ]);
+    final result = await _git(root, ['stash', 'list', '--format=%gd%x1f%gs']);
     if (result == null || result.exitCode != 0) return const [];
     final entries = <StashEntry>[];
     for (final line in result.stdout.toString().split('\n')) {
@@ -335,16 +330,14 @@ class GitStatusStore {
   }
 
   /// Pops `stash@{index}` (apply + drop). Error message on failure, else null.
-  Future<String?> popStash(int index) =>
-      _stashOp(['pop', 'stash@{$index}']);
+  Future<String?> popStash(int index) => _stashOp(['pop', 'stash@{$index}']);
 
   /// Applies `stash@{index}` without dropping it.
   Future<String?> applyStash(int index) =>
       _stashOp(['apply', 'stash@{$index}']);
 
   /// Drops `stash@{index}` without applying it.
-  Future<String?> dropStash(int index) =>
-      _stashOp(['drop', 'stash@{$index}']);
+  Future<String?> dropStash(int index) => _stashOp(['drop', 'stash@{$index}']);
 
   Future<String?> _stashOp(List<String> args) async {
     final root = status.value?.root;
@@ -413,11 +406,7 @@ class GitStatusStore {
   ) async {
     Process? proc;
     try {
-      proc = await Process.start('git', [
-        '-C',
-        workingDirectory,
-        ...args,
-      ]);
+      proc = await Process.start('git', ['-C', workingDirectory, ...args]);
       final p = proc;
       final stdoutF = p.stdout.transform(systemEncoding.decoder).join();
       final stderrF = p.stderr.transform(systemEncoding.decoder).join();
@@ -437,12 +426,7 @@ class GitStatusStore {
         unawaited(stderrF.catchError((_) => ''));
         return null;
       }
-      return ProcessResult(
-        p.pid,
-        exitCode,
-        await stdoutF,
-        await stderrF,
-      );
+      return ProcessResult(p.pid, exitCode, await stdoutF, await stderrF);
     } on Object {
       proc?.kill(ProcessSignal.sigkill);
       return null;

@@ -70,8 +70,7 @@ class _GitStatusBarState extends State<GitStatusBar>
           if (status.deletions > 0)
             _GitCount('-${status.deletions}', color: AppColors.danger),
           // New files have no diff vs HEAD — show them separately, muted.
-          if (status.untracked > 0)
-            _GitCount('?${status.untracked}'),
+          if (status.untracked > 0) _GitCount('?${status.untracked}'),
           if (status.stash > 0) _StashButton(status: status, store: store),
           if (!status.hasChanges &&
               status.ahead == 0 &&
