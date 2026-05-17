@@ -186,7 +186,7 @@ class _OpenWithBodyState extends State<_OpenWithBody> {
       children: [
         Row(
           children: [
-            const PhosphorIcon(
+            PhosphorIcon(
               PhosphorIconsRegular.appWindow,
               size: 20,
               color: AppColors.accent,

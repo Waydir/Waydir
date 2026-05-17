@@ -19,7 +19,7 @@ class PaneLocationBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 38,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.bgToolbar,
         border: Border(bottom: BorderSide(color: AppColors.bgDivider)),
       ),
@@ -291,7 +291,7 @@ class _PathBarState extends State<_PathBar> {
               onTap: atRoot ? null : () => widget.store.navigateTo(kTrashPath),
               child: Row(
                 children: [
-                  const PhosphorIcon(
+                  PhosphorIcon(
                     PhosphorIconsRegular.trashSimple,
                     size: 13,
                     color: AppColors.fgAccent,

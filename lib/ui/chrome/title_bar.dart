@@ -107,7 +107,7 @@ class _TitleBarRow extends StatelessWidget {
     return WindowTitleBarBox(
       child: Container(
         height: 32,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.bgSidebar,
           border: Border(bottom: BorderSide(color: AppColors.bgDivider)),
         ),
@@ -240,8 +240,8 @@ class _TitleMenuButtonState extends State<TitleMenuButton> {
 class _WindowButtons extends StatelessWidget {
   const _WindowButtons();
 
-  static const _iconColor = AppColors.fgMuted;
-  static const _iconHoverColor = AppColors.fg;
+  static final _iconColor = AppColors.fgMuted;
+  static final _iconHoverColor = AppColors.fg;
 
   static final _btnColors = WindowButtonColors(
     iconNormal: _iconColor,

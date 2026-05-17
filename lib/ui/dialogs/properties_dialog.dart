@@ -233,8 +233,8 @@ class _Divider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 8),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Divider(height: 1, thickness: 1, color: AppColors.bgDivider),
     );
   }

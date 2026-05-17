@@ -50,7 +50,7 @@ class _GitStatusBarState extends State<GitStatusBar>
     return Container(
       height: 26,
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.bgStatus,
         border: Border(top: BorderSide(color: AppColors.bgDivider)),
       ),
@@ -163,7 +163,7 @@ class _BranchButton extends StatelessWidget {
         'on this branch.',
         style: context.txt.body,
       ),
-      actions: const [
+      actions: [
         DialogAction(label: 'Cancel', color: AppColors.bgHoverStrong),
         DialogAction(label: 'Stash & Switch', color: AppColors.accent),
       ],

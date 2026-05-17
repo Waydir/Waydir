@@ -176,10 +176,10 @@ class _Header extends StatelessWidget {
     return Container(
       height: 44,
       padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: const BoxDecoration(color: AppColors.bgSidebar),
+      decoration: BoxDecoration(color: AppColors.bgSidebar),
       child: Row(
         children: [
-          const PhosphorIcon(
+          PhosphorIcon(
             PhosphorIconsRegular.keyboard,
             size: 16,
             color: AppColors.fgAccent,
@@ -215,7 +215,7 @@ class _SearchBar extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const PhosphorIcon(
+            PhosphorIcon(
               PhosphorIconsRegular.magnifyingGlass,
               size: 13,
               color: AppColors.fgSubtle,
@@ -326,7 +326,7 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const PhosphorIcon(
+          PhosphorIcon(
             PhosphorIconsRegular.magnifyingGlass,
             size: 28,
             color: AppColors.fgSubtle,
@@ -497,7 +497,7 @@ class _KeyCap extends StatelessWidget {
         color: AppColors.bgInput,
         borderRadius: BorderRadius.circular(4),
         border: Border.all(color: AppColors.borderColor),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
             color: AppColors.shadowSubtle,
             blurRadius: 0,

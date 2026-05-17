@@ -424,7 +424,7 @@ class _ListHeader extends StatelessWidget {
     return Container(
       height: 24,
       padding: const EdgeInsets.only(left: 12, right: 16),
-      decoration: const BoxDecoration(color: AppColors.bg),
+      decoration: BoxDecoration(color: AppColors.bg),
       child: Row(
         children: [
           const SizedBox(width: 22),

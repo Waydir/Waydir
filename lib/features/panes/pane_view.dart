@@ -117,7 +117,7 @@ class _TabContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Watch((context) {
       if (store.isLoading.value) {
-        return const Center(
+        return Center(
           child: SizedBox(
             width: 20,
             height: 20,

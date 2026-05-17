@@ -70,7 +70,7 @@ class _AppSearchBarState extends State<AppSearchBar> {
   Widget build(BuildContext context) {
     return Container(
       height: 32,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.bgToolbar,
         border: Border(bottom: BorderSide(color: AppColors.bgDivider)),
       ),
@@ -120,8 +120,8 @@ class _AppSearchBarState extends State<AppSearchBar> {
           Watch((context) {
             final searching = widget.store.isSearching.value;
             if (!searching) return const SizedBox.shrink();
-            return const Padding(
-              padding: EdgeInsets.only(right: 6),
+            return Padding(
+              padding: const EdgeInsets.only(right: 6),
               child: SizedBox(
                 width: 12,
                 height: 12,

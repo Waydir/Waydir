@@ -117,7 +117,7 @@ class _Header extends StatelessWidget {
     return Container(
       height: 44,
       padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: const BoxDecoration(color: AppColors.bgSidebar),
+      decoration: BoxDecoration(color: AppColors.bgSidebar),
       child: Row(
         children: [
           PhosphorIcon(
@@ -237,7 +237,7 @@ class _CategoryItemState extends State<_CategoryItem> {
             color: bg,
             borderRadius: BorderRadius.circular(4),
             border: widget.selected
-                ? const Border(
+                ? Border(
                     left: BorderSide(color: AppColors.accent, width: 2),
                   )
                 : null,
@@ -476,15 +476,15 @@ class _SettingsTextFieldState extends State<SettingsTextField> {
         fillColor: AppColors.bgInput,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(4),
-          borderSide: const BorderSide(color: AppColors.borderColor),
+          borderSide: BorderSide(color: AppColors.borderColor),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(4),
-          borderSide: const BorderSide(color: AppColors.borderColor),
+          borderSide: BorderSide(color: AppColors.borderColor),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(4),
-          borderSide: const BorderSide(color: AppColors.accent),
+          borderSide: BorderSide(color: AppColors.accent),
         ),
       ),
       cursorColor: AppColors.accent,

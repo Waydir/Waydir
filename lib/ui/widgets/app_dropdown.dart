@@ -127,7 +127,7 @@ class _AppDropdownState<T> extends State<AppDropdown<T>> {
                 ),
               ),
               const SizedBox(width: 8),
-              const PhosphorIcon(
+              PhosphorIcon(
                 PhosphorIconsRegular.caretDown,
                 size: 12,
                 color: AppColors.fgMuted,
@@ -262,7 +262,7 @@ class _MenuTileState<T> extends State<_MenuTile<T>> {
               ],
               if (widget.isSelected) ...[
                 const SizedBox(width: 8),
-                const PhosphorIcon(
+                PhosphorIcon(
                   PhosphorIconsRegular.check,
                   size: 12,
                   color: AppColors.accent,

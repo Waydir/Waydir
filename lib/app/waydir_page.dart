@@ -1148,7 +1148,7 @@ class _WaydirPageState extends State<WaydirPage> {
               platformMenus: _platformViewMenus(),
               child: Watch((context) {
                 if (!_shell.ready.value) {
-                  return const Center(
+                  return Center(
                     child: SizedBox(
                       width: 20,
                       height: 20,

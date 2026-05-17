@@ -28,7 +28,7 @@ class StatusBar extends StatelessWidget {
     return Container(
       height: 22,
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.bgStatus,
         border: Border(top: BorderSide(color: AppColors.bgDivider)),
       ),
