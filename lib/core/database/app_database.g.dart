@@ -22,6 +22,18 @@ class $AppSettingsTable extends AppSettings
       'PRIMARY KEY AUTOINCREMENT',
     ),
   );
+  static const VerificationMeta _themeModeMeta = const VerificationMeta(
+    'themeMode',
+  );
+  @override
+  late final GeneratedColumn<String> themeMode = GeneratedColumn<String>(
+    'theme_mode',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('system'),
+  );
   static const VerificationMeta _terminalMeta = const VerificationMeta(
     'terminal',
   );
@@ -251,6 +263,7 @@ class $AppSettingsTable extends AppSettings
   @override
   List<GeneratedColumn> get $columns => [
     id,
+    themeMode,
     terminal,
     terminalCustomCommand,
     isDual,
@@ -283,6 +296,12 @@ class $AppSettingsTable extends AppSettings
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('theme_mode')) {
+      context.handle(
+        _themeModeMeta,
+        themeMode.isAcceptableOrUnknown(data['theme_mode']!, _themeModeMeta),
+      );
     }
     if (data.containsKey('terminal')) {
       context.handle(
@@ -432,6 +451,10 @@ class $AppSettingsTable extends AppSettings
         DriftSqlType.int,
         data['${effectivePrefix}id'],
       )!,
+      themeMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}theme_mode'],
+      )!,
       terminal: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}terminal'],
@@ -511,6 +534,7 @@ class $AppSettingsTable extends AppSettings
 
 class AppSetting extends DataClass implements Insertable<AppSetting> {
   final int id;
+  final String themeMode;
   final String terminal;
   final String terminalCustomCommand;
   final bool isDual;
@@ -530,6 +554,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
   final bool foldersFirst;
   const AppSetting({
     required this.id,
+    required this.themeMode,
     required this.terminal,
     required this.terminalCustomCommand,
     required this.isDual,
@@ -552,6 +577,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
+    map['theme_mode'] = Variable<String>(themeMode);
     map['terminal'] = Variable<String>(terminal);
     map['terminal_custom_command'] = Variable<String>(terminalCustomCommand);
     map['is_dual'] = Variable<bool>(isDual);
@@ -575,6 +601,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
   AppSettingsCompanion toCompanion(bool nullToAbsent) {
     return AppSettingsCompanion(
       id: Value(id),
+      themeMode: Value(themeMode),
       terminal: Value(terminal),
       terminalCustomCommand: Value(terminalCustomCommand),
       isDual: Value(isDual),
@@ -602,6 +629,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return AppSetting(
       id: serializer.fromJson<int>(json['id']),
+      themeMode: serializer.fromJson<String>(json['themeMode']),
       terminal: serializer.fromJson<String>(json['terminal']),
       terminalCustomCommand: serializer.fromJson<String>(
         json['terminalCustomCommand'],
@@ -632,6 +660,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
+      'themeMode': serializer.toJson<String>(themeMode),
       'terminal': serializer.toJson<String>(terminal),
       'terminalCustomCommand': serializer.toJson<String>(terminalCustomCommand),
       'isDual': serializer.toJson<bool>(isDual),
@@ -654,6 +683,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
 
   AppSetting copyWith({
     int? id,
+    String? themeMode,
     String? terminal,
     String? terminalCustomCommand,
     bool? isDual,
@@ -673,6 +703,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     bool? foldersFirst,
   }) => AppSetting(
     id: id ?? this.id,
+    themeMode: themeMode ?? this.themeMode,
     terminal: terminal ?? this.terminal,
     terminalCustomCommand: terminalCustomCommand ?? this.terminalCustomCommand,
     isDual: isDual ?? this.isDual,
@@ -694,6 +725,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
   AppSetting copyWithCompanion(AppSettingsCompanion data) {
     return AppSetting(
       id: data.id.present ? data.id.value : this.id,
+      themeMode: data.themeMode.present ? data.themeMode.value : this.themeMode,
       terminal: data.terminal.present ? data.terminal.value : this.terminal,
       terminalCustomCommand: data.terminalCustomCommand.present
           ? data.terminalCustomCommand.value
@@ -746,6 +778,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
   String toString() {
     return (StringBuffer('AppSetting(')
           ..write('id: $id, ')
+          ..write('themeMode: $themeMode, ')
           ..write('terminal: $terminal, ')
           ..write('terminalCustomCommand: $terminalCustomCommand, ')
           ..write('isDual: $isDual, ')
@@ -770,6 +803,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
   @override
   int get hashCode => Object.hash(
     id,
+    themeMode,
     terminal,
     terminalCustomCommand,
     isDual,
@@ -793,6 +827,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       identical(this, other) ||
       (other is AppSetting &&
           other.id == this.id &&
+          other.themeMode == this.themeMode &&
           other.terminal == this.terminal &&
           other.terminalCustomCommand == this.terminalCustomCommand &&
           other.isDual == this.isDual &&
@@ -814,6 +849,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
 
 class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
   final Value<int> id;
+  final Value<String> themeMode;
   final Value<String> terminal;
   final Value<String> terminalCustomCommand;
   final Value<bool> isDual;
@@ -833,6 +869,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
   final Value<bool> foldersFirst;
   const AppSettingsCompanion({
     this.id = const Value.absent(),
+    this.themeMode = const Value.absent(),
     this.terminal = const Value.absent(),
     this.terminalCustomCommand = const Value.absent(),
     this.isDual = const Value.absent(),
@@ -853,6 +890,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
   });
   AppSettingsCompanion.insert({
     this.id = const Value.absent(),
+    this.themeMode = const Value.absent(),
     this.terminal = const Value.absent(),
     this.terminalCustomCommand = const Value.absent(),
     this.isDual = const Value.absent(),
@@ -873,6 +911,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
   });
   static Insertable<AppSetting> custom({
     Expression<int>? id,
+    Expression<String>? themeMode,
     Expression<String>? terminal,
     Expression<String>? terminalCustomCommand,
     Expression<bool>? isDual,
@@ -893,6 +932,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (themeMode != null) 'theme_mode': themeMode,
       if (terminal != null) 'terminal': terminal,
       if (terminalCustomCommand != null)
         'terminal_custom_command': terminalCustomCommand,
@@ -918,6 +958,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
 
   AppSettingsCompanion copyWith({
     Value<int>? id,
+    Value<String>? themeMode,
     Value<String>? terminal,
     Value<String>? terminalCustomCommand,
     Value<bool>? isDual,
@@ -938,6 +979,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
   }) {
     return AppSettingsCompanion(
       id: id ?? this.id,
+      themeMode: themeMode ?? this.themeMode,
       terminal: terminal ?? this.terminal,
       terminalCustomCommand:
           terminalCustomCommand ?? this.terminalCustomCommand,
@@ -964,6 +1006,9 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<int>(id.value);
+    }
+    if (themeMode.present) {
+      map['theme_mode'] = Variable<String>(themeMode.value);
     }
     if (terminal.present) {
       map['terminal'] = Variable<String>(terminal.value);
@@ -1027,6 +1072,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
   String toString() {
     return (StringBuffer('AppSettingsCompanion(')
           ..write('id: $id, ')
+          ..write('themeMode: $themeMode, ')
           ..write('terminal: $terminal, ')
           ..write('terminalCustomCommand: $terminalCustomCommand, ')
           ..write('isDual: $isDual, ')
@@ -2869,6 +2915,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
 typedef $$AppSettingsTableCreateCompanionBuilder =
     AppSettingsCompanion Function({
       Value<int> id,
+      Value<String> themeMode,
       Value<String> terminal,
       Value<String> terminalCustomCommand,
       Value<bool> isDual,
@@ -2890,6 +2937,7 @@ typedef $$AppSettingsTableCreateCompanionBuilder =
 typedef $$AppSettingsTableUpdateCompanionBuilder =
     AppSettingsCompanion Function({
       Value<int> id,
+      Value<String> themeMode,
       Value<String> terminal,
       Value<String> terminalCustomCommand,
       Value<bool> isDual,
@@ -2920,6 +2968,11 @@ class $$AppSettingsTableFilterComposer
   });
   ColumnFilters<int> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get themeMode => $composableBuilder(
+    column: $table.themeMode,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3023,6 +3076,11 @@ class $$AppSettingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get themeMode => $composableBuilder(
+    column: $table.themeMode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get terminal => $composableBuilder(
     column: $table.terminal,
     builder: (column) => ColumnOrderings(column),
@@ -3120,6 +3178,9 @@ class $$AppSettingsTableAnnotationComposer
   });
   GeneratedColumn<int> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get themeMode =>
+      $composableBuilder(column: $table.themeMode, builder: (column) => column);
 
   GeneratedColumn<String> get terminal =>
       $composableBuilder(column: $table.terminal, builder: (column) => column);
@@ -3233,6 +3294,7 @@ class $$AppSettingsTableTableManager
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
+                Value<String> themeMode = const Value.absent(),
                 Value<String> terminal = const Value.absent(),
                 Value<String> terminalCustomCommand = const Value.absent(),
                 Value<bool> isDual = const Value.absent(),
@@ -3252,6 +3314,7 @@ class $$AppSettingsTableTableManager
                 Value<bool> foldersFirst = const Value.absent(),
               }) => AppSettingsCompanion(
                 id: id,
+                themeMode: themeMode,
                 terminal: terminal,
                 terminalCustomCommand: terminalCustomCommand,
                 isDual: isDual,
@@ -3273,6 +3336,7 @@ class $$AppSettingsTableTableManager
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
+                Value<String> themeMode = const Value.absent(),
                 Value<String> terminal = const Value.absent(),
                 Value<String> terminalCustomCommand = const Value.absent(),
                 Value<bool> isDual = const Value.absent(),
@@ -3292,6 +3356,7 @@ class $$AppSettingsTableTableManager
                 Value<bool> foldersFirst = const Value.absent(),
               }) => AppSettingsCompanion.insert(
                 id: id,
+                themeMode: themeMode,
                 terminal: terminal,
                 terminalCustomCommand: terminalCustomCommand,
                 isDual: isDual,
