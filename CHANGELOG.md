@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-05-17
+
+### Fixed
+- Linux RPM no longer fails to install on Fedora and other non-Debian distros due to an unresolvable `libbz2.so.1.0` dependency. The package now bundles libarchive together with its runtime libraries, making it self-contained across distributions.
+
 ## [0.3.0] - 2026-05-17
 
 ### Added
