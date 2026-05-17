@@ -32,41 +32,83 @@ class _Response {
   const _Response(this.id, this.result, this.error);
 }
 
+class _FsWorker {
+  final int slot;
+  final Isolate isolate;
+  final SendPort commandPort;
+  final ReceivePort replyPort;
+  final ReceivePort errorPort;
+  final ReceivePort exitPort;
+  StreamSubscription? replySub;
+  StreamSubscription? errorSub;
+  StreamSubscription? exitSub;
+  final pending = <int, Completer<dynamic>>{};
+
+  _FsWorker({
+    required this.slot,
+    required this.isolate,
+    required this.commandPort,
+    required this.replyPort,
+    required this.errorPort,
+    required this.exitPort,
+  });
+
+  void shutdown(Object error) {
+    replySub?.cancel();
+    errorSub?.cancel();
+    exitSub?.cancel();
+    replyPort.close();
+    errorPort.close();
+    exitPort.close();
+    isolate.kill(priority: Isolate.immediate);
+    for (final c in pending.values) {
+      if (!c.isCompleted) c.completeError(error);
+    }
+    pending.clear();
+  }
+}
+
 class FsWorkerPool {
   static final FsWorkerPool instance = FsWorkerPool._();
   FsWorkerPool._();
 
-  SendPort? _commandPort;
-  ReceivePort? _replyPort;
-  ReceivePort? _errorPort;
-  ReceivePort? _exitPort;
-  Isolate? _isolate;
-  StreamSubscription? _replySubscription;
-  StreamSubscription? _errorSubscription;
-  StreamSubscription? _exitSubscription;
-  final _pending = <int, Completer<dynamic>>{};
+  static final int _poolSize = () {
+    final n = Platform.numberOfProcessors ~/ 2;
+    return n < 2 ? 2 : (n > 8 ? 8 : n);
+  }();
+
+  final List<_FsWorker?> _workers = List.filled(_poolSize, null);
+  final List<Future<_FsWorker>?> _spawning = List.filled(_poolSize, null);
   int _nextId = 0;
-  Future<void>? _initFuture;
+  int _rr = 0;
 
   Future<void> ensureStarted() async {
-    final existing = _initFuture;
-    if (existing != null) return existing;
-    final future = _start();
-    _initFuture = future;
-    try {
-      await future;
-    } catch (_) {
-      if (identical(_initFuture, future)) {
-        _initFuture = null;
-      }
-      rethrow;
-    }
+    await Future.wait([for (var i = 0; i < _poolSize; i++) _ensureWorker(i)]);
   }
 
-  Future<void> _start() async {
+  Future<_FsWorker> _ensureWorker(int slot) {
+    final live = _workers[slot];
+    if (live != null) return Future.value(live);
+    final inFlight = _spawning[slot];
+    if (inFlight != null) return inFlight;
+    final fut = _spawnWorker(slot);
+    _spawning[slot] = fut;
+    return fut
+        .then((w) {
+          _workers[slot] = w;
+          _spawning[slot] = null;
+          return w;
+        })
+        .catchError((e) {
+          _spawning[slot] = null;
+          throw e;
+        });
+  }
+
+  Future<_FsWorker> _spawnWorker(int slot) async {
     final ready = ReceivePort();
-    _errorPort = ReceivePort();
-    _exitPort = ReceivePort();
+    final errorPort = ReceivePort();
+    final exitPort = ReceivePort();
     final workerReady = Completer<SendPort>();
 
     late StreamSubscription readySub;
@@ -78,50 +120,39 @@ class FsWorkerPool {
       }
     });
 
-    _errorSubscription = _errorPort!.listen((err) {
-      if (!workerReady.isCompleted) {
-        workerReady.completeError(StateError('FS worker failed: $err'));
-      }
-      _handleWorkerFailure(StateError('FS worker failed: $err'));
-    });
-    _exitSubscription = _exitPort!.listen((_) {
-      if (!workerReady.isCompleted) {
-        workerReady.completeError(StateError('FS worker exited before ready'));
-      }
-      _handleWorkerFailure(StateError('FS worker exited unexpectedly'));
-    });
-
+    Isolate isolate;
     try {
-      _isolate = await Isolate.spawn<SendPort>(
+      isolate = await Isolate.spawn<SendPort>(
         _entryPoint,
         ready.sendPort,
         errorsAreFatal: false,
-        onError: _errorPort!.sendPort,
-        onExit: _exitPort!.sendPort,
+        onError: errorPort.sendPort,
+        onExit: exitPort.sendPort,
       );
-
-      _commandPort = await workerReady.future;
     } catch (_) {
       await readySub.cancel();
       ready.close();
-      _errorSubscription?.cancel();
-      _exitSubscription?.cancel();
-      _errorPort?.close();
-      _exitPort?.close();
-      _errorSubscription = null;
-      _exitSubscription = null;
-      _errorPort = null;
-      _exitPort = null;
-      _isolate?.kill(priority: Isolate.immediate);
-      _isolate = null;
+      errorPort.close();
+      exitPort.close();
       rethrow;
     }
 
-    _replyPort = ReceivePort();
-    _commandPort!.send(_replyPort!.sendPort);
-    _replySubscription = _replyPort!.listen((msg) {
+    final commandPort = await workerReady.future;
+    final replyPort = ReceivePort();
+    commandPort.send(replyPort.sendPort);
+
+    final worker = _FsWorker(
+      slot: slot,
+      isolate: isolate,
+      commandPort: commandPort,
+      replyPort: replyPort,
+      errorPort: errorPort,
+      exitPort: exitPort,
+    );
+
+    worker.replySub = replyPort.listen((msg) {
       if (msg is _Response) {
-        final completer = _pending.remove(msg.id);
+        final completer = worker.pending.remove(msg.id);
         if (completer == null) return;
         if (msg.error != null) {
           completer.completeError(msg.error!);
@@ -130,14 +161,23 @@ class FsWorkerPool {
         }
       }
     });
+    worker.errorSub = errorPort.listen(
+      (err) => _handleWorkerFailure(slot, StateError('FS worker failed: $err')),
+    );
+    worker.exitSub = exitPort.listen(
+      (_) => _handleWorkerFailure(slot, StateError('FS worker exited')),
+    );
+    return worker;
   }
 
   Future<T> _run<T>(_Op op, List<dynamic> args) async {
-    await ensureStarted();
+    final slot = _rr;
+    _rr = (_rr + 1) % _poolSize;
+    final worker = await _ensureWorker(slot);
     final id = _nextId++;
     final completer = Completer<dynamic>();
-    _pending[id] = completer;
-    _commandPort!.send(_Request(id, op, args));
+    worker.pending[id] = completer;
+    worker.commandPort.send(_Request(id, op, args));
     final result = await completer.future;
     return result as T;
   }
@@ -176,49 +216,19 @@ class FsWorkerPool {
   ]);
 
   void dispose() {
-    _replySubscription?.cancel();
-    _errorSubscription?.cancel();
-    _exitSubscription?.cancel();
-    _replyPort?.close();
-    _errorPort?.close();
-    _exitPort?.close();
-    _isolate?.kill(priority: Isolate.immediate);
-    for (final c in _pending.values) {
-      if (!c.isCompleted) c.completeError(StateError('Pool disposed'));
+    for (var i = 0; i < _poolSize; i++) {
+      _workers[i]?.shutdown(StateError('Pool disposed'));
+      _workers[i] = null;
+      _spawning[i] = null;
     }
-    _pending.clear();
-    _commandPort = null;
-    _replyPort = null;
-    _errorPort = null;
-    _exitPort = null;
-    _isolate = null;
-    _replySubscription = null;
-    _errorSubscription = null;
-    _exitSubscription = null;
-    _initFuture = null;
   }
 
-  void _handleWorkerFailure(Object error) {
-    _replySubscription?.cancel();
-    _errorSubscription?.cancel();
-    _exitSubscription?.cancel();
-    _replySubscription = null;
-    _errorSubscription = null;
-    _exitSubscription = null;
-    _replyPort?.close();
-    _errorPort?.close();
-    _exitPort?.close();
-    _replyPort = null;
-    _errorPort = null;
-    _exitPort = null;
-    _commandPort = null;
-    _isolate?.kill(priority: Isolate.immediate);
-    _isolate = null;
-    _initFuture = null;
-    for (final c in _pending.values) {
-      if (!c.isCompleted) c.completeError(error);
-    }
-    _pending.clear();
+  void _handleWorkerFailure(int slot, Object error) {
+    final worker = _workers[slot];
+    if (worker == null) return;
+    _workers[slot] = null;
+    _spawning[slot] = null;
+    worker.shutdown(error);
   }
 
   static void _entryPoint(SendPort initial) {
