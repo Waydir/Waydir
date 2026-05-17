@@ -160,7 +160,6 @@ class RecursiveSearch {
     const batchSize = 200;
     const flushIntervalMs = 200;
     const progressIntervalMs = 150;
-    final epoch = DateTime.fromMillisecondsSinceEpoch(0);
 
     void flush() {
       if (buffer.isEmpty) return;
@@ -186,12 +185,12 @@ class RecursiveSearch {
     }
 
     FileEntry makeEntry(FileSystemEntity entity, String name, bool isDir) {
-      return FileEntry(
+      return FileEntry.raw(
         name: name,
         path: entity.path,
         type: isDir ? FileItemType.folder : FileItemType.file,
         size: 0,
-        modified: epoch,
+        modifiedMs: 0,
       );
     }
 

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
+import 'dart:typed_data';
 import '../archive/archive_reader.dart';
 import '../archive/archive_service.dart';
 import '../models/file_entry.dart';
@@ -182,8 +183,11 @@ class FsWorkerPool {
     return result as T;
   }
 
-  Future<List<FileEntry>> listDirectory(String path) =>
-      _run<List<FileEntry>>(_Op.list, [path]);
+  Future<List<FileEntry>> listDirectory(String path) async {
+    final r = await _run<dynamic>(_Op.list, [path]);
+    if (r is Uint8List) return FileEntryCodec.decode(r);
+    return r as List<FileEntry>;
+  }
 
   Future<bool> directoryExists(String path) => _run<bool>(_Op.exists, [path]);
 
@@ -255,7 +259,11 @@ class FsWorkerPool {
   static dynamic _execute(_Op op, List<dynamic> args) {
     switch (op) {
       case _Op.list:
-        return _listDirectory(args[0] as String);
+        final listed = _listDirectory(args[0] as String);
+        if (listed.length >= FileEntryCodec.threshold) {
+          return FileEntryCodec.encode(listed);
+        }
+        return listed;
       case _Op.exists:
         return Directory(args[0] as String).existsSync();
       case _Op.isDir:
@@ -332,12 +340,12 @@ class FsWorkerPool {
               e is Directory ||
               (e is Link && stat.type == FileSystemEntityType.directory);
           entries.add(
-            FileEntry(
+            FileEntry.raw(
               name: PlatformPaths.fileName(e.path),
               path: e.path,
               type: isDir ? FileItemType.folder : FileItemType.file,
               size: stat.size,
-              modified: stat.modified,
+              modifiedMs: stat.modified.millisecondsSinceEpoch,
             ),
           );
         } catch (_) {}
