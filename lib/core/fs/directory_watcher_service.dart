@@ -1,15 +1,33 @@
 import 'dart:async';
 import 'dart:io';
 
+/// Coalesced directory-change notifier.
+///
+/// Dart's [Directory.watch] already wraps the native backend (inotify on
+/// Linux, FSEvents on macOS, ReadDirectoryChangesW on Windows). On top of
+/// that this service batches a burst of events into a single callback and,
+/// crucially, reports *which* child paths changed so the caller can apply an
+/// incremental patch instead of re-scanning the whole directory.
+///
+/// [fullReload] is set when a precise patch is unsafe: move/rename events
+/// (the old↔new pairing is ambiguous), watcher errors, or a storm large
+/// enough that per-path stats would cost as much as a full relist.
+typedef DirectoryChangeCallback =
+    void Function(Set<String> changedPaths, bool fullReload);
+
 class DirectoryWatcherService {
-  static const _debounce = Duration(milliseconds: 150);
+  static const _debounce = Duration(milliseconds: 100);
+  static const _stormThreshold = 64;
 
   StreamSubscription<FileSystemEvent>? _subscription;
   Timer? _debounceTimer;
   String? _watchedPath;
-  void Function()? _onChange;
+  DirectoryChangeCallback? _onChange;
 
-  void watch(String path, void Function() onChange) {
+  final Set<String> _pending = {};
+  bool _fullReload = false;
+
+  void watch(String path, DirectoryChangeCallback onChange) {
     if (_watchedPath == path && _subscription != null) {
       _onChange = onChange;
       return;
@@ -23,20 +41,43 @@ class DirectoryWatcherService {
       _subscription = dir
           .watch(recursive: false)
           .listen(
-            (_) {
+            (event) {
               if (_watchedPath != path) return;
+              _accumulate(event);
               _scheduleNotify();
             },
-            onError: (_) {},
+            onError: (_) {
+              if (_watchedPath != path) return;
+              _fullReload = true;
+              _scheduleNotify();
+            },
             cancelOnError: true,
           );
     } catch (_) {}
   }
 
+  void _accumulate(FileSystemEvent event) {
+    if (event is FileSystemMoveEvent) {
+      _fullReload = true;
+      return;
+    }
+    _pending.add(event.path);
+    if (event.path != _watchedPath) {
+      // Some backends report the directory itself; ignore for patching.
+    }
+    if (_pending.length > _stormThreshold) _fullReload = true;
+  }
+
   void _scheduleNotify() {
     _debounceTimer?.cancel();
     _debounceTimer = Timer(_debounce, () {
-      _onChange?.call();
+      final cb = _onChange;
+      if (cb == null) return;
+      final changed = Set<String>.from(_pending);
+      final full = _fullReload || changed.isEmpty;
+      _pending.clear();
+      _fullReload = false;
+      cb(changed, full);
     });
   }
 
@@ -47,6 +88,8 @@ class DirectoryWatcherService {
     _subscription = null;
     _watchedPath = null;
     _onChange = null;
+    _pending.clear();
+    _fullReload = false;
   }
 
   void dispose() => stop();
