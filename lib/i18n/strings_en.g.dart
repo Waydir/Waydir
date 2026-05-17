@@ -1155,6 +1155,24 @@ class TranslationsPreferencesAppearanceEn {
 	/// en: 'Defaults for how files and the sidebar are displayed.'
 	String get subtitle => 'Defaults for how files and the sidebar are displayed.';
 
+	/// en: 'Theme'
+	String get themeSection => 'Theme';
+
+	/// en: 'Appearance'
+	String get themeMode => 'Appearance';
+
+	/// en: 'Match the system, or force a light or dark theme.'
+	String get themeModeHint => 'Match the system, or force a light or dark theme.';
+
+	/// en: 'System'
+	String get themeModeSystem => 'System';
+
+	/// en: 'Light'
+	String get themeModeLight => 'Light';
+
+	/// en: 'Dark'
+	String get themeModeDark => 'Dark';
+
 	/// en: 'Files'
 	String get filesSection => 'Files';
 
@@ -1461,6 +1479,12 @@ extension on Translations {
 			'preferences.general.terminalCustomHelp' => 'Use {dir} as a placeholder for the directory path.',
 			'preferences.appearance.title' => 'Appearance',
 			'preferences.appearance.subtitle' => 'Defaults for how files and the sidebar are displayed.',
+			'preferences.appearance.themeSection' => 'Theme',
+			'preferences.appearance.themeMode' => 'Appearance',
+			'preferences.appearance.themeModeHint' => 'Match the system, or force a light or dark theme.',
+			'preferences.appearance.themeModeSystem' => 'System',
+			'preferences.appearance.themeModeLight' => 'Light',
+			'preferences.appearance.themeModeDark' => 'Dark',
 			'preferences.appearance.filesSection' => 'Files',
 			'preferences.appearance.showHidden' => 'Show hidden files by default',
 			'preferences.appearance.showHiddenHint' => 'Applies to new tabs. Existing tabs keep their setting.',

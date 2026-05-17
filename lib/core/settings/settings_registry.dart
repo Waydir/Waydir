@@ -184,6 +184,31 @@ class SettingsRegistry {
       searchTerms: const ['terminal', 'command'],
       signal: SettingsStore.instance.terminalCustomCommand,
     ),
+    ChoiceSetting<String>(
+      id: 'appearance.themeMode',
+      category: SettingsCategory.appearance,
+      label: () => t.preferences.appearance.themeMode,
+      hint: () => t.preferences.appearance.themeModeHint,
+      searchTerms: const ['theme', 'dark', 'light', 'appearance', 'system'],
+      signal: SettingsStore.instance.themeMode,
+      choices: [
+        SettingChoice(
+          value: 'system',
+          label: () => t.preferences.appearance.themeModeSystem,
+          icon: PhosphorIconsRegular.desktop,
+        ),
+        SettingChoice(
+          value: 'light',
+          label: () => t.preferences.appearance.themeModeLight,
+          icon: PhosphorIconsRegular.sun,
+        ),
+        SettingChoice(
+          value: 'dark',
+          label: () => t.preferences.appearance.themeModeDark,
+          icon: PhosphorIconsRegular.moon,
+        ),
+      ],
+    ),
     ToggleSetting(
       id: 'appearance.showHiddenDefault',
       category: SettingsCategory.appearance,

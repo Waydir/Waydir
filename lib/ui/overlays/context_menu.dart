@@ -148,8 +148,8 @@ class _ContextMenuBody extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: items.asMap().entries.map((e) {
                 if (e.value.isDivider) {
-                  return const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     child: Divider(
                       height: 1,
                       thickness: 1,

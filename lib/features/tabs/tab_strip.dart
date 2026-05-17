@@ -19,7 +19,7 @@ class TabStrip extends StatelessWidget {
         height: 30,
         decoration: BoxDecoration(
           color: isActive ? AppColors.bgSidebar : AppColors.bg,
-          border: const Border(bottom: BorderSide(color: AppColors.bgDivider)),
+          border: Border(bottom: BorderSide(color: AppColors.bgDivider)),
         ),
         child: ListView.separated(
           scrollDirection: Axis.horizontal,

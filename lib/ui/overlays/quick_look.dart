@@ -697,7 +697,7 @@ class _TextScrollerState extends State<_TextScroller> {
                     padding: const EdgeInsets.fromLTRB(16, 16, 24, 24),
                     child: SelectableText(
                       widget.text,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'monospace',
                         fontSize: 12.5,
                         height: 1.45,
@@ -770,7 +770,7 @@ class _Centered extends StatelessWidget {
       color: AppColors.bg,
       alignment: Alignment.center,
       child: spinner
-          ? const SizedBox(
+          ? SizedBox(
               width: 20,
               height: 20,
               child: CircularProgressIndicator(

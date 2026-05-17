@@ -591,7 +591,7 @@ class _SidebarOperationsButtonState extends State<_SidebarOperationsButton> {
       if (widget.collapsed) {
         return Container(
           padding: const EdgeInsets.symmetric(vertical: 6),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             border: Border(top: BorderSide(color: AppColors.bgDivider)),
           ),
           alignment: Alignment.center,
@@ -626,7 +626,7 @@ class _SidebarOperationsButtonState extends State<_SidebarOperationsButton> {
                           value: active.totalFiles > 0 ? progress : null,
                           strokeWidth: 2,
                           backgroundColor: AppColors.bgInput,
-                          valueColor: const AlwaysStoppedAnimation(
+                          valueColor: AlwaysStoppedAnimation(
                             AppColors.accent,
                           ),
                         ),
@@ -647,7 +647,7 @@ class _SidebarOperationsButtonState extends State<_SidebarOperationsButton> {
 
       return Container(
         padding: const EdgeInsets.fromLTRB(6, 7, 6, 7),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           border: Border(top: BorderSide(color: AppColors.bgDivider)),
         ),
         child: Tooltip(
@@ -713,7 +713,7 @@ class _SidebarOperationsButtonState extends State<_SidebarOperationsButton> {
                         value: active.totalFiles > 0 ? progress : null,
                         minHeight: 3,
                         backgroundColor: AppColors.bgInput,
-                        valueColor: const AlwaysStoppedAnimation(
+                        valueColor: AlwaysStoppedAnimation(
                           AppColors.accent,
                         ),
                       ),
@@ -923,7 +923,7 @@ class _ItemRowState extends State<_ItemRow> {
                       ),
                       if (widget.onUnmount != null)
                         IconButton(
-                          icon: const PhosphorIcon(
+                          icon: PhosphorIcon(
                             PhosphorIconsRegular.eject,
                             size: 14,
                             color: AppColors.fgMuted,

@@ -92,7 +92,7 @@ class _CompressBodyState extends State<_CompressBody> {
         children: [
           Row(
             children: [
-              const Icon(
+              Icon(
                 PhosphorIconsRegular.fileZip,
                 color: AppColors.accent,
                 size: 18,
@@ -183,11 +183,11 @@ class _CompressBodyState extends State<_CompressBody> {
     contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(6),
-      borderSide: const BorderSide(color: AppColors.borderColor),
+      borderSide: BorderSide(color: AppColors.borderColor),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(6),
-      borderSide: const BorderSide(color: AppColors.accent),
+      borderSide: BorderSide(color: AppColors.accent),
     ),
   );
 }

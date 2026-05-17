@@ -14,7 +14,7 @@ Future<T?> showCustomDialog<T>({
   required BuildContext context,
   required String title,
   required IconData icon,
-  Color iconColor = AppColors.accent,
+  Color? iconColor,
   double width = 360,
   required Widget body,
   required List<DialogAction> actions,
@@ -29,7 +29,7 @@ Future<T?> showCustomDialog<T>({
           child: _CustomDialogBody(
             title: title,
             icon: icon,
-            iconColor: iconColor,
+            iconColor: iconColor ?? AppColors.accent,
             width: width,
             body: body,
             actions: actions,

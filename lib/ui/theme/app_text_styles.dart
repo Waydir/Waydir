@@ -41,7 +41,11 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
 
   static const _systemFont = 'system-ui';
 
-  static final dark = AppTextStyles(
+  /// Builds the text styles for [brightness]. Must be called after
+  /// [AppColors.brightness] has been set so color getters resolve correctly.
+  static AppTextStyles forBrightness(Brightness brightness) {
+    AppColors.brightness = brightness;
+    return AppTextStyles(
     badge: TextStyle(
       fontSize: 9,
       fontWeight: FontWeight.w700,
@@ -137,7 +141,8 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
       color: AppColors.fg,
       fontFamily: _systemFont,
     ),
-  );
+    );
+  }
 
   @override
   AppTextStyles copyWith({
