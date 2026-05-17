@@ -348,7 +348,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "LIBARCHIVE_DIR=\"$SRCROOT/../third_party/libarchive/macos\"\nFRAMEWORKS_DIR=\"$TARGET_BUILD_DIR/$FRAMEWORKS_FOLDER_PATH\"\nif [ -d \"$LIBARCHIVE_DIR\" ]; then\n  mkdir -p \"$FRAMEWORKS_DIR\"\n  find \"$LIBARCHIVE_DIR\" -maxdepth 1 -name '*.dylib' -type f -exec cp -f {} \"$FRAMEWORKS_DIR\" \\;\nfi\n";
+			shellScript = "LIBARCHIVE_DIR=\"$SRCROOT/../third_party/libarchive/macos\"\nWAYDIR_CORE_DIR=\"$SRCROOT/../third_party/waydir_core/macos\"\nFRAMEWORKS_DIR=\"$TARGET_BUILD_DIR/$FRAMEWORKS_FOLDER_PATH\"\nif [ -d \"$LIBARCHIVE_DIR\" ]; then\n  mkdir -p \"$FRAMEWORKS_DIR\"\n  find \"$LIBARCHIVE_DIR\" -maxdepth 1 -name '*.dylib' -type f -exec cp -f {} \"$FRAMEWORKS_DIR\" \\;\nfi\nif [ -d \"$WAYDIR_CORE_DIR\" ]; then\n  mkdir -p \"$FRAMEWORKS_DIR\"\n  find \"$WAYDIR_CORE_DIR\" -maxdepth 1 -name '*.dylib' -type f -exec cp -f {} \"$FRAMEWORKS_DIR\" \\;\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
