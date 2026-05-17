@@ -44,3 +44,6 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 dist/
+
+# Rust native core build artifacts
+rust/**/target/

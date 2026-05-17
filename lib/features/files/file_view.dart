@@ -288,41 +288,51 @@ class _FileListState extends State<FileList> {
                       padding: EdgeInsets.zero,
                       itemCount: widget.files.length,
                       itemExtent: _itemExt,
-                      itemBuilder: (context, i) => Padding(
-                        padding: EdgeInsets.only(bottom: _rowG),
-                        child: _ListRow(
-                          rowHeight: _rowH,
-                          dateFmt: _dateFmt,
-                          recentDatesRelative: _recentDatesRelative,
-                          entry: widget.files[i],
-                          index: i,
-                          selected: widget.selectedPaths.contains(
-                            widget.files[i].path,
+                      // We supply our own RepaintBoundary per row; the keep
+                      // alive / semantics / repaint wrappers ListView adds by
+                      // default are pure overhead at 10k+ rows.
+                      addAutomaticKeepAlives: false,
+                      addRepaintBoundaries: false,
+                      addSemanticIndexes: false,
+                      itemBuilder: (context, i) => RepaintBoundary(
+                        child: Padding(
+                          padding: EdgeInsets.only(bottom: _rowG),
+                          child: _ListRow(
+                            rowHeight: _rowH,
+                            dateFmt: _dateFmt,
+                            recentDatesRelative: _recentDatesRelative,
+                            entry: widget.files[i],
+                            index: i,
+                            selected: widget.selectedPaths.contains(
+                              widget.files[i].path,
+                            ),
+                            selectedPaths: widget.selectedPaths,
+                            isCut: widget.cutPaths.contains(
+                              widget.files[i].path,
+                            ),
+                            isDraggingSelected: widget.selectedPaths.isNotEmpty,
+                            isFolderDragOver:
+                                _hoveredFolderPath == widget.files[i].path,
+                            isRenaming:
+                                widget.renamingPath == widget.files[i].path,
+                            renameAttempt: widget.renameAttempt,
+                            onRenameSubmit: widget.onRenameSubmit,
+                            onRenameCancel: widget.onRenameCancel,
+                            onSelect: widget.onSelect,
+                            onOpen: widget.onOpen,
+                            onContextMenu: widget.onContextMenu,
+                            onMenuAction: widget.onMenuAction,
+                            recursive: widget.recursiveResults,
+                            sizeWidth: columnWidths.size,
+                            dateWidth: columnWidths.date,
+                            location: widget.recursiveResults
+                                ? _relativeParent(
+                                    widget.files[i].path,
+                                    widget.currentPath,
+                                  )
+                                : null,
+                            onOpenInNewTab: widget.onOpenInNewTab,
                           ),
-                          selectedPaths: widget.selectedPaths,
-                          isCut: widget.cutPaths.contains(widget.files[i].path),
-                          isDraggingSelected: widget.selectedPaths.isNotEmpty,
-                          isFolderDragOver:
-                              _hoveredFolderPath == widget.files[i].path,
-                          isRenaming:
-                              widget.renamingPath == widget.files[i].path,
-                          renameAttempt: widget.renameAttempt,
-                          onRenameSubmit: widget.onRenameSubmit,
-                          onRenameCancel: widget.onRenameCancel,
-                          onSelect: widget.onSelect,
-                          onOpen: widget.onOpen,
-                          onContextMenu: widget.onContextMenu,
-                          onMenuAction: widget.onMenuAction,
-                          recursive: widget.recursiveResults,
-                          sizeWidth: columnWidths.size,
-                          dateWidth: columnWidths.date,
-                          location: widget.recursiveResults
-                              ? _relativeParent(
-                                  widget.files[i].path,
-                                  widget.currentPath,
-                                )
-                              : null,
-                          onOpenInNewTab: widget.onOpenInNewTab,
                         ),
                       ),
                     ),

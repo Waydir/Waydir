@@ -8,6 +8,7 @@ import '../../core/models/file_entry.dart';
 import '../../core/clipboard/file_clipboard.dart';
 import '../../core/fs/file_sort.dart';
 import '../../core/fs/file_system_service.dart';
+import '../../core/fs/fs_worker_pool.dart';
 import '../../core/fs/directory_watcher_service.dart';
 import '../../core/fs/recursive_search.dart';
 import '../../core/keyboard/keyboard_shortcuts.dart';
@@ -416,7 +417,10 @@ class NavigationStore {
       if (isTrashPath(path)) {
         _watcher.stop();
       } else {
-        _watcher.watch(path, () => _onExternalChange(path));
+        _watcher.watch(
+          path,
+          (changed, fullReload) => _onWatcherEvent(path, changed, fullReload),
+        );
       }
     } catch (e) {
       if (token != _loadToken) return;
@@ -495,6 +499,65 @@ class NavigationStore {
     });
     refresh();
   }
+
+  void _onWatcherEvent(
+    String path,
+    Set<String> changed,
+    bool fullReload,
+  ) async {
+    if (path != currentPath.value) return;
+    if (fullReload) {
+      _onExternalChange(path);
+      return;
+    }
+    try {
+      final patched = List<FileEntry>.of(files.value);
+      final byPath = {
+        for (var i = 0; i < patched.length; i++) patched[i].path: i,
+      };
+      var mutated = false;
+      for (final childPath in changed) {
+        if (childPath == path) continue;
+        final entry = await FsWorkerPool.instance.stat(childPath);
+        if (path != currentPath.value) return;
+        final existingIdx = byPath[childPath];
+        if (entry == null) {
+          if (existingIdx != null) {
+            patched[existingIdx] = _kTombstone;
+            mutated = true;
+          }
+        } else if (existingIdx != null) {
+          patched[existingIdx] = entry;
+          mutated = true;
+        } else {
+          patched.add(entry);
+          mutated = true;
+        }
+      }
+      if (!mutated) return;
+      patched.removeWhere(identical0);
+      _applyExternalChanges(sortCurrent(patched));
+    } catch (_) {
+      _onExternalChange(path);
+    }
+  }
+
+  static final FileEntry _kTombstone = FileEntry.raw(
+    name: '',
+    path: ' waydir-tombstone',
+    type: FileItemType.file,
+    size: 0,
+    modifiedMs: 0,
+  );
+
+  static bool identical0(FileEntry e) => identical(e, _kTombstone);
+
+  List<FileEntry> sortCurrent(List<FileEntry> entries) => sortEntries(
+    entries,
+    key: sortKey.value,
+    ascending: sortAscending.value,
+    foldersFirst: foldersFirst.value,
+  );
 
   void _onExternalChange(String path) async {
     if (path != currentPath.value) return;

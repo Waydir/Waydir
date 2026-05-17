@@ -40,6 +40,12 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build waydir_core (hard dependency)
+        run: scripts/build_waydir_core.sh
+
       - name: Get dependencies
         run: flutter pub get
 

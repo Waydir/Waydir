@@ -14,6 +14,7 @@ import '../terminal/terminal.dart';
 import '../../i18n/strings.g.dart';
 import 'fs_worker_pool.dart';
 import 'safe_file_replace.dart';
+import 'waydir_core_loader.dart';
 import 'trash_service.dart';
 
 sealed class RenameResult {
@@ -208,7 +209,8 @@ class FileSystemService {
     String? destination;
     int processedBytes = 0;
     int processedFiles = 0;
-    var lastReport = DateTime.now();
+    final reportClock = Stopwatch()..start();
+    var lastReportMs = 0;
 
     void emitPrompt(ConflictInfo info) {
       if (promptedSet.add(info.sourcePath)) {
@@ -223,8 +225,7 @@ class FileSystemService {
     }
 
     void maybeReport(String currentFile) {
-      final now = DateTime.now();
-      if (now.difference(lastReport).inMilliseconds > 50 ||
+      if (reportClock.elapsedMilliseconds - lastReportMs > 50 ||
           processedFiles % 100 == 0) {
         mainSendPort.send(
           ProgressMessage(
@@ -233,7 +234,7 @@ class FileSystemService {
             currentFile: currentFile,
           ),
         );
-        lastReport = now;
+        lastReportMs = reportClock.elapsedMilliseconds;
       }
     }
 
@@ -267,14 +268,13 @@ class FileSystemService {
         );
       } else {
         try {
-          final size = File(src).lengthSync();
+          final sourceStat = FileStat.statSync(src);
+          final size = sourceStat.size;
           allPaths.add(src);
           totalFiles++;
           totalBytes += size;
-          if (FileSystemEntity.typeSync(targetPath) !=
-              FileSystemEntityType.notFound) {
-            final targetStat = FileStat.statSync(targetPath);
-            final sourceStat = FileStat.statSync(src);
+          final targetStat = FileStat.statSync(targetPath);
+          if (targetStat.type != FileSystemEntityType.notFound) {
             conflicts.add(
               ConflictInfo(
                 sourcePath: src,
@@ -404,7 +404,7 @@ class FileSystemService {
           pendingConflicts.remove(srcPath);
           processedFiles++;
           maybeReport(srcPath.split(Platform.pathSeparator).last);
-          if (processedFiles % 4 == 0) {
+          if (processedFiles % 64 == 0) {
             await Future.delayed(Duration.zero);
           }
         }
@@ -517,7 +517,8 @@ class FileSystemService {
     final errors = <TaskError>[];
     String? destination;
     int processedFiles = 0;
-    var lastReport = DateTime.now();
+    final reportClock = Stopwatch()..start();
+    var lastReportMs = 0;
 
     void emitPrompt(ConflictInfo info) {
       if (promptedSet.add(info.sourcePath)) {
@@ -532,8 +533,7 @@ class FileSystemService {
     }
 
     void maybeReport(String currentFile) {
-      final now = DateTime.now();
-      if (now.difference(lastReport).inMilliseconds > 50 ||
+      if (reportClock.elapsedMilliseconds - lastReportMs > 50 ||
           processedFiles % 100 == 0) {
         mainSendPort.send(
           ProgressMessage(
@@ -542,7 +542,7 @@ class FileSystemService {
             currentFile: currentFile,
           ),
         );
-        lastReport = now;
+        lastReportMs = reportClock.elapsedMilliseconds;
       }
     }
 
@@ -572,10 +572,10 @@ class FileSystemService {
             mainSendPort.send(ErrorMessage(path: errorPath, message: errorMsg));
           },
         );
-        if (FileSystemEntity.typeSync(targetPath) !=
-            FileSystemEntityType.notFound) {
+        final dirTargetStat = FileStat.statSync(targetPath);
+        if (dirTargetStat.type != FileSystemEntityType.notFound) {
           try {
-            final targetStat = FileStat.statSync(targetPath);
+            final targetStat = dirTargetStat;
             final sourceStat = FileStat.statSync(src);
             conflicts.add(
               ConflictInfo(
@@ -599,9 +599,8 @@ class FileSystemService {
         try {
           allPaths.add(src);
           totalFiles++;
-          if (FileSystemEntity.typeSync(targetPath) !=
-              FileSystemEntityType.notFound) {
-            final targetStat = FileStat.statSync(targetPath);
+          final targetStat = FileStat.statSync(targetPath);
+          if (targetStat.type != FileSystemEntityType.notFound) {
             final sourceStat = FileStat.statSync(src);
             conflicts.add(
               ConflictInfo(
@@ -839,11 +838,11 @@ class FileSystemService {
     int totalFiles = 0;
     List<TaskError> errors = [];
     int processedFiles = 0;
-    var lastReport = DateTime.now();
+    final reportClock = Stopwatch()..start();
+    var lastReportMs = 0;
 
     void maybeReport(String currentFile) {
-      final now = DateTime.now();
-      if (now.difference(lastReport).inMilliseconds > 50 ||
+      if (reportClock.elapsedMilliseconds - lastReportMs > 50 ||
           processedFiles % 100 == 0) {
         mainSendPort.send(
           ProgressMessage(
@@ -852,37 +851,11 @@ class FileSystemService {
             currentFile: currentFile,
           ),
         );
-        lastReport = now;
+        lastReportMs = reportClock.elapsedMilliseconds;
       }
     }
 
     void scanForDelete(List<String> sources) {
-      final visited = <String>{};
-      void walk(String dirPath) {
-        final resolved = _resolveCanonical(dirPath);
-        if (!visited.add(resolved)) return;
-        try {
-          for (final entity in Directory(
-            dirPath,
-          ).listSync(followLinks: false)) {
-            final entType = FileSystemEntity.typeSync(
-              entity.path,
-              followLinks: false,
-            );
-            if (entType == FileSystemEntityType.directory) {
-              walk(entity.path);
-            }
-            allPaths.add(entity.path);
-            totalFiles++;
-          }
-        } catch (e) {
-          errors.add(TaskError(path: dirPath, message: _friendlyError(e)));
-          mainSendPort.send(
-            ErrorMessage(path: dirPath, message: _friendlyError(e)),
-          );
-        }
-      }
-
       for (final src in sources) {
         final type = FileSystemEntity.typeSync(src, followLinks: false);
         if (type == FileSystemEntityType.notFound) {
@@ -891,7 +864,26 @@ class FileSystemService {
             ErrorMessage(path: src, message: t.errors.notFound),
           );
         } else if (type == FileSystemEntityType.directory) {
-          walk(src);
+          // Tree enumeration is native-only (Rust). No Dart fallback.
+          final native = WaydirCoreLoader.enumerate(src, postorder: false);
+          if (native == null) {
+            errors.add(
+              TaskError(
+                path: src,
+                message: _friendlyError(
+                  FileSystemException('Directory not readable', src),
+                ),
+              ),
+            );
+            mainSendPort.send(
+              ErrorMessage(path: src, message: t.errors.notFound),
+            );
+            continue;
+          }
+          for (final e in FileEntryCodec.decode(native)) {
+            allPaths.add(e.path);
+            totalFiles++;
+          }
           allPaths.add(src);
           totalFiles++;
         } else {
@@ -984,11 +976,11 @@ class FileSystemService {
     List<String> sources = const [];
     final errors = <TaskError>[];
     int processedFiles = 0;
-    var lastReport = DateTime.now();
+    final reportClock = Stopwatch()..start();
+    var lastReportMs = 0;
 
     void maybeReport(String currentFile) {
-      final now = DateTime.now();
-      if (now.difference(lastReport).inMilliseconds > 50 ||
+      if (reportClock.elapsedMilliseconds - lastReportMs > 50 ||
           processedFiles % 50 == 0) {
         mainSendPort.send(
           ProgressMessage(
@@ -997,7 +989,7 @@ class FileSystemService {
             currentFile: currentFile,
           ),
         );
-        lastReport = now;
+        lastReportMs = reportClock.elapsedMilliseconds;
       }
     }
 
@@ -1074,7 +1066,8 @@ class FileSystemService {
     int totalFiles = 0;
     final errors = <TaskError>[];
     int processedFiles = 0;
-    var lastReport = DateTime.now();
+    final reportClock = Stopwatch()..start();
+    var lastReportMs = 0;
     final conflicts = <ConflictInfo>[];
     final conflictKeys = <String>{};
     Map<String, ConflictResolution> resolutions = {};
@@ -1092,8 +1085,7 @@ class FileSystemService {
     }
 
     void maybeReport(String currentFile) {
-      final now = DateTime.now();
-      if (now.difference(lastReport).inMilliseconds > 50 ||
+      if (reportClock.elapsedMilliseconds - lastReportMs > 50 ||
           processedFiles % 50 == 0) {
         mainSendPort.send(
           ProgressMessage(
@@ -1102,7 +1094,7 @@ class FileSystemService {
             currentFile: currentFile,
           ),
         );
-        lastReport = now;
+        lastReportMs = reportClock.elapsedMilliseconds;
       }
     }
 
@@ -1260,11 +1252,11 @@ class FileSystemService {
     int totalFiles = 0;
     final errors = <TaskError>[];
     int processedFiles = 0;
-    var lastReport = DateTime.now();
+    final reportClock = Stopwatch()..start();
+    var lastReportMs = 0;
 
     void maybeReport(String currentFile) {
-      final now = DateTime.now();
-      if (now.difference(lastReport).inMilliseconds > 50 ||
+      if (reportClock.elapsedMilliseconds - lastReportMs > 50 ||
           processedFiles % 50 == 0) {
         mainSendPort.send(
           ProgressMessage(
@@ -1273,7 +1265,7 @@ class FileSystemService {
             currentFile: currentFile,
           ),
         );
-        lastReport = now;
+        lastReportMs = reportClock.elapsedMilliseconds;
       }
     }
 
@@ -1370,11 +1362,11 @@ class FileSystemService {
     int totalFiles = 0;
     final errors = <TaskError>[];
     int processedFiles = 0;
-    var lastReport = DateTime.now();
+    final reportClock = Stopwatch()..start();
+    var lastReportMs = 0;
 
     void maybeReport(String currentFile) {
-      final now = DateTime.now();
-      if (now.difference(lastReport).inMilliseconds > 50 ||
+      if (reportClock.elapsedMilliseconds - lastReportMs > 50 ||
           processedFiles % 50 == 0) {
         mainSendPort.send(
           ProgressMessage(
@@ -1383,7 +1375,7 @@ class FileSystemService {
             currentFile: currentFile,
           ),
         );
-        lastReport = now;
+        lastReportMs = reportClock.elapsedMilliseconds;
       }
     }
 
@@ -1485,12 +1477,11 @@ class FileSystemService {
           _scanDirForCopy(entity, targetPath, visited, onFile, onError);
         } else if (entity is File) {
           try {
-            final size = entity.lengthSync();
+            final sourceStat = FileStat.statSync(entity.path);
+            final size = sourceStat.size;
             ConflictInfo? conflict;
-            if (FileSystemEntity.typeSync(targetPath) !=
-                FileSystemEntityType.notFound) {
-              final targetStat = FileStat.statSync(targetPath);
-              final sourceStat = FileStat.statSync(entity.path);
+            final targetStat = FileStat.statSync(targetPath);
+            if (targetStat.type != FileSystemEntityType.notFound) {
               conflict = ConflictInfo(
                 sourcePath: entity.path,
                 targetPath: targetPath,
@@ -1533,9 +1524,8 @@ class FileSystemService {
         } else {
           try {
             ConflictInfo? conflict;
-            if (FileSystemEntity.typeSync(targetPath) !=
-                FileSystemEntityType.notFound) {
-              final targetStat = FileStat.statSync(targetPath);
+            final targetStat = FileStat.statSync(targetPath);
+            if (targetStat.type != FileSystemEntityType.notFound) {
               final sourceStat = FileStat.statSync(entity.path);
               conflict = ConflictInfo(
                 sourcePath: entity.path,
@@ -1653,7 +1643,7 @@ class FileSystemService {
         _copyFileSync(entity, newPath);
         onProgress?.call(name);
       }
-      if ((++counter & 0xF) == 0) {
+      if ((++counter & 0x3F) == 0) {
         await Future.delayed(Duration.zero);
       }
     }

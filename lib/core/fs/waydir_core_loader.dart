@@ -1,0 +1,182 @@
+import 'dart:ffi';
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:ffi/ffi.dart';
+import 'package:path/path.dart' as p;
+
+typedef _SearchNative =
+    Pointer<Uint8> Function(
+      Pointer<Utf8>,
+      Pointer<Utf8>,
+      Bool,
+      Pointer<IntPtr>,
+    );
+typedef _SearchDart =
+    Pointer<Uint8> Function(
+      Pointer<Utf8>,
+      Pointer<Utf8>,
+      bool,
+      Pointer<IntPtr>,
+    );
+
+typedef _ListNative =
+    Pointer<Uint8> Function(Pointer<Utf8>, Bool, Pointer<IntPtr>);
+typedef _ListDart =
+    Pointer<Uint8> Function(Pointer<Utf8>, bool, Pointer<IntPtr>);
+
+typedef _EnumNative =
+    Pointer<Uint8> Function(Pointer<Utf8>, Bool, Pointer<IntPtr>);
+typedef _EnumDart =
+    Pointer<Uint8> Function(Pointer<Utf8>, bool, Pointer<IntPtr>);
+
+typedef _FreeNative = Void Function(Pointer<Uint8>, IntPtr);
+typedef _FreeDart = void Function(Pointer<Uint8>, int);
+
+typedef _AbiNative = Uint32 Function();
+typedef _AbiDart = int Function();
+
+/// Thrown when the required `waydir_core` native library cannot be loaded.
+/// `waydir_core` is a hard dependency: directory listing, recursive search
+/// and delete enumeration run exclusively in Rust — there is no Dart
+/// fallback. A missing library is a deployment error, not a soft condition.
+class WaydirCoreException implements Exception {
+  final String message;
+  const WaydirCoreException(this.message);
+  @override
+  String toString() => 'WaydirCoreException: $message';
+}
+
+/// Loads the required `waydir_core` native helper (Rust). Cached.
+/// [requireLib] throws [WaydirCoreException] if it is absent so callers
+/// fail loudly instead of silently degrading.
+class WaydirCoreLoader {
+  WaydirCoreLoader._();
+
+  static DynamicLibrary? _cached;
+  static bool _tried = false;
+
+  static DynamicLibrary? load() {
+    if (_tried) return _cached;
+    _tried = true;
+    for (final path in _candidatePaths()) {
+      try {
+        final lib = DynamicLibrary.open(path);
+        final abi = lib.lookupFunction<_AbiNative, _AbiDart>('waydir_core_abi');
+        if (abi() < 1) continue;
+        _cached = lib;
+        return lib;
+      } catch (_) {}
+    }
+    return null;
+  }
+
+  static DynamicLibrary requireLib() {
+    final lib = load();
+    if (lib == null) {
+      throw WaydirCoreException(
+        'native waydir_core not found; searched: '
+        '${_candidatePaths().join(", ")}',
+      );
+    }
+    return lib;
+  }
+
+  /// Runs the native recursive search. Returns a FileEntryCodec buffer.
+  /// Throws [WaydirCoreException] if the library is missing.
+  static Uint8List? search(String root, String query, bool includeHidden) {
+    final lib = requireLib();
+    final search = lib.lookupFunction<_SearchNative, _SearchDart>(
+      'waydir_search',
+    );
+    final free = lib.lookupFunction<_FreeNative, _FreeDart>('waydir_free');
+    final rootPtr = root.toNativeUtf8();
+    final queryPtr = query.toNativeUtf8();
+    final outLen = calloc<IntPtr>();
+    try {
+      final buf = search(rootPtr, queryPtr, includeHidden, outLen);
+      if (buf == nullptr) return null;
+      final len = outLen.value;
+      final copy = Uint8List.fromList(buf.asTypedList(len));
+      free(buf, len);
+      return copy;
+    } catch (_) {
+      return null;
+    } finally {
+      calloc.free(rootPtr);
+      calloc.free(queryPtr);
+      calloc.free(outLen);
+    }
+  }
+
+  /// Native single-directory listing. Returns a FileEntryCodec buffer or
+  /// null if unavailable / failed (e.g. unreadable directory).
+  static Uint8List? listDir(String path, {bool withStat = true}) {
+    final lib = requireLib();
+    final list = lib.lookupFunction<_ListNative, _ListDart>('waydir_list');
+    final free = lib.lookupFunction<_FreeNative, _FreeDart>('waydir_free');
+    final pathPtr = path.toNativeUtf8();
+    final outLen = calloc<IntPtr>();
+    try {
+      final buf = list(pathPtr, withStat, outLen);
+      if (buf == nullptr) return null;
+      final len = outLen.value;
+      final copy = Uint8List.fromList(buf.asTypedList(len));
+      free(buf, len);
+      return copy;
+    } catch (_) {
+      return null;
+    } finally {
+      calloc.free(pathPtr);
+      calloc.free(outLen);
+    }
+  }
+
+  /// Recursive enumeration for delete pre-scans. [postorder] yields
+  /// deepest-first ordering. Returns a FileEntryCodec buffer or null.
+  static Uint8List? enumerate(String root, {bool postorder = true}) {
+    final lib = requireLib();
+    final fn = lib.lookupFunction<_EnumNative, _EnumDart>('waydir_enumerate');
+    final free = lib.lookupFunction<_FreeNative, _FreeDart>('waydir_free');
+    final rootPtr = root.toNativeUtf8();
+    final outLen = calloc<IntPtr>();
+    try {
+      final buf = fn(rootPtr, postorder, outLen);
+      if (buf == nullptr) return null;
+      final len = outLen.value;
+      final copy = Uint8List.fromList(buf.asTypedList(len));
+      free(buf, len);
+      return copy;
+    } catch (_) {
+      return null;
+    } finally {
+      calloc.free(rootPtr);
+      calloc.free(outLen);
+    }
+  }
+
+  static List<String> _candidatePaths() {
+    final exeDir = p.dirname(Platform.resolvedExecutable);
+    final lib = Platform.isWindows
+        ? 'waydir_core.dll'
+        : Platform.isMacOS
+        ? 'libwaydir_core.dylib'
+        : 'libwaydir_core.so';
+    final devTarget = p.join(
+      Directory.current.path,
+      'rust',
+      'waydir_core',
+      'target',
+      'release',
+      lib,
+    );
+    return [
+      p.join(exeDir, 'lib', lib),
+      p.join(exeDir, lib),
+      if (Platform.isMacOS)
+        p.normalize(p.join(exeDir, '..', 'Frameworks', lib)),
+      devTarget,
+      lib,
+    ];
+  }
+}

@@ -112,6 +112,16 @@ if(EXISTS "${LIBARCHIVE_BUNDLE_DIR}")
   endforeach(libarchive_library)
 endif()
 
+set(WAYDIR_CORE_BUNDLE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../third_party/waydir_core/linux")
+if(EXISTS "${WAYDIR_CORE_BUNDLE_DIR}")
+  file(GLOB WAYDIR_CORE_BUNDLED_LIBRARIES "${WAYDIR_CORE_BUNDLE_DIR}/*.so")
+  foreach(waydir_core_library ${WAYDIR_CORE_BUNDLED_LIBRARIES})
+    install(FILES "${waydir_core_library}"
+      DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+      COMPONENT Runtime)
+  endforeach(waydir_core_library)
+endif()
+
 foreach(bundled_library ${PLUGIN_BUNDLED_LIBRARIES})
   install(FILES "${bundled_library}"
     DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"

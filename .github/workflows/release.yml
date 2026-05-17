@@ -29,6 +29,12 @@ jobs:
       - name: Vendor libarchive
         run: scripts/vendor_libarchive_linux.sh
 
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build and vendor waydir_core
+        run: scripts/build_waydir_core.sh
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -90,6 +96,13 @@ jobs:
         shell: pwsh
         run: scripts\vendor_libarchive_windows.ps1
 
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build and vendor waydir_core
+        shell: pwsh
+        run: scripts\build_waydir_core_windows.ps1
+
       - name: Install Inno Setup
         run: choco install innosetup -y --no-progress
 
@@ -131,6 +144,12 @@ jobs:
 
       - name: Vendor libarchive
         run: scripts/vendor_libarchive_macos.sh
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build and vendor waydir_core
+        run: scripts/build_waydir_core.sh
 
       - name: Install fastforge
         run: dart pub global activate fastforge
