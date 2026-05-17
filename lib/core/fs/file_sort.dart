@@ -27,8 +27,7 @@ List<FileEntry> sortEntries(
   required bool foldersFirst,
 }) {
   final out = List<FileEntry>.of(entries);
-  int byName(FileEntry a, FileEntry b) =>
-      a.name.toLowerCase().compareTo(b.name.toLowerCase());
+  int byName(FileEntry a, FileEntry b) => a.nameLower.compareTo(b.nameLower);
 
   out.sort((a, b) {
     if (foldersFirst && a.type != b.type) {

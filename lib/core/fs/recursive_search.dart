@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:io';
 import 'dart:isolate';
 import '../models/file_entry.dart';
@@ -153,8 +154,9 @@ class RecursiveSearch {
     final queryLower = query.toLowerCase();
     final buffer = <FileEntry>[];
     int scannedDirs = 0;
-    var lastFlush = DateTime.now();
-    var lastProgress = DateTime.now().subtract(const Duration(seconds: 1));
+    final clock = Stopwatch()..start();
+    var lastFlushMs = 0;
+    var lastProgressMs = -1000;
     const batchSize = 200;
     const flushIntervalMs = 200;
     const progressIntervalMs = 150;
@@ -164,24 +166,22 @@ class RecursiveSearch {
       if (buffer.isEmpty) return;
       mainPort.send(_BatchMsg(List.of(buffer)));
       buffer.clear();
-      lastFlush = DateTime.now();
+      lastFlushMs = clock.elapsedMilliseconds;
     }
 
     void maybeFlush() {
-      final now = DateTime.now();
       if (buffer.length >= batchSize ||
-          now.difference(lastFlush).inMilliseconds >= flushIntervalMs) {
+          clock.elapsedMilliseconds - lastFlushMs >= flushIntervalMs) {
         flush();
       }
     }
 
     void sendProgress(String? dir, {bool force = false}) {
-      final now = DateTime.now();
-      if (!force &&
-          now.difference(lastProgress).inMilliseconds < progressIntervalMs) {
+      final nowMs = clock.elapsedMilliseconds;
+      if (!force && nowMs - lastProgressMs < progressIntervalMs) {
         return;
       }
-      lastProgress = now;
+      lastProgressMs = nowMs;
       mainPort.send(_ProgressMsg(scannedDirs, dir));
     }
 
@@ -195,12 +195,12 @@ class RecursiveSearch {
       );
     }
 
-    final queue = <String>[root];
+    final queue = Queue<String>()..add(root);
 
     while (queue.isNotEmpty) {
       if (isCancelled()) break;
 
-      final dirPath = queue.removeAt(0);
+      final dirPath = queue.removeFirst();
       sendProgress(dirPath);
 
       List<FileSystemEntity> entities;

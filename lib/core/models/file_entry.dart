@@ -18,13 +18,15 @@ class FileEntry {
   final int size;
   final DateTime modified;
 
+  late final String nameLower = name.toLowerCase();
+
   /// Real on-disk path, used when [path] is a virtual location (e.g. an item
   /// shown inside the trash). Falls back to [path] for ordinary entries.
   final String? _realPath;
 
   String get realPath => _realPath ?? path;
 
-  const FileEntry({
+  FileEntry({
     required this.name,
     required this.path,
     required this.type,

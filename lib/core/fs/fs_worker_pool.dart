@@ -288,7 +288,7 @@ class FsWorkerPool {
           if (a.type != b.type) {
             return a.type == FileItemType.folder ? -1 : 1;
           }
-          return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+          return a.nameLower.compareTo(b.nameLower);
         });
         return entries;
       case _Op.archiveExtract:
@@ -317,12 +317,7 @@ class FsWorkerPool {
     try {
       for (final e in dir.listSync(followLinks: false)) {
         try {
-          FileStat stat;
-          try {
-            stat = e.statSync();
-          } catch (_) {
-            stat = FileStat.statSync(e.path);
-          }
+          final stat = FileStat.statSync(e.path);
           final isDir =
               e is Directory ||
               (e is Link && stat.type == FileSystemEntityType.directory);
@@ -344,7 +339,7 @@ class FsWorkerPool {
 
     entries.sort((a, b) {
       if (a.type != b.type) return a.type == FileItemType.folder ? -1 : 1;
-      return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+      return a.nameLower.compareTo(b.nameLower);
     });
 
     return entries;
