@@ -6,8 +6,7 @@ import 'package:waydir/core/fs/waydir_core_loader.dart';
 
 void main() {
   test('native list returns sorted entries with size and mtime', () {
-    final lib = WaydirCoreLoader.load();
-    if (lib == null) return; // native helper absent: skip.
+    expect(WaydirCoreLoader.load(), isNotNull);
 
     final root = Directory.systemTemp.createTempSync('waydir_list_test');
     try {
@@ -34,7 +33,7 @@ void main() {
   });
 
   test('native list returns null for a missing directory', () {
-    if (WaydirCoreLoader.load() == null) return;
+    expect(WaydirCoreLoader.load(), isNotNull);
     final missing =
         '${Directory.systemTemp.path}/waydir_does_not_exist_zzz_123';
     expect(WaydirCoreLoader.listDir(missing), isNull);

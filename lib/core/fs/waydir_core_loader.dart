@@ -36,9 +36,20 @@ typedef _FreeDart = void Function(Pointer<Uint8>, int);
 typedef _AbiNative = Uint32 Function();
 typedef _AbiDart = int Function();
 
-/// Loads the optional `waydir_core` native helper (Rust). Mirrors the
-/// libarchive loader: best-effort, cached, never throws. When unavailable
-/// the caller falls back to the pure-Dart implementation.
+/// Thrown when the required `waydir_core` native library cannot be loaded.
+/// `waydir_core` is a hard dependency: directory listing, recursive search
+/// and delete enumeration run exclusively in Rust — there is no Dart
+/// fallback. A missing library is a deployment error, not a soft condition.
+class WaydirCoreException implements Exception {
+  final String message;
+  const WaydirCoreException(this.message);
+  @override
+  String toString() => 'WaydirCoreException: $message';
+}
+
+/// Loads the required `waydir_core` native helper (Rust). Cached.
+/// [requireLib] throws [WaydirCoreException] if it is absent so callers
+/// fail loudly instead of silently degrading.
 class WaydirCoreLoader {
   WaydirCoreLoader._();
 
@@ -60,11 +71,21 @@ class WaydirCoreLoader {
     return null;
   }
 
-  /// Runs the native recursive search. Returns a FileEntryCodec buffer or
-  /// null if the library is missing or the call failed.
-  static Uint8List? search(String root, String query, bool includeHidden) {
+  static DynamicLibrary requireLib() {
     final lib = load();
-    if (lib == null) return null;
+    if (lib == null) {
+      throw WaydirCoreException(
+        'native waydir_core not found; searched: '
+        '${_candidatePaths().join(", ")}',
+      );
+    }
+    return lib;
+  }
+
+  /// Runs the native recursive search. Returns a FileEntryCodec buffer.
+  /// Throws [WaydirCoreException] if the library is missing.
+  static Uint8List? search(String root, String query, bool includeHidden) {
+    final lib = requireLib();
     final search = lib.lookupFunction<_SearchNative, _SearchDart>(
       'waydir_search',
     );
@@ -91,8 +112,7 @@ class WaydirCoreLoader {
   /// Native single-directory listing. Returns a FileEntryCodec buffer or
   /// null if unavailable / failed (e.g. unreadable directory).
   static Uint8List? listDir(String path, {bool withStat = true}) {
-    final lib = load();
-    if (lib == null) return null;
+    final lib = requireLib();
     final list = lib.lookupFunction<_ListNative, _ListDart>('waydir_list');
     final free = lib.lookupFunction<_FreeNative, _FreeDart>('waydir_free');
     final pathPtr = path.toNativeUtf8();
@@ -115,8 +135,7 @@ class WaydirCoreLoader {
   /// Recursive enumeration for delete pre-scans. [postorder] yields
   /// deepest-first ordering. Returns a FileEntryCodec buffer or null.
   static Uint8List? enumerate(String root, {bool postorder = true}) {
-    final lib = load();
-    if (lib == null) return null;
+    final lib = requireLib();
     final fn = lib.lookupFunction<_EnumNative, _EnumDart>('waydir_enumerate');
     final free = lib.lookupFunction<_FreeNative, _FreeDart>('waydir_free');
     final rootPtr = root.toNativeUtf8();

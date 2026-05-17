@@ -1,7 +1,6 @@
 import 'dart:async';
-import 'dart:collection';
-import 'dart:io';
 import 'dart:isolate';
+import 'dart:typed_data';
 import '../models/file_entry.dart';
 import 'waydir_core_loader.dart';
 
@@ -20,6 +19,11 @@ class _DoneMsg {
   const _DoneMsg();
 }
 
+class _ErrorMsg {
+  final String message;
+  const _ErrorMsg(this.message);
+}
+
 class _StartMsg {
   final String root;
   final String query;
@@ -30,18 +34,6 @@ class _StartMsg {
 class _CancelMsg {
   const _CancelMsg();
 }
-
-const _excludedDirs = {
-  '.git',
-  'node_modules',
-  '.cache',
-  '.venv',
-  '__pycache__',
-  'target',
-  'build',
-  '.gradle',
-  '.idea',
-};
 
 class SearchHandle {
   SendPort? _commandPort;
@@ -90,6 +82,13 @@ class RecursiveSearch {
         onBatch(msg.entries);
       } else if (msg is _ProgressMsg) {
         onProgress(msg.dirs, msg.currentDir);
+      } else if (msg is _ErrorMsg) {
+        if (!handle._done) {
+          handle._done = true;
+          onError(StateError(msg.message));
+        }
+        receivePort.close();
+        isolate?.kill(priority: Isolate.immediate);
       } else if (msg is _DoneMsg) {
         if (!handle._done) {
           handle._done = true;
@@ -145,6 +144,9 @@ class RecursiveSearch {
     });
   }
 
+  // Recursive search runs exclusively in the native (Rust) parallel walker.
+  // There is no Dart fallback by design; a missing native library is a
+  // hard error surfaced to the caller.
   static Future<void> _runSearchAsync(
     SendPort mainPort,
     String root,
@@ -152,119 +154,35 @@ class RecursiveSearch {
     bool includeHidden,
     bool Function() isCancelled,
   ) async {
-    final queryLower = query.toLowerCase();
-    final buffer = <FileEntry>[];
-    int scannedDirs = 0;
-    final clock = Stopwatch()..start();
-    var lastFlushMs = 0;
-    var lastProgressMs = -1000;
     const batchSize = 200;
-    const flushIntervalMs = 200;
-    const progressIntervalMs = 150;
-
-    void flush() {
-      if (buffer.isEmpty) return;
-      mainPort.send(_BatchMsg(List.of(buffer)));
-      buffer.clear();
-      lastFlushMs = clock.elapsedMilliseconds;
+    if (isCancelled()) {
+      mainPort.send(const _DoneMsg());
+      return;
     }
 
-    void maybeFlush() {
-      if (buffer.length >= batchSize ||
-          clock.elapsedMilliseconds - lastFlushMs >= flushIntervalMs) {
-        flush();
-      }
+    final Uint8List? blob;
+    try {
+      blob = WaydirCoreLoader.search(root, query, includeHidden);
+    } catch (e) {
+      mainPort.send(_ErrorMsg(e.toString()));
+      return;
     }
 
-    void sendProgress(String? dir, {bool force = false}) {
-      final nowMs = clock.elapsedMilliseconds;
-      if (!force && nowMs - lastProgressMs < progressIntervalMs) {
-        return;
-      }
-      lastProgressMs = nowMs;
-      mainPort.send(_ProgressMsg(scannedDirs, dir));
+    if (blob == null) {
+      // Native returned null: unreadable / invalid root. Treat as empty.
+      mainPort.send(_ProgressMsg(0, null));
+      mainPort.send(const _DoneMsg());
+      return;
     }
 
-    // Fast path: the native (Rust) parallel walker. Returns all matches in
-    // one buffer; we chunk it back into the same batch protocol the UI
-    // already consumes. Falls back to the Dart walker on any failure.
-    if (!isCancelled()) {
-      final blob = WaydirCoreLoader.search(root, query, includeHidden);
-      if (blob != null) {
-        final all = FileEntryCodec.decode(blob);
-        for (var i = 0; i < all.length; i += batchSize) {
-          if (isCancelled()) break;
-          final end = (i + batchSize < all.length) ? i + batchSize : all.length;
-          mainPort.send(_BatchMsg(all.sublist(i, end)));
-          await Future.delayed(Duration.zero);
-        }
-        sendProgress(null, force: true);
-        mainPort.send(const _DoneMsg());
-        return;
-      }
-    }
-
-    FileEntry makeEntry(FileSystemEntity entity, String name, bool isDir) {
-      return FileEntry.raw(
-        name: name,
-        path: entity.path,
-        type: isDir ? FileItemType.folder : FileItemType.file,
-        size: 0,
-        modifiedMs: 0,
-      );
-    }
-
-    final queue = Queue<String>()..add(root);
-
-    while (queue.isNotEmpty) {
+    final all = FileEntryCodec.decode(blob);
+    for (var i = 0; i < all.length; i += batchSize) {
       if (isCancelled()) break;
-
-      final dirPath = queue.removeFirst();
-      sendProgress(dirPath);
-
-      List<FileSystemEntity> entities;
-      try {
-        entities = Directory(dirPath).listSync(followLinks: false);
-      } catch (_) {
-        scannedDirs++;
-        continue;
-      }
-
-      for (final entity in entities) {
-        if (isCancelled()) break;
-
-        final name = entity.path.split(Platform.pathSeparator).last;
-        final isHidden = name.startsWith('.');
-        final isDir = entity is Directory;
-
-        if (!includeHidden && isHidden) continue;
-
-        if (isDir) {
-          if (_excludedDirs.contains(name)) {
-            if (name.toLowerCase().contains(queryLower)) {
-              buffer.add(makeEntry(entity, name, true));
-              maybeFlush();
-            }
-            continue;
-          }
-          queue.add(entity.path);
-        }
-
-        if (name.toLowerCase().contains(queryLower)) {
-          buffer.add(makeEntry(entity, name, isDir));
-          maybeFlush();
-        }
-      }
-
-      scannedDirs++;
-      sendProgress(null);
-      maybeFlush();
-
+      final end = (i + batchSize < all.length) ? i + batchSize : all.length;
+      mainPort.send(_BatchMsg(all.sublist(i, end)));
       await Future.delayed(Duration.zero);
     }
-
-    flush();
-    sendProgress(null, force: true);
+    mainPort.send(_ProgressMsg(0, null));
     mainPort.send(const _DoneMsg());
   }
 }

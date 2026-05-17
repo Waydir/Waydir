@@ -49,17 +49,22 @@ Requirements:
 
 - Flutter 3.35+
 - Dart 3.10+
+- Rust (stable) — `waydir_core` is a hard dependency: directory listing,
+  recursive search and delete enumeration run exclusively in native Rust,
+  there is no Dart fallback.
 
 ```bash
 git clone https://github.com/mikolajbadyl/waydir.git
 cd waydir
 flutter pub get
+scripts/build_waydir_core.sh   # required before run/test
 flutter run -d linux
 ```
 
 Run checks before opening a PR:
 
 ```bash
+scripts/build_waydir_core.sh
 dart format .
 flutter analyze
 flutter test

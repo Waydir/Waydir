@@ -5,7 +5,6 @@ import 'dart:typed_data';
 import '../archive/archive_reader.dart';
 import '../archive/archive_service.dart';
 import '../models/file_entry.dart';
-import '../platform/platform_paths.dart';
 import 'waydir_core_loader.dart';
 
 enum _Op {
@@ -261,18 +260,15 @@ class FsWorkerPool {
     switch (op) {
       case _Op.list:
         final path = args[0] as String;
+        // Directory listing is native-only (Rust). No Dart fallback.
         final native = WaydirCoreLoader.listDir(path);
-        if (native != null) {
-          if (FileEntryCodec.countOf(native) >= FileEntryCodec.threshold) {
-            return native;
-          }
-          return FileEntryCodec.decode(native);
+        if (native == null) {
+          throw FileSystemException('Directory not readable', path);
         }
-        final listed = _listDirectory(path);
-        if (listed.length >= FileEntryCodec.threshold) {
-          return FileEntryCodec.encode(listed);
+        if (FileEntryCodec.countOf(native) >= FileEntryCodec.threshold) {
+          return native;
         }
-        return listed;
+        return FileEntryCodec.decode(native);
       case _Op.exists:
         return Directory(args[0] as String).existsSync();
       case _Op.isDir:
@@ -332,43 +328,5 @@ class FsWorkerPool {
           args[2] as String,
         );
     }
-  }
-
-  static List<FileEntry> _listDirectory(String path) {
-    final dir = Directory(path);
-    if (!dir.existsSync()) {
-      throw FileSystemException('Directory not found', path);
-    }
-
-    final entries = <FileEntry>[];
-    try {
-      for (final e in dir.listSync(followLinks: false)) {
-        try {
-          final stat = FileStat.statSync(e.path);
-          final isDir =
-              e is Directory ||
-              (e is Link && stat.type == FileSystemEntityType.directory);
-          entries.add(
-            FileEntry.raw(
-              name: PlatformPaths.fileName(e.path),
-              path: e.path,
-              type: isDir ? FileItemType.folder : FileItemType.file,
-              size: stat.size,
-              modifiedMs: stat.modified.millisecondsSinceEpoch,
-            ),
-          );
-        } catch (_) {}
-      }
-    } catch (e) {
-      if (e is FileSystemException) rethrow;
-      throw FileSystemException(e.toString(), path);
-    }
-
-    entries.sort((a, b) {
-      if (a.type != b.type) return a.type == FileItemType.folder ? -1 : 1;
-      return a.nameLower.compareTo(b.nameLower);
-    });
-
-    return entries;
   }
 }

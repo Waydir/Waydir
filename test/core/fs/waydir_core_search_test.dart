@@ -6,11 +6,13 @@ import 'package:waydir/core/fs/waydir_core_loader.dart';
 
 void main() {
   test('native search finds matching names recursively', () {
-    final lib = WaydirCoreLoader.load();
-    if (lib == null) {
-      // Native helper not built in this environment; skipped.
-      return;
-    }
+    expect(
+      WaydirCoreLoader.load(),
+      isNotNull,
+      reason:
+          'waydir_core is a hard dependency; build it via '
+          'scripts/build_waydir_core.sh',
+    );
 
     final root = Directory.systemTemp.createTempSync('waydir_core_test');
     try {

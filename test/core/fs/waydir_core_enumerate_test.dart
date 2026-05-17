@@ -6,7 +6,7 @@ import 'package:waydir/core/fs/waydir_core_loader.dart';
 
 void main() {
   test('native enumerate returns full tree, deepest-first', () {
-    if (WaydirCoreLoader.load() == null) return; // skip if absent.
+    expect(WaydirCoreLoader.load(), isNotNull);
 
     final root = Directory.systemTemp.createTempSync('waydir_enum_test');
     try {

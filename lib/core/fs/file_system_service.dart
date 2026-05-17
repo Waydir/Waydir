@@ -856,32 +856,6 @@ class FileSystemService {
     }
 
     void scanForDelete(List<String> sources) {
-      final visited = <String>{};
-      void walk(String dirPath) {
-        final resolved = _resolveCanonical(dirPath);
-        if (!visited.add(resolved)) return;
-        try {
-          for (final entity in Directory(
-            dirPath,
-          ).listSync(followLinks: false)) {
-            final entType = FileSystemEntity.typeSync(
-              entity.path,
-              followLinks: false,
-            );
-            if (entType == FileSystemEntityType.directory) {
-              walk(entity.path);
-            }
-            allPaths.add(entity.path);
-            totalFiles++;
-          }
-        } catch (e) {
-          errors.add(TaskError(path: dirPath, message: _friendlyError(e)));
-          mainSendPort.send(
-            ErrorMessage(path: dirPath, message: _friendlyError(e)),
-          );
-        }
-      }
-
       for (final src in sources) {
         final type = FileSystemEntity.typeSync(src, followLinks: false);
         if (type == FileSystemEntityType.notFound) {
@@ -890,14 +864,25 @@ class FileSystemService {
             ErrorMessage(path: src, message: t.errors.notFound),
           );
         } else if (type == FileSystemEntityType.directory) {
+          // Tree enumeration is native-only (Rust). No Dart fallback.
           final native = WaydirCoreLoader.enumerate(src, postorder: false);
-          if (native != null) {
-            for (final e in FileEntryCodec.decode(native)) {
-              allPaths.add(e.path);
-              totalFiles++;
-            }
-          } else {
-            walk(src);
+          if (native == null) {
+            errors.add(
+              TaskError(
+                path: src,
+                message: _friendlyError(
+                  FileSystemException('Directory not readable', src),
+                ),
+              ),
+            );
+            mainSendPort.send(
+              ErrorMessage(path: src, message: t.errors.notFound),
+            );
+            continue;
+          }
+          for (final e in FileEntryCodec.decode(native)) {
+            allPaths.add(e.path);
+            totalFiles++;
           }
           allPaths.add(src);
           totalFiles++;
