@@ -115,6 +115,14 @@ class FileEntryCodec {
     return b.toBytes();
   }
 
+  static int countOf(Uint8List bytes) {
+    final view = ByteData.sublistView(bytes);
+    if (view.getUint32(0) != _magic) {
+      throw const FormatException('bad FileEntry blob');
+    }
+    return view.getUint32(4);
+  }
+
   static List<FileEntry> decode(Uint8List bytes) {
     final view = ByteData.sublistView(bytes);
     if (view.getUint32(0) != _magic) {

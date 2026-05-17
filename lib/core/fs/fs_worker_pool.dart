@@ -6,6 +6,7 @@ import '../archive/archive_reader.dart';
 import '../archive/archive_service.dart';
 import '../models/file_entry.dart';
 import '../platform/platform_paths.dart';
+import 'waydir_core_loader.dart';
 
 enum _Op {
   list,
@@ -259,7 +260,15 @@ class FsWorkerPool {
   static dynamic _execute(_Op op, List<dynamic> args) {
     switch (op) {
       case _Op.list:
-        final listed = _listDirectory(args[0] as String);
+        final path = args[0] as String;
+        final native = WaydirCoreLoader.listDir(path);
+        if (native != null) {
+          if (FileEntryCodec.countOf(native) >= FileEntryCodec.threshold) {
+            return native;
+          }
+          return FileEntryCodec.decode(native);
+        }
+        final listed = _listDirectory(path);
         if (listed.length >= FileEntryCodec.threshold) {
           return FileEntryCodec.encode(listed);
         }

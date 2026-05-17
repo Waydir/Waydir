@@ -20,6 +20,11 @@ typedef _SearchDart =
       Pointer<IntPtr>,
     );
 
+typedef _ListNative =
+    Pointer<Uint8> Function(Pointer<Utf8>, Bool, Pointer<IntPtr>);
+typedef _ListDart =
+    Pointer<Uint8> Function(Pointer<Utf8>, bool, Pointer<IntPtr>);
+
 typedef _FreeNative = Void Function(Pointer<Uint8>, IntPtr);
 typedef _FreeDart = void Function(Pointer<Uint8>, int);
 
@@ -41,9 +46,8 @@ class WaydirCoreLoader {
     for (final path in _candidatePaths()) {
       try {
         final lib = DynamicLibrary.open(path);
-        final abi = lib
-            .lookupFunction<_AbiNative, _AbiDart>('waydir_core_abi');
-        if (abi() != 1) continue;
+        final abi = lib.lookupFunction<_AbiNative, _AbiDart>('waydir_core_abi');
+        if (abi() < 1) continue;
         _cached = lib;
         return lib;
       } catch (_) {}
@@ -75,6 +79,30 @@ class WaydirCoreLoader {
     } finally {
       calloc.free(rootPtr);
       calloc.free(queryPtr);
+      calloc.free(outLen);
+    }
+  }
+
+  /// Native single-directory listing. Returns a FileEntryCodec buffer or
+  /// null if unavailable / failed (e.g. unreadable directory).
+  static Uint8List? listDir(String path, {bool withStat = true}) {
+    final lib = load();
+    if (lib == null) return null;
+    final list = lib.lookupFunction<_ListNative, _ListDart>('waydir_list');
+    final free = lib.lookupFunction<_FreeNative, _FreeDart>('waydir_free');
+    final pathPtr = path.toNativeUtf8();
+    final outLen = calloc<IntPtr>();
+    try {
+      final buf = list(pathPtr, withStat, outLen);
+      if (buf == nullptr) return null;
+      final len = outLen.value;
+      final copy = Uint8List.fromList(buf.asTypedList(len));
+      free(buf, len);
+      return copy;
+    } catch (_) {
+      return null;
+    } finally {
+      calloc.free(pathPtr);
       calloc.free(outLen);
     }
   }

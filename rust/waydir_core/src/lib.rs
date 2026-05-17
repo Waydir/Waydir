@@ -38,8 +38,11 @@ const EXCLUDED: &[&str] = &[
 
 struct Entry {
     is_dir: bool,
+    size: i64,
+    mtime_ms: i64,
     name: Vec<u8>,
     path: Vec<u8>,
+    disk_path: std::path::PathBuf,
 }
 
 fn put_u32(buf: &mut Vec<u8>, v: u32) {
@@ -56,8 +59,8 @@ fn serialise(entries: &[Entry]) -> Vec<u8> {
     put_u32(&mut buf, entries.len() as u32);
     for e in entries {
         buf.push(if e.is_dir { 0 } else { 1 });
-        put_i64(&mut buf, 0); // size: parity with the Dart walker
-        put_i64(&mut buf, 0); // modifiedMs: parity with the Dart walker
+        put_i64(&mut buf, e.size);
+        put_i64(&mut buf, e.mtime_ms);
         put_u32(&mut buf, e.name.len() as u32);
         put_u32(&mut buf, e.path.len() as u32);
         buf.extend_from_slice(&e.name);
@@ -134,8 +137,11 @@ pub unsafe extern "C" fn waydir_search(
             if name_lossy.contains(query.as_str()) {
                 let entry = Entry {
                     is_dir,
+                    size: 0,
+                    mtime_ms: 0,
                     name: os_bytes(os_name),
                     path: os_bytes(dirent.path().as_os_str()),
+                    disk_path: std::path::PathBuf::new(),
                 };
                 collected.lock().unwrap().push(entry);
             }
@@ -164,9 +170,111 @@ pub unsafe extern "C" fn waydir_free(ptr: *mut u8, len: usize) {
     drop(Vec::from_raw_parts(ptr, len, len));
 }
 
+fn mtime_ms(meta: &std::fs::Metadata) -> i64 {
+    match meta.modified() {
+        Ok(t) => match t.duration_since(std::time::UNIX_EPOCH) {
+            Ok(d) => d.as_millis() as i64,
+            Err(e) => -(e.duration().as_millis() as i64),
+        },
+        Err(_) => 0,
+    }
+}
+
+/// Lists a single directory (non-recursive). `with_stat` controls whether
+/// size/mtime are resolved (a parallel stat pass) or left zero for a
+/// name-only fast path. Output is sorted folders-first then case-insensitive
+/// by name, matching the Dart lister. Same buffer contract as
+/// `waydir_search`.
+///
+/// # Safety
+/// `path` must be a valid NUL-terminated C string; `out_len` writable.
+#[no_mangle]
+pub unsafe extern "C" fn waydir_list(
+    path: *const c_char,
+    with_stat: bool,
+    out_len: *mut usize,
+) -> *mut u8 {
+    if path.is_null() || out_len.is_null() {
+        return std::ptr::null_mut();
+    }
+    let dir = match CStr::from_ptr(path).to_str() {
+        Ok(s) => s.to_owned(),
+        Err(_) => return std::ptr::null_mut(),
+    };
+
+    let rd = match std::fs::read_dir(&dir) {
+        Ok(r) => r,
+        Err(_) => return std::ptr::null_mut(),
+    };
+
+    let mut entries: Vec<Entry> = Vec::new();
+    for de in rd.flatten() {
+        let ft = de.file_type();
+        let is_dir = match &ft {
+            Ok(t) if t.is_symlink() => std::fs::metadata(de.path())
+                .map(|m| m.is_dir())
+                .unwrap_or(false),
+            Ok(t) => t.is_dir(),
+            Err(_) => false,
+        };
+        let dp = de.path();
+        entries.push(Entry {
+            is_dir,
+            size: 0,
+            mtime_ms: 0,
+            name: os_bytes(de.file_name().as_os_str()),
+            path: os_bytes(dp.as_os_str()),
+            disk_path: dp,
+        });
+    }
+
+    if with_stat {
+        let threads = num_cpus().min(entries.len().max(1));
+        if threads > 1 {
+            let chunk = entries.len().div_ceil(threads);
+            std::thread::scope(|s| {
+                for part in entries.chunks_mut(chunk) {
+                    s.spawn(|| {
+                        for e in part.iter_mut() {
+                            fill_stat(e);
+                        }
+                    });
+                }
+            });
+        } else {
+            for e in entries.iter_mut() {
+                fill_stat(e);
+            }
+        }
+    }
+
+    entries.sort_by(|a, b| match (a.is_dir, b.is_dir) {
+        (true, false) => std::cmp::Ordering::Less,
+        (false, true) => std::cmp::Ordering::Greater,
+        _ => {
+            let an = String::from_utf8_lossy(&a.name).to_lowercase();
+            let bn = String::from_utf8_lossy(&b.name).to_lowercase();
+            an.cmp(&bn)
+        }
+    });
+
+    let mut bytes = serialise(&entries).into_boxed_slice();
+    *out_len = bytes.len();
+    let ptr = bytes.as_mut_ptr();
+    std::mem::forget(bytes);
+    ptr
+}
+
+fn fill_stat(e: &mut Entry) {
+    if let Ok(meta) = std::fs::metadata(&e.disk_path) {
+        e.size = meta.len() as i64;
+        e.mtime_ms = mtime_ms(&meta);
+    }
+}
+
 #[no_mangle]
 pub extern "C" fn waydir_core_abi() -> u32 {
-    1
+    2
 }
 
 fn num_cpus() -> usize {
