@@ -13,6 +13,12 @@ class AppearancePane extends StatelessWidget {
     return SettingsPaneScaffold(
       children: [
         SettingsSection(
+          title: t.preferences.appearance.themeSection,
+          children: [
+            RegistrySettingRow(setting: registry.byId('appearance.themeMode')),
+          ],
+        ),
+        SettingsSection(
           title: t.preferences.appearance.filesSection,
           children: [
             RegistrySettingRow(

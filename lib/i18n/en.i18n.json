@@ -113,6 +113,12 @@
     "appearance": {
       "title": "Appearance",
       "subtitle": "Defaults for how files and the sidebar are displayed.",
+      "themeSection": "Theme",
+      "themeMode": "Appearance",
+      "themeModeHint": "Match the system, or force a light or dark theme.",
+      "themeModeSystem": "System",
+      "themeModeLight": "Light",
+      "themeModeDark": "Dark",
       "filesSection": "Files",
       "showHidden": "Show hidden files by default",
       "showHiddenHint": "Applies to new tabs. Existing tabs keep their setting.",
