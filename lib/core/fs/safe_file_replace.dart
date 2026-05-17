@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:ffi/ffi.dart';
 import 'package:win32/win32.dart';
 
+import 'native_copy.dart';
+
 typedef _ChmodNative = Int32 Function(Pointer<Utf8>, Uint32);
 typedef _ChmodDart = int Function(Pointer<Utf8>, int);
 
@@ -86,6 +88,8 @@ class SafeFileReplace {
   }
 
   static void _copyToPath(File source, String destinationPath) {
+    if (NativeCopy.tryFastCopy(source.path, destinationPath)) return;
+
     const chunkSize = 1024 * 1024;
     final input = source.openSync(mode: FileMode.read);
     final output = File(destinationPath).openSync(mode: FileMode.write);
