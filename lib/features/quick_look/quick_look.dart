@@ -53,10 +53,16 @@ class _QuickLook extends StatefulWidget {
 class _QuickLookState extends State<_QuickLook> {
   final _focus = FocusNode();
   final _editorActive = ValueNotifier<bool>(false);
+  bool _compact = true;
+  bool _showInfo = true;
+  String? _presentationKey;
 
   @override
   void initState() {
     super.initState();
+    final entry = widget.store.cursorEntry.value;
+    _compact = _defaultCompact(entry);
+    _presentationKey = entry?.realPath;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _focus.requestFocus();
     });
@@ -92,17 +98,44 @@ class _QuickLookState extends State<_QuickLook> {
     return KeyEventResult.ignored;
   }
 
+  static bool _defaultCompact(FileEntry? entry) {
+    return entry == null || entry.type == FileItemType.folder;
+  }
+
+  void _setCompact(bool value) {
+    if (_compact == value) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _compact == value) return;
+      setState(() => _compact = value);
+    });
+  }
+
+  void _syncPresentation(FileEntry? entry) {
+    final key = entry?.realPath;
+    if (_presentationKey == key) return;
+    _presentationKey = key;
+    _setCompact(_defaultCompact(entry));
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final width = _compact
+        ? (size.width * 0.36).clamp(360.0, 540.0)
+        : (size.width * 0.78).clamp(480.0, 1280.0);
+    final height = _compact
+        ? (size.height * 0.56).clamp(300.0, 560.0)
+        : (size.height * 0.82).clamp(360.0, 980.0);
     return Focus(
       onKeyEvent: _handleKey,
       child: Center(
         child: Material(
           color: Colors.transparent,
-          child: Container(
-            width: (size.width * 0.78).clamp(480.0, 1280.0),
-            height: (size.height * 0.82).clamp(360.0, 980.0),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 130),
+            curve: Curves.easeOut,
+            width: width,
+            height: height,
             decoration: BoxDecoration(
               color: AppColors.bgSurface,
               border: Border.all(color: AppColors.borderColor),
@@ -116,15 +149,24 @@ class _QuickLookState extends State<_QuickLook> {
             ),
             child: Watch((_) {
               final entry = widget.store.cursorEntry.value;
+              _syncPresentation(entry);
               return Column(
                 children: [
                   _Header(
                     entry: entry,
+                    compact: _compact,
+                    showInfo: _showInfo,
+                    onToggleInfo: () => setState(() => _showInfo = !_showInfo),
                     onClose: () => Navigator.of(context).pop(),
                   ),
                   Container(height: 1, color: AppColors.bgDivider),
                   Expanded(
-                    child: _Body(entry: entry, editorActive: _editorActive),
+                    child: _Body(
+                      entry: entry,
+                      editorActive: _editorActive,
+                      showInfo: _showInfo,
+                      onCompactChanged: _setCompact,
+                    ),
                   ),
                 ],
               );
@@ -138,14 +180,24 @@ class _QuickLookState extends State<_QuickLook> {
 
 class _Header extends StatelessWidget {
   final FileEntry? entry;
+  final bool compact;
+  final bool showInfo;
+  final VoidCallback onToggleInfo;
   final VoidCallback onClose;
 
-  const _Header({required this.entry, required this.onClose});
+  const _Header({
+    required this.entry,
+    required this.compact,
+    required this.showInfo,
+    required this.onToggleInfo,
+    required this.onClose,
+  });
 
   @override
   Widget build(BuildContext context) {
     final e = entry;
     final name = e?.name ?? t.quickLook.noSelection;
+    final hasPreview = e != null && !compact;
     return Container(
       height: 46,
       color: AppColors.bgSidebar,
@@ -174,8 +226,75 @@ class _Header extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
+          if (hasPreview) ...[
+            _HeaderButton(
+              icon: PhosphorIconsRegular.info,
+              active: showInfo,
+              tooltip: 'Properties',
+              onTap: onToggleInfo,
+            ),
+            const SizedBox(width: 4),
+          ],
           _CloseButton(onTap: onClose),
         ],
+      ),
+    );
+  }
+}
+
+class _HeaderButton extends StatefulWidget {
+  final IconData icon;
+  final bool active;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  const _HeaderButton({
+    required this.icon,
+    required this.active,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  @override
+  State<_HeaderButton> createState() => _HeaderButtonState();
+}
+
+class _HeaderButtonState extends State<_HeaderButton> {
+  bool _hover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final active = widget.active;
+    final bg = active
+        ? AppColors.accent.withValues(alpha: 0.16)
+        : _hover
+        ? AppColors.bgHover
+        : Colors.transparent;
+    final fg = active
+        ? AppColors.accent
+        : _hover
+        ? AppColors.fg
+        : AppColors.fgMuted;
+    return Tooltip(
+      message: widget.tooltip,
+      waitDuration: const Duration(milliseconds: 450),
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hover = true),
+        onExit: (_) => setState(() => _hover = false),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: widget.onTap,
+          child: Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: bg,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: PhosphorIcon(widget.icon, size: 16, color: fg),
+          ),
+        ),
       ),
     );
   }
@@ -220,13 +339,17 @@ class _CloseButtonState extends State<_CloseButton> {
   }
 }
 
-Widget _split(Widget preview, FileEntry entry) {
+Widget _split(Widget preview, FileEntry entry, {required bool showInfo}) {
+  if (!showInfo) return preview;
   return Row(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       Expanded(child: preview),
       Container(width: 1, color: AppColors.bgDivider),
-      SizedBox(width: panelWidth, child: InfoPanel(entry: entry)),
+      SizedBox(
+        width: panelWidth,
+        child: InfoPanel(entry: entry),
+      ),
     ],
   );
 }
@@ -234,8 +357,15 @@ Widget _split(Widget preview, FileEntry entry) {
 class _Body extends StatelessWidget {
   final FileEntry? entry;
   final ValueNotifier<bool> editorActive;
+  final bool showInfo;
+  final ValueChanged<bool> onCompactChanged;
 
-  const _Body({required this.entry, required this.editorActive});
+  const _Body({
+    required this.entry,
+    required this.editorActive,
+    required this.showInfo,
+    required this.onCompactChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -246,21 +376,36 @@ class _Body extends StatelessWidget {
 
     if (e == null || e.type == FileItemType.folder) {
       release();
+      onCompactChanged(true);
       return PropertiesOnly(entry: e);
     }
     if (imageExts.contains(e.extension)) {
       release();
-      return _split(ImagePreview(path: e.realPath), e);
+      onCompactChanged(false);
+      return _split(ImagePreview(path: e.realPath), e, showInfo: showInfo);
     }
-    return _TextLoader(entry: e, editorActive: editorActive);
+    onCompactChanged(false);
+    return _TextLoader(
+      entry: e,
+      editorActive: editorActive,
+      showInfo: showInfo,
+      onCompactChanged: onCompactChanged,
+    );
   }
 }
 
 class _TextLoader extends StatelessWidget {
   final FileEntry entry;
   final ValueNotifier<bool> editorActive;
+  final bool showInfo;
+  final ValueChanged<bool> onCompactChanged;
 
-  const _TextLoader({required this.entry, required this.editorActive});
+  const _TextLoader({
+    required this.entry,
+    required this.editorActive,
+    required this.showInfo,
+    required this.onCompactChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -273,8 +418,10 @@ class _TextLoader extends StatelessWidget {
           WidgetsBinding.instance.addPostFrameCallback(
             (_) => editorActive.value = false,
           );
+          onCompactChanged(true);
           return PropertiesOnly(entry: entry, note: res.error);
         }
+        onCompactChanged(false);
         return _split(
           CodeEditor(
             key: ValueKey(entry.realPath),
@@ -284,6 +431,7 @@ class _TextLoader extends StatelessWidget {
             editorActive: editorActive,
           ),
           entry,
+          showInfo: showInfo,
         );
       },
     );

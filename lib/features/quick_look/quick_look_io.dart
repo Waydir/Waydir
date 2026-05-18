@@ -13,8 +13,9 @@ typedef QlSection = ({String title, List<MapEntry<String, String>> rows});
 class FolderStats {
   final int bytes;
   final int items;
+  final bool done;
 
-  const FolderStats(this.bytes, this.items);
+  const FolderStats(this.bytes, this.items, {required this.done});
 }
 
 class TextResult {
@@ -23,26 +24,6 @@ class TextResult {
   final bool binary;
 
   const TextResult(this.text, {this.error, this.binary = false});
-}
-
-Future<FolderStats?> folderStats(String path) async {
-  var bytes = 0;
-  var items = 0;
-  try {
-    await for (final e in Directory(
-      path,
-    ).list(recursive: true, followLinks: false)) {
-      items++;
-      if (e is File) {
-        try {
-          bytes += await e.length();
-        } catch (_) {}
-      }
-    }
-  } catch (_) {
-    return null;
-  }
-  return FolderStats(bytes, items);
 }
 
 Future<Uint8List> readHead(String path, int maxBytes) async {

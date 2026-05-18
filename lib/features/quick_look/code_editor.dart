@@ -189,7 +189,8 @@ class _CodeEditorState extends State<CodeEditor> {
 
   KeyEventResult _onKey(FocusNode node, KeyEvent event) {
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
-    final ctrl = HardwareKeyboard.instance.isControlPressed ||
+    final ctrl =
+        HardwareKeyboard.instance.isControlPressed ||
         HardwareKeyboard.instance.isMetaPressed;
     if (ctrl && event.logicalKey == LogicalKeyboardKey.keyS) {
       _save();
@@ -231,58 +232,34 @@ class _CodeEditorState extends State<CodeEditor> {
                 builder: (context, c) {
                   final contentW = math.max(
                     c.maxWidth,
-                    _maxLineLen * _charWidth + 28,
+                    _maxLineLen * _charWidth + _EditorField.hPadding * 2 + 12,
+                  );
+                  final editor = SingleChildScrollView(
+                    controller: _vScroll,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minHeight: c.maxHeight),
+                      child: _EditorField(
+                        controller: _ctrl,
+                        focusNode: _focus,
+                        baseStyle: baseStyle,
+                        width: contentW,
+                      ),
+                    ),
                   );
                   return Scrollbar(
                     controller: _vScroll,
                     thumbVisibility: true,
+                    notificationPredicate: (n) =>
+                        n.metrics.axis == Axis.vertical,
                     child: Scrollbar(
                       controller: _hScroll,
                       thumbVisibility: true,
-                      notificationPredicate: (n) => n.depth == 1,
+                      notificationPredicate: (n) =>
+                          n.metrics.axis == Axis.horizontal,
                       child: SingleChildScrollView(
-                        controller: _vScroll,
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(minHeight: c.maxHeight),
-                          child: SingleChildScrollView(
-                            controller: _hScroll,
-                            scrollDirection: Axis.horizontal,
-                            child: SizedBox(
-                              width: contentW,
-                              child: Padding(
-                                padding: const EdgeInsets.fromLTRB(
-                                  16,
-                                  _topPad,
-                                  16,
-                                  _topPad,
-                                ),
-                                child: TextField(
-                                  controller: _ctrl,
-                                  focusNode: _focus,
-                                  autofocus: true,
-                                  maxLines: null,
-                                  cursorColor: AppColors.accent,
-                                  cursorWidth: 1.5,
-                                  style: baseStyle,
-                                  strutStyle: const StrutStyle(
-                                    fontSize: _fontSize,
-                                    height: _lineHeight,
-                                    forceStrutHeight: true,
-                                  ),
-                                  scrollPhysics:
-                                      const NeverScrollableScrollPhysics(),
-                                  keyboardType: TextInputType.multiline,
-                                  textAlignVertical: TextAlignVertical.top,
-                                  decoration: const InputDecoration(
-                                    isCollapsed: true,
-                                    border: InputBorder.none,
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
+                        controller: _hScroll,
+                        scrollDirection: Axis.horizontal,
+                        child: editor,
                       ),
                     ),
                   );
@@ -300,6 +277,62 @@ class _CodeEditorState extends State<CodeEditor> {
             onSave: _save,
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _EditorField extends StatelessWidget {
+  final HighlightController controller;
+  final FocusNode focusNode;
+  final TextStyle baseStyle;
+  final double width;
+
+  const _EditorField({
+    required this.controller,
+    required this.focusNode,
+    required this.baseStyle,
+    required this.width,
+  });
+
+  static const _fontSize = _CodeEditorState._fontSize;
+  static const _lineHeight = _CodeEditorState._lineHeight;
+  static const _topPad = _CodeEditorState._topPad;
+  static const hPadding = 16.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: width,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          hPadding,
+          _topPad,
+          hPadding,
+          _topPad,
+        ),
+        child: TextField(
+          controller: controller,
+          focusNode: focusNode,
+          autofocus: true,
+          maxLines: null,
+          cursorColor: AppColors.accent,
+          cursorWidth: 1.5,
+          style: baseStyle,
+          strutStyle: const StrutStyle(
+            fontSize: _fontSize,
+            height: _lineHeight,
+            forceStrutHeight: true,
+          ),
+          scrollPhysics: const NeverScrollableScrollPhysics(),
+          keyboardType: TextInputType.multiline,
+          textAlignVertical: TextAlignVertical.top,
+          decoration: const InputDecoration(
+            isCollapsed: true,
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.zero,
+          ),
+        ),
       ),
     );
   }

@@ -1,11 +1,11 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 
+import '../../core/fs/waydir_core_loader.dart';
 import '../../core/models/file_entry.dart';
 import '../../core/platform/platform_paths.dart';
-import '../../features/files/file_icons.dart';
 import '../../i18n/strings.g.dart';
 import '../../utils/format.dart';
 import '../../ui/theme/app_theme.dart';
@@ -70,27 +70,119 @@ class _SizeRows extends StatelessWidget {
     if (entry.type != FileItemType.folder) {
       return PropRow(label: t.quickLook.size, value: formatBytes(entry.size));
     }
-    return AsyncRetain<FolderStats?>(
-      cacheKey: 'folder:${entry.realPath}',
-      loader: () => folderStats(entry.realPath),
-      builder: (stats) {
-        final calc = t.quickLook.calculating;
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            PropRow(
-              label: t.quickLook.size,
-              value: stats == null ? calc : formatBytes(stats.bytes),
-            ),
-            PropRow(
-              label: t.quickLook.contains,
-              value: stats == null
-                  ? calc
-                  : t.quickLook.items(count: stats.items),
-            ),
-          ],
-        );
-      },
+    return _FolderSizeRows(path: entry.realPath);
+  }
+}
+
+class _FolderSizeRows extends StatefulWidget {
+  final String path;
+
+  const _FolderSizeRows({required this.path});
+
+  @override
+  State<_FolderSizeRows> createState() => _FolderSizeRowsState();
+}
+
+class _FolderSizeRowsState extends State<_FolderSizeRows> {
+  Timer? _timer;
+  int? _session;
+  FolderStats? _stats;
+  bool _failed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _start();
+  }
+
+  @override
+  void didUpdateWidget(_FolderSizeRows oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.path != widget.path) {
+      _stop(cancel: true);
+      setState(() {
+        _stats = null;
+        _failed = false;
+      });
+      _start();
+    }
+  }
+
+  @override
+  void dispose() {
+    _stop(cancel: true);
+    super.dispose();
+  }
+
+  void _start() {
+    try {
+      _session = WaydirCoreLoader.folderScanStart(widget.path);
+    } catch (_) {
+      _session = null;
+    }
+    if (_session == null) {
+      _failed = true;
+      return;
+    }
+    _poll();
+    _timer = Timer.periodic(const Duration(milliseconds: 120), (_) => _poll());
+  }
+
+  void _poll() {
+    final session = _session;
+    if (session == null) return;
+    try {
+      final r = WaydirCoreLoader.folderScanPoll(session);
+      if (!mounted) return;
+      setState(() {
+        _stats = FolderStats(r.bytes, r.items, done: r.done);
+        _failed = false;
+      });
+      if (r.done) _stop(cancel: false);
+    } catch (_) {
+      if (mounted) {
+        setState(() => _failed = true);
+      }
+      _stop(cancel: true);
+    }
+  }
+
+  void _stop({required bool cancel}) {
+    _timer?.cancel();
+    _timer = null;
+    final session = _session;
+    if (session == null) return;
+    _session = null;
+    try {
+      if (cancel) WaydirCoreLoader.folderScanCancel(session);
+      WaydirCoreLoader.folderScanFree(session);
+    } catch (_) {}
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final calc = t.quickLook.calculating;
+    final stats = _stats;
+    final size = _failed
+        ? t.quickLook.readError
+        : stats == null
+        ? calc
+        : stats.done
+        ? formatBytes(stats.bytes)
+        : '${formatBytes(stats.bytes)} · $calc';
+    final contains = _failed
+        ? t.quickLook.readError
+        : stats == null
+        ? calc
+        : stats.done
+        ? t.quickLook.items(count: stats.items)
+        : '${t.quickLook.items(count: stats.items)} · $calc';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        PropRow(label: t.quickLook.size, value: size),
+        PropRow(label: t.quickLook.contains, value: contains),
+      ],
     );
   }
 }
@@ -118,10 +210,7 @@ class _StatRows extends StatelessWidget {
               label: t.quickLook.changed,
               value: formatTimeAgo(stat.changed),
             ),
-            PropRow(
-              label: t.quickLook.permissions,
-              value: stat.modeString(),
-            ),
+            PropRow(label: t.quickLook.permissions, value: stat.modeString()),
           ],
         );
       },
@@ -144,10 +233,7 @@ List<Widget> propertyRows(FileEntry e) {
     PropRow(label: t.quickLook.modified, value: formatTimeAgo(e.modified)),
     const SizedBox(height: 16),
     SectionLabel(t.quickLook.sectionDetails),
-    PropRow(
-      label: t.quickLook.location,
-      value: PlatformPaths.parentOf(e.path),
-    ),
+    PropRow(label: t.quickLook.location, value: PlatformPaths.parentOf(e.path)),
     PropRow(label: t.quickLook.path, value: e.path),
     _StatRows(entry: e),
     AsyncRetain<QlSection?>(
@@ -198,7 +284,16 @@ class PropertiesOnly extends StatelessWidget {
     if (e == null) {
       return QlCentered(message: t.quickLook.noSelection);
     }
-    final isFolder = e.type == FileItemType.folder;
+    final hasNote = note != null;
+    if (!hasNote) {
+      return Container(
+        color: AppColors.bgSidebar,
+        child: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          children: propertyRows(e),
+        ),
+      );
+    }
     return Container(
       color: AppColors.bg,
       alignment: Alignment.center,
@@ -210,34 +305,12 @@ class PropertiesOnly extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Center(
-                child: PhosphorIcon(
-                  isFolder
-                      ? PhosphorIconsRegular.folder
-                      : fileIcon(e.extension),
-                  size: 56,
-                  color: isFolder
-                      ? AppColors.accent
-                      : fileIconColor(e.extension),
-                ),
-              ),
-              const SizedBox(height: 14),
               Text(
-                e.name,
+                note!,
                 textAlign: TextAlign.center,
-                style: context.txt.heading,
+                style: context.txt.caption.copyWith(color: AppColors.fgMuted),
               ),
-              if (note != null) ...[
-                const SizedBox(height: 6),
-                Text(
-                  note!,
-                  textAlign: TextAlign.center,
-                  style: context.txt.caption.copyWith(
-                    color: AppColors.fgMuted,
-                  ),
-                ),
-              ],
-              const SizedBox(height: 22),
+              const SizedBox(height: 18),
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20,

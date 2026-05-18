@@ -5,7 +5,7 @@ import '../../ui/theme/app_theme.dart';
 import '../../ui/theme/app_text_styles.dart';
 
 const imageExts = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'};
-const maxTextBytes = 1024 * 1024;
+const maxTextBytes = 4 * 1024 * 1024;
 const maxHighlightChars = 200 * 1024;
 const panelWidth = 300.0;
 
