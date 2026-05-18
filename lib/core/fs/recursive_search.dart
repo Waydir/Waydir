@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:isolate';
-import 'dart:typed_data';
 import '../models/file_entry.dart';
 import 'waydir_core_loader.dart';
 
@@ -154,35 +153,55 @@ class RecursiveSearch {
     bool includeHidden,
     bool Function() isCancelled,
   ) async {
-    const batchSize = 200;
+    const pollInterval = Duration(milliseconds: 120);
     if (isCancelled()) {
       mainPort.send(const _DoneMsg());
       return;
     }
 
-    final Uint8List? blob;
+    final int? session;
     try {
-      blob = WaydirCoreLoader.search(root, query, includeHidden);
+      session = WaydirCoreLoader.searchStart(root, query, includeHidden);
     } catch (e) {
       mainPort.send(_ErrorMsg(e.toString()));
       return;
     }
 
-    if (blob == null) {
-      // Native returned null: unreadable / invalid root. Treat as empty.
+    if (session == null) {
       mainPort.send(_ProgressMsg(0, null));
       mainPort.send(const _DoneMsg());
       return;
     }
 
-    final all = FileEntryCodec.decode(blob);
-    for (var i = 0; i < all.length; i += batchSize) {
-      if (isCancelled()) break;
-      final end = (i + batchSize < all.length) ? i + batchSize : all.length;
-      mainPort.send(_BatchMsg(all.sublist(i, end)));
-      await Future.delayed(Duration.zero);
+    var lastScanned = -1;
+    try {
+      while (true) {
+        if (isCancelled()) {
+          WaydirCoreLoader.searchCancel(session);
+        }
+        final r = WaydirCoreLoader.searchPoll(session);
+        if (r.batch != null) {
+          final entries = FileEntryCodec.decode(r.batch!);
+          if (entries.isNotEmpty) mainPort.send(_BatchMsg(entries));
+        }
+        if (r.scanned != lastScanned) {
+          lastScanned = r.scanned;
+          mainPort.send(_ProgressMsg(r.scanned, null));
+        }
+        if (r.done || isCancelled()) {
+          final f = WaydirCoreLoader.searchPoll(session);
+          if (f.batch != null) {
+            final entries = FileEntryCodec.decode(f.batch!);
+            if (entries.isNotEmpty) mainPort.send(_BatchMsg(entries));
+          }
+          break;
+        }
+        await Future.delayed(pollInterval);
+      }
+    } finally {
+      WaydirCoreLoader.searchFree(session);
     }
-    mainPort.send(_ProgressMsg(0, null));
+    mainPort.send(_ProgressMsg(lastScanned < 0 ? 0 : lastScanned, null));
     mainPort.send(const _DoneMsg());
   }
 }

@@ -7,7 +7,9 @@
 // single buffer instead of materialising entries one by one.
 
 use std::ffi::{c_char, CStr, OsStr};
-use std::sync::Mutex;
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::{Arc, Mutex};
+use std::thread::JoinHandle;
 
 use ignore::{WalkBuilder, WalkState};
 
@@ -243,6 +245,170 @@ pub unsafe extern "C" fn waydir_free(ptr: *mut u8, len: usize) {
     drop(Vec::from_raw_parts(ptr, len, len));
 }
 
+pub struct SearchSession {
+    pending: Arc<Mutex<(Vec<u8>, usize)>>,
+    scanned: Arc<AtomicUsize>,
+    cancelled: Arc<AtomicBool>,
+    finished: Arc<AtomicBool>,
+    handle: Option<JoinHandle<()>>,
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn waydir_search_start(
+    root: *const c_char,
+    query: *const c_char,
+    include_hidden: bool,
+) -> *mut SearchSession {
+    if root.is_null() || query.is_null() {
+        return std::ptr::null_mut();
+    }
+    let root = match CStr::from_ptr(root).to_str() {
+        Ok(s) => s.to_owned(),
+        Err(_) => return std::ptr::null_mut(),
+    };
+    let query = CStr::from_ptr(query).to_string_lossy().to_lowercase();
+
+    let pending: Arc<Mutex<(Vec<u8>, usize)>> = Arc::new(Mutex::new((Vec::new(), 0)));
+    let scanned = Arc::new(AtomicUsize::new(0));
+    let cancelled = Arc::new(AtomicBool::new(false));
+    let finished = Arc::new(AtomicBool::new(false));
+
+    let t_pending = Arc::clone(&pending);
+    let t_scanned = Arc::clone(&scanned);
+    let t_cancelled = Arc::clone(&cancelled);
+    let t_finished = Arc::clone(&finished);
+
+    let handle = std::thread::spawn(move || {
+        let mut builder = WalkBuilder::new(&root);
+        builder
+            .hidden(!include_hidden)
+            .parents(false)
+            .ignore(false)
+            .git_ignore(false)
+            .git_global(false)
+            .git_exclude(false)
+            .follow_links(false)
+            .threads(num_cpus());
+
+        builder.filter_entry(|dirent| {
+            if dirent.depth() == 0 {
+                return true;
+            }
+            let is_dir = dirent.file_type().map(|t| t.is_dir()).unwrap_or(false);
+            if !is_dir {
+                return true;
+            }
+            let name = dirent.file_name().to_string_lossy();
+            !EXCLUDED.iter().any(|x| *x == name)
+        });
+
+        let walker = builder.build_parallel();
+        walker.run(|| {
+            let pending = Arc::clone(&t_pending);
+            let scanned = Arc::clone(&t_scanned);
+            let cancelled = Arc::clone(&t_cancelled);
+            let query = query.clone();
+            Box::new(move |result| {
+                if cancelled.load(Ordering::Relaxed) {
+                    return WalkState::Quit;
+                }
+                let dirent = match result {
+                    Ok(d) => d,
+                    Err(_) => return WalkState::Continue,
+                };
+                if dirent.depth() == 0 {
+                    return WalkState::Continue;
+                }
+                scanned.fetch_add(1, Ordering::Relaxed);
+                let os_name = dirent.file_name();
+                let name_lossy = os_name.to_string_lossy().to_lowercase();
+                if name_lossy.contains(query.as_str()) {
+                    let is_dir = dirent.file_type().map(|t| t.is_dir()).unwrap_or(false);
+                    let mut g = pending.lock().unwrap();
+                    put_record(
+                        &mut g.0,
+                        is_dir,
+                        0,
+                        0,
+                        &os_bytes(os_name),
+                        &os_bytes(dirent.path().as_os_str()),
+                    );
+                    g.1 += 1;
+                }
+                WalkState::Continue
+            })
+        });
+        t_finished.store(true, Ordering::Release);
+    });
+
+    let session = Box::new(SearchSession {
+        pending,
+        scanned,
+        cancelled,
+        finished,
+        handle: Some(handle),
+    });
+    Box::into_raw(session)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn waydir_search_poll(
+    session: *mut SearchSession,
+    out_len: *mut usize,
+    out_scanned: *mut usize,
+    out_done: *mut i32,
+) -> *mut u8 {
+    if session.is_null() || out_len.is_null() || out_scanned.is_null() || out_done.is_null() {
+        return std::ptr::null_mut();
+    }
+    let session = &*session;
+
+    let (body, count) = {
+        let mut g = session.pending.lock().unwrap();
+        let body = std::mem::take(&mut g.0);
+        let count = std::mem::replace(&mut g.1, 0);
+        (body, count)
+    };
+
+    *out_scanned = session.scanned.load(Ordering::Relaxed);
+    *out_done = if session.finished.load(Ordering::Acquire) { 1 } else { 0 };
+
+    if count == 0 {
+        *out_len = 0;
+        return std::ptr::null_mut();
+    }
+
+    let mut buf = Vec::with_capacity(8 + body.len());
+    put_u32(&mut buf, MAGIC);
+    put_u32(&mut buf, count as u32);
+    buf.extend_from_slice(&body);
+    let mut bytes = buf.into_boxed_slice();
+    *out_len = bytes.len();
+    let ptr = bytes.as_mut_ptr();
+    std::mem::forget(bytes);
+    ptr
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn waydir_search_cancel(session: *mut SearchSession) {
+    if session.is_null() {
+        return;
+    }
+    (*session).cancelled.store(true, Ordering::Relaxed);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn waydir_search_free(session: *mut SearchSession) {
+    if session.is_null() {
+        return;
+    }
+    let mut session = Box::from_raw(session);
+    session.cancelled.store(true, Ordering::Relaxed);
+    if let Some(h) = session.handle.take() {
+        let _ = h.join();
+    }
+}
+
 fn mtime_ms(meta: &std::fs::Metadata) -> i64 {
     match meta.modified() {
         Ok(t) => match t.duration_since(std::time::UNIX_EPOCH) {
@@ -432,7 +598,7 @@ pub unsafe extern "C" fn waydir_enumerate(
 
 #[no_mangle]
 pub extern "C" fn waydir_core_abi() -> u32 {
-    3
+    4
 }
 
 #[no_mangle]
