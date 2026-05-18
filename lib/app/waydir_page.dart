@@ -25,10 +25,9 @@ import '../ui/chrome/title_bar.dart';
 import '../ui/dialogs/dialog.dart';
 import '../ui/dialogs/compress_dialog.dart';
 import '../ui/dialogs/open_with_dialog.dart';
-import '../ui/dialogs/properties_dialog.dart';
 import '../ui/overlays/context_menu.dart';
 import '../ui/overlays/notification_overlay.dart';
-import '../ui/overlays/quick_look.dart';
+import '../features/quick_look/quick_look.dart';
 import '../ui/overlays/notification_store.dart';
 import '../ui/overlays/toast.dart';
 import '../ui/theme/app_theme.dart';
@@ -634,9 +633,9 @@ class _WaydirPageState extends State<WaydirPage> {
       case 'properties':
         final entries = store.selectedEntries;
         if (entries.length == 1) {
-          showPropertiesDialog(
+          showQuickLook(
             context: context,
-            entry: entries.first,
+            store: store,
           ).then((_) => _restoreFocus());
         }
     }

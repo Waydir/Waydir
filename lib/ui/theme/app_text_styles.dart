@@ -9,6 +9,7 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
   final TextStyle captionSmall;
   final TextStyle sectionLabel;
   final TextStyle keyCap;
+  final TextStyle code;
   final TextStyle row;
   final TextStyle rowEmphasis;
   final TextStyle muted;
@@ -27,6 +28,7 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
     required this.captionSmall,
     required this.sectionLabel,
     required this.keyCap,
+    required this.code,
     required this.row,
     required this.rowEmphasis,
     required this.muted,
@@ -82,6 +84,12 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
       fontSize: 11.5,
       height: 1.2,
       fontWeight: FontWeight.w500,
+      color: AppColors.fg,
+      fontFamily: 'monospace',
+    ),
+    code: TextStyle(
+      fontSize: 12.5,
+      height: 1.45,
       color: AppColors.fg,
       fontFamily: 'monospace',
     ),
@@ -152,6 +160,7 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
     TextStyle? captionSmall,
     TextStyle? sectionLabel,
     TextStyle? keyCap,
+    TextStyle? code,
     TextStyle? row,
     TextStyle? rowEmphasis,
     TextStyle? muted,
@@ -170,6 +179,7 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
       captionSmall: captionSmall ?? this.captionSmall,
       sectionLabel: sectionLabel ?? this.sectionLabel,
       keyCap: keyCap ?? this.keyCap,
+      code: code ?? this.code,
       row: row ?? this.row,
       rowEmphasis: rowEmphasis ?? this.rowEmphasis,
       muted: muted ?? this.muted,
@@ -193,6 +203,7 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
       captionSmall: TextStyle.lerp(captionSmall, other.captionSmall, t)!,
       sectionLabel: TextStyle.lerp(sectionLabel, other.sectionLabel, t)!,
       keyCap: TextStyle.lerp(keyCap, other.keyCap, t)!,
+      code: TextStyle.lerp(code, other.code, t)!,
       row: TextStyle.lerp(row, other.row, t)!,
       rowEmphasis: TextStyle.lerp(rowEmphasis, other.rowEmphasis, t)!,
       muted: TextStyle.lerp(muted, other.muted, t)!,

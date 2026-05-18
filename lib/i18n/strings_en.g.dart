@@ -489,6 +489,39 @@ class TranslationsQuickLookEn {
 	/// en: 'Could not read file'
 	String get readError => 'Could not read file';
 
+	/// en: 'Save'
+	String get save => 'Save';
+
+	/// en: 'Saved'
+	String get saved => 'Saved';
+
+	/// en: 'Unsaved'
+	String get unsaved => 'Unsaved';
+
+	/// en: 'Could not save file'
+	String get saveError => 'Could not save file';
+
+	/// en: 'Accessed'
+	String get accessed => 'Accessed';
+
+	/// en: 'Changed'
+	String get changed => 'Changed';
+
+	/// en: 'Permissions'
+	String get permissions => 'Permissions';
+
+	/// en: 'Contains'
+	String get contains => 'Contains';
+
+	/// en: 'Calculating…'
+	String get calculating => 'Calculating…';
+
+	/// en: '$count items'
+	String items({required Object count}) => '${count} items';
+
+	/// en: 'Details'
+	String get sectionDetails => 'Details';
+
 	/// en: 'Information'
 	String get info => 'Information';
 
@@ -1623,6 +1656,17 @@ extension on Translations {
 			'quickLook.binaryFile' => 'Binary file — no preview',
 			'quickLook.tooLarge' => 'File too large to preview',
 			'quickLook.readError' => 'Could not read file',
+			'quickLook.save' => 'Save',
+			'quickLook.saved' => 'Saved',
+			'quickLook.unsaved' => 'Unsaved',
+			'quickLook.saveError' => 'Could not save file',
+			'quickLook.accessed' => 'Accessed',
+			'quickLook.changed' => 'Changed',
+			'quickLook.permissions' => 'Permissions',
+			'quickLook.contains' => 'Contains',
+			'quickLook.calculating' => 'Calculating…',
+			'quickLook.items' => ({required Object count}) => '${count} items',
+			'quickLook.sectionDetails' => 'Details',
 			'quickLook.info' => 'Information',
 			'quickLook.name' => 'Name',
 			'quickLook.type' => 'Type',

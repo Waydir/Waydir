@@ -77,7 +77,7 @@ class _PreferencesDialogState extends State<_PreferencesDialog> {
           height: size.height - 48,
           decoration: BoxDecoration(
             color: AppColors.bgSurface,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.zero,
             border: Border.all(color: AppColors.borderColor),
             boxShadow: [
               BoxShadow(
@@ -88,7 +88,7 @@ class _PreferencesDialogState extends State<_PreferencesDialog> {
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.zero,
             child: Column(
               children: [
                 _Header(onClose: () => Navigator.of(context).pop()),
