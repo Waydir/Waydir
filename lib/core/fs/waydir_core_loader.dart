@@ -22,6 +22,29 @@ typedef _SearchDart =
       Pointer<IntPtr>,
     );
 
+typedef _SearchStartNative =
+    Pointer<Void> Function(Pointer<Utf8>, Pointer<Utf8>, Bool);
+typedef _SearchStartDart =
+    Pointer<Void> Function(Pointer<Utf8>, Pointer<Utf8>, bool);
+
+typedef _SearchPollNative =
+    Pointer<Uint8> Function(
+      Pointer<Void>,
+      Pointer<IntPtr>,
+      Pointer<IntPtr>,
+      Pointer<Int32>,
+    );
+typedef _SearchPollDart =
+    Pointer<Uint8> Function(
+      Pointer<Void>,
+      Pointer<IntPtr>,
+      Pointer<IntPtr>,
+      Pointer<Int32>,
+    );
+
+typedef _SessionVoidNative = Void Function(Pointer<Void>);
+typedef _SessionVoidDart = void Function(Pointer<Void>);
+
 typedef _ListNative =
     Pointer<Uint8> Function(Pointer<Utf8>, Bool, Pointer<IntPtr>);
 typedef _ListDart =
@@ -50,6 +73,13 @@ class WaydirCoreException implements Exception {
   const WaydirCoreException(this.message);
   @override
   String toString() => 'WaydirCoreException: $message';
+}
+
+class SearchPollResult {
+  final Uint8List? batch;
+  final int scanned;
+  final bool done;
+  const SearchPollResult(this.batch, this.scanned, this.done);
 }
 
 /// Loads the required `waydir_core` native helper (Rust). Cached.
@@ -117,6 +147,71 @@ class WaydirCoreLoader {
       calloc.free(queryPtr);
       calloc.free(outLen);
     }
+  }
+
+  static int? searchStart(String root, String query, bool includeHidden) {
+    final lib = requireLib();
+    final start = lib.lookupFunction<_SearchStartNative, _SearchStartDart>(
+      'waydir_search_start',
+    );
+    final rootPtr = root.toNativeUtf8();
+    final queryPtr = query.toNativeUtf8();
+    try {
+      final session = start(rootPtr, queryPtr, includeHidden);
+      if (session == nullptr) return null;
+      return session.address;
+    } catch (_) {
+      return null;
+    } finally {
+      calloc.free(rootPtr);
+      calloc.free(queryPtr);
+    }
+  }
+
+  static SearchPollResult searchPoll(int session) {
+    final lib = requireLib();
+    final poll = lib.lookupFunction<_SearchPollNative, _SearchPollDart>(
+      'waydir_search_poll',
+    );
+    final free = lib.lookupFunction<_FreeNative, _FreeDart>('waydir_free');
+    final sessionPtr = Pointer<Void>.fromAddress(session);
+    final outLen = calloc<IntPtr>();
+    final outScanned = calloc<IntPtr>();
+    final outDone = calloc<Int32>();
+    try {
+      final buf = poll(sessionPtr, outLen, outScanned, outDone);
+      final scanned = outScanned.value;
+      final done = outDone.value != 0;
+      if (buf == nullptr) {
+        return SearchPollResult(null, scanned, done);
+      }
+      final len = outLen.value;
+      final copy = Uint8List.fromList(buf.asTypedList(len));
+      free(buf, len);
+      return SearchPollResult(copy, scanned, done);
+    } catch (_) {
+      return const SearchPollResult(null, 0, true);
+    } finally {
+      calloc.free(outLen);
+      calloc.free(outScanned);
+      calloc.free(outDone);
+    }
+  }
+
+  static void searchCancel(int session) {
+    final lib = requireLib();
+    final cancel = lib.lookupFunction<_SessionVoidNative, _SessionVoidDart>(
+      'waydir_search_cancel',
+    );
+    cancel(Pointer<Void>.fromAddress(session));
+  }
+
+  static void searchFree(int session) {
+    final lib = requireLib();
+    final fn = lib.lookupFunction<_SessionVoidNative, _SessionVoidDart>(
+      'waydir_search_free',
+    );
+    fn(Pointer<Void>.fromAddress(session));
   }
 
   /// Native single-directory listing. Returns a FileEntryCodec buffer or
