@@ -9,6 +9,7 @@ import '../../ui/theme/app_text_styles.dart';
 import '../../ui/widgets/app_dropdown.dart';
 import 'panes/about_pane.dart';
 import 'panes/appearance_pane.dart';
+import 'panes/diagnostics_pane.dart';
 import 'panes/general_pane.dart';
 
 Future<void> showPreferencesDialog(BuildContext context) {
@@ -20,7 +21,7 @@ Future<void> showPreferencesDialog(BuildContext context) {
   );
 }
 
-enum Category { general, appearance, about }
+enum Category { general, appearance, diagnostics, about }
 
 class CategoryMeta {
   final Category id;
@@ -40,6 +41,11 @@ final categories = <CategoryMeta>[
     Category.appearance,
     PhosphorIconsRegular.palette,
     () => t.preferences.categories.appearance,
+  ),
+  CategoryMeta(
+    Category.diagnostics,
+    PhosphorIconsRegular.bug,
+    () => t.preferences.categories.diagnostics,
   ),
   CategoryMeta(
     Category.about,
@@ -275,6 +281,7 @@ class _ContentPane extends StatelessWidget {
     return switch (category) {
       Category.general => const GeneralPane(),
       Category.appearance => const AppearancePane(),
+      Category.diagnostics => const DiagnosticsPane(),
       Category.about => const AboutPane(),
     };
   }

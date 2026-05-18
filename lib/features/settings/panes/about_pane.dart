@@ -76,8 +76,8 @@ class AboutPane extends StatelessWidget {
               Container(height: 1, color: AppColors.bgDivider),
               _InfoRow(
                 label: t.preferences.about.repository,
-                value: AppInfo.homepage,
-                onCopy: () => _copy(context, AppInfo.homepage),
+                value: AppInfo.repository,
+                onCopy: () => _copy(context, AppInfo.repository),
                 onOpen: () => _openUrl(AppInfo.homepage),
               ),
               Container(height: 1, color: AppColors.bgDivider),

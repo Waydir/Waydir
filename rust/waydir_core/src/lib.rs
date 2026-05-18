@@ -45,6 +45,47 @@ struct Entry {
     disk_path: std::path::PathBuf,
 }
 
+struct ChunkSink<'a> {
+    local: Vec<u8>,
+    count: usize,
+    chunks: &'a Mutex<Vec<(Vec<u8>, usize)>>,
+}
+
+impl Drop for ChunkSink<'_> {
+    fn drop(&mut self) {
+        if self.count == 0 {
+            return;
+        }
+        let buf = std::mem::take(&mut self.local);
+        self.chunks.lock().unwrap().push((buf, self.count));
+    }
+}
+
+struct EntrySink<'a> {
+    local: Vec<Entry>,
+    buckets: &'a Mutex<Vec<Vec<Entry>>>,
+}
+
+impl Drop for EntrySink<'_> {
+    fn drop(&mut self) {
+        if self.local.is_empty() {
+            return;
+        }
+        let v = std::mem::take(&mut self.local);
+        self.buckets.lock().unwrap().push(v);
+    }
+}
+
+#[cfg(unix)]
+fn path_depth(path: &[u8]) -> usize {
+    path.iter().filter(|&&b| b == b'/').count()
+}
+
+#[cfg(not(unix))]
+fn path_depth(path: &[u8]) -> usize {
+    path.iter().filter(|&&b| b == b'/' || b == b'\\').count()
+}
+
 fn put_u32(buf: &mut Vec<u8>, v: u32) {
     buf.extend_from_slice(&v.to_be_bytes());
 }
@@ -53,18 +94,44 @@ fn put_i64(buf: &mut Vec<u8>, v: i64) {
     buf.extend_from_slice(&v.to_be_bytes());
 }
 
+fn put_record(
+    buf: &mut Vec<u8>,
+    is_dir: bool,
+    size: i64,
+    mtime_ms: i64,
+    name: &[u8],
+    path: &[u8],
+) {
+    buf.push(if is_dir { 0 } else { 1 });
+    put_i64(buf, size);
+    put_i64(buf, mtime_ms);
+    put_u32(buf, name.len() as u32);
+    put_u32(buf, path.len() as u32);
+    buf.extend_from_slice(name);
+    buf.extend_from_slice(path);
+}
+
 fn serialise(entries: &[Entry]) -> Vec<u8> {
-    let mut buf = Vec::with_capacity(32 + entries.len() * 48);
+    let body: usize = entries
+        .iter()
+        .map(|e| 25 + e.name.len() + e.path.len())
+        .sum();
+    let mut buf = Vec::with_capacity(8 + body);
     put_u32(&mut buf, MAGIC);
     put_u32(&mut buf, entries.len() as u32);
     for e in entries {
-        buf.push(if e.is_dir { 0 } else { 1 });
-        put_i64(&mut buf, e.size);
-        put_i64(&mut buf, e.mtime_ms);
-        put_u32(&mut buf, e.name.len() as u32);
-        put_u32(&mut buf, e.path.len() as u32);
-        buf.extend_from_slice(&e.name);
-        buf.extend_from_slice(&e.path);
+        put_record(&mut buf, e.is_dir, e.size, e.mtime_ms, &e.name, &e.path);
+    }
+    buf
+}
+
+fn assemble(count: usize, chunks: Vec<Vec<u8>>) -> Vec<u8> {
+    let body: usize = chunks.iter().map(|c| c.len()).sum();
+    let mut buf = Vec::with_capacity(8 + body);
+    put_u32(&mut buf, MAGIC);
+    put_u32(&mut buf, count as u32);
+    for c in chunks {
+        buf.extend_from_slice(&c);
     }
     buf
 }
@@ -94,7 +161,7 @@ pub unsafe extern "C" fn waydir_search(
         .to_string_lossy()
         .to_lowercase();
 
-    let collected: Mutex<Vec<Entry>> = Mutex::new(Vec::new());
+    let chunks: Mutex<Vec<(Vec<u8>, usize)>> = Mutex::new(Vec::new());
 
     let mut builder = WalkBuilder::new(&root);
     builder
@@ -121,7 +188,11 @@ pub unsafe extern "C" fn waydir_search(
 
     let walker = builder.build_parallel();
     walker.run(|| {
-        let collected = &collected;
+        let mut sink = ChunkSink {
+            local: Vec::new(),
+            count: 0,
+            chunks: &chunks,
+        };
         let query = &query;
         Box::new(move |result| {
             let dirent = match result {
@@ -131,26 +202,28 @@ pub unsafe extern "C" fn waydir_search(
             if dirent.depth() == 0 {
                 return WalkState::Continue;
             }
-            let is_dir = dirent.file_type().map(|t| t.is_dir()).unwrap_or(false);
             let os_name = dirent.file_name();
             let name_lossy = os_name.to_string_lossy().to_lowercase();
             if name_lossy.contains(query.as_str()) {
-                let entry = Entry {
+                let is_dir = dirent.file_type().map(|t| t.is_dir()).unwrap_or(false);
+                put_record(
+                    &mut sink.local,
                     is_dir,
-                    size: 0,
-                    mtime_ms: 0,
-                    name: os_bytes(os_name),
-                    path: os_bytes(dirent.path().as_os_str()),
-                    disk_path: std::path::PathBuf::new(),
-                };
-                collected.lock().unwrap().push(entry);
+                    0,
+                    0,
+                    &os_bytes(os_name),
+                    &os_bytes(dirent.path().as_os_str()),
+                );
+                sink.count += 1;
             }
             WalkState::Continue
         })
     });
 
-    let entries = collected.into_inner().unwrap();
-    let mut bytes = serialise(&entries).into_boxed_slice();
+    let chunks = chunks.into_inner().unwrap();
+    let total: usize = chunks.iter().map(|(_, n)| n).sum();
+    let ordered: Vec<Vec<u8>> = chunks.into_iter().map(|(b, _)| b).collect();
+    let mut bytes = assemble(total, ordered).into_boxed_slice();
     *out_len = bytes.len();
     let ptr = bytes.as_mut_ptr();
     std::mem::forget(bytes);
@@ -294,7 +367,7 @@ pub unsafe extern "C" fn waydir_enumerate(
         Err(_) => return std::ptr::null_mut(),
     };
 
-    let collected: Mutex<Vec<Entry>> = Mutex::new(Vec::new());
+    let buckets: Mutex<Vec<Vec<Entry>>> = Mutex::new(Vec::new());
 
     let mut builder = WalkBuilder::new(&root);
     builder
@@ -309,7 +382,10 @@ pub unsafe extern "C" fn waydir_enumerate(
 
     let walker = builder.build_parallel();
     walker.run(|| {
-        let collected = &collected;
+        let mut sink = EntrySink {
+            local: Vec::new(),
+            buckets: &buckets,
+        };
         Box::new(move |result| {
             let dirent = match result {
                 Ok(d) => d,
@@ -319,7 +395,7 @@ pub unsafe extern "C" fn waydir_enumerate(
                 return WalkState::Continue;
             }
             let is_dir = dirent.file_type().map(|t| t.is_dir()).unwrap_or(false);
-            collected.lock().unwrap().push(Entry {
+            sink.local.push(Entry {
                 is_dir,
                 size: 0,
                 mtime_ms: 0,
@@ -331,9 +407,20 @@ pub unsafe extern "C" fn waydir_enumerate(
         })
     });
 
-    let mut entries = collected.into_inner().unwrap();
+    let mut entries: Vec<Entry> = buckets
+        .into_inner()
+        .unwrap()
+        .into_iter()
+        .flatten()
+        .collect();
     if postorder {
-        entries.sort_by(|a, b| b.path.len().cmp(&a.path.len()));
+        // Deepest first by component depth, not byte length: byte length
+        // can place a parent before its own child and break unlink order.
+        entries.sort_by(|a, b| {
+            path_depth(&b.path)
+                .cmp(&path_depth(&a.path))
+                .then_with(|| b.path.cmp(&a.path))
+        });
     }
 
     let mut bytes = serialise(&entries).into_boxed_slice();
@@ -346,6 +433,16 @@ pub unsafe extern "C" fn waydir_enumerate(
 #[no_mangle]
 pub extern "C" fn waydir_core_abi() -> u32 {
     3
+}
+
+#[no_mangle]
+pub extern "C" fn waydir_core_version() -> *const c_char {
+    concat!(env!("WAYDIR_VERSION"), "\0").as_ptr() as *const c_char
+}
+
+#[no_mangle]
+pub extern "C" fn waydir_core_git() -> *const c_char {
+    concat!(env!("WAYDIR_GIT"), "\0").as_ptr() as *const c_char
 }
 
 fn num_cpus() -> usize {

@@ -10,6 +10,9 @@ set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 crate="$here/rust/waydir_core"
 
+WAYDIR_VERSION="$(grep '^version:' "$here/pubspec.yaml" | sed -E 's/version:[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+).*/\1/')"
+export WAYDIR_VERSION
+
 cargo build --release --manifest-path "$crate/Cargo.toml"
 
 out="$crate/target/release"

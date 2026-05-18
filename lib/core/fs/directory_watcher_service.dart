@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import '../logging/app_logger.dart';
+
 /// Coalesced directory-change notifier.
 ///
 /// Dart's [Directory.watch] already wraps the native backend (inotify on
@@ -46,14 +48,17 @@ class DirectoryWatcherService {
               _accumulate(event);
               _scheduleNotify();
             },
-            onError: (_) {
+            onError: (e) {
               if (_watchedPath != path) return;
+              log.warn('fs.watcher', 'watch error, full reload', error: e);
               _fullReload = true;
               _scheduleNotify();
             },
             cancelOnError: true,
           );
-    } catch (_) {}
+    } catch (e, s) {
+      log.warn('fs.watcher', 'failed to start watch', error: e, stack: s);
+    }
   }
 
   void _accumulate(FileSystemEvent event) {

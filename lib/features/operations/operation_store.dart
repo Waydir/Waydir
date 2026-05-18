@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:path/path.dart' as p;
 import 'package:signals/signals.dart';
+import '../../core/logging/app_logger.dart';
 import '../../core/models/app_notification.dart';
 import '../../core/models/file_operation.dart';
 import '../../core/fs/file_system_service.dart';
@@ -411,6 +412,7 @@ class OperationStore {
 
       handle.errorPort.listen((err) {
         if (completer.isCompleted) return;
+        log.error('operation', 'task ${task.id} isolate error', error: err);
         task.status = TaskStatus.failed;
         task.errors = [
           ...task.errors,
@@ -428,6 +430,7 @@ class OperationStore {
 
       handle.exitPort.listen((_) {
         if (completer.isCompleted) return;
+        log.error('operation', 'task ${task.id} worker exited unexpectedly');
         task.status = TaskStatus.failed;
         task.errors = [
           ...task.errors,
@@ -444,7 +447,8 @@ class OperationStore {
       });
 
       await completer.future;
-    } catch (e) {
+    } catch (e, s) {
+      log.error('operation', 'task ${task.id} failed', error: e, stack: s);
       task.status = TaskStatus.failed;
       task.errors = [TaskError(path: '', message: e.toString())];
       task.endTime = DateTime.now();

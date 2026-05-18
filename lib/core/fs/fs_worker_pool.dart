@@ -4,6 +4,7 @@ import 'dart:isolate';
 import 'dart:typed_data';
 import '../archive/archive_reader.dart';
 import '../archive/archive_service.dart';
+import '../logging/app_logger.dart';
 import '../models/file_entry.dart';
 import 'waydir_core_loader.dart';
 
@@ -130,7 +131,9 @@ class FsWorkerPool {
         onError: errorPort.sendPort,
         onExit: exitPort.sendPort,
       );
-    } catch (_) {
+    } catch (e, s) {
+      log.error('fs.worker', 'FS worker spawn failed slot $slot',
+          error: e, stack: s);
       await readySub.cancel();
       ready.close();
       errorPort.close();
@@ -228,6 +231,7 @@ class FsWorkerPool {
   }
 
   void _handleWorkerFailure(int slot, Object error) {
+    log.error('fs.worker', 'FS worker slot $slot failed', error: error);
     final worker = _workers[slot];
     if (worker == null) return;
     _workers[slot] = null;
