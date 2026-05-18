@@ -18,7 +18,7 @@ A fast, keyboard-driven desktop file manager built with Flutter.
 
 Waydir is the file manager I wanted on my own machine: hands stay on the keyboard, the UI gets out of the way, and opening a 100k-file directory doesn't lock up the window.
 
-It's built on Flutter so the same binary runs on Linux, Windows and macOS from one codebase.
+The interface is built with Flutter and runs natively on Linux, Windows and macOS from one codebase. The path-heavy work - directory listing, search, and delete - runs in a native Rust core, off the UI thread.
 
 ## Install
 
@@ -36,19 +36,19 @@ tar -xzf waydir-*-linux-x64.tar.gz
 ## Features
 
 - Dual-pane navigation with tabs
-- Keyboard-driven nav, selection, and file ops
-- Archive support: browse, extract, compress, and edit ZIP, TAR, 7z, RAR, and more
-- Quick Look file preview with Space (images, text, code)
-- Open files with a chosen app and manage defaults per file type
-- Recursive search with live-streaming results
-- Git status bar with branch switching and stash management
-- Sidebar bookmarks and drive management (mount/unmount)
-- Light, Dark, and Nord built-in themes with custom theme support via JSON
-- Preferences dialog for appearance, behavior, and terminal integration
-- Background-isolate directory scanning (no UI jank)
+- Keyboard-driven navigation, selection, and file operations
+- Recursive search that streams results live with a scanned-entry counter
 - Copy / move / delete with conflict resolution and progress tracking
 - Clipboard integration
-- Linux, Windows, and macOS from a single codebase
+- Archive support: browse, extract, compress, and edit ZIP, TAR, 7z, RAR, and more
+- Quick Look file preview with Space - images, text, and code
+- Open files with a chosen app and manage defaults per file type
+- Git status bar with branch switching and stash management
+- Sidebar bookmarks and drive management (mount/unmount)
+- Light, Dark, and Nord built-in themes, plus custom themes via JSON
+- Preferences dialog for appearance, behavior, and terminal integration
+- Native Rust core, with background scanning that keeps the UI responsive
+- Native builds for Linux, Windows, and macOS from one codebase
 
 ## Development
 
