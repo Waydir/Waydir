@@ -32,7 +32,7 @@ class $AppSettingsTable extends AppSettings
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultValue: const Constant('system'),
+    defaultValue: const Constant('dark'),
   );
   static const VerificationMeta _terminalMeta = const VerificationMeta(
     'terminal',

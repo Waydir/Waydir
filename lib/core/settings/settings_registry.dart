@@ -3,6 +3,8 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:signals/signals.dart';
 
 import '../../i18n/strings.g.dart';
+import '../../ui/theme/app_theme_definition.dart';
+import '../../ui/theme/app_theme_registry.dart';
 import 'settings_store.dart';
 
 enum SettingsCategory { general, appearance }
@@ -64,9 +66,9 @@ class ToggleSetting extends AppSetting<bool> {
 }
 
 class ChoiceSetting<T> extends AppSetting<T> {
-  final List<SettingChoice<T>> choices;
+  List<SettingChoice<T>> choices;
 
-  const ChoiceSetting({
+  ChoiceSetting({
     required super.id,
     required super.category,
     required super.label,
@@ -185,28 +187,19 @@ class SettingsRegistry {
       signal: SettingsStore.instance.terminalCustomCommand,
     ),
     ChoiceSetting<String>(
-      id: 'appearance.themeMode',
+      id: 'appearance.theme',
       category: SettingsCategory.appearance,
-      label: () => t.preferences.appearance.themeMode,
-      hint: () => t.preferences.appearance.themeModeHint,
-      searchTerms: const ['theme', 'dark', 'light', 'appearance', 'system'],
-      signal: SettingsStore.instance.themeMode,
+      label: () => t.preferences.appearance.theme,
+      hint: () => t.preferences.appearance.themeHint,
+      searchTerms: const ['theme', 'dark', 'light', 'nord', 'appearance'],
+      signal: SettingsStore.instance.themeId,
       choices: [
-        SettingChoice(
-          value: 'system',
-          label: () => t.preferences.appearance.themeModeSystem,
-          icon: PhosphorIconsRegular.desktop,
-        ),
-        SettingChoice(
-          value: 'light',
-          label: () => t.preferences.appearance.themeModeLight,
-          icon: PhosphorIconsRegular.sun,
-        ),
-        SettingChoice(
-          value: 'dark',
-          label: () => t.preferences.appearance.themeModeDark,
-          icon: PhosphorIconsRegular.moon,
-        ),
+        for (final theme in AppThemeRegistry.instance.themes)
+          SettingChoice(
+            value: theme.id,
+            label: () => theme.name,
+            icon: _themeIcon(theme),
+          ),
       ],
     ),
     ToggleSetting(
@@ -317,4 +310,22 @@ class SettingsRegistry {
   AppSetting<dynamic> byId(String id) {
     return all.firstWhere((setting) => setting.id == id);
   }
+
+  void refreshThemeChoices() {
+    final setting = byId('appearance.theme') as ChoiceSetting<String>;
+    setting.choices = [
+      for (final theme in AppThemeRegistry.instance.themes)
+        SettingChoice(
+          value: theme.id,
+          label: () => theme.name,
+          icon: _themeIcon(theme),
+        ),
+    ];
+  }
+}
+
+IconData _themeIcon(AppThemeDefinition theme) {
+  if (theme.id == 'light') return PhosphorIconsRegular.sun;
+  if (theme.id == 'dark') return PhosphorIconsRegular.moon;
+  return PhosphorIconsRegular.palette;
 }

@@ -18,6 +18,7 @@ void main() {
     test('getSettings creates default row on first call', () async {
       final settings = await db.getSettings();
 
+      expect(settings.themeMode, 'dark');
       expect(settings.terminal, 'auto');
       expect(settings.terminalCustomCommand, '');
       expect(settings.isDual, false);

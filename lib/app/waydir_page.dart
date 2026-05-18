@@ -749,7 +749,10 @@ class _WaydirPageState extends State<WaydirPage> {
   }
 
   void _openPreferences() {
-    showPreferencesDialog(context).then((_) => _restoreFocus());
+    showPreferencesDialog(context).then((_) {
+      if (!mounted) return;
+      _restoreFocus();
+    });
   }
 
   void _openQuickLook() {

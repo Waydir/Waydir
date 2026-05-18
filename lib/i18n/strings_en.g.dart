@@ -1195,20 +1195,53 @@ class TranslationsPreferencesAppearanceEn {
 	/// en: 'Theme'
 	String get themeSection => 'Theme';
 
-	/// en: 'Appearance'
-	String get themeMode => 'Appearance';
+	/// en: 'Theme'
+	String get theme => 'Theme';
 
-	/// en: 'Match the system, or force a light or dark theme.'
-	String get themeModeHint => 'Match the system, or force a light or dark theme.';
+	/// en: 'Choose a built-in or custom theme.'
+	String get themeHint => 'Choose a built-in or custom theme.';
 
-	/// en: 'System'
-	String get themeModeSystem => 'System';
+	/// en: 'Custom themes'
+	String get customThemes => 'Custom themes';
 
-	/// en: 'Light'
-	String get themeModeLight => 'Light';
+	/// en: 'Place theme JSON files in this folder. Changes are loaded when you switch themes.'
+	String get customThemesHint => 'Place theme JSON files in this folder. Changes are loaded when you switch themes.';
 
-	/// en: 'Dark'
-	String get themeModeDark => 'Dark';
+	/// en: 'Add theme'
+	String get addTheme => 'Add theme';
+
+	/// en: 'New Custom Theme'
+	String get addThemeTitle => 'New Custom Theme';
+
+	/// en: 'Theme name'
+	String get addThemeNameHint => 'Theme name';
+
+	/// en: 'Create'
+	String get addThemeCreate => 'Create';
+
+	/// en: 'Cancel'
+	String get addThemeCancel => 'Cancel';
+
+	/// en: 'Edit'
+	String get editTheme => 'Edit';
+
+	/// en: 'Delete'
+	String get deleteTheme => 'Delete';
+
+	/// en: 'Delete Theme?'
+	String get deleteThemeTitle => 'Delete Theme?';
+
+	/// en: 'Delete "$name"? This cannot be undone.'
+	String deleteThemeMessage({required Object name}) => 'Delete "${name}"? This cannot be undone.';
+
+	/// en: 'Loading themes…'
+	String get loadingThemes => 'Loading themes…';
+
+	/// en: 'No custom themes yet.'
+	String get noCustomThemes => 'No custom themes yet.';
+
+	/// en: 'Invalid theme JSON'
+	String get invalidTheme => 'Invalid theme JSON';
 
 	/// en: 'Files'
 	String get filesSection => 'Files';
@@ -1554,11 +1587,22 @@ extension on Translations {
 			'preferences.appearance.title' => 'Appearance',
 			'preferences.appearance.subtitle' => 'Defaults for how files and the sidebar are displayed.',
 			'preferences.appearance.themeSection' => 'Theme',
-			'preferences.appearance.themeMode' => 'Appearance',
-			'preferences.appearance.themeModeHint' => 'Match the system, or force a light or dark theme.',
-			'preferences.appearance.themeModeSystem' => 'System',
-			'preferences.appearance.themeModeLight' => 'Light',
-			'preferences.appearance.themeModeDark' => 'Dark',
+			'preferences.appearance.theme' => 'Theme',
+			'preferences.appearance.themeHint' => 'Choose a built-in or custom theme.',
+			'preferences.appearance.customThemes' => 'Custom themes',
+			'preferences.appearance.customThemesHint' => 'Place theme JSON files in this folder. Changes are loaded when you switch themes.',
+			'preferences.appearance.addTheme' => 'Add theme',
+			'preferences.appearance.addThemeTitle' => 'New Custom Theme',
+			'preferences.appearance.addThemeNameHint' => 'Theme name',
+			'preferences.appearance.addThemeCreate' => 'Create',
+			'preferences.appearance.addThemeCancel' => 'Cancel',
+			'preferences.appearance.editTheme' => 'Edit',
+			'preferences.appearance.deleteTheme' => 'Delete',
+			'preferences.appearance.deleteThemeTitle' => 'Delete Theme?',
+			'preferences.appearance.deleteThemeMessage' => ({required Object name}) => 'Delete "${name}"? This cannot be undone.',
+			'preferences.appearance.loadingThemes' => 'Loading themes…',
+			'preferences.appearance.noCustomThemes' => 'No custom themes yet.',
+			'preferences.appearance.invalidTheme' => 'Invalid theme JSON',
 			'preferences.appearance.filesSection' => 'Files',
 			'preferences.appearance.showHidden' => 'Show hidden files by default',
 			'preferences.appearance.showHiddenHint' => 'Applies to new tabs. Existing tabs keep their setting.',

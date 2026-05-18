@@ -10,7 +10,7 @@ class SettingsStore {
 
   SettingsStore._();
 
-  final themeMode = signal<String>('system');
+  final themeId = signal<String>('dark');
   final terminal = signal<String>('auto');
   final terminalCustomCommand = signal<String>('');
   final sessionIsDual = signal<bool>(false);
@@ -46,7 +46,7 @@ class SettingsStore {
 
   Future<void> _loadFromDb() async {
     final row = await _db.getSettings();
-    themeMode.value = row.themeMode;
+    themeId.value = row.themeMode == 'system' ? 'dark' : row.themeMode;
     terminal.value = row.terminal;
     terminalCustomCommand.value = row.terminalCustomCommand;
     sessionIsDual.value = row.isDual;
@@ -69,7 +69,7 @@ class SettingsStore {
   void _wireAutoSave() {
     _disposers.add(
       effect(() {
-        themeMode.value;
+        themeId.value;
         terminal.value;
         terminalCustomCommand.value;
         sessionIsDual.value;
@@ -102,7 +102,7 @@ class SettingsStore {
     try {
       await _db.updateSettings(
         AppSettingsCompanion(
-          themeMode: Value(themeMode.value),
+          themeMode: Value(themeId.value),
           terminal: Value(terminal.value),
           terminalCustomCommand: Value(terminalCustomCommand.value),
           isDual: Value(sessionIsDual.value),
