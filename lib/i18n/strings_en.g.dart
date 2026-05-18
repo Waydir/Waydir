@@ -1291,9 +1291,6 @@ class TranslationsPreferencesDiagnosticsEn {
 	/// en: 'Filter logs…'
 	String get search => 'Filter logs…';
 
-	/// en: 'Open logs folder'
-	String get openFolder => 'Open logs folder';
-
 	/// en: 'Export current log'
 	String get export => 'Export current log';
 
@@ -1561,7 +1558,6 @@ extension on Translations {
 			'preferences.diagnostics.subtitle' => 'Recent warnings and errors. Logs are written to disk for bug reports.',
 			'preferences.diagnostics.empty' => 'No warnings or errors logged this session.',
 			'preferences.diagnostics.search' => 'Filter logs…',
-			'preferences.diagnostics.openFolder' => 'Open logs folder',
 			'preferences.diagnostics.export' => 'Export current log',
 			'preferences.diagnostics.copy' => 'Copy visible',
 			'preferences.diagnostics.clear' => 'Clear',

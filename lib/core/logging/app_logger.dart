@@ -94,8 +94,6 @@ class AppLogger {
     } catch (_) {}
   }
 
-  Future<String> logsDir() => AppDirs.logs();
-
   Future<String> currentLogFile() async =>
       p.join(await AppDirs.logs(), _fileName);
 

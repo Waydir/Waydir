@@ -156,7 +156,6 @@
       "subtitle": "Recent warnings and errors. Logs are written to disk for bug reports.",
       "empty": "No warnings or errors logged this session.",
       "search": "Filter logs…",
-      "openFolder": "Open logs folder",
       "export": "Export current log",
       "copy": "Copy visible",
       "clear": "Clear",

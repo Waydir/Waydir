@@ -6,7 +6,6 @@ import 'package:signals/signals_flutter.dart';
 import '../../../core/fs/waydir_core_loader.dart';
 import '../../../core/logging/app_logger.dart';
 import '../../../core/logging/log_entry.dart';
-import '../../../core/open/open_service.dart';
 import '../../../i18n/strings.g.dart';
 import '../../../ui/overlays/toast.dart';
 import '../../../ui/theme/app_theme.dart';
@@ -23,6 +22,7 @@ class DiagnosticsPane extends StatefulWidget {
 class _DiagnosticsPaneState extends State<DiagnosticsPane> {
   final _searchController = TextEditingController();
   String _query = '';
+  bool _searchFocused = false;
 
   @override
   void dispose() {
@@ -48,11 +48,6 @@ class _DiagnosticsPaneState extends State<DiagnosticsPane> {
     return e.stackTrace == null ? base : '$base\n${e.stackTrace}';
   }
 
-  Future<void> _openFolder() async {
-    final dir = await log.logsDir();
-    await OpenService.openDefault(dir);
-  }
-
   Future<void> _copy(List<LogEntry> entries) async {
     final text = entries.map(_format).join('\n');
     await Clipboard.setData(ClipboardData(text: text));
@@ -68,15 +63,9 @@ class _DiagnosticsPaneState extends State<DiagnosticsPane> {
       final visible = _filtered(all);
       return SettingsPaneScaffold(
         children: [
-          Text(
-            t.preferences.diagnostics.title,
-            style: context.txt.dialogTitle,
-          ),
+          Text(t.preferences.diagnostics.title, style: context.txt.dialogTitle),
           const SizedBox(height: 4),
-          Text(
-            t.preferences.diagnostics.subtitle,
-            style: context.txt.muted,
-          ),
+          Text(t.preferences.diagnostics.subtitle, style: context.txt.muted),
           const SizedBox(height: 8),
           SelectableText(
             'Native: ${WaydirCoreLoader.buildInfo() ?? 'unavailable'}',
@@ -84,50 +73,41 @@ class _DiagnosticsPaneState extends State<DiagnosticsPane> {
           ),
           const SizedBox(height: 16),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
-                child: SizedBox(
-                  height: 34,
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: (v) => setState(() => _query = v),
-                    style: context.txt.body,
-                    decoration: InputDecoration(
-                      isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 8,
-                      ),
-                      hintText: t.preferences.diagnostics.search,
-                      hintStyle: context.txt.body.copyWith(
-                        color: AppColors.fgMuted,
-                      ),
-                      filled: true,
-                      fillColor: AppColors.bgInput,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(4),
-                        borderSide: BorderSide(color: AppColors.borderColor),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(4),
-                        borderSide: BorderSide(color: AppColors.borderColor),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(4),
-                        borderSide: BorderSide(color: AppColors.accent),
+                child: Focus(
+                  onFocusChange: (focused) =>
+                      setState(() => _searchFocused = focused),
+                  child: Container(
+                    height: 34,
+                    alignment: Alignment.centerLeft,
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    decoration: BoxDecoration(
+                      color: AppColors.bgInput,
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(
+                        color: _searchFocused
+                            ? AppColors.accent
+                            : AppColors.borderColor,
                       ),
                     ),
-                    cursorColor: AppColors.accent,
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (v) => setState(() => _query = v),
+                      style: context.txt.body,
+                      decoration: InputDecoration.collapsed(
+                        hintText: t.preferences.diagnostics.search,
+                        hintStyle: context.txt.body.copyWith(
+                          color: AppColors.fgMuted,
+                        ),
+                      ),
+                      cursorColor: AppColors.accent,
+                    ),
                   ),
                 ),
               ),
               const SizedBox(width: 8),
-              _Btn(
-                icon: PhosphorIconsRegular.folderOpen,
-                label: t.preferences.diagnostics.openFolder,
-                onTap: _openFolder,
-              ),
-              const SizedBox(width: 6),
               _Btn(
                 icon: PhosphorIconsRegular.copy,
                 label: t.preferences.diagnostics.copy,
@@ -208,10 +188,7 @@ class _LogRow extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 6,
-                  vertical: 2,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(3),
@@ -231,10 +208,7 @@ class _LogRow extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 4),
-          SelectableText(
-            entry.message,
-            style: context.txt.body,
-          ),
+          SelectableText(entry.message, style: context.txt.body),
         ],
       ),
     );
@@ -262,9 +236,7 @@ class _BtnState extends State<_Btn> {
         ? AppColors.fgMuted.withValues(alpha: 0.5)
         : (_hovered ? AppColors.fg : AppColors.fgMuted);
     return MouseRegion(
-      cursor: enabled
-          ? SystemMouseCursors.click
-          : SystemMouseCursors.basic,
+      cursor: enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
@@ -273,9 +245,7 @@ class _BtnState extends State<_Btn> {
           height: 34,
           padding: const EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
-            color: enabled && _hovered
-                ? AppColors.bgHover
-                : AppColors.bgInput,
+            color: enabled && _hovered ? AppColors.bgHover : AppColors.bgInput,
             borderRadius: BorderRadius.circular(4),
             border: Border.all(color: AppColors.borderColor),
           ),
@@ -283,10 +253,7 @@ class _BtnState extends State<_Btn> {
             children: [
               PhosphorIcon(widget.icon, size: 14, color: fg),
               const SizedBox(width: 6),
-              Text(
-                widget.label,
-                style: context.txt.body.copyWith(color: fg),
-              ),
+              Text(widget.label, style: context.txt.body.copyWith(color: fg)),
             ],
           ),
         ),
