@@ -8,15 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Light and Nord built-in themes.
+- Custom theme management: create, edit, and delete your own themes via JSON files in Preferences.
+- Ctrl+H shortcut to toggle hidden files.
 - Recursive search now streams results as they are found, with a live counter of scanned entries instead of waiting for the full scan to complete.
 
 ### Changed
 - Completely rebuilt Quick Look for a cleaner preview experience with better file details, image viewing, and text/code editing.
+- Faster directory scanning in large folders thanks to improved parallel walk.
+
+### Removed
+- Command palette (Ctrl+P).
 
 ## [0.3.1] - 2026-05-17
 
 ### Fixed
-- Linux RPM no longer fails to install on Fedora and other non-Debian distros due to an unresolvable `libbz2.so.1.0` dependency. The package now bundles libarchive together with its runtime libraries, making it self-contained across distributions.
+- Linux RPM no longer fails to install on Fedora and other non-Debian distros due to an unresolvable `libbz2.so.1.0` dependency.
 
 ## [0.3.0] - 2026-05-17
 
