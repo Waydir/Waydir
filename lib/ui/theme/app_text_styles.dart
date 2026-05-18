@@ -43,112 +43,113 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
 
   static const _systemFont = 'system-ui';
 
-  /// Builds the text styles for [brightness]. Must be called after
-  /// [AppColors.brightness] has been set so color getters resolve correctly.
   static AppTextStyles forBrightness(Brightness brightness) {
-    AppColors.brightness = brightness;
     return AppTextStyles(
-    badge: TextStyle(
-      fontSize: 9,
-      fontWeight: FontWeight.w700,
-      color: Colors.white,
-      height: 1.1,
-      fontFamily: _systemFont,
-    ),
-    micro: TextStyle(
-      fontSize: 10,
-      color: AppColors.fgMuted,
-      fontStyle: FontStyle.italic,
-      fontFamily: _systemFont,
-    ),
-    caption: TextStyle(
-      fontSize: 11,
-      height: 1.2,
-      color: AppColors.fgMuted,
-      fontFamily: _systemFont,
-    ),
-    captionSmall: TextStyle(
-      fontSize: 12,
-      color: AppColors.fgMuted,
-      fontFamily: _systemFont,
-    ),
-    sectionLabel: TextStyle(
-      fontSize: 11,
-      height: 1.2,
-      fontWeight: FontWeight.w600,
-      letterSpacing: 0.8,
-      color: AppColors.fgMuted,
-      fontFamily: _systemFont,
-    ),
-    keyCap: TextStyle(
-      fontSize: 11.5,
-      height: 1.2,
-      fontWeight: FontWeight.w500,
-      color: AppColors.fg,
-      fontFamily: 'monospace',
-    ),
-    code: TextStyle(
-      fontSize: 12.5,
-      height: 1.45,
-      color: AppColors.fg,
-      fontFamily: 'monospace',
-    ),
-    row: TextStyle(
-      fontSize: 13,
-      height: 1.3,
-      color: AppColors.fg,
-      fontFamily: _systemFont,
-    ),
-    rowEmphasis: TextStyle(
-      fontSize: 13,
-      height: 1.3,
-      fontWeight: FontWeight.w500,
-      color: AppColors.fg,
-      fontFamily: _systemFont,
-    ),
-    muted: TextStyle(
-      fontSize: 13,
-      height: 1.3,
-      color: AppColors.fgMuted,
-      fontFamily: _systemFont,
-    ),
-    fieldLabel: TextStyle(
-      fontSize: 13,
-      fontWeight: FontWeight.w600,
-      letterSpacing: 0.3,
-      color: AppColors.fgMuted,
-      fontFamily: _systemFont,
-    ),
-    body: TextStyle(fontSize: 14, color: AppColors.fg, fontFamily: _systemFont),
-    bodyEmphasis: TextStyle(
-      fontSize: 14,
-      fontWeight: FontWeight.w500,
-      color: AppColors.fg,
-      fontFamily: _systemFont,
-    ),
-    bodyMuted: TextStyle(
-      fontSize: 14,
-      color: AppColors.fgMuted,
-      fontFamily: _systemFont,
-    ),
-    dialogTitle: TextStyle(
-      fontSize: 15,
-      fontWeight: FontWeight.w600,
-      color: AppColors.fg,
-      fontFamily: _systemFont,
-    ),
-    heading: TextStyle(
-      fontSize: 16,
-      fontWeight: FontWeight.w600,
-      color: AppColors.fg,
-      fontFamily: _systemFont,
-    ),
-    pageTitle: TextStyle(
-      fontSize: 17,
-      fontWeight: FontWeight.w600,
-      color: AppColors.fg,
-      fontFamily: _systemFont,
-    ),
+      badge: TextStyle(
+        fontSize: 9,
+        fontWeight: FontWeight.w700,
+        color: Colors.white,
+        height: 1.1,
+        fontFamily: _systemFont,
+      ),
+      micro: TextStyle(
+        fontSize: 10,
+        color: AppColors.fgMuted,
+        fontStyle: FontStyle.italic,
+        fontFamily: _systemFont,
+      ),
+      caption: TextStyle(
+        fontSize: 11,
+        height: 1.2,
+        color: AppColors.fgMuted,
+        fontFamily: _systemFont,
+      ),
+      captionSmall: TextStyle(
+        fontSize: 12,
+        color: AppColors.fgMuted,
+        fontFamily: _systemFont,
+      ),
+      sectionLabel: TextStyle(
+        fontSize: 11,
+        height: 1.2,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.8,
+        color: AppColors.fgMuted,
+        fontFamily: _systemFont,
+      ),
+      keyCap: TextStyle(
+        fontSize: 11.5,
+        height: 1.2,
+        fontWeight: FontWeight.w500,
+        color: AppColors.fg,
+        fontFamily: 'monospace',
+      ),
+      code: TextStyle(
+        fontSize: 12.5,
+        height: 1.45,
+        color: AppColors.fg,
+        fontFamily: 'monospace',
+      ),
+      row: TextStyle(
+        fontSize: 13,
+        height: 1.3,
+        color: AppColors.fg,
+        fontFamily: _systemFont,
+      ),
+      rowEmphasis: TextStyle(
+        fontSize: 13,
+        height: 1.3,
+        fontWeight: FontWeight.w500,
+        color: AppColors.fg,
+        fontFamily: _systemFont,
+      ),
+      muted: TextStyle(
+        fontSize: 13,
+        height: 1.3,
+        color: AppColors.fgMuted,
+        fontFamily: _systemFont,
+      ),
+      fieldLabel: TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.3,
+        color: AppColors.fgMuted,
+        fontFamily: _systemFont,
+      ),
+      body: TextStyle(
+        fontSize: 14,
+        color: AppColors.fg,
+        fontFamily: _systemFont,
+      ),
+      bodyEmphasis: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: AppColors.fg,
+        fontFamily: _systemFont,
+      ),
+      bodyMuted: TextStyle(
+        fontSize: 14,
+        color: AppColors.fgMuted,
+        fontFamily: _systemFont,
+      ),
+      dialogTitle: TextStyle(
+        fontSize: 15,
+        fontWeight: FontWeight.w600,
+        color: AppColors.fg,
+        fontFamily: _systemFont,
+      ),
+      heading: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        color: AppColors.fg,
+        fontFamily: _systemFont,
+      ),
+      pageTitle: TextStyle(
+        fontSize: 17,
+        fontWeight: FontWeight.w600,
+        color: AppColors.fg,
+        fontFamily: _systemFont,
+      ),
     );
   }
 

@@ -7,7 +7,7 @@ part 'app_database.g.dart';
 
 class AppSettings extends Table {
   IntColumn get id => integer().autoIncrement()();
-  TextColumn get themeMode => text().withDefault(const Constant('system'))();
+  TextColumn get themeMode => text().withDefault(const Constant('dark'))();
   TextColumn get terminal => text().withDefault(const Constant('auto'))();
   TextColumn get terminalCustomCommand =>
       text().withDefault(const Constant(''))();
@@ -101,7 +101,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -153,6 +153,11 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 11) {
         await addSettingColumn(appSettings.themeMode);
+      }
+      if (from < 12) {
+        await customStatement(
+          "UPDATE app_settings SET theme_mode = 'dark' WHERE theme_mode = 'system'",
+        );
       }
     },
   );

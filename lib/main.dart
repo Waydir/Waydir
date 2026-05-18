@@ -9,6 +9,7 @@ import 'core/fs/fs_worker_pool.dart';
 import 'core/logging/app_logger.dart';
 import 'core/settings/settings_store.dart';
 import 'i18n/strings.g.dart';
+import 'ui/theme/app_theme_registry.dart';
 
 void main(List<String> args) async {
   runZonedGuarded(
@@ -18,11 +19,7 @@ void main(List<String> args) async {
       await AppLogger.instance.init();
 
       FlutterError.onError = (details) {
-        log.error(
-          'flutter',
-          details.exceptionAsString(),
-          stack: details.stack,
-        );
+        log.error('flutter', details.exceptionAsString(), stack: details.stack);
         FlutterError.presentError(details);
       };
 
@@ -36,6 +33,7 @@ void main(List<String> args) async {
         await initializeDateFormatting();
       } catch (_) {}
       unawaited(FsWorkerPool.instance.ensureStarted());
+      await AppThemeRegistry.instance.load();
       await SettingsStore.instance.load();
       await AppInfo.init();
       runApp(TranslationProvider(child: const WaydirApp()));

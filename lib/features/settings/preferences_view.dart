@@ -160,6 +160,7 @@ class _CloseButtonState extends State<_CloseButton> {
       onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
         onTap: widget.onTap,
+        behavior: HitTestBehavior.opaque,
         child: Container(
           width: 26,
           height: 26,
@@ -243,9 +244,7 @@ class _CategoryItemState extends State<_CategoryItem> {
             color: bg,
             borderRadius: BorderRadius.circular(4),
             border: widget.selected
-                ? Border(
-                    left: BorderSide(color: AppColors.accent, width: 2),
-                  )
+                ? Border(left: BorderSide(color: AppColors.accent, width: 2))
                 : null,
           ),
           child: Row(
@@ -274,6 +273,7 @@ class _CategoryItemState extends State<_CategoryItem> {
 
 class _ContentPane extends StatelessWidget {
   final Category category;
+
   const _ContentPane({required this.category});
 
   @override
@@ -286,8 +286,6 @@ class _ContentPane extends StatelessWidget {
     };
   }
 }
-
-// ── Shared widgets used by individual panes ────────────────────────────────
 
 class SettingsPaneScaffold extends StatelessWidget {
   final List<Widget> children;
@@ -511,6 +509,56 @@ class SettingsToggle extends StatefulWidget {
 
   @override
   State<SettingsToggle> createState() => _SettingsToggleState();
+}
+
+class SettingsActionButton extends StatefulWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const SettingsActionButton({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  State<SettingsActionButton> createState() => _SettingsActionButtonState();
+}
+
+class _SettingsActionButtonState extends State<SettingsActionButton> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final fg = _hovered ? AppColors.fg : AppColors.fgMuted;
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: Container(
+          height: 30,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          decoration: BoxDecoration(
+            color: _hovered ? AppColors.bgHover : AppColors.bgInput,
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(color: AppColors.borderColor),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              PhosphorIcon(widget.icon, size: 14, color: fg),
+              const SizedBox(width: 6),
+              Text(widget.label, style: context.txt.body.copyWith(color: fg)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _SettingsToggleState extends State<SettingsToggle> {
