@@ -304,6 +304,7 @@ class TranslationsPreferencesEn {
 	late final TranslationsPreferencesGeneralEn general = TranslationsPreferencesGeneralEn.internal(_root);
 	late final TranslationsPreferencesAppearanceEn appearance = TranslationsPreferencesAppearanceEn.internal(_root);
 	late final TranslationsPreferencesBookmarksEn bookmarks = TranslationsPreferencesBookmarksEn.internal(_root);
+	late final TranslationsPreferencesDiagnosticsEn diagnostics = TranslationsPreferencesDiagnosticsEn.internal(_root);
 	late final TranslationsPreferencesAboutEn about = TranslationsPreferencesAboutEn.internal(_root);
 }
 
@@ -1059,6 +1060,9 @@ class TranslationsPreferencesCategoriesEn {
 	/// en: 'Bookmarks'
 	String get bookmarks => 'Bookmarks';
 
+	/// en: 'Diagnostics'
+	String get diagnostics => 'Diagnostics';
+
 	/// en: 'About'
 	String get about => 'About';
 }
@@ -1267,6 +1271,45 @@ class TranslationsPreferencesBookmarksEn {
 	String get remove => 'Remove';
 }
 
+// Path: preferences.diagnostics
+class TranslationsPreferencesDiagnosticsEn {
+	TranslationsPreferencesDiagnosticsEn.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Diagnostics'
+	String get title => 'Diagnostics';
+
+	/// en: 'Recent warnings and errors. Logs are written to disk for bug reports.'
+	String get subtitle => 'Recent warnings and errors. Logs are written to disk for bug reports.';
+
+	/// en: 'No warnings or errors logged this session.'
+	String get empty => 'No warnings or errors logged this session.';
+
+	/// en: 'Filter logs…'
+	String get search => 'Filter logs…';
+
+	/// en: 'Open logs folder'
+	String get openFolder => 'Open logs folder';
+
+	/// en: 'Export current log'
+	String get export => 'Export current log';
+
+	/// en: 'Copy visible'
+	String get copy => 'Copy visible';
+
+	/// en: 'Clear'
+	String get clear => 'Clear';
+
+	/// en: 'Copied to clipboard'
+	String get copied => 'Copied to clipboard';
+
+	/// en: 'Logs may contain file paths. Review before sharing.'
+	String get privacyNote => 'Logs may contain file paths. Review before sharing.';
+}
+
 // Path: preferences.about
 class TranslationsPreferencesAboutEn {
 	TranslationsPreferencesAboutEn.internal(this._root);
@@ -1453,6 +1496,7 @@ extension on Translations {
 			'preferences.categories.general' => 'General',
 			'preferences.categories.appearance' => 'Appearance',
 			'preferences.categories.bookmarks' => 'Bookmarks',
+			'preferences.categories.diagnostics' => 'Diagnostics',
 			'preferences.categories.about' => 'About',
 			'preferences.general.title' => 'General',
 			'preferences.general.subtitle' => 'Startup, file operations and terminal integration.',
@@ -1513,6 +1557,16 @@ extension on Translations {
 			'preferences.bookmarks.empty' => 'No bookmarks yet. Drop a folder onto the sidebar to add one.',
 			'preferences.bookmarks.rename' => 'Rename',
 			'preferences.bookmarks.remove' => 'Remove',
+			'preferences.diagnostics.title' => 'Diagnostics',
+			'preferences.diagnostics.subtitle' => 'Recent warnings and errors. Logs are written to disk for bug reports.',
+			'preferences.diagnostics.empty' => 'No warnings or errors logged this session.',
+			'preferences.diagnostics.search' => 'Filter logs…',
+			'preferences.diagnostics.openFolder' => 'Open logs folder',
+			'preferences.diagnostics.export' => 'Export current log',
+			'preferences.diagnostics.copy' => 'Copy visible',
+			'preferences.diagnostics.clear' => 'Clear',
+			'preferences.diagnostics.copied' => 'Copied to clipboard',
+			'preferences.diagnostics.privacyNote' => 'Logs may contain file paths. Review before sharing.',
 			'preferences.about.title' => 'About',
 			'preferences.about.version' => 'Version',
 			'preferences.about.build' => 'Build',

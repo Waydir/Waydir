@@ -1,9 +1,7 @@
-import 'dart:io';
-
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
+
+import '../platform/app_dirs.dart';
 
 part 'app_database.g.dart';
 
@@ -211,17 +209,7 @@ class AppDatabase extends _$AppDatabase {
     );
   }
 
-  static Future<String> _getDatabaseDirectory() async {
-    if (Platform.isLinux) {
-      final xdg = Platform.environment['XDG_CONFIG_HOME'];
-      final base = xdg != null && xdg.isNotEmpty
-          ? xdg
-          : p.join(Platform.environment['HOME'] ?? '', '.config');
-      return p.join(base, 'waydir');
-    }
-    final dir = await getApplicationSupportDirectory();
-    return dir.path;
-  }
+  static Future<String> _getDatabaseDirectory() => AppDirs.support();
 
   Future<AppSetting> getSettings() {
     return (select(appSettings)..limit(1)).getSingleOrNull().then((row) {

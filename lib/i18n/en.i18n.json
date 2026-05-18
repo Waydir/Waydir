@@ -83,6 +83,7 @@
       "general": "General",
       "appearance": "Appearance",
       "bookmarks": "Bookmarks",
+      "diagnostics": "Diagnostics",
       "about": "About"
     },
     "general": {
@@ -149,6 +150,18 @@
       "empty": "No bookmarks yet. Drop a folder onto the sidebar to add one.",
       "rename": "Rename",
       "remove": "Remove"
+    },
+    "diagnostics": {
+      "title": "Diagnostics",
+      "subtitle": "Recent warnings and errors. Logs are written to disk for bug reports.",
+      "empty": "No warnings or errors logged this session.",
+      "search": "Filter logs…",
+      "openFolder": "Open logs folder",
+      "export": "Export current log",
+      "copy": "Copy visible",
+      "clear": "Clear",
+      "copied": "Copied to clipboard",
+      "privacyNote": "Logs may contain file paths. Review before sharing."
     },
     "about": {
       "title": "About",

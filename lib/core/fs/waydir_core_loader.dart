@@ -5,6 +5,8 @@ import 'dart:typed_data';
 import 'package:ffi/ffi.dart';
 import 'package:path/path.dart' as p;
 
+import '../logging/app_logger.dart';
+
 typedef _SearchNative =
     Pointer<Uint8> Function(
       Pointer<Utf8>,
@@ -35,6 +37,9 @@ typedef _FreeDart = void Function(Pointer<Uint8>, int);
 
 typedef _AbiNative = Uint32 Function();
 typedef _AbiDart = int Function();
+
+typedef _StrNative = Pointer<Utf8> Function();
+typedef _StrDart = Pointer<Utf8> Function();
 
 /// Thrown when the required `waydir_core` native library cannot be loaded.
 /// `waydir_core` is a hard dependency: directory listing, recursive search
@@ -68,6 +73,11 @@ class WaydirCoreLoader {
         return lib;
       } catch (_) {}
     }
+    log.error(
+      'ffi.waydir_core',
+      'native waydir_core not found; searched: '
+          '${_candidatePaths().join(", ")}',
+    );
     return null;
   }
 
@@ -153,6 +163,33 @@ class WaydirCoreLoader {
       calloc.free(rootPtr);
       calloc.free(outLen);
     }
+  }
+
+  /// "{version} ({git}) abi={n}" for the loaded native lib, or null if
+  /// the library is absent.
+  static String? buildInfo() {
+    final lib = load();
+    if (lib == null) return null;
+    String sym(String name) {
+      try {
+        return lib
+            .lookupFunction<_StrNative, _StrDart>(name)()
+            .toDartString();
+      } catch (_) {
+        return '?';
+      }
+    }
+
+    int abi() {
+      try {
+        return lib.lookupFunction<_AbiNative, _AbiDart>('waydir_core_abi')();
+      } catch (_) {
+        return 0;
+      }
+    }
+
+    return '${sym('waydir_core_version')} (${sym('waydir_core_git')}) '
+        'abi=${abi()}';
   }
 
   static List<String> _candidatePaths() {
