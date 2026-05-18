@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Recursive search now streams results as they are found, with a live counter of scanned entries instead of waiting for the full scan to complete.
+
 ## [0.3.1] - 2026-05-17
 
 ### Fixed
