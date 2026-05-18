@@ -59,7 +59,7 @@ class _PasswordDialogState extends State<_PasswordDialog> {
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: AppColors.bgSurface,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.zero,
             border: Border.all(color: AppColors.borderColor),
             boxShadow: [
               BoxShadow(

@@ -45,6 +45,24 @@ typedef _SearchPollDart =
 typedef _SessionVoidNative = Void Function(Pointer<Void>);
 typedef _SessionVoidDart = void Function(Pointer<Void>);
 
+typedef _FolderScanStartNative = Pointer<Void> Function(Pointer<Utf8>);
+typedef _FolderScanStartDart = Pointer<Void> Function(Pointer<Utf8>);
+
+typedef _FolderScanPollNative =
+    Void Function(
+      Pointer<Void>,
+      Pointer<Uint64>,
+      Pointer<IntPtr>,
+      Pointer<Int32>,
+    );
+typedef _FolderScanPollDart =
+    void Function(
+      Pointer<Void>,
+      Pointer<Uint64>,
+      Pointer<IntPtr>,
+      Pointer<Int32>,
+    );
+
 typedef _ListNative =
     Pointer<Uint8> Function(Pointer<Utf8>, Bool, Pointer<IntPtr>);
 typedef _ListDart =
@@ -80,6 +98,13 @@ class SearchPollResult {
   final int scanned;
   final bool done;
   const SearchPollResult(this.batch, this.scanned, this.done);
+}
+
+class FolderScanPollResult {
+  final int bytes;
+  final int items;
+  final bool done;
+  const FolderScanPollResult(this.bytes, this.items, this.done);
 }
 
 /// Loads the required `waydir_core` native helper (Rust). Cached.
@@ -214,6 +239,65 @@ class WaydirCoreLoader {
     fn(Pointer<Void>.fromAddress(session));
   }
 
+  static int? folderScanStart(String root) {
+    final lib = requireLib();
+    final start = lib
+        .lookupFunction<_FolderScanStartNative, _FolderScanStartDart>(
+          'waydir_folder_scan_start',
+        );
+    final rootPtr = root.toNativeUtf8();
+    try {
+      final session = start(rootPtr);
+      if (session == nullptr) return null;
+      return session.address;
+    } catch (_) {
+      return null;
+    } finally {
+      calloc.free(rootPtr);
+    }
+  }
+
+  static FolderScanPollResult folderScanPoll(int session) {
+    final lib = requireLib();
+    final poll = lib.lookupFunction<_FolderScanPollNative, _FolderScanPollDart>(
+      'waydir_folder_scan_poll',
+    );
+    final sessionPtr = Pointer<Void>.fromAddress(session);
+    final outBytes = calloc<Uint64>();
+    final outItems = calloc<IntPtr>();
+    final outDone = calloc<Int32>();
+    try {
+      poll(sessionPtr, outBytes, outItems, outDone);
+      return FolderScanPollResult(
+        outBytes.value,
+        outItems.value,
+        outDone.value != 0,
+      );
+    } catch (_) {
+      return const FolderScanPollResult(0, 0, true);
+    } finally {
+      calloc.free(outBytes);
+      calloc.free(outItems);
+      calloc.free(outDone);
+    }
+  }
+
+  static void folderScanCancel(int session) {
+    final lib = requireLib();
+    final cancel = lib.lookupFunction<_SessionVoidNative, _SessionVoidDart>(
+      'waydir_folder_scan_cancel',
+    );
+    cancel(Pointer<Void>.fromAddress(session));
+  }
+
+  static void folderScanFree(int session) {
+    final lib = requireLib();
+    final fn = lib.lookupFunction<_SessionVoidNative, _SessionVoidDart>(
+      'waydir_folder_scan_free',
+    );
+    fn(Pointer<Void>.fromAddress(session));
+  }
+
   /// Native single-directory listing. Returns a FileEntryCodec buffer or
   /// null if unavailable / failed (e.g. unreadable directory).
   static Uint8List? listDir(String path, {bool withStat = true}) {
@@ -267,9 +351,7 @@ class WaydirCoreLoader {
     if (lib == null) return null;
     String sym(String name) {
       try {
-        return lib
-            .lookupFunction<_StrNative, _StrDart>(name)()
-            .toDartString();
+        return lib.lookupFunction<_StrNative, _StrDart>(name)().toDartString();
       } catch (_) {
         return '?';
       }

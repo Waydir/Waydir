@@ -67,7 +67,7 @@ class _CustomDialogBody extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.bgSurface,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.zero,
         border: Border.all(color: AppColors.borderColor),
         boxShadow: [
           BoxShadow(

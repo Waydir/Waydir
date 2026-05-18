@@ -83,7 +83,7 @@ class _CompressBodyState extends State<_CompressBody> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.bgSurface,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.zero,
         border: Border.all(color: AppColors.borderColor),
       ),
       child: Column(

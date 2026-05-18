@@ -763,7 +763,7 @@ class _SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(14, 6, 14, 4),
       child: Text(
         title.toUpperCase(),
-        style: Theme.of(context).textTheme.labelSmall,
+        style: context.txt.sectionLabel,
       ),
     );
   }

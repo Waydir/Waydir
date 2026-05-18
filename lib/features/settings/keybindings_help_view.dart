@@ -132,7 +132,7 @@ class _KeybindingsHelpDialogState extends State<_KeybindingsHelpDialog> {
           height: height,
           decoration: BoxDecoration(
             color: AppColors.bgSurface,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.zero,
             border: Border.all(color: AppColors.borderColor),
             boxShadow: [
               BoxShadow(
@@ -143,7 +143,7 @@ class _KeybindingsHelpDialogState extends State<_KeybindingsHelpDialog> {
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.zero,
             child: Column(
               children: [
                 _Header(onClose: () => Navigator.of(context).pop()),
