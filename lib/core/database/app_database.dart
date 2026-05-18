@@ -110,27 +110,37 @@ class AppDatabase extends _$AppDatabase {
       if (from < 2) {
         await m.createTable(bookmarks);
       }
+      Future<void> addSettingColumn(GeneratedColumn column) async {
+        final existing = await customSelect(
+          'PRAGMA table_info(app_settings)',
+        ).get();
+        final names = existing.map((r) => r.read<String>('name')).toSet();
+        if (!names.contains(column.name)) {
+          await m.addColumn(appSettings, column);
+        }
+      }
+
       if (from < 3) {
-        await m.addColumn(appSettings, appSettings.sidebarCollapsed);
+        await addSettingColumn(appSettings.sidebarCollapsed);
       }
       if (from < 4) {
-        await m.addColumn(appSettings, appSettings.restoreSession);
-        await m.addColumn(appSettings, appSettings.defaultStartingPath);
-        await m.addColumn(appSettings, appSettings.confirmDelete);
-        await m.addColumn(appSettings, appSettings.showHiddenDefault);
-        await m.addColumn(appSettings, appSettings.rowDensity);
-        await m.addColumn(appSettings, appSettings.dateFormat);
+        await addSettingColumn(appSettings.restoreSession);
+        await addSettingColumn(appSettings.defaultStartingPath);
+        await addSettingColumn(appSettings.confirmDelete);
+        await addSettingColumn(appSettings.showHiddenDefault);
+        await addSettingColumn(appSettings.rowDensity);
+        await addSettingColumn(appSettings.dateFormat);
       }
       if (from < 5) {
-        await m.addColumn(appSettings, appSettings.recentDatesRelative);
+        await addSettingColumn(appSettings.recentDatesRelative);
       }
       if (from < 6) {
-        await m.addColumn(appSettings, appSettings.deleteKeyBehavior);
+        await addSettingColumn(appSettings.deleteKeyBehavior);
       }
       if (from < 7) {
-        await m.addColumn(appSettings, appSettings.sortKey);
-        await m.addColumn(appSettings, appSettings.sortAscending);
-        await m.addColumn(appSettings, appSettings.foldersFirst);
+        await addSettingColumn(appSettings.sortKey);
+        await addSettingColumn(appSettings.sortAscending);
+        await addSettingColumn(appSettings.foldersFirst);
       }
       if (from < 8) {
         await m.createTable(folderPrefs);
@@ -142,7 +152,7 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(defaultApps);
       }
       if (from < 11) {
-        await m.addColumn(appSettings, appSettings.themeMode);
+        await addSettingColumn(appSettings.themeMode);
       }
     },
   );
