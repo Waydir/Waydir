@@ -37,11 +37,18 @@ tar -xzf waydir-*-linux-x64.tar.gz
 
 - Dual-pane navigation with tabs
 - Keyboard-driven nav, selection, and file ops
+- Archive support: browse, extract, compress, and edit ZIP, TAR, 7z, RAR, and more
+- Quick Look file preview with Space (images, text, code)
+- Open files with a chosen app and manage defaults per file type
+- Recursive search with live-streaming results
+- Git status bar with branch switching and stash management
+- Sidebar bookmarks and drive management (mount/unmount)
+- Light, Dark, and Nord built-in themes with custom theme support via JSON
+- Preferences dialog for appearance, behavior, and terminal integration
 - Background-isolate directory scanning (no UI jank)
-- Copy / move / delete with progress
+- Copy / move / delete with conflict resolution and progress tracking
 - Clipboard integration
-- Minimal dark interface
-- Linux, Windows and macOS builds
+- Linux, Windows, and macOS from a single codebase
 
 ## Development
 
