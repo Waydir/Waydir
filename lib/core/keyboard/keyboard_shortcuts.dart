@@ -294,10 +294,10 @@ class AppShortcuts {
       shift: true,
     ),
     ShortcutDef(
-      id: 'command_palette',
+      id: 'toggle_hidden',
       label: () => '',
-      group: ShortcutGroup.search,
-      key: LogicalKeyboardKey.keyP,
+      group: ShortcutGroup.panes,
+      key: LogicalKeyboardKey.keyH,
       ctrl: true,
     ),
     ShortcutDef(

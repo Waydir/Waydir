@@ -26,7 +26,6 @@ import '../ui/dialogs/dialog.dart';
 import '../ui/dialogs/compress_dialog.dart';
 import '../ui/dialogs/open_with_dialog.dart';
 import '../ui/dialogs/properties_dialog.dart';
-import '../ui/overlays/command_palette.dart';
 import '../ui/overlays/context_menu.dart';
 import '../ui/overlays/notification_overlay.dart';
 import '../ui/overlays/quick_look.dart';
@@ -762,39 +761,6 @@ class _WaydirPageState extends State<WaydirPage> {
     ).then((_) => _restoreFocus());
   }
 
-  void _openCommandPalette() {
-    showCommandPalette(
-      context: context,
-      actions: [
-        CommandPaletteAction(
-          icon: PhosphorIconsRegular.gearSix,
-          title: t.commandPalette.openPreferences,
-          subtitle: t.commandPalette.preferencesSubtitle,
-          searchText: 'settings options preferences',
-          run: _openPreferences,
-        ),
-        CommandPaletteAction(
-          icon: PhosphorIconsRegular.columns,
-          title: t.menu.dualPaneMode,
-          subtitle: _shell.isDual.value
-              ? t.commandPalette.enabled
-              : t.commandPalette.disabled,
-          searchText: 'view split panes dual',
-          run: _shell.toggleDual,
-        ),
-        CommandPaletteAction(
-          icon: PhosphorIconsRegular.eye,
-          title: t.menu.showHidden,
-          subtitle: SettingsStore.instance.showHiddenDefault.value
-              ? t.commandPalette.enabled
-              : t.commandPalette.disabled,
-          searchText: 'view hidden dotfiles files',
-          run: _toggleShowHiddenGlobal,
-        ),
-      ],
-    ).then((_) => _restoreFocus());
-  }
-
   KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
 
@@ -802,14 +768,6 @@ class _WaydirPageState extends State<WaydirPage> {
     final ctrl = AppShortcuts.isControl;
     final shift = HardwareKeyboard.instance.isShiftPressed;
     final alt = HardwareKeyboard.instance.isAltPressed;
-
-    if (!_isModalRouteOnTop() &&
-        ctrl &&
-        !shift &&
-        AppShortcuts.isKey('command_palette', key)) {
-      _openCommandPalette();
-      return KeyEventResult.handled;
-    }
 
     if (!_isModalRouteOnTop() &&
         ctrl &&
@@ -831,6 +789,11 @@ class _WaydirPageState extends State<WaydirPage> {
     if (ctrl && !shift && AppShortcuts.isKey('toggle_sidebar', key)) {
       final s = SettingsStore.instance.sidebarCollapsed;
       s.value = !s.value;
+      return KeyEventResult.handled;
+    }
+
+    if (ctrl && !shift && AppShortcuts.isKey('toggle_hidden', key)) {
+      _toggleShowHiddenGlobal();
       return KeyEventResult.handled;
     }
 
