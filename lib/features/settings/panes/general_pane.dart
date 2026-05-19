@@ -14,6 +14,8 @@ class GeneralPane extends StatelessWidget {
     final restoreSession = registry.byId('general.restoreSession');
     final defaultPath = registry.byId('general.defaultStartingPath');
     final confirmDelete = registry.byId('general.confirmDelete');
+    final confirmCopy = registry.byId('general.confirmCopy');
+    final confirmMove = registry.byId('general.confirmMove');
     final deleteKeyBehavior = registry.byId('general.deleteKeyBehavior');
     final terminal = registry.byId('general.terminal');
     final terminalCustom = registry.byId('general.terminalCustomCommand');
@@ -32,6 +34,8 @@ class GeneralPane extends StatelessWidget {
           children: [
             RegistrySettingRow(setting: deleteKeyBehavior),
             RegistrySettingRow(setting: confirmDelete),
+            RegistrySettingRow(setting: confirmCopy),
+            RegistrySettingRow(setting: confirmMove),
           ],
         ),
         SettingsSection(

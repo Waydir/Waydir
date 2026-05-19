@@ -21,6 +21,8 @@ class AppSettings extends Table {
   TextColumn get defaultStartingPath =>
       text().withDefault(const Constant(''))();
   BoolColumn get confirmDelete => boolean().withDefault(const Constant(true))();
+  BoolColumn get confirmCopy => boolean().withDefault(const Constant(false))();
+  BoolColumn get confirmMove => boolean().withDefault(const Constant(true))();
   BoolColumn get showHiddenDefault =>
       boolean().withDefault(const Constant(false))();
   TextColumn get rowDensity =>
@@ -101,7 +103,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -158,6 +160,10 @@ class AppDatabase extends _$AppDatabase {
         await customStatement(
           "UPDATE app_settings SET theme_mode = 'dark' WHERE theme_mode = 'system'",
         );
+      }
+      if (from < 13) {
+        await addSettingColumn(appSettings.confirmCopy);
+        await addSettingColumn(appSettings.confirmMove);
       }
     },
   );

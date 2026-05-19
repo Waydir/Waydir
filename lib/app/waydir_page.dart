@@ -70,6 +70,7 @@ class _WaydirPageState extends State<WaydirPage> {
   @override
   void initState() {
     super.initState();
+    _operationStore.confirmTransfer = _confirmTransfer;
     _effectDisposers.add(
       effect(() {
         if (!_shell.ready.value) return;
@@ -182,6 +183,51 @@ class _WaydirPageState extends State<WaydirPage> {
     _shell.dispose();
     _operationStore.dispose();
     super.dispose();
+  }
+
+  Future<bool> _confirmTransfer(TaskType type, List<String> sources) async {
+    final isCopy = type == TaskType.copy;
+    final enabled = isCopy
+        ? SettingsStore.instance.confirmCopy.value
+        : SettingsStore.instance.confirmMove.value;
+    if (!enabled) return true;
+    if (sources.isEmpty) return true;
+    if (!mounted) return true;
+
+    final count = sources.length;
+    final single = count == 1;
+    final name = PlatformPaths.fileName(sources.first);
+    final String title;
+    final String message;
+    final String actionLabel;
+    if (isCopy) {
+      title = t.dialog.confirmCopyTitle;
+      message = single
+          ? t.dialog.confirmCopySingle(name: name)
+          : t.dialog.confirmCopyMultiple(count: count);
+      actionLabel = t.dialog.copy;
+    } else {
+      title = t.dialog.confirmMoveTitle;
+      message = single
+          ? t.dialog.confirmMoveSingle(name: name)
+          : t.dialog.confirmMoveMultiple(count: count);
+      actionLabel = t.dialog.move;
+    }
+
+    final result = await showCustomDialog<String>(
+      context: context,
+      title: title,
+      icon: isCopy
+          ? PhosphorIconsRegular.copy
+          : PhosphorIconsRegular.arrowsLeftRight,
+      iconColor: AppColors.accent,
+      body: Text(message, style: context.txt.body.copyWith(height: 1.4)),
+      actions: [
+        DialogAction(label: t.dialog.cancel, color: AppColors.fgMuted),
+        DialogAction(label: actionLabel, color: AppColors.accent),
+      ],
+    );
+    return result == actionLabel;
   }
 
   Future<void> _confirmAndDelete({bool forcePermanent = false}) async {

@@ -48,6 +48,10 @@ class OperationStore {
 
   OperationStore({this.notificationStore});
 
+  /// Optional gate shown before a copy/move is enqueued. Returns whether the
+  /// transfer should proceed. Set by the UI layer so it can show a dialog.
+  Future<bool> Function(TaskType type, List<String> sources)? confirmTransfer;
+
   final tasks = signal<List<FileTask>>([]);
 
   final taskCompleted = Signal<String?>(null, debugLabel: 'taskCompleted');
@@ -103,6 +107,9 @@ class OperationStore {
       return s != dst;
     }).toList();
     if (filtered.isEmpty) return;
+
+    final confirm = confirmTransfer;
+    if (confirm != null && !await confirm(type, filtered)) return;
 
     final task = FileTask(
       id: '${_idCounter++}',

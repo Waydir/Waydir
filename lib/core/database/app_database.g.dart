@@ -152,6 +152,36 @@ class $AppSettingsTable extends AppSettings
     ),
     defaultValue: const Constant(true),
   );
+  static const VerificationMeta _confirmCopyMeta = const VerificationMeta(
+    'confirmCopy',
+  );
+  @override
+  late final GeneratedColumn<bool> confirmCopy = GeneratedColumn<bool>(
+    'confirm_copy',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("confirm_copy" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _confirmMoveMeta = const VerificationMeta(
+    'confirmMove',
+  );
+  @override
+  late final GeneratedColumn<bool> confirmMove = GeneratedColumn<bool>(
+    'confirm_move',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("confirm_move" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
   static const VerificationMeta _showHiddenDefaultMeta = const VerificationMeta(
     'showHiddenDefault',
   );
@@ -273,6 +303,8 @@ class $AppSettingsTable extends AppSettings
     restoreSession,
     defaultStartingPath,
     confirmDelete,
+    confirmCopy,
+    confirmMove,
     showHiddenDefault,
     rowDensity,
     dateFormat,
@@ -372,6 +404,24 @@ class $AppSettingsTable extends AppSettings
         confirmDelete.isAcceptableOrUnknown(
           data['confirm_delete']!,
           _confirmDeleteMeta,
+        ),
+      );
+    }
+    if (data.containsKey('confirm_copy')) {
+      context.handle(
+        _confirmCopyMeta,
+        confirmCopy.isAcceptableOrUnknown(
+          data['confirm_copy']!,
+          _confirmCopyMeta,
+        ),
+      );
+    }
+    if (data.containsKey('confirm_move')) {
+      context.handle(
+        _confirmMoveMeta,
+        confirmMove.isAcceptableOrUnknown(
+          data['confirm_move']!,
+          _confirmMoveMeta,
         ),
       );
     }
@@ -491,6 +541,14 @@ class $AppSettingsTable extends AppSettings
         DriftSqlType.bool,
         data['${effectivePrefix}confirm_delete'],
       )!,
+      confirmCopy: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}confirm_copy'],
+      )!,
+      confirmMove: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}confirm_move'],
+      )!,
       showHiddenDefault: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}show_hidden_default'],
@@ -544,6 +602,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
   final bool restoreSession;
   final String defaultStartingPath;
   final bool confirmDelete;
+  final bool confirmCopy;
+  final bool confirmMove;
   final bool showHiddenDefault;
   final String rowDensity;
   final String dateFormat;
@@ -564,6 +624,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     required this.restoreSession,
     required this.defaultStartingPath,
     required this.confirmDelete,
+    required this.confirmCopy,
+    required this.confirmMove,
     required this.showHiddenDefault,
     required this.rowDensity,
     required this.dateFormat,
@@ -587,6 +649,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     map['restore_session'] = Variable<bool>(restoreSession);
     map['default_starting_path'] = Variable<String>(defaultStartingPath);
     map['confirm_delete'] = Variable<bool>(confirmDelete);
+    map['confirm_copy'] = Variable<bool>(confirmCopy);
+    map['confirm_move'] = Variable<bool>(confirmMove);
     map['show_hidden_default'] = Variable<bool>(showHiddenDefault);
     map['row_density'] = Variable<String>(rowDensity);
     map['date_format'] = Variable<String>(dateFormat);
@@ -611,6 +675,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       restoreSession: Value(restoreSession),
       defaultStartingPath: Value(defaultStartingPath),
       confirmDelete: Value(confirmDelete),
+      confirmCopy: Value(confirmCopy),
+      confirmMove: Value(confirmMove),
       showHiddenDefault: Value(showHiddenDefault),
       rowDensity: Value(rowDensity),
       dateFormat: Value(dateFormat),
@@ -643,6 +709,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
         json['defaultStartingPath'],
       ),
       confirmDelete: serializer.fromJson<bool>(json['confirmDelete']),
+      confirmCopy: serializer.fromJson<bool>(json['confirmCopy']),
+      confirmMove: serializer.fromJson<bool>(json['confirmMove']),
       showHiddenDefault: serializer.fromJson<bool>(json['showHiddenDefault']),
       rowDensity: serializer.fromJson<String>(json['rowDensity']),
       dateFormat: serializer.fromJson<String>(json['dateFormat']),
@@ -670,6 +738,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       'restoreSession': serializer.toJson<bool>(restoreSession),
       'defaultStartingPath': serializer.toJson<String>(defaultStartingPath),
       'confirmDelete': serializer.toJson<bool>(confirmDelete),
+      'confirmCopy': serializer.toJson<bool>(confirmCopy),
+      'confirmMove': serializer.toJson<bool>(confirmMove),
       'showHiddenDefault': serializer.toJson<bool>(showHiddenDefault),
       'rowDensity': serializer.toJson<String>(rowDensity),
       'dateFormat': serializer.toJson<String>(dateFormat),
@@ -693,6 +763,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     bool? restoreSession,
     String? defaultStartingPath,
     bool? confirmDelete,
+    bool? confirmCopy,
+    bool? confirmMove,
     bool? showHiddenDefault,
     String? rowDensity,
     String? dateFormat,
@@ -713,6 +785,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     restoreSession: restoreSession ?? this.restoreSession,
     defaultStartingPath: defaultStartingPath ?? this.defaultStartingPath,
     confirmDelete: confirmDelete ?? this.confirmDelete,
+    confirmCopy: confirmCopy ?? this.confirmCopy,
+    confirmMove: confirmMove ?? this.confirmMove,
     showHiddenDefault: showHiddenDefault ?? this.showHiddenDefault,
     rowDensity: rowDensity ?? this.rowDensity,
     dateFormat: dateFormat ?? this.dateFormat,
@@ -749,6 +823,12 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       confirmDelete: data.confirmDelete.present
           ? data.confirmDelete.value
           : this.confirmDelete,
+      confirmCopy: data.confirmCopy.present
+          ? data.confirmCopy.value
+          : this.confirmCopy,
+      confirmMove: data.confirmMove.present
+          ? data.confirmMove.value
+          : this.confirmMove,
       showHiddenDefault: data.showHiddenDefault.present
           ? data.showHiddenDefault.value
           : this.showHiddenDefault,
@@ -788,6 +868,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           ..write('restoreSession: $restoreSession, ')
           ..write('defaultStartingPath: $defaultStartingPath, ')
           ..write('confirmDelete: $confirmDelete, ')
+          ..write('confirmCopy: $confirmCopy, ')
+          ..write('confirmMove: $confirmMove, ')
           ..write('showHiddenDefault: $showHiddenDefault, ')
           ..write('rowDensity: $rowDensity, ')
           ..write('dateFormat: $dateFormat, ')
@@ -801,7 +883,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     themeMode,
     terminal,
@@ -813,6 +895,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     restoreSession,
     defaultStartingPath,
     confirmDelete,
+    confirmCopy,
+    confirmMove,
     showHiddenDefault,
     rowDensity,
     dateFormat,
@@ -821,7 +905,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     sortKey,
     sortAscending,
     foldersFirst,
-  );
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -837,6 +921,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           other.restoreSession == this.restoreSession &&
           other.defaultStartingPath == this.defaultStartingPath &&
           other.confirmDelete == this.confirmDelete &&
+          other.confirmCopy == this.confirmCopy &&
+          other.confirmMove == this.confirmMove &&
           other.showHiddenDefault == this.showHiddenDefault &&
           other.rowDensity == this.rowDensity &&
           other.dateFormat == this.dateFormat &&
@@ -859,6 +945,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
   final Value<bool> restoreSession;
   final Value<String> defaultStartingPath;
   final Value<bool> confirmDelete;
+  final Value<bool> confirmCopy;
+  final Value<bool> confirmMove;
   final Value<bool> showHiddenDefault;
   final Value<String> rowDensity;
   final Value<String> dateFormat;
@@ -879,6 +967,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.restoreSession = const Value.absent(),
     this.defaultStartingPath = const Value.absent(),
     this.confirmDelete = const Value.absent(),
+    this.confirmCopy = const Value.absent(),
+    this.confirmMove = const Value.absent(),
     this.showHiddenDefault = const Value.absent(),
     this.rowDensity = const Value.absent(),
     this.dateFormat = const Value.absent(),
@@ -900,6 +990,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.restoreSession = const Value.absent(),
     this.defaultStartingPath = const Value.absent(),
     this.confirmDelete = const Value.absent(),
+    this.confirmCopy = const Value.absent(),
+    this.confirmMove = const Value.absent(),
     this.showHiddenDefault = const Value.absent(),
     this.rowDensity = const Value.absent(),
     this.dateFormat = const Value.absent(),
@@ -921,6 +1013,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Expression<bool>? restoreSession,
     Expression<String>? defaultStartingPath,
     Expression<bool>? confirmDelete,
+    Expression<bool>? confirmCopy,
+    Expression<bool>? confirmMove,
     Expression<bool>? showHiddenDefault,
     Expression<String>? rowDensity,
     Expression<String>? dateFormat,
@@ -944,6 +1038,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       if (defaultStartingPath != null)
         'default_starting_path': defaultStartingPath,
       if (confirmDelete != null) 'confirm_delete': confirmDelete,
+      if (confirmCopy != null) 'confirm_copy': confirmCopy,
+      if (confirmMove != null) 'confirm_move': confirmMove,
       if (showHiddenDefault != null) 'show_hidden_default': showHiddenDefault,
       if (rowDensity != null) 'row_density': rowDensity,
       if (dateFormat != null) 'date_format': dateFormat,
@@ -968,6 +1064,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Value<bool>? restoreSession,
     Value<String>? defaultStartingPath,
     Value<bool>? confirmDelete,
+    Value<bool>? confirmCopy,
+    Value<bool>? confirmMove,
     Value<bool>? showHiddenDefault,
     Value<String>? rowDensity,
     Value<String>? dateFormat,
@@ -990,6 +1088,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       restoreSession: restoreSession ?? this.restoreSession,
       defaultStartingPath: defaultStartingPath ?? this.defaultStartingPath,
       confirmDelete: confirmDelete ?? this.confirmDelete,
+      confirmCopy: confirmCopy ?? this.confirmCopy,
+      confirmMove: confirmMove ?? this.confirmMove,
       showHiddenDefault: showHiddenDefault ?? this.showHiddenDefault,
       rowDensity: rowDensity ?? this.rowDensity,
       dateFormat: dateFormat ?? this.dateFormat,
@@ -1041,6 +1141,12 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     if (confirmDelete.present) {
       map['confirm_delete'] = Variable<bool>(confirmDelete.value);
     }
+    if (confirmCopy.present) {
+      map['confirm_copy'] = Variable<bool>(confirmCopy.value);
+    }
+    if (confirmMove.present) {
+      map['confirm_move'] = Variable<bool>(confirmMove.value);
+    }
     if (showHiddenDefault.present) {
       map['show_hidden_default'] = Variable<bool>(showHiddenDefault.value);
     }
@@ -1082,6 +1188,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
           ..write('restoreSession: $restoreSession, ')
           ..write('defaultStartingPath: $defaultStartingPath, ')
           ..write('confirmDelete: $confirmDelete, ')
+          ..write('confirmCopy: $confirmCopy, ')
+          ..write('confirmMove: $confirmMove, ')
           ..write('showHiddenDefault: $showHiddenDefault, ')
           ..write('rowDensity: $rowDensity, ')
           ..write('dateFormat: $dateFormat, ')
@@ -2925,6 +3033,8 @@ typedef $$AppSettingsTableCreateCompanionBuilder =
       Value<bool> restoreSession,
       Value<String> defaultStartingPath,
       Value<bool> confirmDelete,
+      Value<bool> confirmCopy,
+      Value<bool> confirmMove,
       Value<bool> showHiddenDefault,
       Value<String> rowDensity,
       Value<String> dateFormat,
@@ -2947,6 +3057,8 @@ typedef $$AppSettingsTableUpdateCompanionBuilder =
       Value<bool> restoreSession,
       Value<String> defaultStartingPath,
       Value<bool> confirmDelete,
+      Value<bool> confirmCopy,
+      Value<bool> confirmMove,
       Value<bool> showHiddenDefault,
       Value<String> rowDensity,
       Value<String> dateFormat,
@@ -3018,6 +3130,16 @@ class $$AppSettingsTableFilterComposer
 
   ColumnFilters<bool> get confirmDelete => $composableBuilder(
     column: $table.confirmDelete,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get confirmCopy => $composableBuilder(
+    column: $table.confirmCopy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get confirmMove => $composableBuilder(
+    column: $table.confirmMove,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3126,6 +3248,16 @@ class $$AppSettingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get confirmCopy => $composableBuilder(
+    column: $table.confirmCopy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get confirmMove => $composableBuilder(
+    column: $table.confirmMove,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get showHiddenDefault => $composableBuilder(
     column: $table.showHiddenDefault,
     builder: (column) => ColumnOrderings(column),
@@ -3223,6 +3355,16 @@ class $$AppSettingsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<bool> get confirmCopy => $composableBuilder(
+    column: $table.confirmCopy,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get confirmMove => $composableBuilder(
+    column: $table.confirmMove,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<bool> get showHiddenDefault => $composableBuilder(
     column: $table.showHiddenDefault,
     builder: (column) => column,
@@ -3304,6 +3446,8 @@ class $$AppSettingsTableTableManager
                 Value<bool> restoreSession = const Value.absent(),
                 Value<String> defaultStartingPath = const Value.absent(),
                 Value<bool> confirmDelete = const Value.absent(),
+                Value<bool> confirmCopy = const Value.absent(),
+                Value<bool> confirmMove = const Value.absent(),
                 Value<bool> showHiddenDefault = const Value.absent(),
                 Value<String> rowDensity = const Value.absent(),
                 Value<String> dateFormat = const Value.absent(),
@@ -3324,6 +3468,8 @@ class $$AppSettingsTableTableManager
                 restoreSession: restoreSession,
                 defaultStartingPath: defaultStartingPath,
                 confirmDelete: confirmDelete,
+                confirmCopy: confirmCopy,
+                confirmMove: confirmMove,
                 showHiddenDefault: showHiddenDefault,
                 rowDensity: rowDensity,
                 dateFormat: dateFormat,
@@ -3346,6 +3492,8 @@ class $$AppSettingsTableTableManager
                 Value<bool> restoreSession = const Value.absent(),
                 Value<String> defaultStartingPath = const Value.absent(),
                 Value<bool> confirmDelete = const Value.absent(),
+                Value<bool> confirmCopy = const Value.absent(),
+                Value<bool> confirmMove = const Value.absent(),
                 Value<bool> showHiddenDefault = const Value.absent(),
                 Value<String> rowDensity = const Value.absent(),
                 Value<String> dateFormat = const Value.absent(),
@@ -3366,6 +3514,8 @@ class $$AppSettingsTableTableManager
                 restoreSession: restoreSession,
                 defaultStartingPath: defaultStartingPath,
                 confirmDelete: confirmDelete,
+                confirmCopy: confirmCopy,
+                confirmMove: confirmMove,
                 showHiddenDefault: showHiddenDefault,
                 rowDensity: rowDensity,
                 dateFormat: dateFormat,

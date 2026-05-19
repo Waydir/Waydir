@@ -137,6 +137,22 @@ class SettingsRegistry {
       searchTerms: const ['delete', 'file operations'],
       signal: SettingsStore.instance.confirmDelete,
     ),
+    ToggleSetting(
+      id: 'general.confirmCopy',
+      category: SettingsCategory.general,
+      label: () => t.preferences.general.confirmCopy,
+      hint: () => t.preferences.general.confirmCopyHint,
+      searchTerms: const ['copy', 'file operations'],
+      signal: SettingsStore.instance.confirmCopy,
+    ),
+    ToggleSetting(
+      id: 'general.confirmMove',
+      category: SettingsCategory.general,
+      label: () => t.preferences.general.confirmMove,
+      hint: () => t.preferences.general.confirmMoveHint,
+      searchTerms: const ['move', 'file operations'],
+      signal: SettingsStore.instance.confirmMove,
+    ),
     ChoiceSetting<String>(
       id: 'general.deleteKeyBehavior',
       category: SettingsCategory.general,

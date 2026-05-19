@@ -20,6 +20,8 @@ class SettingsStore {
   final restoreSession = signal<bool>(true);
   final defaultStartingPath = signal<String>('');
   final confirmDelete = signal<bool>(true);
+  final confirmCopy = signal<bool>(false);
+  final confirmMove = signal<bool>(true);
   final showHiddenDefault = signal<bool>(false);
   final rowDensity = signal<String>('comfortable');
   final dateFormat = signal<String>('locale');
@@ -56,6 +58,8 @@ class SettingsStore {
     restoreSession.value = row.restoreSession;
     defaultStartingPath.value = row.defaultStartingPath;
     confirmDelete.value = row.confirmDelete;
+    confirmCopy.value = row.confirmCopy;
+    confirmMove.value = row.confirmMove;
     showHiddenDefault.value = row.showHiddenDefault;
     rowDensity.value = row.rowDensity;
     dateFormat.value = row.dateFormat;
@@ -79,6 +83,8 @@ class SettingsStore {
         restoreSession.value;
         defaultStartingPath.value;
         confirmDelete.value;
+        confirmCopy.value;
+        confirmMove.value;
         showHiddenDefault.value;
         rowDensity.value;
         dateFormat.value;
@@ -112,6 +118,8 @@ class SettingsStore {
           restoreSession: Value(restoreSession.value),
           defaultStartingPath: Value(defaultStartingPath.value),
           confirmDelete: Value(confirmDelete.value),
+          confirmCopy: Value(confirmCopy.value),
+          confirmMove: Value(confirmMove.value),
           showHiddenDefault: Value(showHiddenDefault.value),
           rowDensity: Value(rowDensity.value),
           dateFormat: Value(dateFormat.value),
