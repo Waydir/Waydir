@@ -9,6 +9,11 @@ String formatBytes(int bytes) {
   return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
 }
 
+String formatSpeed(double bytesPerSecond) {
+  if (bytesPerSecond <= 0) return '';
+  return '${formatBytes(bytesPerSecond.round())}/s';
+}
+
 String formatTimeAgo(DateTime ts) {
   final diff = DateTime.now().difference(ts);
   if (diff.inSeconds < 10) return t.operations.justNow;

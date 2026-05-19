@@ -212,7 +212,30 @@ class _TaskTile extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(TaskLabel.progressText(task), style: context.txt.muted),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          TaskLabel.progressText(task),
+                          style: context.txt.muted,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (task.status == TaskStatus.running &&
+                          task.bytesPerSecond > 0) ...[
+                        const SizedBox(width: 8),
+                        Text(
+                          formatSpeed(task.bytesPerSecond),
+                          style: context.txt.muted.copyWith(
+                            color: AppColors.accent,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
                 if (task.totalFiles > 0)
                   Text(
                     t.operations.filesCount(

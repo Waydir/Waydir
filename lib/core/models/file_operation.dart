@@ -60,6 +60,7 @@ class FileTask {
   int? totalBytes;
   int processedBytes;
   String currentFile;
+  double bytesPerSecond;
 
   List<ConflictInfo> conflicts;
   Map<String, ConflictResolution> resolutions;
@@ -83,6 +84,7 @@ class FileTask {
     this.totalBytes,
     this.processedBytes = 0,
     this.currentFile = '',
+    this.bytesPerSecond = 0,
     this.conflicts = const [],
     this.resolutions = const {},
     this.errors = const [],

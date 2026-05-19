@@ -18,19 +18,19 @@ void main() {
       }
     });
 
-    test('copyFile replaces existing file contents', () {
+    test('copyFile replaces existing file contents', () async {
       final source = File(p.join(tmpDir.path, 'source.txt'))
         ..writeAsStringSync('new content');
       final destination = File(p.join(tmpDir.path, 'destination.txt'))
         ..writeAsStringSync('old content');
 
-      SafeFileReplace.copyFile(source, destination.path);
+      await SafeFileReplace.copyFile(source, destination.path);
 
       expect(destination.readAsStringSync(), 'new content');
       expect(source.readAsStringSync(), 'new content');
     });
 
-    test('copyFile preserves last modified timestamp', () {
+    test('copyFile preserves last modified timestamp', () async {
       final source = File(p.join(tmpDir.path, 'source.txt'))
         ..writeAsStringSync('new content');
       final modified = DateTime(2020, 1, 2, 3, 4, 5);
@@ -38,19 +38,19 @@ void main() {
       final destination = File(p.join(tmpDir.path, 'destination.txt'))
         ..writeAsStringSync('old content');
 
-      SafeFileReplace.copyFile(source, destination.path);
+      await SafeFileReplace.copyFile(source, destination.path);
 
       expect(destination.lastModifiedSync(), modified);
     });
 
-    test('copyFile removes temporary file when replace fails', () {
+    test('copyFile removes temporary file when replace fails', () async {
       final source = File(p.join(tmpDir.path, 'source.txt'))
         ..writeAsStringSync('new content');
       final destination = Directory(p.join(tmpDir.path, 'destination'))
         ..createSync();
 
-      expect(
-        () => SafeFileReplace.copyFile(source, destination.path),
+      await expectLater(
+        SafeFileReplace.copyFile(source, destination.path),
         throwsA(isA<FileSystemException>()),
       );
 

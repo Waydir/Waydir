@@ -44,6 +44,18 @@ class RenameError extends RenameResult {
 }
 
 class FileSystemService {
+  /// Files at/above this size are copied on their own (exclusive disk
+  /// access) — they are bandwidth-bound, so concurrency adds nothing and
+  /// would only thrash spinning disks.
+  static const int _largeCopyBytes = 16 * 1024 * 1024;
+
+  /// Max concurrent small-file copies. Enough to fill an NVMe/network
+  /// queue and hide latency without over-subscribing the device.
+  static final int _copyConcurrency = () {
+    final n = Platform.numberOfProcessors ~/ 2;
+    return n < 2 ? 2 : (n > 4 ? 4 : n);
+  }();
+
   static RenameResult rename(String oldPath, String newName) {
     if (!PlatformPaths.isValidFileName(newName)) {
       return const RenameInvalidName();
@@ -191,6 +203,7 @@ class FileSystemService {
 
     bool cancelled = false;
     final allPaths = <String>[];
+    final fileSizes = <String, int>{};
     final sourceRoots = <String>{};
     final visitedDirs = <String>{};
     int totalBytes = 0;
@@ -253,6 +266,7 @@ class FileSystemService {
           visitedDirs,
           (path, bytes, conflict) {
             allPaths.add(path);
+            fileSizes[path] = bytes;
             totalFiles++;
             totalBytes += bytes;
             if (conflict != null) conflicts.add(conflict);
@@ -267,6 +281,7 @@ class FileSystemService {
           final sourceStat = FileStat.statSync(src);
           final size = sourceStat.size;
           allPaths.add(src);
+          fileSizes[src] = size;
           totalFiles++;
           totalBytes += size;
           final targetStat = FileStat.statSync(targetPath);
@@ -332,7 +347,8 @@ class FileSystemService {
           Link(dstPath).createSync(Link(srcPath).targetSync());
           return true;
         }
-        final type = FileSystemEntity.typeSync(srcPath);
+        // Not a link: followLinks:false already resolved the real type.
+        final type = linkType;
         if (type == FileSystemEntityType.notFound) {
           errors.add(TaskError(path: srcPath, message: t.errors.notFound));
           return true;
@@ -367,13 +383,14 @@ class FileSystemService {
           }
 
           final fileName = srcPath.split(Platform.pathSeparator).last;
-          _copyFileSync(
+          await _copyFile(
             File(srcPath),
             dstPath,
             onProgress: (n) {
               processedBytes += n;
               maybeReport(fileName);
             },
+            isCancelled: () => cancelled,
           );
         } else if (type == FileSystemEntityType.directory) {
           if (!Directory(dstPath).existsSync()) {
@@ -404,6 +421,33 @@ class FileSystemService {
         await decisionWaker!.future;
       }
 
+      // Weighted semaphore: small files share up to _copyConcurrency
+      // permits; a large file grabs them all so it transfers alone and
+      // never competes with another stream for the disk.
+      final permits = _copyConcurrency;
+      var available = permits;
+      final waitQueue = <(int, Completer<void>)>[];
+
+      Future<void> acquire(int weight) {
+        if (available >= weight) {
+          available -= weight;
+          return Future<void>.value();
+        }
+        final c = Completer<void>();
+        waitQueue.add((weight, c));
+        return c.future;
+      }
+
+      void releasePermit(int weight) {
+        available += weight;
+        while (waitQueue.isNotEmpty && available >= waitQueue.first.$1) {
+          final (w, c) = waitQueue.removeAt(0);
+          available -= w;
+          c.complete();
+        }
+      }
+
+      final inFlight = <Future<void>>[];
       for (final srcPath in allPaths) {
         if (cancelled) break;
 
@@ -414,16 +458,34 @@ class FileSystemService {
           continue;
         }
 
-        final handled = await processCopyItem(srcPath);
-        if (handled) {
-          pendingConflicts.remove(srcPath);
-          processedFiles++;
-          maybeReport(srcPath.split(Platform.pathSeparator).last);
-          if (processedFiles % 64 == 0) {
-            await Future.delayed(Duration.zero);
-          }
+        final effRes =
+            runtimeApplyAll ??
+            runtimeResolutions[srcPath] ??
+            resolutions[srcPath];
+        final exclusive =
+            (fileSizes[srcPath] ?? 0) >= _largeCopyBytes ||
+            effRes == ConflictResolution.rename;
+        final weight = exclusive ? permits : 1;
+        await acquire(weight);
+        if (cancelled) {
+          releasePermit(weight);
+          break;
         }
+
+        inFlight.add(() async {
+          try {
+            final handled = await processCopyItem(srcPath);
+            if (handled) {
+              pendingConflicts.remove(srcPath);
+              processedFiles++;
+              maybeReport(srcPath.split(Platform.pathSeparator).last);
+            }
+          } finally {
+            releasePermit(weight);
+          }
+        }());
       }
+      await Future.wait(inFlight);
 
       while (pendingConflicts.isNotEmpty && !cancelled) {
         final resolvable = pendingConflicts.keys
@@ -1520,12 +1582,18 @@ class FileSystemService {
     });
   }
 
-  static void _copyFileSync(
+  static Future<void> _copyFile(
     File src,
     String dstPath, {
     void Function(int bytes)? onProgress,
-  }) {
-    SafeFileReplace.copyFile(src, dstPath, onProgress: onProgress);
+    bool Function()? isCancelled,
+  }) async {
+    await SafeFileReplace.copyFile(
+      src,
+      dstPath,
+      onProgress: onProgress,
+      isCancelled: isCancelled,
+    );
   }
 
   static void _scanDirForCopy(
@@ -1673,10 +1741,11 @@ class FileSystemService {
         File(src).renameSync(dst);
         onBytes?.call(renameCreditBytes);
       } on FileSystemException {
-        _copyFileSync(
+        await _copyFile(
           File(src),
           dst,
           onProgress: onBytes == null ? null : (n) => onBytes(n),
+          isCancelled: isCancelled,
         );
         if (isCancelled()) {
           return;
@@ -1723,10 +1792,11 @@ class FileSystemService {
           onBytes,
         );
       } else if (entity is File) {
-        _copyFileSync(
+        await _copyFile(
           entity,
           newPath,
           onProgress: onBytes == null ? null : (n) => onBytes(n),
+          isCancelled: isCancelled,
         );
         onProgress?.call(name);
       }

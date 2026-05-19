@@ -33,6 +33,8 @@ typedef _CfrDart =
 typedef _CloneNative = Int32 Function(Pointer<Utf8>, Pointer<Utf8>, Int32);
 typedef _CloneDart = int Function(Pointer<Utf8>, Pointer<Utf8>, int);
 
+enum FastCopyResult { done, unsupported, cancelled }
+
 /// Best-effort native fast-copy. Uses copy_file_range on Linux (server-side
 /// / reflink copy) and clonefile on macOS (APFS copy-on-write). Returns
 /// false on any failure so the caller falls back to a portable copy.
@@ -53,20 +55,29 @@ class NativeCopy {
     return null;
   }
 
-  static bool tryFastCopy(
+  static Future<FastCopyResult> tryFastCopy(
     String sourcePath,
     String destinationPath, {
     void Function(int bytes)? onProgress,
-  }) {
+    bool Function()? shouldCancel,
+  }) async {
     final lib = _lib;
-    if (lib == null) return false;
+    if (lib == null) return FastCopyResult.unsupported;
     if (Platform.isLinux) {
-      return _linuxCopyFileRange(lib, sourcePath, destinationPath, onProgress);
+      return _linuxCopyFileRange(
+        lib,
+        sourcePath,
+        destinationPath,
+        onProgress,
+        shouldCancel,
+      );
     }
     if (Platform.isMacOS) {
-      return _macClonefile(lib, sourcePath, destinationPath, onProgress);
+      return _macClonefile(lib, sourcePath, destinationPath, onProgress)
+          ? FastCopyResult.done
+          : FastCopyResult.unsupported;
     }
-    return false;
+    return FastCopyResult.unsupported;
   }
 
   static bool _macClonefile(
@@ -97,12 +108,13 @@ class NativeCopy {
   // Cap per-syscall transfer so progress can be reported on big files.
   static const int _cfrChunk = 32 * 1024 * 1024;
 
-  static bool _linuxCopyFileRange(
+  static Future<FastCopyResult> _linuxCopyFileRange(
     DynamicLibrary lib,
     String src,
     String dst,
     void Function(int bytes)? onProgress,
-  ) {
+    bool Function()? shouldCancel,
+  ) async {
     final open = lib.lookupFunction<_OpenNative, _OpenDart>('open');
     final close = lib.lookupFunction<_CloseNative, _CloseDart>('close');
     final cfr = lib.lookupFunction<_CfrNative, _CfrDart>('copy_file_range');
@@ -111,7 +123,7 @@ class NativeCopy {
     try {
       total = File(src).lengthSync();
     } catch (_) {
-      return false;
+      return FastCopyResult.unsupported;
     }
 
     final sPtr = src.toNativeUtf8();
@@ -120,11 +132,11 @@ class NativeCopy {
     int fdOut = -1;
     try {
       fdIn = open(sPtr, _oRdonly | _oCloexec, 0);
-      if (fdIn < 0) return false;
+      if (fdIn < 0) return FastCopyResult.unsupported;
       fdOut = open(dPtr, _oWronly | _oCreat | _oTrunc | _oCloexec, 0x1A4);
-      if (fdOut < 0) return false;
+      if (fdOut < 0) return FastCopyResult.unsupported;
 
-      if (total == 0) return true; // empty file: fds created the target.
+      if (total == 0) return FastCopyResult.done; // fds created the target.
 
       var remaining = total;
       var emitted = 0;
@@ -135,16 +147,26 @@ class NativeCopy {
           // Partial fail: undo reported bytes so the portable fallback,
           // which recopies the whole file, does not double-count.
           if (emitted > 0) onProgress?.call(-emitted);
-          return false; // EXDEV/ENOSYS/EINVAL → fall back.
+          return FastCopyResult.unsupported; // EXDEV/ENOSYS → fall back.
         }
         if (n == 0) break; // unexpected short source.
         remaining -= n;
         emitted += n;
         onProgress?.call(n);
+        if (remaining > 0) {
+          // Yield so the worker isolate can deliver a pending cancel
+          // before the next (blocking) syscall.
+          await Future<void>.delayed(Duration.zero);
+          if (shouldCancel != null && shouldCancel()) {
+            return FastCopyResult.cancelled;
+          }
+        }
       }
-      return remaining == 0;
+      return remaining == 0
+          ? FastCopyResult.done
+          : FastCopyResult.unsupported;
     } catch (_) {
-      return false;
+      return FastCopyResult.unsupported;
     } finally {
       if (fdIn >= 0) {
         try {

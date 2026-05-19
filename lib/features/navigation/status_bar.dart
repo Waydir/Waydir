@@ -3,7 +3,6 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:signals/signals_flutter.dart';
 import 'navigation_store.dart';
 import '../../app/app_info.dart';
-import '../../core/models/file_operation.dart';
 import '../operations/operation_store.dart';
 import '../../ui/overlays/notification_store.dart';
 import '../../ui/overlays/notifications_panel.dart';
@@ -61,88 +60,16 @@ class StatusBar extends StatelessWidget {
             );
           }),
           const Spacer(),
-          Watch((context) {
-            final tasks = operationStore.tasks.value;
-            final active = tasks.where(
-              (t) =>
-                  t.status == TaskStatus.running ||
-                  t.status == TaskStatus.preparing ||
-                  t.status == TaskStatus.cancelling,
-            );
-
-            if (active.isEmpty) {
-              return _statusText(
-                context,
-                '${AppInfo.name} ${AppInfo.versionLabel.value}',
-              );
-            }
-
-            return Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                for (final task in active) ...[
-                  _taskChip(context, task),
-                  const SizedBox(width: 8),
-                ],
-                _statusText(
-                  context,
-                  '${AppInfo.name} ${AppInfo.versionLabel.value}',
-                ),
-              ],
-            );
-          }),
+          Watch(
+            (context) => _statusText(
+              context,
+              '${AppInfo.name} ${AppInfo.versionLabel.value}',
+            ),
+          ),
           const SizedBox(width: 8),
           _StatusNotificationsButton(notificationStore: notificationStore),
         ],
       ),
-    );
-  }
-
-  Widget _taskChip(BuildContext context, FileTask task) {
-    final pct = task.totalFiles > 0
-        ? '${(task.progress.clamp(0.0, 1.0) * 100).round()}%'
-        : null;
-
-    final icon = switch (task.type) {
-      TaskType.copy => PhosphorIconsRegular.copy,
-      TaskType.move => PhosphorIconsRegular.arrowRight,
-      TaskType.delete => PhosphorIconsRegular.trash,
-      TaskType.trash => PhosphorIconsRegular.trashSimple,
-      TaskType.extract => PhosphorIconsRegular.archive,
-      TaskType.compress => PhosphorIconsRegular.fileZip,
-      TaskType.archiveEdit => PhosphorIconsRegular.archive,
-    };
-
-    final label = TaskLabel.title(task);
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        PhosphorIcon(icon, size: 11, color: AppColors.fgAccent),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: context.txt.rowEmphasis.copyWith(color: AppColors.fgAccent),
-          overflow: TextOverflow.ellipsis,
-        ),
-        if (pct != null) ...[
-          const SizedBox(width: 4),
-          Text(pct, style: context.txt.muted),
-        ],
-        if (task.conflicts.isNotEmpty) ...[
-          const SizedBox(width: 6),
-          PhosphorIcon(
-            PhosphorIconsRegular.warning,
-            size: 11,
-            color: AppColors.warning,
-          ),
-          const SizedBox(width: 3),
-          Text(
-            '${task.conflicts.length}',
-            style: context.txt.row.copyWith(color: AppColors.warning),
-          ),
-        ],
-      ],
     );
   }
 

@@ -1,5 +1,6 @@
 import 'dart:ffi';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
 import 'package:win32/win32.dart';
@@ -14,18 +15,29 @@ class SafeFileReplace {
 
   static final DynamicLibrary? _libc = _openLibc();
 
-  static void copyFile(
+  /// Copies [source] to [destinationPath] via a temp sibling, then atomically
+  /// swaps it in. Returns false (leaving no target) if [isCancelled] fired
+  /// mid-copy; the partial temp file is always cleaned up.
+  static Future<bool> copyFile(
     File source,
     String destinationPath, {
     void Function(int bytes)? onProgress,
-  }) {
+    bool Function()? isCancelled,
+  }) async {
     final tempPath = temporarySiblingPath(destinationPath);
     Object? copyError;
     StackTrace? copyStack;
     var tempReady = false;
+    var cancelled = false;
 
     try {
-      _copyToPath(source, tempPath, onProgress: onProgress);
+      cancelled = !await _copyToPath(
+        source,
+        tempPath,
+        onProgress: onProgress,
+        isCancelled: isCancelled,
+      );
+      if (cancelled) return false;
       _copyBasicMetadata(source, File(tempPath));
       tempReady = true;
       replaceWithFile(tempPath, destinationPath);
@@ -45,6 +57,7 @@ class SafeFileReplace {
     if (copyError != null) {
       Error.throwWithStackTrace(copyError, copyStack!);
     }
+    return true;
   }
 
   static void replaceWithFile(String replacementPath, String destinationPath) {
@@ -91,31 +104,50 @@ class SafeFileReplace {
     } catch (_) {}
   }
 
-  static void _copyToPath(
+  /// Returns false if the copy was cancelled mid-stream, true on completion.
+  static Future<bool> _copyToPath(
     File source,
     String destinationPath, {
     void Function(int bytes)? onProgress,
-  }) {
-    if (NativeCopy.tryFastCopy(
+    bool Function()? isCancelled,
+  }) async {
+    final fast = await NativeCopy.tryFastCopy(
       source.path,
       destinationPath,
       onProgress: onProgress,
-    )) {
-      return;
-    }
+      shouldCancel: isCancelled,
+    );
+    if (fast == FastCopyResult.done) return true;
+    if (fast == FastCopyResult.cancelled) return false;
 
-    const chunkSize = 1024 * 1024;
+    const chunkSize = 8 * 1024 * 1024;
+    // Yield to the event loop (so a pending cancel can be delivered) once
+    // per this many bytes, instead of every chunk — far fewer event-loop
+    // turns at cache speed while keeping cancel latency well under a second.
+    const yieldEvery = 16 * 1024 * 1024;
     final input = source.openSync(mode: FileMode.read);
     final output = File(destinationPath).openSync(mode: FileMode.write);
+    final buffer = Uint8List(chunkSize);
     Object? error;
     StackTrace? stack;
+    var completed = true;
+    var sinceYield = 0;
 
     try {
       while (true) {
-        final chunk = input.readSync(chunkSize);
-        if (chunk.isEmpty) break;
-        output.writeFromSync(chunk);
-        onProgress?.call(chunk.length);
+        if (isCancelled != null && isCancelled()) {
+          completed = false;
+          break;
+        }
+        final n = input.readIntoSync(buffer);
+        if (n <= 0) break;
+        output.writeFromSync(buffer, 0, n);
+        onProgress?.call(n);
+        sinceYield += n;
+        if (sinceYield >= yieldEvery) {
+          sinceYield = 0;
+          await Future<void>.delayed(Duration.zero);
+        }
       }
       output.flushSync();
     } catch (e, st) {
@@ -129,6 +161,7 @@ class SafeFileReplace {
     if (error != null) {
       Error.throwWithStackTrace(error, stack!);
     }
+    return completed;
   }
 
   static void _copyBasicMetadata(File source, File destination) {

@@ -362,6 +362,11 @@ class OperationStore {
 
       final completer = Completer<void>();
 
+      final speedClock = Stopwatch()..start();
+      var lastSampleMs = 0;
+      var lastSampleBytes = 0;
+      var emaBytesPerSec = 0.0;
+
       void handleMessage(dynamic msg) {
         if (completer.isCompleted) return;
         if (msg is! WorkerMessage) return;
@@ -383,6 +388,21 @@ class OperationStore {
           task.processedFiles = msg.processedFiles;
           task.processedBytes = msg.processedBytes;
           task.currentFile = msg.currentFile;
+
+          final nowMs = speedClock.elapsedMilliseconds;
+          final dtMs = nowMs - lastSampleMs;
+          if (dtMs >= 300) {
+            final dBytes = task.processedBytes - lastSampleBytes;
+            if (dBytes > 0) {
+              final inst = dBytes * 1000 / dtMs;
+              emaBytesPerSec = emaBytesPerSec == 0
+                  ? inst
+                  : emaBytesPerSec * 0.6 + inst * 0.4;
+              task.bytesPerSecond = emaBytesPerSec;
+            }
+            lastSampleMs = nowMs;
+            lastSampleBytes = task.processedBytes;
+          }
           final tb = task.totalBytes;
           if (tb != null && tb > 0) {
             task.progress = (task.processedBytes / tb).clamp(0.0, 1.0);
@@ -406,6 +426,7 @@ class OperationStore {
             task.status = TaskStatus.completed;
           }
           task.errors = allErrors;
+          task.bytesPerSecond = 0;
           task.endTime = DateTime.now();
           task.progress = task.status == TaskStatus.completed
               ? 1.0

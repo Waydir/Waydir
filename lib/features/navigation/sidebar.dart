@@ -582,7 +582,7 @@ class _SidebarOperationsButtonState extends State<_SidebarOperationsButton> {
     return Watch((context) {
       final tasks = widget.operationStore.tasks.value;
       final active = tasks.where(_isActiveTask).firstOrNull;
-      if (active == null) return const SizedBox.shrink();
+      if (active == null) return _buildIdle(context);
 
       final activeCount = widget.operationStore.activeCount.value;
       final progress = active.progress.clamp(0.0, 1.0).toDouble();
@@ -722,6 +722,94 @@ class _SidebarOperationsButtonState extends State<_SidebarOperationsButton> {
         ),
       );
     });
+  }
+
+  Widget _buildIdle(BuildContext context) {
+    final color = _hovered ? AppColors.fg : AppColors.fgMuted;
+
+    if (widget.collapsed) {
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: AppColors.bgDivider)),
+        ),
+        alignment: Alignment.center,
+        child: Tooltip(
+          message: t.toolbar.operations,
+          child: MouseRegion(
+            cursor: SystemMouseCursors.click,
+            onEnter: (_) => setState(() => _hovered = true),
+            onExit: (_) => setState(() => _hovered = false),
+            child: GestureDetector(
+              onTap: _openPanel,
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: _hovered ? AppColors.bgHover : Colors.transparent,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Center(
+                  child: PhosphorIcon(
+                    PhosphorIconsRegular.clockClockwise,
+                    size: 15,
+                    color: color,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(6, 7, 6, 7),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: AppColors.bgDivider)),
+      ),
+      child: Tooltip(
+        message: t.toolbar.operations,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          onEnter: (_) => setState(() => _hovered = true),
+          onExit: (_) => setState(() => _hovered = false),
+          child: GestureDetector(
+            onTap: _openPanel,
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 9,
+              ),
+              decoration: BoxDecoration(
+                color: _hovered ? AppColors.bgHover : Colors.transparent,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Row(
+                children: [
+                  PhosphorIcon(
+                    PhosphorIconsRegular.clockClockwise,
+                    size: 15,
+                    color: color,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      t.toolbar.operations,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.txt.rowEmphasis.copyWith(color: color),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   static bool _isActiveTask(FileTask task) {
