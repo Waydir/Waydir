@@ -14,14 +14,18 @@ class SafeFileReplace {
 
   static final DynamicLibrary? _libc = _openLibc();
 
-  static void copyFile(File source, String destinationPath) {
+  static void copyFile(
+    File source,
+    String destinationPath, {
+    void Function(int bytes)? onProgress,
+  }) {
     final tempPath = temporarySiblingPath(destinationPath);
     Object? copyError;
     StackTrace? copyStack;
     var tempReady = false;
 
     try {
-      _copyToPath(source, tempPath);
+      _copyToPath(source, tempPath, onProgress: onProgress);
       _copyBasicMetadata(source, File(tempPath));
       tempReady = true;
       replaceWithFile(tempPath, destinationPath);
@@ -87,8 +91,18 @@ class SafeFileReplace {
     } catch (_) {}
   }
 
-  static void _copyToPath(File source, String destinationPath) {
-    if (NativeCopy.tryFastCopy(source.path, destinationPath)) return;
+  static void _copyToPath(
+    File source,
+    String destinationPath, {
+    void Function(int bytes)? onProgress,
+  }) {
+    if (NativeCopy.tryFastCopy(
+      source.path,
+      destinationPath,
+      onProgress: onProgress,
+    )) {
+      return;
+    }
 
     const chunkSize = 1024 * 1024;
     final input = source.openSync(mode: FileMode.read);
@@ -101,6 +115,7 @@ class SafeFileReplace {
         final chunk = input.readSync(chunkSize);
         if (chunk.isEmpty) break;
         output.writeFromSync(chunk);
+        onProgress?.call(chunk.length);
       }
       output.flushSync();
     } catch (e, st) {
