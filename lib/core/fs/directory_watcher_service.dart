@@ -23,6 +23,7 @@ class DirectoryWatcherService {
 
   StreamSubscription<FileSystemEvent>? _subscription;
   Timer? _debounceTimer;
+  Timer? _restartTimer;
   String? _watchedPath;
   DirectoryChangeCallback? _onChange;
 
@@ -37,6 +38,10 @@ class DirectoryWatcherService {
     stop();
     _watchedPath = path;
     _onChange = onChange;
+    _subscribe(path);
+  }
+
+  void _subscribe(String path) {
     try {
       final dir = Directory(path);
       if (!dir.existsSync()) return;
@@ -50,9 +55,19 @@ class DirectoryWatcherService {
             },
             onError: (e) {
               if (_watchedPath != path) return;
-              log.warn('fs.watcher', 'watch error, full reload', error: e);
+              log.warn(
+                'fs.watcher',
+                'watch error, full reload + restart',
+                error: e,
+              );
               _fullReload = true;
               _scheduleNotify();
+              _subscription?.cancel();
+              _subscription = null;
+              _restartTimer?.cancel();
+              _restartTimer = Timer(const Duration(milliseconds: 500), () {
+                if (_watchedPath == path) _subscribe(path);
+              });
             },
             cancelOnError: true,
           );
@@ -89,6 +104,8 @@ class DirectoryWatcherService {
   void stop() {
     _debounceTimer?.cancel();
     _debounceTimer = null;
+    _restartTimer?.cancel();
+    _restartTimer = null;
     _subscription?.cancel();
     _subscription = null;
     _watchedPath = null;

@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -67,15 +66,12 @@ class _CodeEditorState extends State<CodeEditor> {
   late final HighlightController _ctrl;
   final _focus = FocusNode();
   final _vScroll = ScrollController();
-  final _hScroll = ScrollController();
   late String _savedText;
   bool _dirty = false;
   bool _saving = false;
   String? _saveError;
   int _caretLine = 0;
-  int _maxLineLen = 0;
   int _lines = 1;
-  double _charWidth = 8;
 
   static const _fontSize = 13.0;
   static const _lineHeight = 1.5;
@@ -89,16 +85,7 @@ class _CodeEditorState extends State<CodeEditor> {
       highlight: widget.initial.length <= maxHighlightChars,
     );
     _ctrl.text = widget.initial;
-    _maxLineLen = _longestLine(widget.initial);
     _lines = '\n'.allMatches(widget.initial).length + 1;
-    final tp = TextPainter(
-      text: const TextSpan(
-        text: 'M',
-        style: TextStyle(fontFamily: 'monospace', fontSize: _fontSize),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    _charWidth = tp.width;
     _ctrl.addListener(_onChanged);
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => widget.editorActive.value = true,
@@ -111,23 +98,8 @@ class _CodeEditorState extends State<CodeEditor> {
     _ctrl.dispose();
     _focus.dispose();
     _vScroll.dispose();
-    _hScroll.dispose();
     widget.editorActive.value = false;
     super.dispose();
-  }
-
-  static int _longestLine(String s) {
-    var max = 0;
-    var cur = 0;
-    for (var i = 0; i < s.length; i++) {
-      if (s.codeUnitAt(i) == 0x0A) {
-        if (cur > max) max = cur;
-        cur = 0;
-      } else {
-        cur++;
-      }
-    }
-    return cur > max ? cur : max;
   }
 
   void _onChanged() {
@@ -136,29 +108,20 @@ class _CodeEditorState extends State<CodeEditor> {
     final caret = _ctrl.selection.baseOffset.clamp(0, text.length);
     var line = 0;
     var total = 0;
-    var cur = 0;
-    var maxLen = 0;
     for (var i = 0; i < text.length; i++) {
       if (text.codeUnitAt(i) == 0x0A) {
         if (i < caret) line++;
         total++;
-        if (cur > maxLen) maxLen = cur;
-        cur = 0;
-      } else {
-        cur++;
       }
     }
-    if (cur > maxLen) maxLen = cur;
     final lines = total + 1;
     if (dirty != _dirty ||
         line != _caretLine ||
-        maxLen != _maxLineLen ||
         lines != _lines ||
         _saveError != null) {
       setState(() {
         _dirty = dirty;
         _caretLine = line;
-        _maxLineLen = maxLen;
         _lines = lines;
         _saveError = null;
       });
@@ -228,42 +191,11 @@ class _CodeEditorState extends State<CodeEditor> {
           Expanded(
             child: Focus(
               onKeyEvent: _onKey,
-              child: LayoutBuilder(
-                builder: (context, c) {
-                  final contentW = math.max(
-                    c.maxWidth,
-                    _maxLineLen * _charWidth + _EditorField.hPadding * 2 + 12,
-                  );
-                  final editor = SingleChildScrollView(
-                    controller: _vScroll,
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(minHeight: c.maxHeight),
-                      child: _EditorField(
-                        controller: _ctrl,
-                        focusNode: _focus,
-                        baseStyle: baseStyle,
-                        width: contentW,
-                      ),
-                    ),
-                  );
-                  return Scrollbar(
-                    controller: _vScroll,
-                    thumbVisibility: true,
-                    notificationPredicate: (n) =>
-                        n.metrics.axis == Axis.vertical,
-                    child: Scrollbar(
-                      controller: _hScroll,
-                      thumbVisibility: true,
-                      notificationPredicate: (n) =>
-                          n.metrics.axis == Axis.horizontal,
-                      child: SingleChildScrollView(
-                        controller: _hScroll,
-                        scrollDirection: Axis.horizontal,
-                        child: editor,
-                      ),
-                    ),
-                  );
-                },
+              child: _EditorField(
+                controller: _ctrl,
+                focusNode: _focus,
+                scrollController: _vScroll,
+                baseStyle: baseStyle,
               ),
             ),
           ),
@@ -285,53 +217,45 @@ class _CodeEditorState extends State<CodeEditor> {
 class _EditorField extends StatelessWidget {
   final HighlightController controller;
   final FocusNode focusNode;
+  final ScrollController scrollController;
   final TextStyle baseStyle;
-  final double width;
 
   const _EditorField({
     required this.controller,
     required this.focusNode,
+    required this.scrollController,
     required this.baseStyle,
-    required this.width,
   });
 
   static const _fontSize = _CodeEditorState._fontSize;
   static const _lineHeight = _CodeEditorState._lineHeight;
   static const _topPad = _CodeEditorState._topPad;
-  static const hPadding = 16.0;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: width,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          hPadding,
-          _topPad,
-          hPadding,
-          _topPad,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, _topPad, 16, _topPad),
+      child: TextField(
+        controller: controller,
+        focusNode: focusNode,
+        scrollController: scrollController,
+        autofocus: true,
+        expands: true,
+        maxLines: null,
+        cursorColor: AppColors.accent,
+        cursorWidth: 1.5,
+        style: baseStyle,
+        strutStyle: const StrutStyle(
+          fontSize: _fontSize,
+          height: _lineHeight,
+          forceStrutHeight: true,
         ),
-        child: TextField(
-          controller: controller,
-          focusNode: focusNode,
-          autofocus: true,
-          maxLines: null,
-          cursorColor: AppColors.accent,
-          cursorWidth: 1.5,
-          style: baseStyle,
-          strutStyle: const StrutStyle(
-            fontSize: _fontSize,
-            height: _lineHeight,
-            forceStrutHeight: true,
-          ),
-          scrollPhysics: const NeverScrollableScrollPhysics(),
-          keyboardType: TextInputType.multiline,
-          textAlignVertical: TextAlignVertical.top,
-          decoration: const InputDecoration(
-            isCollapsed: true,
-            border: InputBorder.none,
-            contentPadding: EdgeInsets.zero,
-          ),
+        keyboardType: TextInputType.multiline,
+        textAlignVertical: TextAlignVertical.top,
+        decoration: const InputDecoration(
+          isCollapsed: true,
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.zero,
         ),
       ),
     );

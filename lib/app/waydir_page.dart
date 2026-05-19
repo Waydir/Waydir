@@ -61,6 +61,9 @@ class _WaydirPageState extends State<WaydirPage> {
   final Map<String, List<ContextMenuItem>> _openWithCache = {};
   final Set<String> _openWithWarming = {};
   final _renameErrorDisposers = <String, void Function()>{};
+  DateTime? _lastCursorRepeatAt;
+
+  static const _cursorRepeatInterval = Duration(milliseconds: 70);
 
   NavigationStore get _active => _shell.activeStore.value!;
 
@@ -795,8 +798,19 @@ class _WaydirPageState extends State<WaydirPage> {
     });
   }
 
+  bool _acceptCursorRepeat() {
+    final now = DateTime.now();
+    final last = _lastCursorRepeatAt;
+    if (last != null && now.difference(last) < _cursorRepeatInterval) {
+      return false;
+    }
+    _lastCursorRepeatAt = now;
+    return true;
+  }
+
   KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
-    if (event is! KeyDownEvent) return KeyEventResult.ignored;
+    final isRepeat = event is KeyRepeatEvent;
+    if (event is! KeyDownEvent && !isRepeat) return KeyEventResult.ignored;
 
     final key = event.logicalKey;
     final ctrl = AppShortcuts.isControl;
@@ -891,6 +905,22 @@ class _WaydirPageState extends State<WaydirPage> {
     }
 
     final store = _active;
+
+    if (isRepeat) {
+      if (AppShortcuts.isKey('cursor_down', key)) {
+        if (!_acceptCursorRepeat()) return KeyEventResult.handled;
+        store.moveCursor(1);
+        return KeyEventResult.handled;
+      }
+
+      if (AppShortcuts.isKey('cursor_up', key)) {
+        if (!_acceptCursorRepeat()) return KeyEventResult.handled;
+        store.moveCursor(-1);
+        return KeyEventResult.handled;
+      }
+
+      return KeyEventResult.ignored;
+    }
 
     if (!ctrl && !shift && !alt && AppShortcuts.isKey('quick_look', key)) {
       _openQuickLook();
@@ -1024,11 +1054,13 @@ class _WaydirPageState extends State<WaydirPage> {
     }
 
     if (AppShortcuts.isKey('cursor_down', key)) {
+      _lastCursorRepeatAt = null;
       store.moveCursor(1);
       return KeyEventResult.handled;
     }
 
     if (AppShortcuts.isKey('cursor_up', key)) {
+      _lastCursorRepeatAt = null;
       store.moveCursor(-1);
       return KeyEventResult.handled;
     }

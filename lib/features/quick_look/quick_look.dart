@@ -56,6 +56,9 @@ class _QuickLookState extends State<_QuickLook> {
   bool _compact = true;
   bool _showInfo = true;
   String? _presentationKey;
+  DateTime? _lastCursorRepeatAt;
+
+  static const _cursorRepeatInterval = Duration(milliseconds: 70);
 
   @override
   void initState() {
@@ -75,23 +78,38 @@ class _QuickLookState extends State<_QuickLook> {
     super.dispose();
   }
 
+  bool _acceptCursorRepeat() {
+    final now = DateTime.now();
+    final last = _lastCursorRepeatAt;
+    if (last != null && now.difference(last) < _cursorRepeatInterval) {
+      return false;
+    }
+    _lastCursorRepeatAt = now;
+    return true;
+  }
+
   KeyEventResult _handleKey(FocusNode node, KeyEvent event) {
-    if (event is! KeyDownEvent) return KeyEventResult.ignored;
+    final isRepeat = event is KeyRepeatEvent;
+    if (event is! KeyDownEvent && !isRepeat) return KeyEventResult.ignored;
     final key = event.logicalKey;
-    if (key == LogicalKeyboardKey.escape) {
+    if (!isRepeat && key == LogicalKeyboardKey.escape) {
       Navigator.of(context).pop();
       return KeyEventResult.handled;
     }
     if (_editorActive.value) return KeyEventResult.ignored;
-    if (key == LogicalKeyboardKey.space) {
+    if (!isRepeat && key == LogicalKeyboardKey.space) {
       Navigator.of(context).pop();
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.arrowDown) {
+      if (isRepeat && !_acceptCursorRepeat()) return KeyEventResult.handled;
+      if (!isRepeat) _lastCursorRepeatAt = null;
       widget.store.moveCursor(1);
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.arrowUp) {
+      if (isRepeat && !_acceptCursorRepeat()) return KeyEventResult.handled;
+      if (!isRepeat) _lastCursorRepeatAt = null;
       widget.store.moveCursor(-1);
       return KeyEventResult.handled;
     }

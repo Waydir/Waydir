@@ -17,10 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Completely rebuilt Quick Look for a cleaner preview experience with better file details, image viewing, and text/code editing.
+- Holding Up/Down now moves through files continuously at a controlled pace.
 - Faster directory scanning in large folders thanks to improved parallel walk.
 
 ### Fixed
 - Right-click context menu on files now opens instantly instead of briefly hanging while resolving the default app.
+- Cascading context submenus now close when the pointer leaves both the parent item and the submenu.
 
 ### Removed
 - Command palette (Ctrl+P).
