@@ -99,7 +99,8 @@ class _QuickLookState extends State<_QuickLook> {
   }
 
   static bool _defaultCompact(FileEntry? entry) {
-    return entry == null || entry.type == FileItemType.folder;
+    if (entry == null || entry.type == FileItemType.folder) return true;
+    return !imageExts.contains(entry.extension);
   }
 
   void _setCompact(bool value) {
@@ -120,12 +121,8 @@ class _QuickLookState extends State<_QuickLook> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final width = _compact
-        ? (size.width * 0.36).clamp(360.0, 540.0)
-        : (size.width * 0.78).clamp(480.0, 1280.0);
-    final height = _compact
-        ? (size.height * 0.56).clamp(300.0, 560.0)
-        : (size.height * 0.82).clamp(360.0, 980.0);
+    final width = (size.width * 0.7).clamp(480.0, 1100.0);
+    final height = (size.height * 0.78).clamp(360.0, 900.0);
     return Focus(
       onKeyEvent: _handleKey,
       child: Center(
@@ -148,6 +145,24 @@ class _QuickLookState extends State<_QuickLook> {
               ],
             ),
             child: Watch((_) {
+              final selected = widget.store.selectedPaths.value;
+              if (selected.length > 1) {
+                final entries = widget.store.selectedEntries;
+                return Column(
+                  children: [
+                    _Header(
+                      entry: null,
+                      compact: true,
+                      showInfo: _showInfo,
+                      multiCount: entries.length,
+                      onToggleInfo: () {},
+                      onClose: () => Navigator.of(context).pop(),
+                    ),
+                    Container(height: 1, color: AppColors.bgDivider),
+                    Expanded(child: MultiProperties(entries: entries)),
+                  ],
+                );
+              }
               final entry = widget.store.cursorEntry.value;
               _syncPresentation(entry);
               return Column(
@@ -184,6 +199,7 @@ class _Header extends StatelessWidget {
   final bool showInfo;
   final VoidCallback onToggleInfo;
   final VoidCallback onClose;
+  final int? multiCount;
 
   const _Header({
     required this.entry,
@@ -191,13 +207,17 @@ class _Header extends StatelessWidget {
     required this.showInfo,
     required this.onToggleInfo,
     required this.onClose,
+    this.multiCount,
   });
 
   @override
   Widget build(BuildContext context) {
     final e = entry;
-    final name = e?.name ?? t.quickLook.noSelection;
-    final hasPreview = e != null && !compact;
+    final multi = multiCount != null;
+    final name = multi
+        ? t.quickLook.items(count: multiCount!)
+        : e?.name ?? t.quickLook.noSelection;
+    final hasPreview = !multi && e != null && !compact;
     return Container(
       height: 46,
       color: AppColors.bgSidebar,
@@ -205,13 +225,17 @@ class _Header extends StatelessWidget {
       child: Row(
         children: [
           PhosphorIcon(
-            e == null
+            multi
+                ? PhosphorIconsRegular.copy
+                : e == null
                 ? PhosphorIconsRegular.file
                 : e.type == FileItemType.folder
                 ? PhosphorIconsRegular.folder
                 : fileIcon(e.extension),
             size: 18,
-            color: e == null
+            color: multi
+                ? AppColors.accent
+                : e == null
                 ? AppColors.fgMuted
                 : e.type == FileItemType.folder
                 ? AppColors.accent
@@ -384,8 +408,12 @@ class _Body extends StatelessWidget {
       onCompactChanged(false);
       return _split(ImagePreview(path: e.realPath), e, showInfo: showInfo);
     }
-    onCompactChanged(false);
-    return _TextLoader(
+    if (binaryExts.contains(e.extension)) {
+      release();
+      onCompactChanged(true);
+      return PropertiesOnly(entry: e);
+    }
+    return _ProbeLoader(
       entry: e,
       editorActive: editorActive,
       showInfo: showInfo,
@@ -394,13 +422,13 @@ class _Body extends StatelessWidget {
   }
 }
 
-class _TextLoader extends StatelessWidget {
+class _ProbeLoader extends StatelessWidget {
   final FileEntry entry;
   final ValueNotifier<bool> editorActive;
   final bool showInfo;
   final ValueChanged<bool> onCompactChanged;
 
-  const _TextLoader({
+  const _ProbeLoader({
     required this.entry,
     required this.editorActive,
     required this.showInfo,
@@ -409,30 +437,38 @@ class _TextLoader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AsyncRetain<TextResult>(
+    void release() => WidgetsBinding.instance.addPostFrameCallback(
+      (_) => editorActive.value = false,
+    );
+    return AsyncRetain<Probe>(
       cacheKey: entry.realPath,
-      loader: () => readText(entry),
+      loader: () => probeFile(entry),
       loading: const QlCentered.spinner(),
       builder: (res) {
-        if (res.error != null) {
-          WidgetsBinding.instance.addPostFrameCallback(
-            (_) => editorActive.value = false,
-          );
-          onCompactChanged(true);
-          return PropertiesOnly(entry: entry, note: res.error);
+        switch (res.kind) {
+          case QlKind.text:
+            onCompactChanged(false);
+            return _split(
+              CodeEditor(
+                key: ValueKey(entry.realPath),
+                path: entry.realPath,
+                extension: entry.extension,
+                initial: res.text,
+                editorActive: editorActive,
+              ),
+              entry,
+              showInfo: showInfo,
+            );
+          case QlKind.binary:
+            release();
+            onCompactChanged(true);
+            return PropertiesOnly(entry: entry);
+          case QlKind.tooLarge:
+          case QlKind.error:
+            release();
+            onCompactChanged(true);
+            return PropertiesOnly(entry: entry, note: res.note);
         }
-        onCompactChanged(false);
-        return _split(
-          CodeEditor(
-            key: ValueKey(entry.realPath),
-            path: entry.realPath,
-            extension: entry.extension,
-            initial: res.text,
-            editorActive: editorActive,
-          ),
-          entry,
-          showInfo: showInfo,
-        );
       },
     );
   }

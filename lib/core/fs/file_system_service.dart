@@ -225,8 +225,7 @@ class FileSystemService {
     }
 
     void maybeReport(String currentFile) {
-      if (reportClock.elapsedMilliseconds - lastReportMs > 50 ||
-          processedFiles % 100 == 0) {
+      if (reportClock.elapsedMilliseconds - lastReportMs > 50) {
         mainSendPort.send(
           ProgressMessage(
             processedFiles: processedFiles,
@@ -357,9 +356,15 @@ class FileSystemService {
             Directory(dstDir).createSync(recursive: true);
           }
 
-          final size = File(srcPath).lengthSync();
-          _copyFileSync(File(srcPath), dstPath);
-          processedBytes += size;
+          final fileName = srcPath.split(Platform.pathSeparator).last;
+          _copyFileSync(
+            File(srcPath),
+            dstPath,
+            onProgress: (n) {
+              processedBytes += n;
+              maybeReport(fileName);
+            },
+          );
         } else if (type == FileSystemEntityType.directory) {
           if (!Directory(dstPath).existsSync()) {
             Directory(dstPath).createSync(recursive: true);
@@ -438,6 +443,13 @@ class FileSystemService {
         }
       }
 
+      mainSendPort.send(
+        ProgressMessage(
+          processedFiles: processedFiles,
+          processedBytes: processedBytes,
+          currentFile: '',
+        ),
+      );
       mainSendPort.send(TaskDoneMessage(cancelled: cancelled, errors: errors));
       workerReceivePort.close();
     }
@@ -505,8 +517,11 @@ class FileSystemService {
     final sourceRoots = <String>{};
     final sourceRootOrder = <String>[];
     final sourceRootCounts = <String, int>{};
+    final sourceRootBytes = <String, int>{};
     final visitedDirs = <String>{};
     int totalFiles = 0;
+    int totalBytes = 0;
+    int processedBytes = 0;
     final conflicts = <ConflictInfo>[];
     Map<String, ConflictResolution> resolutions = {};
     final runtimeResolutions = <String, ConflictResolution>{};
@@ -533,12 +548,11 @@ class FileSystemService {
     }
 
     void maybeReport(String currentFile) {
-      if (reportClock.elapsedMilliseconds - lastReportMs > 50 ||
-          processedFiles % 100 == 0) {
+      if (reportClock.elapsedMilliseconds - lastReportMs > 50) {
         mainSendPort.send(
           ProgressMessage(
             processedFiles: processedFiles,
-            processedBytes: 0,
+            processedBytes: processedBytes,
             currentFile: currentFile,
           ),
         );
@@ -559,6 +573,7 @@ class FileSystemService {
       if (type == FileSystemEntityType.directory) {
         allPaths.add(src);
         totalFiles++;
+        var rootBytes = 0;
         _scanDirForMove(
           Directory(src),
           targetPath,
@@ -566,6 +581,14 @@ class FileSystemService {
           (path, _) {
             allPaths.add(path);
             totalFiles++;
+            if (FileSystemEntity.typeSync(path, followLinks: false) ==
+                FileSystemEntityType.file) {
+              try {
+                final sz = FileStat.statSync(path).size;
+                rootBytes += sz;
+                totalBytes += sz;
+              } catch (_) {}
+            }
           },
           (errorPath, errorMsg) {
             errors.add(TaskError(path: errorPath, message: errorMsg));
@@ -595,10 +618,16 @@ class FileSystemService {
             );
           }
         }
+        sourceRootBytes[src] = rootBytes;
       } else {
         try {
           allPaths.add(src);
           totalFiles++;
+          try {
+            final sz = FileStat.statSync(src).size;
+            sourceRootBytes[src] = sz;
+            totalBytes += sz;
+          } catch (_) {}
           final targetStat = FileStat.statSync(targetPath);
           if (targetStat.type != FileSystemEntityType.notFound) {
             final sourceStat = FileStat.statSync(src);
@@ -663,6 +692,12 @@ class FileSystemService {
         dstPath = _uniqueName(dstPath);
       }
 
+      final credit = sourceRootBytes[srcPath] ?? 0;
+      void onBytes(int d) {
+        processedBytes += d;
+        maybeReport(srcPath.split(Platform.pathSeparator).last);
+      }
+
       try {
         final targetType = FileSystemEntity.typeSync(
           dstPath,
@@ -678,7 +713,14 @@ class FileSystemService {
         if (resolution == ConflictResolution.overwrite &&
             targetType != FileSystemEntityType.notFound) {
           final tempDstPath = SafeFileReplace.temporarySiblingPath(dstPath);
-          await _moveEntity(srcPath, tempDstPath, () => cancelled, null);
+          await _moveEntity(
+            srcPath,
+            tempDstPath,
+            () => cancelled,
+            null,
+            renameCreditBytes: credit,
+            onBytes: onBytes,
+          );
           if (cancelled) return true;
           if (targetType == FileSystemEntityType.file ||
               targetType == FileSystemEntityType.link) {
@@ -696,7 +738,14 @@ class FileSystemService {
         if (!Directory(dstDir).existsSync()) {
           Directory(dstDir).createSync(recursive: true);
         }
-        await _moveEntity(srcPath, dstPath, () => cancelled, null);
+        await _moveEntity(
+          srcPath,
+          dstPath,
+          () => cancelled,
+          null,
+          renameCreditBytes: credit,
+          onBytes: onBytes,
+        );
       } catch (e) {
         errors.add(TaskError(path: srcPath, message: _friendlyError(e)));
       }
@@ -768,6 +817,13 @@ class FileSystemService {
         }
       }
 
+      mainSendPort.send(
+        ProgressMessage(
+          processedFiles: processedFiles,
+          processedBytes: processedBytes,
+          currentFile: '',
+        ),
+      );
       mainSendPort.send(TaskDoneMessage(cancelled: cancelled, errors: errors));
       workerReceivePort.close();
     }
@@ -786,7 +842,7 @@ class FileSystemService {
           mainSendPort.send(
             PreScanResultMessage(
               totalFiles: totalFiles,
-              totalBytes: null,
+              totalBytes: totalBytes,
               allPaths: allPaths,
               conflicts: conflicts,
             ),
@@ -1454,8 +1510,12 @@ class FileSystemService {
     });
   }
 
-  static void _copyFileSync(File src, String dstPath) {
-    SafeFileReplace.copyFile(src, dstPath);
+  static void _copyFileSync(
+    File src,
+    String dstPath, {
+    void Function(int bytes)? onProgress,
+  }) {
+    SafeFileReplace.copyFile(src, dstPath, onProgress: onProgress);
   }
 
   static void _scanDirForCopy(
@@ -1570,8 +1630,10 @@ class FileSystemService {
     String src,
     String dst,
     bool Function() isCancelled,
-    void Function(String currentName)? onProgress,
-  ) async {
+    void Function(String currentName)? onProgress, {
+    int renameCreditBytes = 0,
+    void Function(int delta)? onBytes,
+  }) async {
     final type = FileSystemEntity.typeSync(src, followLinks: false);
     if (type == FileSystemEntityType.link) {
       final target = Link(src).targetSync();
@@ -1582,12 +1644,15 @@ class FileSystemService {
     if (type == FileSystemEntityType.directory) {
       try {
         Directory(src).renameSync(dst);
+        // Same-volume rename moves whole subtree instantly.
+        onBytes?.call(renameCreditBytes);
       } on FileSystemException {
         await _copyDirectory(
           Directory(src),
           Directory(dst),
           isCancelled,
           onProgress,
+          onBytes,
         );
         if (isCancelled()) return;
         Directory(src).deleteSync(recursive: true);
@@ -1595,8 +1660,13 @@ class FileSystemService {
     } else {
       try {
         File(src).renameSync(dst);
+        onBytes?.call(renameCreditBytes);
       } on FileSystemException {
-        _copyFileSync(File(src), dst);
+        _copyFileSync(
+          File(src),
+          dst,
+          onProgress: onBytes == null ? null : (n) => onBytes(n),
+        );
         if (isCancelled()) {
           return;
         }
@@ -1620,8 +1690,9 @@ class FileSystemService {
     Directory src,
     Directory dst,
     bool Function() isCancelled,
-    void Function(String currentName)? onProgress,
-  ) async {
+    void Function(String currentName)? onProgress, [
+    void Function(int delta)? onBytes,
+  ]) async {
     if (!dst.existsSync()) dst.createSync(recursive: true);
     int counter = 0;
     for (final entity in src.listSync(followLinks: false)) {
@@ -1638,9 +1709,14 @@ class FileSystemService {
           Directory(newPath),
           isCancelled,
           onProgress,
+          onBytes,
         );
       } else if (entity is File) {
-        _copyFileSync(entity, newPath);
+        _copyFileSync(
+          entity,
+          newPath,
+          onProgress: onBytes == null ? null : (n) => onBytes(n),
+        );
         onProgress?.call(name);
       }
       if ((++counter & 0x3F) == 0) {

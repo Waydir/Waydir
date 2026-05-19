@@ -53,24 +53,39 @@ class NativeCopy {
     return null;
   }
 
-  static bool tryFastCopy(String sourcePath, String destinationPath) {
+  static bool tryFastCopy(
+    String sourcePath,
+    String destinationPath, {
+    void Function(int bytes)? onProgress,
+  }) {
     final lib = _lib;
     if (lib == null) return false;
     if (Platform.isLinux) {
-      return _linuxCopyFileRange(lib, sourcePath, destinationPath);
+      return _linuxCopyFileRange(lib, sourcePath, destinationPath, onProgress);
     }
     if (Platform.isMacOS) {
-      return _macClonefile(lib, sourcePath, destinationPath);
+      return _macClonefile(lib, sourcePath, destinationPath, onProgress);
     }
     return false;
   }
 
-  static bool _macClonefile(DynamicLibrary lib, String src, String dst) {
+  static bool _macClonefile(
+    DynamicLibrary lib,
+    String src,
+    String dst,
+    void Function(int bytes)? onProgress,
+  ) {
     final clonefile = lib.lookupFunction<_CloneNative, _CloneDart>('clonefile');
     final s = src.toNativeUtf8();
     final d = dst.toNativeUtf8();
     try {
-      return clonefile(s, d, 0) == 0;
+      final ok = clonefile(s, d, 0) == 0;
+      if (ok && onProgress != null) {
+        try {
+          onProgress(File(src).lengthSync());
+        } catch (_) {}
+      }
+      return ok;
     } catch (_) {
       return false;
     } finally {
@@ -79,7 +94,15 @@ class NativeCopy {
     }
   }
 
-  static bool _linuxCopyFileRange(DynamicLibrary lib, String src, String dst) {
+  // Cap per-syscall transfer so progress can be reported on big files.
+  static const int _cfrChunk = 32 * 1024 * 1024;
+
+  static bool _linuxCopyFileRange(
+    DynamicLibrary lib,
+    String src,
+    String dst,
+    void Function(int bytes)? onProgress,
+  ) {
     final open = lib.lookupFunction<_OpenNative, _OpenDart>('open');
     final close = lib.lookupFunction<_CloseNative, _CloseDart>('close');
     final cfr = lib.lookupFunction<_CfrNative, _CfrDart>('copy_file_range');
@@ -104,11 +127,20 @@ class NativeCopy {
       if (total == 0) return true; // empty file: fds created the target.
 
       var remaining = total;
+      var emitted = 0;
       while (remaining > 0) {
-        final n = cfr(fdIn, nullptr, fdOut, nullptr, remaining, 0);
-        if (n < 0) return false; // EXDEV/ENOSYS/EINVAL → fall back.
+        final want = remaining < _cfrChunk ? remaining : _cfrChunk;
+        final n = cfr(fdIn, nullptr, fdOut, nullptr, want, 0);
+        if (n < 0) {
+          // Partial fail: undo reported bytes so the portable fallback,
+          // which recopies the whole file, does not double-count.
+          if (emitted > 0) onProgress?.call(-emitted);
+          return false; // EXDEV/ENOSYS/EINVAL → fall back.
+        }
         if (n == 0) break; // unexpected short source.
         remaining -= n;
+        emitted += n;
+        onProgress?.call(n);
       }
       return remaining == 0;
     } catch (_) {

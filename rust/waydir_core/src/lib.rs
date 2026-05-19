@@ -518,9 +518,11 @@ pub unsafe extern "C" fn waydir_folder_scan_free(session: *mut FolderScanSession
     }
     let mut session = Box::from_raw(session);
     session.cancelled.store(true, Ordering::Relaxed);
-    if let Some(h) = session.handle.take() {
-        let _ = h.join();
-    }
+    // Detach the worker instead of joining: it owns its own Arc clones, so
+    // dropping the handle is safe and lets it wind down on its own once the
+    // cancel flag is observed. Joining here would block the caller (the UI
+    // thread) until a potentially deep tree walk unwinds, freezing the app.
+    drop(session.handle.take());
 }
 
 fn mtime_ms(meta: &std::fs::Metadata) -> i64 {

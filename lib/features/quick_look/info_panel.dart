@@ -22,7 +22,10 @@ class SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Text(text.toUpperCase(), style: context.txt.sectionLabel),
+      child: Text(
+        text.toUpperCase(),
+        style: context.txt.sectionLabel.copyWith(fontSize: 11.5),
+      ),
     );
   }
 }
@@ -41,17 +44,17 @@ class PropRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 80,
+            width: 96,
             child: Text(
               label,
-              style: context.txt.caption.copyWith(color: AppColors.fgMuted),
+              style: context.txt.captionSmall.copyWith(color: AppColors.fgMuted),
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 12),
           Expanded(
             child: SelectableText(
               value,
-              style: context.txt.caption.copyWith(color: AppColors.fg),
+              style: context.txt.captionSmall.copyWith(color: AppColors.fg),
             ),
           ),
         ],
@@ -328,6 +331,175 @@ class PropertiesOnly extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _FolderJob {
+  final int session;
+  int bytes = 0;
+  int items = 0;
+  bool done = false;
+  bool freed = false;
+
+  _FolderJob(this.session);
+}
+
+/// Aggregate properties for a multi-selection: sums plain file sizes
+/// immediately and recursively scans every selected folder, summing bytes
+/// and contained items live.
+class MultiProperties extends StatefulWidget {
+  final List<FileEntry> entries;
+
+  const MultiProperties({super.key, required this.entries});
+
+  @override
+  State<MultiProperties> createState() => _MultiPropertiesState();
+}
+
+class _MultiPropertiesState extends State<MultiProperties> {
+  Timer? _timer;
+  final List<_FolderJob> _jobs = [];
+  bool _failed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _start();
+  }
+
+  @override
+  void didUpdateWidget(MultiProperties old) {
+    super.didUpdateWidget(old);
+    final a = old.entries.map((e) => e.path).join('|');
+    final b = widget.entries.map((e) => e.path).join('|');
+    if (a != b) {
+      _stopAll();
+      setState(() {
+        _jobs.clear();
+        _failed = false;
+      });
+      _start();
+    }
+  }
+
+  @override
+  void dispose() {
+    _stopAll();
+    super.dispose();
+  }
+
+  void _start() {
+    for (final e in widget.entries) {
+      if (e.type != FileItemType.folder) continue;
+      int? session;
+      try {
+        session = WaydirCoreLoader.folderScanStart(e.realPath);
+      } catch (_) {
+        session = null;
+      }
+      if (session == null) {
+        _failed = true;
+        continue;
+      }
+      _jobs.add(_FolderJob(session));
+    }
+    if (_jobs.isEmpty) return;
+    _poll();
+    _timer = Timer.periodic(const Duration(milliseconds: 120), (_) => _poll());
+  }
+
+  void _poll() {
+    var allDone = true;
+    for (final j in _jobs) {
+      if (j.done) continue;
+      try {
+        final r = WaydirCoreLoader.folderScanPoll(j.session);
+        j.bytes = r.bytes;
+        j.items = r.items;
+        j.done = r.done;
+        if (!r.done) {
+          allDone = false;
+        } else {
+          _free(j);
+        }
+      } catch (_) {
+        _failed = true;
+        j.done = true;
+        _free(j);
+      }
+    }
+    if (mounted) setState(() {});
+    if (allDone) {
+      _timer?.cancel();
+      _timer = null;
+    }
+  }
+
+  void _free(_FolderJob j) {
+    if (j.freed) return;
+    j.freed = true;
+    try {
+      WaydirCoreLoader.folderScanFree(j.session);
+    } catch (_) {}
+  }
+
+  void _stopAll() {
+    _timer?.cancel();
+    _timer = null;
+    for (final j in _jobs) {
+      if (j.freed) continue;
+      if (!j.done) {
+        try {
+          WaydirCoreLoader.folderScanCancel(j.session);
+        } catch (_) {}
+      }
+      _free(j);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final files = widget.entries
+        .where((e) => e.type != FileItemType.folder)
+        .toList();
+    final folderCount = widget.entries.length - files.length;
+    final fileBytes = files.fold<int>(0, (a, e) => a + e.size);
+    final folderBytes = _jobs.fold<int>(0, (a, j) => a + j.bytes);
+    final folderItems = _jobs.fold<int>(0, (a, j) => a + j.items);
+    final allDone = _jobs.every((j) => j.done);
+    final totalBytes = fileBytes + folderBytes;
+    final totalItems = files.length + folderItems;
+    final calc = t.quickLook.calculating;
+
+    String live(String base) => allDone ? base : '$base · $calc';
+
+    return Container(
+      color: AppColors.bgSidebar,
+      child: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        children: [
+          SectionLabel(t.quickLook.sectionGeneral),
+          PropRow(
+            label: t.quickLook.size,
+            value: _failed
+                ? t.quickLook.readError
+                : live(formatBytes(totalBytes)),
+          ),
+          PropRow(
+            label: t.quickLook.contains,
+            value: live(t.quickLook.items(count: totalItems)),
+          ),
+          PropRow(
+            label: t.quickLook.typeFolder,
+            value: '$folderCount',
+          ),
+          PropRow(
+            label: t.quickLook.typeFile,
+            value: '${files.length}',
+          ),
+        ],
       ),
     );
   }
