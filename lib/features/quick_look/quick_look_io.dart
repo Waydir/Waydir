@@ -18,12 +18,14 @@ class FolderStats {
   const FolderStats(this.bytes, this.items, {required this.done});
 }
 
-class TextResult {
-  final String text;
-  final String? error;
-  final bool binary;
+enum QlKind { text, binary, tooLarge, error }
 
-  const TextResult(this.text, {this.error, this.binary = false});
+class Probe {
+  final QlKind kind;
+  final String text;
+  final String? note;
+
+  const Probe(this.kind, {this.text = '', this.note});
 }
 
 Future<Uint8List> readHead(String path, int maxBytes) async {
@@ -74,7 +76,7 @@ Future<QlSection?> imageInfo(FileEntry e) async {
   return (title: t.quickLook.sectionImage, rows: rows);
 }
 
-Future<TextResult> readText(FileEntry entry) async {
+Future<Probe> probeFile(FileEntry entry) async {
   try {
     final file = File(entry.realPath);
     final builder = BytesBuilder(copy: false);
@@ -84,16 +86,20 @@ Future<TextResult> readText(FileEntry entry) async {
     }
     final bytes = builder.takeBytes();
     if (bytes.length > maxTextBytes) {
-      return TextResult('', error: t.quickLook.tooLarge);
+      return Probe(QlKind.tooLarge, note: t.quickLook.tooLarge);
     }
     final scanLen = bytes.length > 8000 ? 8000 : bytes.length;
+    var suspicious = 0;
     for (var i = 0; i < scanLen; i++) {
-      if (bytes[i] == 0) {
-        return TextResult('', error: t.quickLook.binaryFile, binary: true);
-      }
+      final b = bytes[i];
+      if (b == 0) return const Probe(QlKind.binary);
+      if (b < 9 || (b > 13 && b < 32) || b == 127) suspicious++;
     }
-    return TextResult(utf8.decode(bytes, allowMalformed: true));
+    if (scanLen > 0 && suspicious / scanLen > 0.1) {
+      return const Probe(QlKind.binary);
+    }
+    return Probe(QlKind.text, text: utf8.decode(bytes, allowMalformed: true));
   } catch (_) {
-    return TextResult('', error: t.quickLook.readError);
+    return Probe(QlKind.error, note: t.quickLook.readError);
   }
 }
