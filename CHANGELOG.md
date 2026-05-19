@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Confirmation dialogs before copying and moving files, with per-action toggles in Preferences (off for copy, on for move by default).
+- Confirmation dialogs can now be accepted with Enter or dismissed with Esc.
 - Light and Nord built-in themes.
 - Custom theme management: create, edit, and delete your own themes via JSON files in Preferences.
 - Ctrl+H shortcut to toggle hidden files.
