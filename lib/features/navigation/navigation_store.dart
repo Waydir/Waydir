@@ -1166,6 +1166,7 @@ class NavigationStore {
         selectedPaths.value = paths;
       } else {
         selectedPaths.value = {_vf[next].path};
+        anchorIndex.value = next;
       }
       cursorIndex.value = next;
     });
