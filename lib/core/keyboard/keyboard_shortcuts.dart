@@ -267,6 +267,13 @@ class AppShortcuts {
       ctrl: true,
     ),
     ShortcutDef(
+      id: 'select_pattern',
+      label: () => '',
+      group: ShortcutGroup.selection,
+      key: LogicalKeyboardKey.keyS,
+      ctrl: true,
+    ),
+    ShortcutDef(
       id: 'deselect_all',
       label: () => '',
       group: ShortcutGroup.selection,

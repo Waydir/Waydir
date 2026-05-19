@@ -27,6 +27,7 @@ import '../ui/dialogs/compress_dialog.dart';
 import '../ui/dialogs/open_with_dialog.dart';
 import '../ui/overlays/context_menu.dart';
 import '../ui/overlays/notification_overlay.dart';
+import '../features/navigation/select_pattern_dialog.dart';
 import '../features/quick_look/quick_look.dart';
 import '../ui/overlays/notification_store.dart';
 import '../ui/overlays/toast.dart';
@@ -54,6 +55,11 @@ class _WaydirPageState extends State<WaydirPage> {
 
   /// The file the "Open With…" chooser was opened on.
   FileEntry? _openWithEntry;
+
+  /// Resolved "Open with default app" menu items, keyed by lowercased file
+  /// extension, plus the set of extensions currently being resolved.
+  final Map<String, List<ContextMenuItem>> _openWithCache = {};
+  final Set<String> _openWithWarming = {};
   final _renameErrorDisposers = <String, void Function()>{};
 
   NavigationStore get _active => _shell.activeStore.value!;
@@ -315,9 +321,8 @@ class _WaydirPageState extends State<WaydirPage> {
     final isRecursive = store.searchActive.value && store.searchRecursive.value;
 
     final openWithItems = isSingleFile
-        ? await _buildOpenWithItem(entries.first)
+        ? _openWithItemsFor(entries.first)
         : const <ContextMenuItem>[];
-    if (!mounted) return;
 
     final archiveEntries = entries
         .where(
@@ -508,18 +513,29 @@ class _WaydirPageState extends State<WaydirPage> {
     );
   }
 
-  Future<List<ContextMenuItem>> _buildOpenWithItem(FileEntry entry) async {
-    _openWithEntry = entry;
+  ContextMenuItem get _openItem => ContextMenuItem(
+    icon: PhosphorIconsRegular.folderOpen,
+    label: t.menu.open,
+    action: 'open',
+  );
 
-    final open = ContextMenuItem(
-      icon: PhosphorIconsRegular.folderOpen,
-      label: t.menu.open,
-      action: 'open',
-    );
+  ContextMenuItem get _chooserItem => ContextMenuItem(
+    icon: PhosphorIconsRegular.dotsThreeOutline,
+    label: t.menu.openWithChoose,
+    action: 'open_with_choose',
+  );
+
+  /// Returns the "Open / Open with" items synchronously so the context menu
+  /// can be shown immediately. On Linux the preferred-app lookup spawns
+  /// `xdg-mime` subprocesses, so it is resolved off the menu path and cached
+  /// per extension; the first menu for a given type shows the generic items,
+  /// subsequent ones show the resolved default app.
+  List<ContextMenuItem> _openWithItemsFor(FileEntry entry) {
+    _openWithEntry = entry;
 
     if (PlatformPaths.isWindows) {
       return [
-        open,
+        _openItem,
         ContextMenuItem(
           icon: PhosphorIconsRegular.dotsThreeOutline,
           label: t.menu.openWithChoose,
@@ -528,31 +544,36 @@ class _WaydirPageState extends State<WaydirPage> {
       ];
     }
 
-    final chooser = ContextMenuItem(
-      icon: PhosphorIconsRegular.dotsThreeOutline,
-      label: t.menu.openWithChoose,
-      action: 'open_with_choose',
-    );
+    if (PlatformPaths.isMacOS) return [_openItem, _chooserItem];
 
-    if (PlatformPaths.isMacOS) return [open, chooser];
+    final key = entry.extension.toLowerCase();
+    final cached = _openWithCache[key];
+    if (cached != null) return cached;
+    _warmOpenWith(entry.realPath, key);
+    return [_openItem, _chooserItem];
+  }
 
-    OpenWithOptions options;
+  Future<void> _warmOpenWith(String path, String key) async {
+    if (!_openWithWarming.add(key)) return;
     try {
-      options = await OpenService.optionsFor(entry.realPath);
+      final options = await OpenService.optionsFor(path);
+      final preferred = options.defaultApp;
+      _openWithCache[key] = preferred == null
+          ? [_openItem, _chooserItem]
+          : [
+              ContextMenuItem(
+                icon: PhosphorIconsRegular.appWindow,
+                label: t.menu.openWithApp(app: preferred.name),
+                action: 'open',
+                iconPath: preferred.iconPath,
+              ),
+              _chooserItem,
+            ];
     } catch (_) {
-      return [open, chooser];
+      // Leave uncached so a later right-click can retry.
+    } finally {
+      _openWithWarming.remove(key);
     }
-    final preferred = options.defaultApp;
-    if (preferred == null) return [open, chooser];
-    return [
-      ContextMenuItem(
-        icon: PhosphorIconsRegular.appWindow,
-        label: t.menu.openWithApp(app: preferred.name),
-        action: 'open',
-        iconPath: preferred.iconPath,
-      ),
-      chooser,
-    ];
   }
 
   void _handleMenuAction(String action) {
@@ -763,6 +784,17 @@ class _WaydirPageState extends State<WaydirPage> {
     ).then((_) => _restoreFocus());
   }
 
+  void _openSelectPattern() {
+    if (_isModalRouteOnTop()) return;
+    final store = _active;
+    showSelectPatternDialog(context).then((pattern) {
+      if (!mounted) return;
+      _restoreFocus();
+      if (pattern == null) return;
+      store.selectByPattern(pattern);
+    });
+  }
+
   KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
 
@@ -877,6 +909,11 @@ class _WaydirPageState extends State<WaydirPage> {
 
     if (AppShortcuts.isKey('close_search', key) && store.searchActive.value) {
       store.closeSearch();
+      return KeyEventResult.handled;
+    }
+
+    if (ctrl && !shift && AppShortcuts.isKey('select_pattern', key)) {
+      _openSelectPattern();
       return KeyEventResult.handled;
     }
 
