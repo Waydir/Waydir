@@ -185,7 +185,14 @@ class FsWorkerPool {
     final id = _nextId++;
     final completer = Completer<dynamic>();
     worker.pending[id] = completer;
-    worker.commandPort.send(_Request(id, op, args));
+    try {
+      worker.commandPort.send(_Request(id, op, args));
+    } catch (e) {
+      if (!completer.isCompleted) completer.completeError(e);
+    }
+    if (_workers[slot] != worker && !completer.isCompleted) {
+      completer.completeError(StateError('FS worker died before dispatch'));
+    }
     final result = await completer.future;
     return result as T;
   }

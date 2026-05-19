@@ -349,6 +349,10 @@ class OperationStore {
         ),
       );
 
+      if (task.status == TaskStatus.cancelling) {
+        handle.sendPort.send(CancelCommand());
+      }
+
       final completer = Completer<void>();
 
       void handleMessage(dynamic msg) {

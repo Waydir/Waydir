@@ -322,6 +322,19 @@ class FileSystemService {
       }
 
       try {
+        final linkType = FileSystemEntity.typeSync(srcPath, followLinks: false);
+        if (linkType == FileSystemEntityType.link) {
+          final dstDir = dstPath.substring(
+            0,
+            dstPath.lastIndexOf(Platform.pathSeparator),
+          );
+          if (!Directory(dstDir).existsSync()) {
+            Directory(dstDir).createSync(recursive: true);
+          }
+          _deleteExistingEntity(dstPath);
+          Link(dstPath).createSync(Link(srcPath).targetSync());
+          return true;
+        }
         final type = FileSystemEntity.typeSync(srcPath);
         if (type == FileSystemEntityType.notFound) {
           errors.add(TaskError(path: srcPath, message: t.errors.notFound));
@@ -1532,8 +1545,9 @@ class FileSystemService {
         final name = entity.path.split(Platform.pathSeparator).last;
         final targetPath = '$dest${Platform.pathSeparator}$name';
         if (entity is Link) {
-          continue;
+          onFile(entity.path, 0, null);
         } else if (entity is Directory) {
+          onFile(entity.path, 0, null);
           _scanDirForCopy(entity, targetPath, visited, onFile, onError);
         } else if (entity is File) {
           try {

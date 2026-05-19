@@ -68,12 +68,27 @@ class RecursiveSearch {
     final receivePort = ReceivePort();
     Isolate? isolate;
     bool startSent = false;
+    bool finished = false;
+
+    void finish({Object? error}) {
+      if (finished) return;
+      finished = true;
+      handle._done = true;
+      receivePort.close();
+      isolate?.kill(priority: Isolate.immediate);
+      if (error != null) {
+        onError(error);
+      } else {
+        onDone();
+      }
+    }
 
     final sub = receivePort.listen((msg) {
       if (!startSent && msg is SendPort) {
         startSent = true;
         handle._setCommandPort(msg);
         msg.send(_StartMsg(root, query, includeHidden));
+        if (handle._done) handle._commandPort?.send(const _CancelMsg());
         return;
       }
       if (handle._done && msg is! _DoneMsg) return;
@@ -82,19 +97,9 @@ class RecursiveSearch {
       } else if (msg is _ProgressMsg) {
         onProgress(msg.dirs, msg.currentDir);
       } else if (msg is _ErrorMsg) {
-        if (!handle._done) {
-          handle._done = true;
-          onError(StateError(msg.message));
-        }
-        receivePort.close();
-        isolate?.kill(priority: Isolate.immediate);
+        finish(error: StateError(msg.message));
       } else if (msg is _DoneMsg) {
-        if (!handle._done) {
-          handle._done = true;
-          onDone();
-        }
-        receivePort.close();
-        isolate?.kill(priority: Isolate.immediate);
+        finish();
       }
     });
 
@@ -105,14 +110,11 @@ class RecursiveSearch {
         )
         .then((iso) {
           isolate = iso;
-          if (handle._done) {
-            iso.kill(priority: Isolate.immediate);
-          }
+          if (handle._done && !finished) finish();
         })
         .catchError((e) {
           sub.cancel();
-          receivePort.close();
-          onError(e);
+          finish(error: e);
         });
 
     return handle;

@@ -560,7 +560,7 @@ class NavigationStore {
 
   static final FileEntry _kTombstone = FileEntry.raw(
     name: '',
-    path: ' waydir-tombstone',
+    path: 'waydir-tombstone-sentinel',
     type: FileItemType.file,
     size: 0,
     modifiedMs: 0,
