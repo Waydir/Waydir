@@ -67,14 +67,15 @@ class _PreferencesDialogState extends State<_PreferencesDialog> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final dialogWidth = size.width * 0.8 > 920 ? 920.0 : size.width * 0.8;
+    final dialogHeight = size.height - 96 > 640 ? 640.0 : size.height - 96;
     return Align(
-      alignment: Alignment.topCenter,
+      alignment: Alignment.center,
       child: Material(
         type: MaterialType.transparency,
         child: Container(
-          margin: const EdgeInsets.only(top: 24),
-          width: size.width * 0.92,
-          height: size.height - 48,
+          width: dialogWidth,
+          height: dialogHeight,
           decoration: BoxDecoration(
             color: AppColors.bgSurface,
             borderRadius: BorderRadius.zero,
@@ -121,8 +122,8 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 44,
-      padding: const EdgeInsets.symmetric(horizontal: 14),
+      height: 36,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(color: AppColors.bgSidebar),
       child: Row(
         children: [
@@ -189,9 +190,9 @@ class _CategorySidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 200,
+      width: 164,
       color: AppColors.bgSidebar,
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 5),
       child: ListView(
         children: [
           for (final cat in categories)
@@ -237,9 +238,9 @@ class _CategoryItemState extends State<_CategoryItem> {
       child: GestureDetector(
         onTap: widget.onTap,
         child: Container(
-          height: 28,
+          height: 24,
           margin: const EdgeInsets.symmetric(vertical: 1),
-          padding: const EdgeInsets.symmetric(horizontal: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
           decoration: BoxDecoration(
             color: bg,
             borderRadius: BorderRadius.circular(4),
@@ -295,7 +296,7 @@ class SettingsPaneScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: const EdgeInsets.fromLTRB(24, 22, 24, 24),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
       children: children,
     );
   }
@@ -321,7 +322,7 @@ class SettingsSection extends StatelessWidget {
           title.toUpperCase(),
           style: context.txt.fieldLabel.copyWith(color: AppColors.fg),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 6),
         DecoratedBox(
           decoration: BoxDecoration(
             color: AppColors.bgSurface,
@@ -338,7 +339,7 @@ class SettingsSection extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 12),
       ],
     );
   }
@@ -349,34 +350,50 @@ class SettingsRow extends StatelessWidget {
   final String? hint;
   final Widget control;
 
+  final bool stretchControl;
+
   const SettingsRow({
     super.key,
     required this.label,
     this.hint,
     required this.control,
+    this.stretchControl = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Expanded(
+            flex: 3,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(label, style: context.txt.body),
                 if (hint != null) ...[
-                  const SizedBox(height: 3),
+                  const SizedBox(height: 2),
                   Text(hint!, style: context.txt.muted),
                 ],
               ],
             ),
           ),
           const SizedBox(width: 16),
-          control,
+          if (stretchControl)
+            Flexible(
+              flex: 2,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 280),
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: control,
+                ),
+              ),
+            )
+          else
+            control,
         ],
       ),
     );
@@ -391,30 +408,25 @@ class RegistrySettingRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Watch((_) {
+      final stretch = setting is ChoiceSetting || setting is TextSetting;
       final control = switch (setting) {
         ToggleSetting toggle => SettingsToggle(
           value: toggle.value,
           onChanged: (value) => toggle.value = value,
         ),
-        ChoiceSetting choice => SizedBox(
-          width: 240,
-          child: AppDropdown<dynamic>(
-            value: choice.value,
-            items: [
-              for (final option in choice.choices)
-                AppDropdownItem<dynamic>(
-                  value: option.value,
-                  label: option.label(),
-                  icon: option.icon,
-                ),
-            ],
-            onChanged: (value) => choice.value = value,
-          ),
+        ChoiceSetting choice => AppDropdown<dynamic>(
+          value: choice.value,
+          items: [
+            for (final option in choice.choices)
+              AppDropdownItem<dynamic>(
+                value: option.value,
+                label: option.label(),
+                icon: option.icon,
+              ),
+          ],
+          onChanged: (value) => choice.value = value,
         ),
-        TextSetting text => SizedBox(
-          width: 280,
-          child: SettingsTextField(setting: text),
-        ),
+        TextSetting text => SettingsTextField(setting: text),
         _ => const SizedBox.shrink(),
       };
 
@@ -422,6 +434,7 @@ class RegistrySettingRow extends StatelessWidget {
         label: setting.label(),
         hint: setting.hint?.call(),
         control: control,
+        stretchControl: stretch,
       );
     });
   }

@@ -347,7 +347,7 @@ class _CustomThemesRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = this.state;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -359,17 +359,17 @@ class _CustomThemesRow extends StatelessWidget {
                   t.preferences.appearance.customThemes,
                   style: context.txt.body,
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 2),
                 Text(
                   t.preferences.appearance.customThemesHint,
                   style: context.txt.muted,
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 SelectableText(
                   state?.themesPath ?? '',
                   style: context.txt.code.copyWith(color: AppColors.fgMuted),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 if (state == null)
                   Text(
                     t.preferences.appearance.loadingThemes,
@@ -426,8 +426,8 @@ class _ThemeFileRow extends StatelessWidget {
         ? '${t.preferences.appearance.invalidTheme}: ${file.error}'
         : '${theme.id} - ${p.basename(file.path)}';
     return Container(
-      margin: const EdgeInsets.only(bottom: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+      margin: const EdgeInsets.only(bottom: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
         color: AppColors.bgInput,
         borderRadius: BorderRadius.circular(4),
