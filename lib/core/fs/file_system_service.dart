@@ -171,9 +171,6 @@ class FileSystemService {
     await OpenService.openDefault(dest);
   }
 
-  static Future<bool> isDirectory(String path) =>
-      FsWorkerPool.instance.isDirectory(path);
-
   static Future<void> createDirectory(String path) =>
       FsWorkerPool.instance.createDirectory(path);
 
@@ -1145,7 +1142,7 @@ class FileSystemService {
     ConflictResolution? runtimeApplyAll;
     Completer<void>? decisionWaker;
 
-    String keyOf(String src, String epath) => '$src $epath';
+    String keyOf(String src, String epath) => '$src\u{0}$epath';
 
     void wakeDecisions() {
       final w = decisionWaker;

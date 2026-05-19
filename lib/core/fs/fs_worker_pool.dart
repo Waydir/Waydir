@@ -11,9 +11,7 @@ import 'waydir_core_loader.dart';
 enum _Op {
   list,
   exists,
-  isDir,
   mkdir,
-  delete,
   stat,
   archiveList,
   archiveExtract,
@@ -205,12 +203,7 @@ class FsWorkerPool {
 
   Future<bool> directoryExists(String path) => _run<bool>(_Op.exists, [path]);
 
-  Future<bool> isDirectory(String path) => _run<bool>(_Op.isDir, [path]);
-
   Future<void> createDirectory(String path) => _run<void>(_Op.mkdir, [path]);
-
-  Future<void> delete(String path, {bool recursive = false}) =>
-      _run<void>(_Op.delete, [path, recursive]);
 
   Future<FileEntry?> stat(String path) => _run<FileEntry?>(_Op.stat, [path]);
 
@@ -286,22 +279,8 @@ class FsWorkerPool {
         return FileEntryCodec.decode(native);
       case _Op.exists:
         return Directory(args[0] as String).existsSync();
-      case _Op.isDir:
-        return FileSystemEntity.isDirectorySync(args[0] as String);
       case _Op.mkdir:
         Directory(args[0] as String).createSync(recursive: true);
-        return null;
-      case _Op.delete:
-        final path = args[0] as String;
-        final recursive = args[1] as bool;
-        final type = FileSystemEntity.typeSync(path, followLinks: false);
-        if (type == FileSystemEntityType.link) {
-          Link(path).deleteSync();
-        } else if (type == FileSystemEntityType.directory) {
-          Directory(path).deleteSync(recursive: recursive);
-        } else if (type == FileSystemEntityType.file) {
-          File(path).deleteSync();
-        }
         return null;
       case _Op.stat:
         final path = args[0] as String;

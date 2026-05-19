@@ -24,8 +24,9 @@ void main() {
 
     test('copy preserves an empty nested directory', () async {
       final src = Directory(p.join(tmpDir.path, 'src'))..createSync();
-      Directory(p.join(src.path, 'empty', 'deep_empty'))
-          .createSync(recursive: true);
+      Directory(
+        p.join(src.path, 'empty', 'deep_empty'),
+      ).createSync(recursive: true);
       File(p.join(src.path, 'file.txt')).writeAsStringSync('x');
 
       final dest = Directory(p.join(tmpDir.path, 'dest'))..createSync();
@@ -34,8 +35,7 @@ void main() {
       await waitForTask(store, (t) => t.status == TaskStatus.completed);
 
       expect(
-        Directory(p.join(dest.path, 'src', 'empty', 'deep_empty'))
-            .existsSync(),
+        Directory(p.join(dest.path, 'src', 'empty', 'deep_empty')).existsSync(),
         isTrue,
         reason: 'empty nested directories must not be dropped',
       );
@@ -54,8 +54,10 @@ void main() {
       final dest = Directory(p.join(tmpDir.path, 'dest'))..createSync();
       store.enqueueCopy([src.path], dest.path);
 
-      final done =
-          await waitForTask(store, (t) => t.status == TaskStatus.completed);
+      final done = await waitForTask(
+        store,
+        (t) => t.status == TaskStatus.completed,
+      );
 
       expect(done.errors, isEmpty);
       final copiedLink = p.join(dest.path, 'src', 'alias.txt');
@@ -67,35 +69,37 @@ void main() {
       expect(File(copiedLink).readAsStringSync(), 'payload');
     });
 
-    test('cancelling during preparing ends cancelled, never completed',
-        () async {
-      final src = Directory(p.join(tmpDir.path, 'big'))..createSync();
-      for (var i = 0; i < 4000; i++) {
-        File(p.join(src.path, 'f$i.txt')).writeAsStringSync('$i');
-      }
-      final dest = Directory(p.join(tmpDir.path, 'dest'))..createSync();
+    test(
+      'cancelling during preparing ends cancelled, never completed',
+      () async {
+        final src = Directory(p.join(tmpDir.path, 'big'))..createSync();
+        for (var i = 0; i < 4000; i++) {
+          File(p.join(src.path, 'f$i.txt')).writeAsStringSync('$i');
+        }
+        final dest = Directory(p.join(tmpDir.path, 'dest'))..createSync();
 
-      store.enqueueCopy([src.path], dest.path);
+        store.enqueueCopy([src.path], dest.path);
 
-      final preparing = await waitForTask(
-        store,
-        (t) => t.status == TaskStatus.preparing,
-      );
-      store.cancelTask(preparing.id);
+        final preparing = await waitForTask(
+          store,
+          (t) => t.status == TaskStatus.preparing,
+        );
+        store.cancelTask(preparing.id);
 
-      final terminal = await waitForTask(
-        store,
-        (t) =>
-            t.id == preparing.id &&
-            (t.status == TaskStatus.cancelled ||
-                t.status == TaskStatus.completed ||
-                t.status == TaskStatus.failed),
-      );
-      expect(
-        terminal.status,
-        TaskStatus.cancelled,
-        reason: 'cancel in preparing must not silently run to completion',
-      );
-    });
+        final terminal = await waitForTask(
+          store,
+          (t) =>
+              t.id == preparing.id &&
+              (t.status == TaskStatus.cancelled ||
+                  t.status == TaskStatus.completed ||
+                  t.status == TaskStatus.failed),
+        );
+        expect(
+          terminal.status,
+          TaskStatus.cancelled,
+          reason: 'cancel in preparing must not silently run to completion',
+        );
+      },
+    );
   });
 }

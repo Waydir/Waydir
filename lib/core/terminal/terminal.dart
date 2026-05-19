@@ -1,13 +1,13 @@
 import 'dart:io';
 
-class TerminalSpec {
+class _TerminalSpec {
   final String id;
   final String displayName;
   final String executable;
   final List<String> Function(String directory) argsBuilder;
   final bool useWorkingDirectory;
 
-  const TerminalSpec({
+  const _TerminalSpec({
     required this.id,
     required this.displayName,
     required this.executable,
@@ -16,111 +16,111 @@ class TerminalSpec {
   });
 }
 
-class TerminalRegistry {
-  static final List<TerminalSpec> linux = [
-    TerminalSpec(
+class _TerminalRegistry {
+  static final List<_TerminalSpec> linux = [
+    _TerminalSpec(
       id: 'kitty',
       displayName: 'Kitty',
       executable: 'kitty',
       argsBuilder: (_) => const [],
     ),
-    TerminalSpec(
+    _TerminalSpec(
       id: 'alacritty',
       displayName: 'Alacritty',
       executable: 'alacritty',
       argsBuilder: (_) => const [],
     ),
-    TerminalSpec(
+    _TerminalSpec(
       id: 'wezterm',
       displayName: 'WezTerm',
       executable: 'wezterm',
       argsBuilder: (_) => const [],
     ),
-    TerminalSpec(
+    _TerminalSpec(
       id: 'foot',
       displayName: 'Foot',
       executable: 'foot',
       argsBuilder: (_) => const [],
     ),
-    TerminalSpec(
+    _TerminalSpec(
       id: 'ghostty',
       displayName: 'Ghostty',
       executable: 'ghostty',
       argsBuilder: (_) => const [],
     ),
-    TerminalSpec(
+    _TerminalSpec(
       id: 'ptyxis',
       displayName: 'Ptyxis',
       executable: 'ptyxis',
       argsBuilder: (d) => ['--new-window', '--working-directory=$d'],
     ),
-    TerminalSpec(
+    _TerminalSpec(
       id: 'kgx',
       displayName: 'GNOME Console',
       executable: 'kgx',
       argsBuilder: (d) => ['--working-directory=$d'],
     ),
-    TerminalSpec(
+    _TerminalSpec(
       id: 'gnome-terminal',
       displayName: 'GNOME Terminal',
       executable: 'gnome-terminal',
       argsBuilder: (d) => ['--working-directory=$d'],
     ),
-    TerminalSpec(
+    _TerminalSpec(
       id: 'konsole',
       displayName: 'Konsole',
       executable: 'konsole',
       argsBuilder: (d) => ['--workdir', d],
     ),
-    TerminalSpec(
+    _TerminalSpec(
       id: 'yakuake',
       displayName: 'Yakuake',
       executable: 'yakuake',
       argsBuilder: (_) => const [],
     ),
-    TerminalSpec(
+    _TerminalSpec(
       id: 'deepin-terminal',
       displayName: 'Deepin Terminal',
       executable: 'deepin-terminal',
       argsBuilder: (d) => ['--work-directory', d],
     ),
-    TerminalSpec(
+    _TerminalSpec(
       id: 'xfce4-terminal',
       displayName: 'Xfce Terminal',
       executable: 'xfce4-terminal',
       argsBuilder: (d) => ['--working-directory=$d'],
     ),
-    TerminalSpec(
+    _TerminalSpec(
       id: 'mate-terminal',
       displayName: 'MATE Terminal',
       executable: 'mate-terminal',
       argsBuilder: (d) => ['--working-directory=$d'],
     ),
-    TerminalSpec(
+    _TerminalSpec(
       id: 'lxterminal',
       displayName: 'LXTerminal',
       executable: 'lxterminal',
       argsBuilder: (d) => ['--working-directory=$d'],
     ),
-    TerminalSpec(
+    _TerminalSpec(
       id: 'terminator',
       displayName: 'Terminator',
       executable: 'terminator',
       argsBuilder: (d) => ['--working-directory=$d'],
     ),
-    TerminalSpec(
+    _TerminalSpec(
       id: 'tilix',
       displayName: 'Tilix',
       executable: 'tilix',
       argsBuilder: (d) => ['--working-directory=$d'],
     ),
-    TerminalSpec(
+    _TerminalSpec(
       id: 'terminology',
       displayName: 'Terminology',
       executable: 'terminology',
       argsBuilder: (d) => ['-d', d],
     ),
-    TerminalSpec(
+    _TerminalSpec(
       id: 'xterm',
       displayName: 'Xterm',
       executable: 'xterm',
@@ -128,43 +128,43 @@ class TerminalRegistry {
     ),
   ];
 
-  static final List<TerminalSpec> macos = [
-    TerminalSpec(
+  static final List<_TerminalSpec> macos = [
+    _TerminalSpec(
       id: 'iterm',
       displayName: 'iTerm',
       executable: 'open',
       argsBuilder: (d) => ['-a', 'iTerm', d],
       useWorkingDirectory: false,
     ),
-    TerminalSpec(
+    _TerminalSpec(
       id: 'warp',
       displayName: 'Warp',
       executable: 'open',
       argsBuilder: (d) => ['-a', 'Warp', d],
       useWorkingDirectory: false,
     ),
-    TerminalSpec(
+    _TerminalSpec(
       id: 'alacritty',
       displayName: 'Alacritty',
       executable: 'open',
       argsBuilder: (d) => ['-a', 'Alacritty', d],
       useWorkingDirectory: false,
     ),
-    TerminalSpec(
+    _TerminalSpec(
       id: 'kitty',
       displayName: 'Kitty',
       executable: 'open',
       argsBuilder: (d) => ['-a', 'kitty', d],
       useWorkingDirectory: false,
     ),
-    TerminalSpec(
+    _TerminalSpec(
       id: 'ghostty',
       displayName: 'Ghostty',
       executable: 'open',
       argsBuilder: (d) => ['-a', 'Ghostty', d],
       useWorkingDirectory: false,
     ),
-    TerminalSpec(
+    _TerminalSpec(
       id: 'terminal',
       displayName: 'Terminal',
       executable: 'open',
@@ -173,14 +173,14 @@ class TerminalRegistry {
     ),
   ];
 
-  static final List<TerminalSpec> windows = [
-    TerminalSpec(
+  static final List<_TerminalSpec> windows = [
+    _TerminalSpec(
       id: 'wt',
       displayName: 'Windows Terminal',
       executable: 'wt',
       argsBuilder: (d) => ['-d', d],
     ),
-    TerminalSpec(
+    _TerminalSpec(
       id: 'powershell',
       displayName: 'PowerShell',
       executable: 'powershell',
@@ -190,7 +190,7 @@ class TerminalRegistry {
         'Set-Location -LiteralPath "$d"',
       ],
     ),
-    TerminalSpec(
+    _TerminalSpec(
       id: 'cmd',
       displayName: 'Command Prompt',
       executable: 'cmd',
@@ -198,14 +198,14 @@ class TerminalRegistry {
     ),
   ];
 
-  static List<TerminalSpec> all() {
+  static List<_TerminalSpec> all() {
     if (Platform.isLinux) return linux;
     if (Platform.isMacOS) return macos;
     if (Platform.isWindows) return windows;
     return const [];
   }
 
-  static TerminalSpec? byId(String id) {
+  static _TerminalSpec? byId(String id) {
     for (final t in all()) {
       if (t.id == id) return t;
     }
@@ -216,7 +216,7 @@ class TerminalRegistry {
 class TerminalService {
   static final _detectionCache = <String, bool>{};
 
-  static Future<bool> isAvailable(String executable) async {
+  static Future<bool> _isAvailable(String executable) async {
     final cached = _detectionCache[executable];
     if (cached != null) return cached;
     final result = await _which(executable);
@@ -234,21 +234,7 @@ class TerminalService {
     }
   }
 
-  static Future<List<TerminalSpec>> detectAvailable() async {
-    final results = <TerminalSpec>[];
-    for (final spec in TerminalRegistry.all()) {
-      if (Platform.isMacOS) {
-        results.add(spec);
-        continue;
-      }
-      if (await isAvailable(spec.executable)) {
-        results.add(spec);
-      }
-    }
-    return results;
-  }
-
-  static Future<bool> launch(TerminalSpec spec, String directory) async {
+  static Future<bool> _launch(_TerminalSpec spec, String directory) async {
     try {
       await Process.start(
         spec.executable,
@@ -276,14 +262,14 @@ class TerminalService {
     if (preferredId != null &&
         preferredId != 'auto' &&
         preferredId != 'custom') {
-      final spec = TerminalRegistry.byId(preferredId);
-      if (spec != null && await launch(spec, directory)) return;
+      final spec = _TerminalRegistry.byId(preferredId);
+      if (spec != null && await _launch(spec, directory)) return;
     }
-    for (final spec in TerminalRegistry.all()) {
+    for (final spec in _TerminalRegistry.all()) {
       if (Platform.isLinux || Platform.isWindows) {
-        if (!await isAvailable(spec.executable)) continue;
+        if (!await _isAvailable(spec.executable)) continue;
       }
-      if (await launch(spec, directory)) return;
+      if (await _launch(spec, directory)) return;
     }
   }
 
