@@ -3,7 +3,7 @@ import 'dart:io' show Platform;
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:waydir/ui/icons/waydir_icons.dart';
 
 import '../../app/app_info.dart';
 import '../../app/waydir_app.dart';
@@ -140,18 +140,18 @@ class _MenuBar extends StatelessWidget {
           label: 'Waydir',
           items: [
             ContextMenuItem(
-              icon: PhosphorIconsRegular.gearSix,
+              icon: WaydirIconsRegular.gearSix,
               label: t.preferences.menuLabel,
               action: 'preferences',
             ),
             ContextMenuItem(
-              icon: PhosphorIconsRegular.keyboard,
+              icon: WaydirIconsRegular.keyboard,
               label: t.keybindings.menuLabel,
               action: 'keybindings',
             ),
             ContextMenuItem.divider,
             ContextMenuItem(
-              icon: PhosphorIconsRegular.signOut,
+              icon: WaydirIconsRegular.signOut,
               label: t.appMenu.quit,
               action: 'quit',
             ),

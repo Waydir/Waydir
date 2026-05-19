@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:waydir/ui/icons/waydir_icons.dart';
 import 'package:signals/signals_flutter.dart';
 
 import '../../../app/app_info.dart';
@@ -128,12 +128,12 @@ class _InfoRow extends StatelessWidget {
           ),
           if (onOpen != null)
             _SmallIcon(
-              icon: PhosphorIconsRegular.arrowSquareOut,
+              icon: WaydirIconsRegular.arrowSquareOut,
               onTap: onOpen!,
             ),
           if (onCopy != null) ...[
             const SizedBox(width: 4),
-            _SmallIcon(icon: PhosphorIconsRegular.copy, onTap: onCopy!),
+            _SmallIcon(icon: WaydirIconsRegular.copy, onTap: onCopy!),
           ],
         ],
       ),
@@ -169,7 +169,7 @@ class _SmallIconState extends State<_SmallIcon> {
             color: _hovered ? AppColors.bgInput : Colors.transparent,
             borderRadius: BorderRadius.circular(4),
           ),
-          child: PhosphorIcon(
+          child: Icon(
             widget.icon,
             size: 14,
             color: _hovered ? AppColors.fg : AppColors.fgMuted,

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../ui/theme/app_theme.dart';
 import '../../ui/theme/app_text_styles.dart';
@@ -117,7 +116,7 @@ class QlCentered extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (icon != null) ...[
-                  PhosphorIcon(icon!, size: 48, color: AppColors.fgSubtle),
+                  Icon(icon!, size: 48, color: AppColors.fgSubtle),
                   const SizedBox(height: 14),
                 ],
                 Text(message ?? '', style: context.txt.muted),

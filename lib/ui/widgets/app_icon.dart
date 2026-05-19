@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:waydir/ui/icons/waydir_icons.dart';
 
 import '../theme/app_theme.dart';
 
@@ -17,8 +17,8 @@ class AppIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fallback = PhosphorIcon(
-      PhosphorIconsRegular.appWindow,
+    final fallback = Icon(
+      WaydirIconsRegular.appWindow,
       size: size * 0.9,
       color: AppColors.fgMuted,
     );

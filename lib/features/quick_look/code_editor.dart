@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:waydir/ui/icons/waydir_icons.dart';
 
 import '../../i18n/strings.g.dart';
 import '../../ui/theme/app_theme.dart';
@@ -358,8 +358,8 @@ class _SaveButtonState extends State<_SaveButton> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              PhosphorIcon(
-                PhosphorIconsRegular.floppyDisk,
+              Icon(
+                WaydirIconsRegular.floppyDisk,
                 size: 13,
                 color: color,
               ),

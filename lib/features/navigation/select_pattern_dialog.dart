@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:waydir/ui/icons/waydir_icons.dart';
 
 import '../../ui/dialogs/dialog.dart';
 import '../../ui/theme/app_theme.dart';
@@ -94,8 +94,8 @@ class _SelectPatternDialogState extends State<_SelectPatternDialog> {
         children: [
           Row(
             children: [
-              PhosphorIcon(
-                PhosphorIconsRegular.selectionAll,
+              Icon(
+                WaydirIconsRegular.selectionAll,
                 size: 18,
                 color: AppColors.accent,
               ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:waydir/ui/icons/waydir_icons.dart';
 import 'package:signals/signals_flutter.dart';
 import '../../ui/theme/app_theme.dart';
 import 'tab_chip.dart';
@@ -69,8 +69,8 @@ class _AddButtonState extends State<_AddButton> {
           height: 30,
           alignment: Alignment.center,
           color: _hovered ? AppColors.bgHover : Colors.transparent,
-          child: PhosphorIcon(
-            PhosphorIconsRegular.plus,
+          child: Icon(
+            WaydirIconsRegular.plus,
             size: 14,
             color: _hovered ? AppColors.fg : AppColors.fgMuted,
           ),

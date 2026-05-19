@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:waydir/ui/icons/waydir_icons.dart';
 
 import '../../core/keyboard/keyboard_shortcuts.dart';
 import '../../i18n/strings.g.dart';
@@ -18,27 +18,27 @@ Future<void> showKeybindingsHelp(BuildContext context) {
 final _groupMeta = <ShortcutGroup, ({String Function() title, IconData icon})>{
   ShortcutGroup.navigation: (
     title: () => t.keybindings.categories.navigation,
-    icon: PhosphorIconsRegular.compass,
+    icon: WaydirIconsRegular.compass,
   ),
   ShortcutGroup.tabs: (
     title: () => t.keybindings.categories.tabs,
-    icon: PhosphorIconsRegular.tabs,
+    icon: WaydirIconsRegular.tabs,
   ),
   ShortcutGroup.panes: (
     title: () => t.keybindings.categories.panes,
-    icon: PhosphorIconsRegular.columns,
+    icon: WaydirIconsRegular.columns,
   ),
   ShortcutGroup.fileOps: (
     title: () => t.keybindings.categories.fileOps,
-    icon: PhosphorIconsRegular.copy,
+    icon: WaydirIconsRegular.copy,
   ),
   ShortcutGroup.selection: (
     title: () => t.keybindings.categories.selection,
-    icon: PhosphorIconsRegular.checkSquare,
+    icon: WaydirIconsRegular.checkSquare,
   ),
   ShortcutGroup.search: (
     title: () => t.keybindings.categories.search,
-    icon: PhosphorIconsRegular.magnifyingGlass,
+    icon: WaydirIconsRegular.magnifyingGlass,
   ),
 };
 
@@ -180,8 +180,8 @@ class _Header extends StatelessWidget {
       decoration: BoxDecoration(color: AppColors.bgSidebar),
       child: Row(
         children: [
-          PhosphorIcon(
-            PhosphorIconsRegular.keyboard,
+          Icon(
+            WaydirIconsRegular.keyboard,
             size: 16,
             color: AppColors.fgAccent,
           ),
@@ -216,8 +216,8 @@ class _SearchBar extends StatelessWidget {
         ),
         child: Row(
           children: [
-            PhosphorIcon(
-              PhosphorIconsRegular.magnifyingGlass,
+            Icon(
+              WaydirIconsRegular.magnifyingGlass,
               size: 13,
               color: AppColors.fgSubtle,
             ),
@@ -271,8 +271,8 @@ class _ClearButtonState extends State<_ClearButton> {
       onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
         onTap: widget.onTap,
-        child: PhosphorIcon(
-          PhosphorIconsRegular.x,
+        child: Icon(
+          WaydirIconsRegular.x,
           size: 12,
           color: _hovered ? AppColors.fg : AppColors.fgSubtle,
         ),
@@ -308,8 +308,8 @@ class _CloseButtonState extends State<_CloseButton> {
             color: _hovered ? AppColors.bgHover : Colors.transparent,
             borderRadius: BorderRadius.circular(4),
           ),
-          child: PhosphorIcon(
-            PhosphorIconsRegular.x,
+          child: Icon(
+            WaydirIconsRegular.x,
             size: 14,
             color: _hovered ? AppColors.fg : AppColors.fgMuted,
           ),
@@ -327,8 +327,8 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          PhosphorIcon(
-            PhosphorIconsRegular.magnifyingGlass,
+          Icon(
+            WaydirIconsRegular.magnifyingGlass,
             size: 28,
             color: AppColors.fgSubtle,
           ),
@@ -377,7 +377,7 @@ class _GroupHeader extends StatelessWidget {
       padding: EdgeInsets.fromLTRB(16, isFirst ? 14 : 22, 16, 6),
       child: Row(
         children: [
-          PhosphorIcon(icon, size: 12, color: AppColors.fgMuted),
+          Icon(icon, size: 12, color: AppColors.fgMuted),
           const SizedBox(width: 7),
           Text(title().toUpperCase(), style: context.txt.sectionLabel),
           const SizedBox(width: 10),

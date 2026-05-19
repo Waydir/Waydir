@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:waydir/ui/icons/waydir_icons.dart';
 import 'package:signals/signals_flutter.dart';
 import '../../core/models/app_notification.dart';
 import '../theme/app_theme.dart';
@@ -146,7 +146,7 @@ class _NotificationCardState extends State<_NotificationCard>
                     if (n.icon != null)
                       Padding(
                         padding: const EdgeInsets.only(right: 8),
-                        child: PhosphorIcon(n.icon!, size: 16, color: accent),
+                        child: Icon(n.icon!, size: 16, color: accent),
                       ),
                     Expanded(
                       child: Column(
@@ -172,8 +172,8 @@ class _NotificationCardState extends State<_NotificationCard>
                     if (n.dismissible)
                       GestureDetector(
                         onTap: _dismiss,
-                        child: PhosphorIcon(
-                          PhosphorIconsRegular.x,
+                        child: Icon(
+                          WaydirIconsRegular.x,
                           size: 14,
                           color: AppColors.fgMuted,
                         ),
@@ -262,8 +262,8 @@ class _ApplyToAllCheckboxState extends State<_ApplyToAllCheckbox> {
                   ),
                 ),
                 child: widget.value
-                    ? PhosphorIcon(
-                        PhosphorIconsRegular.check,
+                    ? Icon(
+                        WaydirIconsRegular.check,
                         size: 10,
                         color: Colors.white,
                       )
