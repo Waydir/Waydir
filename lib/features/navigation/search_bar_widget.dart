@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:waydir/ui/icons/waydir_icons.dart';
 import 'package:signals/signals_flutter.dart';
 import '../../i18n/strings.g.dart';
 import '../../ui/theme/app_theme.dart';
@@ -77,8 +77,8 @@ class _AppSearchBarState extends State<AppSearchBar> {
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Row(
         children: [
-          PhosphorIcon(
-            PhosphorIconsRegular.magnifyingGlass,
+          Icon(
+            WaydirIconsRegular.magnifyingGlass,
             size: 16,
             color: AppColors.fgMuted,
           ),
@@ -216,8 +216,8 @@ class _RecursiveToggleState extends State<_RecursiveToggle> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  PhosphorIcon(
-                    PhosphorIconsRegular.treeStructure,
+                  Icon(
+                    WaydirIconsRegular.treeStructure,
                     size: 14,
                     color: active ? AppColors.accent : AppColors.fgMuted,
                   ),
@@ -267,8 +267,8 @@ class _CloseButtonState extends State<_CloseButton> {
               color: _hovered ? AppColors.bgHover : Colors.transparent,
               borderRadius: BorderRadius.circular(4),
             ),
-            child: PhosphorIcon(
-              PhosphorIconsRegular.x,
+            child: Icon(
+              WaydirIconsRegular.x,
               size: 14,
               color: AppColors.fgMuted,
             ),

@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:waydir/ui/icons/waydir_icons.dart';
 
 import '../../core/models/file_entry.dart';
 import '../../core/open/open_service.dart';
@@ -186,8 +186,8 @@ class _OpenWithBodyState extends State<_OpenWithBody> {
       children: [
         Row(
           children: [
-            PhosphorIcon(
-              PhosphorIconsRegular.appWindow,
+            Icon(
+              WaydirIconsRegular.appWindow,
               size: 20,
               color: AppColors.accent,
             ),
@@ -392,8 +392,8 @@ class _DefaultCheckbox extends StatelessWidget {
                 ),
               ),
               child: value && enabled
-                  ? const PhosphorIcon(
-                      PhosphorIconsBold.check,
+                  ? const Icon(
+                      WaydirIconsBold.check,
                       size: 11,
                       color: Colors.white,
                     )

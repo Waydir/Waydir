@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:waydir/ui/icons/waydir_icons.dart';
 import 'package:signals/signals_flutter.dart';
 
 import '../../../core/fs/waydir_core_loader.dart';
@@ -109,13 +109,13 @@ class _DiagnosticsPaneState extends State<DiagnosticsPane> {
               ),
               const SizedBox(width: 8),
               _Btn(
-                icon: PhosphorIconsRegular.copy,
+                icon: WaydirIconsRegular.copy,
                 label: t.preferences.diagnostics.copy,
                 onTap: visible.isEmpty ? null : () => _copy(visible),
               ),
               const SizedBox(width: 6),
               _Btn(
-                icon: PhosphorIconsRegular.trashSimple,
+                icon: WaydirIconsRegular.trashSimple,
                 label: t.preferences.diagnostics.clear,
                 onTap: all.isEmpty ? null : log.clear,
               ),
@@ -150,8 +150,8 @@ class _DiagnosticsPaneState extends State<DiagnosticsPane> {
           const SizedBox(height: 12),
           Row(
             children: [
-              PhosphorIcon(
-                PhosphorIconsRegular.info,
+              Icon(
+                WaydirIconsRegular.info,
                 size: 13,
                 color: AppColors.fgMuted,
               ),
@@ -251,7 +251,7 @@ class _BtnState extends State<_Btn> {
           ),
           child: Row(
             children: [
-              PhosphorIcon(widget.icon, size: 14, color: fg),
+              Icon(widget.icon, size: 14, color: fg),
               const SizedBox(width: 6),
               Text(widget.label, style: context.txt.body.copyWith(color: fg)),
             ],

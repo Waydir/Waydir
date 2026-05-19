@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:waydir/ui/icons/waydir_icons.dart';
 
 import '../../ui/dialogs/dialog.dart';
 import '../../ui/overlays/context_menu.dart';
@@ -126,8 +126,8 @@ class _BranchButton extends StatelessWidget {
         for (final name in branches)
           ContextMenuItem(
             icon: name == status.branch
-                ? PhosphorIconsFill.check
-                : PhosphorIconsRegular.gitBranch,
+                ? WaydirIconsFill.check
+                : WaydirIconsRegular.gitBranch,
             label: name,
             action: name,
           ),
@@ -155,7 +155,7 @@ class _BranchButton extends StatelessWidget {
     final choice = await showCustomDialog<String>(
       context: context,
       title: 'Uncommitted changes',
-      icon: PhosphorIconsRegular.warning,
+      icon: WaydirIconsRegular.warning,
       iconColor: AppColors.warning,
       body: Text(
         "Your local changes would be overwritten by switching to '$branch'.\n\n"
@@ -195,10 +195,10 @@ class _BranchButton extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              PhosphorIcon(
+              Icon(
                 status.detached
-                    ? PhosphorIconsRegular.warning
-                    : PhosphorIconsRegular.gitBranch,
+                    ? WaydirIconsRegular.warning
+                    : WaydirIconsRegular.gitBranch,
                 size: 13,
                 color: color,
               ),
@@ -211,8 +211,8 @@ class _BranchButton extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 3),
-              PhosphorIcon(
-                PhosphorIconsRegular.caretUpDown,
+              Icon(
+                WaydirIconsRegular.caretUpDown,
                 size: 11,
                 color: AppColors.fgMuted,
               ),
@@ -244,22 +244,22 @@ class _StashButton extends StatelessWidget {
       items: [
         for (final s in stashes)
           ContextMenuItem(
-            icon: PhosphorIconsRegular.archive,
+            icon: WaydirIconsRegular.archive,
             label: 'stash@{${s.index}} · ${s.message}',
             action: 'stash:${s.index}',
             children: [
               ContextMenuItem(
-                icon: PhosphorIconsRegular.arrowCounterClockwise,
+                icon: WaydirIconsRegular.arrowCounterClockwise,
                 label: 'Pop (apply & remove)',
                 action: 'pop:${s.index}',
               ),
               ContextMenuItem(
-                icon: PhosphorIconsRegular.copy,
+                icon: WaydirIconsRegular.copy,
                 label: 'Apply (keep stash)',
                 action: 'apply:${s.index}',
               ),
               ContextMenuItem(
-                icon: PhosphorIconsRegular.trash,
+                icon: WaydirIconsRegular.trash,
                 label: 'Drop',
                 action: 'drop:${s.index}',
                 danger: true,
@@ -307,8 +307,8 @@ class _StashButton extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              PhosphorIcon(
-                PhosphorIconsRegular.archive,
+              Icon(
+                WaydirIconsRegular.archive,
                 size: 12,
                 color: AppColors.warning,
               ),
