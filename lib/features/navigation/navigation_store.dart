@@ -889,26 +889,35 @@ class NavigationStore {
   /// glob (`*`, `?`, character classes), case-insensitively. Returns the
   /// number of entries matched.
   int selectByPattern(String pattern) {
-    final trimmed = pattern.trim();
-    if (trimmed.isEmpty) return 0;
-    final buf = StringBuffer('^');
-    for (final ch in trimmed.split('')) {
-      switch (ch) {
-        case '*':
-          buf.write('.*');
-        case '?':
-          buf.write('.');
-        case '[':
-        case ']':
-          buf.write(ch);
-        default:
-          buf.write(RegExp.escape(ch));
+    final globs = pattern
+        .split(',')
+        .map((g) => g.trim())
+        .where((g) => g.isNotEmpty)
+        .toList();
+    if (globs.isEmpty) return 0;
+    final alternatives = globs.map((glob) {
+      final buf = StringBuffer();
+      for (final ch in glob.split('')) {
+        switch (ch) {
+          case '*':
+            buf.write('.*');
+          case '?':
+            buf.write('.');
+          case '[':
+          case ']':
+            buf.write(ch);
+          default:
+            buf.write(RegExp.escape(ch));
+        }
       }
-    }
-    buf.write(r'$');
+      return buf.toString();
+    });
     final RegExp re;
     try {
-      re = RegExp(buf.toString(), caseSensitive: false);
+      re = RegExp(
+        '^(?:${alternatives.join('|')})\$',
+        caseSensitive: false,
+      );
     } catch (_) {
       return 0;
     }

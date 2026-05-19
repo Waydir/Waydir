@@ -411,6 +411,9 @@ class TranslationsKeybindingsEn {
 	/// en: 'Select all'
 	String get selectAll => 'Select all';
 
+	/// en: 'Select by pattern'
+	String get selectPattern => 'Select by pattern';
+
 	/// en: 'Deselect all'
 	String get deselectAll => 'Deselect all';
 
@@ -862,6 +865,30 @@ class TranslationsDialogEn {
 
 	/// en: 'Move $count items to Trash?'
 	String confirmTrashMultiple({required Object count}) => 'Move ${count} items to Trash?';
+
+	/// en: 'Copy'
+	String get copy => 'Copy';
+
+	/// en: 'Move'
+	String get move => 'Move';
+
+	/// en: 'Copy items?'
+	String get confirmCopyTitle => 'Copy items?';
+
+	/// en: 'Copy "$name" here?'
+	String confirmCopySingle({required Object name}) => 'Copy "${name}" here?';
+
+	/// en: 'Copy $count items here?'
+	String confirmCopyMultiple({required Object count}) => 'Copy ${count} items here?';
+
+	/// en: 'Move items?'
+	String get confirmMoveTitle => 'Move items?';
+
+	/// en: 'Move "$name" here?'
+	String confirmMoveSingle({required Object name}) => 'Move "${name}" here?';
+
+	/// en: 'Move $count items here?'
+	String confirmMoveMultiple({required Object count}) => 'Move ${count} items here?';
 }
 
 // Path: operations
@@ -1140,6 +1167,18 @@ class TranslationsPreferencesGeneralEn {
 
 	/// en: 'Show a dialog before removing files or folders.'
 	String get confirmDeleteHint => 'Show a dialog before removing files or folders.';
+
+	/// en: 'Confirm before copy'
+	String get confirmCopy => 'Confirm before copy';
+
+	/// en: 'Show a dialog before copying files or folders.'
+	String get confirmCopyHint => 'Show a dialog before copying files or folders.';
+
+	/// en: 'Confirm before move'
+	String get confirmMove => 'Confirm before move';
+
+	/// en: 'Show a dialog before moving files or folders.'
+	String get confirmMoveHint => 'Show a dialog before moving files or folders.';
 
 	/// en: 'Delete key behavior'
 	String get deleteKeyBehavior => 'Delete key behavior';
@@ -1572,6 +1611,10 @@ extension on Translations {
 			'preferences.general.fileOpsSection' => 'File operations',
 			'preferences.general.confirmDelete' => 'Confirm before delete',
 			'preferences.general.confirmDeleteHint' => 'Show a dialog before removing files or folders.',
+			'preferences.general.confirmCopy' => 'Confirm before copy',
+			'preferences.general.confirmCopyHint' => 'Show a dialog before copying files or folders.',
+			'preferences.general.confirmMove' => 'Confirm before move',
+			'preferences.general.confirmMoveHint' => 'Show a dialog before moving files or folders.',
 			'preferences.general.deleteKeyBehavior' => 'Delete key behavior',
 			'preferences.general.deleteKeyBehaviorHint' => 'What the Delete key does by default. Shift+Delete always deletes permanently.',
 			'preferences.general.deleteKeyTrash' => 'Move to Trash',
@@ -1680,6 +1723,7 @@ extension on Translations {
 			'keybindings.dualCopy' => 'Copy to other pane',
 			'keybindings.dualMove' => 'Move to other pane',
 			'keybindings.selectAll' => 'Select all',
+			'keybindings.selectPattern' => 'Select by pattern',
 			'keybindings.deselectAll' => 'Deselect all',
 			'keybindings.toggleSelect' => 'Toggle select',
 			'keybindings.search' => 'Search',
@@ -1801,6 +1845,14 @@ extension on Translations {
 			'dialog.confirmTrashTitle' => 'Move to Trash?',
 			'dialog.confirmTrashSingle' => ({required Object name}) => 'Move "${name}" to Trash?',
 			'dialog.confirmTrashMultiple' => ({required Object count}) => 'Move ${count} items to Trash?',
+			'dialog.copy' => 'Copy',
+			'dialog.move' => 'Move',
+			'dialog.confirmCopyTitle' => 'Copy items?',
+			'dialog.confirmCopySingle' => ({required Object name}) => 'Copy "${name}" here?',
+			'dialog.confirmCopyMultiple' => ({required Object count}) => 'Copy ${count} items here?',
+			'dialog.confirmMoveTitle' => 'Move items?',
+			'dialog.confirmMoveSingle' => ({required Object name}) => 'Move "${name}" here?',
+			'dialog.confirmMoveMultiple' => ({required Object count}) => 'Move ${count} items here?',
 			'operations.title' => 'Operations',
 			'operations.clear' => 'Clear',
 			'operations.noActive' => 'No active operations',

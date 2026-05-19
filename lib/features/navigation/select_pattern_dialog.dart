@@ -115,7 +115,7 @@ class _SelectPatternDialogState extends State<_SelectPatternDialog> {
                 horizontal: 10,
                 vertical: 8,
               ),
-              hintText: '*.jpg',
+              hintText: '*.jpg, *.png',
               hintStyle: context.txt.body.copyWith(color: AppColors.fgMuted),
               filled: true,
               fillColor: AppColors.bgInput,
@@ -135,7 +135,10 @@ class _SelectPatternDialogState extends State<_SelectPatternDialog> {
             cursorColor: AppColors.accent,
           ),
           const SizedBox(height: 8),
-          Text('Wildcards: * (any), ? (one char)', style: context.txt.muted),
+          Text(
+            'Wildcards: * (any), ? (one char). Separate patterns with commas.',
+            style: context.txt.muted,
+          ),
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,

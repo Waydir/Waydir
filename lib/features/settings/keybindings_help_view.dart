@@ -70,6 +70,7 @@ String _labelFor(ShortcutDef s) => switch (s.id) {
   'dual_copy' => t.keybindings.dualCopy,
   'dual_move' => t.keybindings.dualMove,
   'select_all' => t.keybindings.selectAll,
+  'select_pattern' => t.keybindings.selectPattern,
   'deselect_all' => t.keybindings.deselectAll,
   'toggle_select' => t.keybindings.toggleSelect,
   'search' => t.keybindings.search,
