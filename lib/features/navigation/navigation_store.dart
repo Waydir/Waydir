@@ -885,6 +885,38 @@ class NavigationStore {
     selectedPaths.value = Set<String>.from(_vf.map((f) => f.path));
   }
 
+  /// Selects every visible entry whose name matches the given shell-style
+  /// glob (`*`, `?`, character classes), case-insensitively. Returns the
+  /// number of entries matched.
+  int selectByPattern(String pattern) {
+    final trimmed = pattern.trim();
+    if (trimmed.isEmpty) return 0;
+    final buf = StringBuffer('^');
+    for (final ch in trimmed.split('')) {
+      switch (ch) {
+        case '*':
+          buf.write('.*');
+        case '?':
+          buf.write('.');
+        case '[':
+        case ']':
+          buf.write(ch);
+        default:
+          buf.write(RegExp.escape(ch));
+      }
+    }
+    buf.write(r'$');
+    final RegExp re;
+    try {
+      re = RegExp(buf.toString(), caseSensitive: false);
+    } catch (_) {
+      return 0;
+    }
+    final matched = _vf.where((f) => re.hasMatch(f.name)).toList();
+    selectedPaths.value = Set<String>.from(matched.map((f) => f.path));
+    return matched.length;
+  }
+
   void deselectAll() {
     batch(() {
       selectedPaths.value = {};
