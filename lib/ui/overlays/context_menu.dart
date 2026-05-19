@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:signals/signals_flutter.dart';
@@ -59,8 +61,11 @@ void showContextMenu({
 }) {
   final overlay = Overlay.of(context);
   final entries = <OverlayEntry>[];
+  Timer? pendingDismiss;
 
   void dismissAll() {
+    pendingDismiss?.cancel();
+    pendingDismiss = null;
     for (final e in entries) {
       if (e.mounted) e.remove();
     }
@@ -74,8 +79,26 @@ void showContextMenu({
     }
   }
 
-  void openMenu(int depth, Offset pos, List<ContextMenuItem> menuItems) {
+  void dismissFromSoon(int depth) {
+    pendingDismiss?.cancel();
+    pendingDismiss = Timer(const Duration(milliseconds: 90), () {
+      pendingDismiss = null;
+      dismissFrom(depth);
+    });
+  }
+
+  void cancelPendingDismiss() {
+    pendingDismiss?.cancel();
+    pendingDismiss = null;
+  }
+
+  void dismissFromNow(int depth) {
+    cancelPendingDismiss();
     dismissFrom(depth);
+  }
+
+  void openMenu(int depth, Offset pos, List<ContextMenuItem> menuItems) {
+    dismissFromNow(depth);
     late OverlayEntry entry;
     entry = OverlayEntry(
       builder: (_) => PopupOverlay(
@@ -87,6 +110,10 @@ void showContextMenu({
         onDismiss: dismissAll,
         builder: (_) => _ContextMenuBody(
           items: menuItems,
+          onEnterMenu: depth == 0 ? () {} : cancelPendingDismiss,
+          onExitMenu: () => dismissFromSoon(depth == 0 ? 1 : depth),
+          onCloseSubmenus: () => dismissFromNow(depth + 1),
+          onScheduleCloseSubmenus: () => dismissFromSoon(depth + 1),
           onSelect: (action) {
             final item = menuItems.firstWhere(
               (i) => !i.isDivider && i.action == action,
@@ -113,59 +140,73 @@ void showContextMenu({
 
 class _ContextMenuBody extends StatelessWidget {
   final List<ContextMenuItem> items;
+  final VoidCallback onEnterMenu;
+  final VoidCallback onExitMenu;
+  final VoidCallback onCloseSubmenus;
+  final VoidCallback onScheduleCloseSubmenus;
   final void Function(String action) onSelect;
   final void Function(ContextMenuItem item, Rect tileRect) onOpenSubmenu;
 
   const _ContextMenuBody({
     required this.items,
+    required this.onEnterMenu,
+    required this.onExitMenu,
+    required this.onCloseSubmenus,
+    required this.onScheduleCloseSubmenus,
     required this.onSelect,
     required this.onOpenSubmenu,
   });
 
   @override
   Widget build(BuildContext context) {
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minWidth: 180, maxWidth: 360),
-      child: IntrinsicWidth(
-        child: Container(
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            color: AppColors.bgSurface,
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: AppColors.borderColor),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.5),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: items.asMap().entries.map((e) {
-                if (e.value.isDivider) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
-                    ),
-                    child: Divider(
-                      height: 1,
-                      thickness: 1,
-                      color: AppColors.bgDivider,
-                    ),
+    return MouseRegion(
+      onEnter: (_) => onEnterMenu(),
+      onExit: (_) => onExitMenu(),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minWidth: 180, maxWidth: 360),
+        child: IntrinsicWidth(
+          child: Container(
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              color: AppColors.bgSurface,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: AppColors.borderColor),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.5),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: items.asMap().entries.map((e) {
+                  if (e.value.isDivider) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      child: Divider(
+                        height: 1,
+                        thickness: 1,
+                        color: AppColors.bgDivider,
+                      ),
+                    );
+                  }
+                  return _ContextMenuItemTile(
+                    item: e.value,
+                    onTap: () => onSelect(e.value.action),
+                    onOpenSubmenu: onOpenSubmenu,
+                    onCloseSubmenus: onCloseSubmenus,
+                    onScheduleCloseSubmenus: onScheduleCloseSubmenus,
                   );
-                }
-                return _ContextMenuItemTile(
-                  item: e.value,
-                  onTap: () => onSelect(e.value.action),
-                  onOpenSubmenu: onOpenSubmenu,
-                );
-              }).toList(),
+                }).toList(),
+              ),
             ),
           ),
         ),
@@ -177,11 +218,15 @@ class _ContextMenuBody extends StatelessWidget {
 class _ContextMenuItemTile extends StatefulWidget {
   final ContextMenuItem item;
   final VoidCallback onTap;
+  final VoidCallback onCloseSubmenus;
+  final VoidCallback onScheduleCloseSubmenus;
   final void Function(ContextMenuItem item, Rect tileRect) onOpenSubmenu;
 
   const _ContextMenuItemTile({
     required this.item,
     required this.onTap,
+    required this.onCloseSubmenus,
+    required this.onScheduleCloseSubmenus,
     required this.onOpenSubmenu,
   });
 
@@ -207,6 +252,22 @@ class _ContextMenuItemTileState extends State<_ContextMenuItemTile> {
     }
   }
 
+  void _handleEnter() {
+    setState(() => _hovered = true);
+    if (widget.item.hasChildren) {
+      _openSubmenu();
+    } else {
+      widget.onCloseSubmenus();
+    }
+  }
+
+  void _handleExit() {
+    setState(() => _hovered = false);
+    if (widget.item.hasChildren) {
+      widget.onScheduleCloseSubmenus();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final item = widget.item;
@@ -219,11 +280,8 @@ class _ContextMenuItemTileState extends State<_ContextMenuItemTile> {
         : AppColors.fgMuted;
 
     return MouseRegion(
-      onEnter: (_) {
-        setState(() => _hovered = true);
-        if (widget.item.hasChildren) _openSubmenu();
-      },
-      onExit: (_) => setState(() => _hovered = false),
+      onEnter: (_) => _handleEnter(),
+      onExit: (_) => _handleExit(),
       child: GestureDetector(
         onTap: _handleTap,
         behavior: HitTestBehavior.opaque,
