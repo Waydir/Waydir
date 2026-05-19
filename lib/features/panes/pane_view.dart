@@ -131,6 +131,7 @@ class _TabContent extends StatelessWidget {
       return Watch((context) {
         final files = store.visibleFiles.value;
         final selected = store.selectedPaths.value;
+        final cursorIndex = store.cursorIndex.value;
         final cutPaths = store.clipboardMode.value == ClipboardMode.cut
             ? store.clipboardPaths.value
             : <String>{};
@@ -148,6 +149,7 @@ class _TabContent extends StatelessWidget {
           onMenuAction: onMenuAction,
           onDropFiles: store.dropFiles,
           selectedPaths: selected,
+          cursorIndex: cursorIndex,
           cutPaths: cutPaths,
           renamingPath: store.renamingPath.value,
           renameAttempt: store.renameAttempt.value,

@@ -50,6 +50,7 @@ class FileList extends StatefulWidget {
   final FileMenuActionCallback? onMenuAction;
   final FileDropCallback? onDropFiles;
   final Set<String> selectedPaths;
+  final int cursorIndex;
   final Set<String> cutPaths;
   final String? renamingPath;
   final int renameAttempt;
@@ -78,6 +79,7 @@ class FileList extends StatefulWidget {
     this.onMenuAction,
     this.onDropFiles,
     this.selectedPaths = const {},
+    this.cursorIndex = -1,
     this.cutPaths = const {},
     this.renamingPath,
     this.renameAttempt = 0,
@@ -102,6 +104,7 @@ class _FileListState extends State<FileList> {
   double _itemExt = _kRowHeightComfortable + _kRowGapComfortable;
   String _dateFmt = 'locale';
   bool _recentDatesRelative = true;
+  String? _lastRevealedKey;
 
   double _measureWidth(String text, TextStyle style) {
     if (text.isEmpty) return 0;
@@ -183,6 +186,35 @@ class _FileListState extends State<FileList> {
     }
   }
 
+  void _revealSelectedRow() {
+    final index = widget.cursorIndex;
+    if (index < 0 || index >= widget.files.length) return;
+    final key = '$index:${widget.files[index].path}';
+    if (key == _lastRevealedKey) return;
+    _lastRevealedKey = key;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollController.hasClients) return;
+      final viewport = _scrollController.position.viewportDimension;
+      final top = index * _itemExt;
+      final bottom = top + _rowH;
+      final current = _scrollController.offset;
+      final target = top < current
+          ? top
+          : bottom > current + viewport
+          ? bottom - viewport
+          : current;
+      if (target == current) return;
+      _scrollController.animateTo(
+        target.clamp(
+          _scrollController.position.minScrollExtent,
+          _scrollController.position.maxScrollExtent,
+        ),
+        duration: const Duration(milliseconds: 80),
+        curve: Curves.easeOut,
+      );
+    });
+  }
+
   @override
   void dispose() {
     _scrollController.dispose();
@@ -199,6 +231,7 @@ class _FileListState extends State<FileList> {
     _rowH = density == 'compact' ? _kRowHeightCompact : _kRowHeightComfortable;
     _rowG = density == 'compact' ? _kRowGapCompact : _kRowGapComfortable;
     _itemExt = _rowH + _rowG;
+    _revealSelectedRow();
 
     if (widget.files.isEmpty) {
       return GestureDetector(
