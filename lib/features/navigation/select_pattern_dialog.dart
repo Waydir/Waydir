@@ -135,10 +135,7 @@ class _SelectPatternDialogState extends State<_SelectPatternDialog> {
             cursorColor: AppColors.accent,
           ),
           const SizedBox(height: 8),
-          Text(
-            'Wildcards: * (any), ? (one char)',
-            style: context.txt.muted,
-          ),
+          Text('Wildcards: * (any), ? (one char)', style: context.txt.muted),
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,

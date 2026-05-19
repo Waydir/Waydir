@@ -47,7 +47,9 @@ class PropRow extends StatelessWidget {
             width: 96,
             child: Text(
               label,
-              style: context.txt.captionSmall.copyWith(color: AppColors.fgMuted),
+              style: context.txt.captionSmall.copyWith(
+                color: AppColors.fgMuted,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -491,14 +493,8 @@ class _MultiPropertiesState extends State<MultiProperties> {
             label: t.quickLook.contains,
             value: live(t.quickLook.items(count: totalItems)),
           ),
-          PropRow(
-            label: t.quickLook.typeFolder,
-            value: '$folderCount',
-          ),
-          PropRow(
-            label: t.quickLook.typeFile,
-            value: '${files.length}',
-          ),
+          PropRow(label: t.quickLook.typeFolder, value: '$folderCount'),
+          PropRow(label: t.quickLook.typeFile, value: '${files.length}'),
         ],
       ),
     );

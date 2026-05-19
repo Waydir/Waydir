@@ -626,9 +626,7 @@ class _SidebarOperationsButtonState extends State<_SidebarOperationsButton> {
                           value: active.totalFiles > 0 ? progress : null,
                           strokeWidth: 2,
                           backgroundColor: AppColors.bgInput,
-                          valueColor: AlwaysStoppedAnimation(
-                            AppColors.accent,
-                          ),
+                          valueColor: AlwaysStoppedAnimation(AppColors.accent),
                         ),
                       ),
                       PhosphorIcon(
@@ -713,9 +711,7 @@ class _SidebarOperationsButtonState extends State<_SidebarOperationsButton> {
                         value: active.totalFiles > 0 ? progress : null,
                         minHeight: 3,
                         backgroundColor: AppColors.bgInput,
-                        valueColor: AlwaysStoppedAnimation(
-                          AppColors.accent,
-                        ),
+                        valueColor: AlwaysStoppedAnimation(AppColors.accent),
                       ),
                     ),
                   ],
@@ -761,10 +757,7 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(14, 6, 14, 4),
-      child: Text(
-        title.toUpperCase(),
-        style: context.txt.sectionLabel,
-      ),
+      child: Text(title.toUpperCase(), style: context.txt.sectionLabel),
     );
   }
 }

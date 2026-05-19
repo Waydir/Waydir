@@ -11,11 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Light and Nord built-in themes.
 - Custom theme management: create, edit, and delete your own themes via JSON files in Preferences.
 - Ctrl+H shortcut to toggle hidden files.
+- Ctrl+S shortcut to select files by a pattern (e.g. `*.jpg`).
+- Quick Look now shows a combined summary (total size and item count) when multiple files and folders are selected.
 - Recursive search now streams results as they are found, with a live counter of scanned entries instead of waiting for the full scan to complete.
 
 ### Changed
 - Completely rebuilt Quick Look for a cleaner preview experience with better file details, image viewing, and text/code editing.
 - Faster directory scanning in large folders thanks to improved parallel walk.
+
+### Fixed
+- Right-click context menu on files now opens instantly instead of briefly hanging while resolving the default app.
 
 ### Removed
 - Command palette (Ctrl+P).

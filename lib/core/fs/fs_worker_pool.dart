@@ -132,8 +132,12 @@ class FsWorkerPool {
         onExit: exitPort.sendPort,
       );
     } catch (e, s) {
-      log.error('fs.worker', 'FS worker spawn failed slot $slot',
-          error: e, stack: s);
+      log.error(
+        'fs.worker',
+        'FS worker spawn failed slot $slot',
+        error: e,
+        stack: s,
+      );
       await readySub.cancel();
       ready.close();
       errorPort.close();
