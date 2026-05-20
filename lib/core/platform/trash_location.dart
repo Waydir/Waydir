@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 
+import '../fs/waydir_core_loader.dart';
 import 'platform_paths.dart';
-import 'recycle_bin.dart';
 
 /// Virtual path that represents the user's trash / recycle bin.
 ///
@@ -16,6 +16,10 @@ import 'recycle_bin.dart';
 /// Sub-folders inside the trash keep the alias as a prefix, e.g.
 /// `::trash/<deleted-item>/<sub-dir>`.
 const String kTrashPath = '::trash';
+
+class TrashAccessDeniedException implements Exception {
+  const TrashAccessDeniedException();
+}
 
 bool isTrashPath(String path) =>
     path == kTrashPath || path.startsWith('$kTrashPath/');
@@ -50,8 +54,8 @@ class TrashEntry {
   /// Linux only: path of the `.trashinfo` metadata file.
   final String? infoPath;
 
-  /// Windows only: backing recycle-bin entry used for restore/purge.
-  final RecycleBinEntry? recycleBinEntry;
+  /// Native trash identifier used for restore/purge on supported platforms.
+  final String? nativeId;
 
   const TrashEntry({
     required this.virtualPath,
@@ -62,7 +66,7 @@ class TrashEntry {
     required this.isDirectory,
     this.originalPath,
     this.infoPath,
-    this.recycleBinEntry,
+    this.nativeId,
   });
 }
 
@@ -105,25 +109,25 @@ class TrashRepository {
   }
 
   Future<List<TrashEntry>> _listWindowsRoot() async {
-    final bin = await RecycleBinService.list();
+    final items = WaydirCoreLoader.trashList();
     final out = <TrashEntry>[];
-    for (final e in bin) {
-      final seg0 = PlatformPaths.fileName(e.dataPath);
-      final vpath = '$kTrashPath/$seg0';
-      _realBase[vpath] = e.dataPath;
+    for (final e in items) {
+      final vpath = '$kTrashPath/${e.id}';
+      _realBase[vpath] = e.id;
       out.add(
         TrashEntry(
           virtualPath: vpath,
           displayName: e.name,
-          realDataPath: e.dataPath,
-          originalPath: e.originalPath,
+          realDataPath: '',
+          originalPath: e.originalPath.isEmpty ? null : e.originalPath,
           deletedAt: e.deletedAt,
           size: e.size,
           isDirectory: e.isDirectory,
-          recycleBinEntry: e,
+          nativeId: e.id,
         ),
       );
     }
+    out.sort((a, b) => b.deletedAt.compareTo(a.deletedAt));
     return out;
   }
 
@@ -171,7 +175,17 @@ class TrashRepository {
     final dir = Directory(filesDir);
     if (!dir.existsSync()) return const [];
     final out = <TrashEntry>[];
-    for (final ent in dir.listSync(followLinks: false)) {
+    late final List<FileSystemEntity> entries;
+    try {
+      entries = dir.listSync(followLinks: false);
+    } on FileSystemException catch (e) {
+      final code = e.osError?.errorCode;
+      if (code == 1 || code == 13) {
+        throw const TrashAccessDeniedException();
+      }
+      rethrow;
+    }
+    for (final ent in entries) {
       final name = PlatformPaths.fileName(ent.path);
       if (name == '.DS_Store') continue;
       FileStat stat;
@@ -215,6 +229,7 @@ class TrashRepository {
   }
 
   Future<List<TrashChild>> listSub(String virtualPath) async {
+    if (PlatformPaths.isWindows) return const [];
     final realDir = await _resolveRealDir(virtualPath);
     if (realDir == null) return const [];
     final dir = Directory(realDir);
@@ -244,8 +259,12 @@ class TrashRepository {
 
   Future<void> restore(TrashEntry e) async {
     if (PlatformPaths.isWindows) {
-      if (e.recycleBinEntry != null) {
-        await RecycleBinService.restore(e.recycleBinEntry!);
+      final id = e.nativeId;
+      if (id != null) {
+        final fails = WaydirCoreLoader.trashRestore([id]);
+        if (fails.isNotEmpty) {
+          throw FileSystemException(fails.first.message);
+        }
       }
       return;
     }
@@ -271,8 +290,12 @@ class TrashRepository {
 
   Future<void> deletePermanently(TrashEntry e) async {
     if (PlatformPaths.isWindows) {
-      if (e.recycleBinEntry != null) {
-        await RecycleBinService.deletePermanently(e.recycleBinEntry!);
+      final id = e.nativeId;
+      if (id != null) {
+        final fails = WaydirCoreLoader.trashPurge([id]);
+        if (fails.isNotEmpty) {
+          throw FileSystemException(fails.first.message);
+        }
       }
       return;
     }

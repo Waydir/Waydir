@@ -38,6 +38,7 @@ class NavigationStore {
   final OperationStore operationStore;
   final gitStatus = GitStatusStore();
   final loadError = signal<String?>(null);
+  final trashAccessDenied = signal<bool>(false);
   final renamingPath = signal<String?>(null);
   final renameError = signal<String?>(null);
   final pendingCreate = signal<FileEntry?>(null);
@@ -441,7 +442,10 @@ class NavigationStore {
 
   Future<void> loadDirectory(String path) async {
     final token = ++_loadToken;
-    isLoading.value = true;
+    batch(() {
+      isLoading.value = true;
+      trashAccessDenied.value = false;
+    });
     try {
       final entries = isTrashPath(path)
           ? await _loadTrash(path)
@@ -450,6 +454,7 @@ class NavigationStore {
       batch(() {
         files.value = entries;
         loadError.value = null;
+        trashAccessDenied.value = false;
         isLoading.value = false;
       });
       if (isTrashPath(path)) {
@@ -465,6 +470,16 @@ class NavigationStore {
       }
     } catch (e) {
       if (token != _loadToken) return;
+      if (e is TrashAccessDeniedException) {
+        batch(() {
+          files.value = [];
+          loadError.value = null;
+          trashAccessDenied.value = true;
+          isLoading.value = false;
+        });
+        _watcher.stop();
+        return;
+      }
       batch(() {
         files.value = [];
         loadError.value = switch (e) {
@@ -473,6 +488,7 @@ class NavigationStore {
             message.isNotEmpty ? message : e.toString(),
           _ => e.toString(),
         };
+        trashAccessDenied.value = false;
         isLoading.value = false;
       });
       _watcher.stop();
@@ -877,6 +893,11 @@ class NavigationStore {
 
   void _openEntry(FileEntry entry) {
     if (entry.type == FileItemType.folder) {
+      if (PlatformPaths.isWindows &&
+          currentPath.value == kTrashPath &&
+          isTrashPath(entry.path)) {
+        return;
+      }
       navigateTo(entry.path);
       return;
     }

@@ -79,6 +79,9 @@ typedef _TrashNative =
 typedef _TrashDart =
     Pointer<Uint8> Function(Pointer<Pointer<Utf8>>, int, Pointer<IntPtr>);
 
+typedef _TrashListNative = Pointer<Uint8> Function(Pointer<IntPtr>);
+typedef _TrashListDart = Pointer<Uint8> Function(Pointer<IntPtr>);
+
 typedef _FreeNative = Void Function(Pointer<Uint8>, IntPtr);
 typedef _FreeDart = void Function(Pointer<Uint8>, int);
 
@@ -120,11 +123,31 @@ class WaydirTrashFailure {
   const WaydirTrashFailure(this.path, this.message);
 }
 
+class NativeTrashItem {
+  final String id;
+  final String name;
+  final String originalPath;
+  final DateTime deletedAt;
+  final int size;
+  final bool isDirectory;
+
+  const NativeTrashItem({
+    required this.id,
+    required this.name,
+    required this.originalPath,
+    required this.deletedAt,
+    required this.size,
+    required this.isDirectory,
+  });
+}
+
 /// Loads the required `waydir_core` native helper (Rust). Cached.
 /// [requireLib] throws [WaydirCoreException] if it is absent so callers
 /// fail loudly instead of silently degrading.
 class WaydirCoreLoader {
   WaydirCoreLoader._();
+
+  static const int _requiredAbi = 7;
 
   static DynamicLibrary? _cached;
   static bool _tried = false;
@@ -136,7 +159,7 @@ class WaydirCoreLoader {
       try {
         final lib = DynamicLibrary.open(path);
         final abi = lib.lookupFunction<_AbiNative, _AbiDart>('waydir_core_abi');
-        if (abi() < 1) continue;
+        if (abi() < _requiredAbi) continue;
         _cached = lib;
         return lib;
       } catch (_) {}
@@ -386,6 +409,65 @@ class WaydirCoreLoader {
     }
   }
 
+  static List<NativeTrashItem> trashList() {
+    final lib = requireLib();
+    final fn = lib.lookupFunction<_TrashListNative, _TrashListDart>(
+      'waydir_trash_list',
+    );
+    final free = lib.lookupFunction<_FreeNative, _FreeDart>('waydir_free');
+    final outLen = calloc<IntPtr>();
+    try {
+      final buf = fn(outLen);
+      if (buf == nullptr) return const [];
+      final len = outLen.value;
+      final bytes = Uint8List.fromList(buf.asTypedList(len));
+      free(buf, len);
+      final items = _decodeNativeTrashItems(bytes);
+      log.warn(
+        'ffi.trash',
+        'native trash list returned ${items.length} entries; ${buildInfo()}',
+      );
+      return items;
+    } finally {
+      calloc.free(outLen);
+    }
+  }
+
+  static List<WaydirTrashFailure> trashRestore(List<String> ids) =>
+      _trashById('waydir_trash_restore', ids);
+
+  static List<WaydirTrashFailure> trashPurge(List<String> ids) =>
+      _trashById('waydir_trash_purge', ids);
+
+  static List<WaydirTrashFailure> _trashById(String symbol, List<String> ids) {
+    if (ids.isEmpty) return const [];
+    final lib = requireLib();
+    final fn = lib.lookupFunction<_TrashNative, _TrashDart>(symbol);
+    final free = lib.lookupFunction<_FreeNative, _FreeDart>('waydir_free');
+    final idPtrs = calloc<Pointer<Utf8>>(ids.length);
+    final allocated = <Pointer<Utf8>>[];
+    final outLen = calloc<IntPtr>();
+    try {
+      for (var i = 0; i < ids.length; i++) {
+        final ptr = ids[i].toNativeUtf8();
+        allocated.add(ptr);
+        idPtrs[i] = ptr;
+      }
+      final buf = fn(idPtrs, ids.length, outLen);
+      if (buf == nullptr) return const [];
+      final len = outLen.value;
+      final bytes = Uint8List.fromList(buf.asTypedList(len));
+      free(buf, len);
+      return _decodeTrashFailures(bytes);
+    } finally {
+      for (final ptr in allocated) {
+        calloc.free(ptr);
+      }
+      calloc.free(idPtrs);
+      calloc.free(outLen);
+    }
+  }
+
   /// "{version} ({git}) abi={n}" for the loaded native lib, or null if
   /// the library is absent.
   static String? buildInfo() {
@@ -427,11 +509,11 @@ class WaydirCoreLoader {
       lib,
     );
     return [
+      devTarget,
       p.join(exeDir, 'lib', lib),
       p.join(exeDir, lib),
       if (Platform.isMacOS)
         p.normalize(p.join(exeDir, '..', 'Frameworks', lib)),
-      devTarget,
       lib,
     ];
   }
@@ -452,5 +534,58 @@ class WaydirCoreLoader {
       failures.add(WaydirTrashFailure(path, msg));
     }
     return failures;
+  }
+
+  static List<NativeTrashItem> _decodeNativeTrashItems(Uint8List bytes) {
+    final items = <NativeTrashItem>[];
+    final data = ByteData.sublistView(bytes);
+    var off = 0;
+    if (bytes.length < 4) return const [];
+    final count = data.getUint32(off);
+    off += 4;
+
+    String? readString() {
+      if (off + 4 > bytes.length) return null;
+      final len = data.getUint32(off);
+      off += 4;
+      if (off + len > bytes.length) return null;
+      final value = utf8.decode(bytes.sublist(off, off + len));
+      off += len;
+      return value;
+    }
+
+    if (count == 0xFFFFFFFF) {
+      final message = readString() ?? 'native trash list failed';
+      log.error('ffi.trash', message);
+      throw WaydirCoreException('native trash list failed: $message');
+    }
+
+    for (var i = 0; i < count; i++) {
+      final id = readString();
+      final name = readString();
+      final originalPath = readString();
+      if (id == null || name == null || originalPath == null) break;
+      if (off + 17 > bytes.length) break;
+      final deletedAtMs = data.getUint64(off);
+      off += 8;
+      final size = data.getUint64(off);
+      off += 8;
+      final isDirectory = bytes[off] != 0;
+      off += 1;
+      items.add(
+        NativeTrashItem(
+          id: id,
+          name: name,
+          originalPath: originalPath,
+          deletedAt: DateTime.fromMillisecondsSinceEpoch(
+            deletedAtMs,
+            isUtc: true,
+          ).toLocal(),
+          size: size,
+          isDirectory: isDirectory,
+        ),
+      );
+    }
+    return items;
   }
 }

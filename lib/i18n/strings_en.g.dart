@@ -53,6 +53,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final TranslationsDragHintEn dragHint = TranslationsDragHintEn.internal(_root);
 	late final TranslationsFileViewEn fileView = TranslationsFileViewEn.internal(_root);
 	late final TranslationsSidebarEn sidebar = TranslationsSidebarEn.internal(_root);
+	late final TranslationsTrashEn trash = TranslationsTrashEn.internal(_root);
 	late final TranslationsToolbarEn toolbar = TranslationsToolbarEn.internal(_root);
 	late final TranslationsNotificationsEn notifications = TranslationsNotificationsEn.internal(_root);
 	late final TranslationsSearchEn search = TranslationsSearchEn.internal(_root);
@@ -706,6 +707,24 @@ class TranslationsSidebarEn {
 
 	/// en: 'Expand sidebar'
 	String get expand => 'Expand sidebar';
+}
+
+// Path: trash
+class TranslationsTrashEn {
+	TranslationsTrashEn.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Trash needs Full Disk Access'
+	String get accessDeniedTitle => 'Trash needs Full Disk Access';
+
+	/// en: 'macOS protects the Trash folder. Grant Waydir Full Disk Access in System Settings, then relaunch the app.'
+	String get accessDeniedBody => 'macOS protects the Trash folder. Grant Waydir Full Disk Access in System Settings, then relaunch the app.';
+
+	/// en: 'Open System Settings'
+	String get openSystemSettings => 'Open System Settings';
 }
 
 // Path: toolbar
@@ -1810,6 +1829,9 @@ extension on Translations {
 			'sidebar.dropBookmark' => 'Drop folder to bookmark',
 			'sidebar.collapse' => 'Collapse sidebar',
 			'sidebar.expand' => 'Expand sidebar',
+			'trash.accessDeniedTitle' => 'Trash needs Full Disk Access',
+			'trash.accessDeniedBody' => 'macOS protects the Trash folder. Grant Waydir Full Disk Access in System Settings, then relaunch the app.',
+			'trash.openSystemSettings' => 'Open System Settings',
 			'toolbar.back' => 'Back',
 			'toolbar.forward' => 'Forward',
 			'toolbar.up' => 'Up',
