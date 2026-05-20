@@ -23,8 +23,6 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   path_provider: ^2.1.5
-  bitsdojo_window: ^0.1.6
-  phosphor_flutter: ^2.1.0
   signals: ^6.3.0
   collection: ^1.19.1
   super_drag_and_drop: ^0.9.1
@@ -62,3 +60,13 @@ flutter:
   uses-material-design: true
   assets:
     - assets/
+  fonts:
+    - family: PhosphorRegular
+      fonts:
+        - asset: assets/fonts/phosphor/PhosphorRegular.ttf
+    - family: PhosphorBold
+      fonts:
+        - asset: assets/fonts/phosphor/PhosphorBold.ttf
+    - family: PhosphorFill
+      fonts:
+        - asset: assets/fonts/phosphor/PhosphorFill.ttf

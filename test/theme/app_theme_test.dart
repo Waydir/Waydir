@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:waydir/ui/icons/waydir_icons.dart';
 import 'package:waydir/ui/theme/app_theme.dart';
 import 'package:waydir/ui/theme/app_theme_registry.dart';
 import 'package:waydir/features/files/file_icons.dart';
@@ -33,31 +33,31 @@ void main() {
     });
 
     test(
-      'fileIcon returns PhosphorIconsRegular.file for unknown extension',
+      'fileIcon returns WaydirIconsRegular.file for unknown extension',
       () {
-        expect(fileIcon('xyz'), PhosphorIconsRegular.file);
-        expect(fileIcon(''), PhosphorIconsRegular.file);
+        expect(fileIcon('xyz'), WaydirIconsRegular.file);
+        expect(fileIcon(''), WaydirIconsRegular.file);
       },
     );
 
     test('fileIcon returns correct icon for code files', () {
-      expect(fileIcon('dart'), PhosphorIconsRegular.fileCode);
-      expect(fileIcon('py'), PhosphorIconsRegular.fileCode);
-      expect(fileIcon('js'), PhosphorIconsRegular.fileJs);
-      expect(fileIcon('ts'), PhosphorIconsRegular.fileTs);
-      expect(fileIcon('html'), PhosphorIconsRegular.fileHtml);
-      expect(fileIcon('css'), PhosphorIconsRegular.fileCss);
-      expect(fileIcon('json'), PhosphorIconsRegular.fileCode);
+      expect(fileIcon('dart'), WaydirIconsRegular.fileCode);
+      expect(fileIcon('py'), WaydirIconsRegular.fileCode);
+      expect(fileIcon('js'), WaydirIconsRegular.fileJs);
+      expect(fileIcon('ts'), WaydirIconsRegular.fileTs);
+      expect(fileIcon('html'), WaydirIconsRegular.fileHtml);
+      expect(fileIcon('css'), WaydirIconsRegular.fileCss);
+      expect(fileIcon('json'), WaydirIconsRegular.fileCode);
     });
 
     test('fileIcon returns correct icon for media files', () {
-      expect(fileIcon('png'), PhosphorIconsRegular.fileImage);
-      expect(fileIcon('pdf'), PhosphorIconsRegular.filePdf);
-      expect(fileIcon('mp3'), PhosphorIconsRegular.fileAudio);
-      expect(fileIcon('mp4'), PhosphorIconsRegular.fileVideo);
-      expect(fileIcon('zip'), PhosphorIconsRegular.fileZip);
-      expect(fileIcon('md'), PhosphorIconsRegular.fileMd);
-      expect(fileIcon('txt'), PhosphorIconsRegular.fileTxt);
+      expect(fileIcon('png'), WaydirIconsRegular.fileImage);
+      expect(fileIcon('pdf'), WaydirIconsRegular.filePdf);
+      expect(fileIcon('mp3'), WaydirIconsRegular.fileAudio);
+      expect(fileIcon('mp4'), WaydirIconsRegular.fileVideo);
+      expect(fileIcon('zip'), WaydirIconsRegular.fileZip);
+      expect(fileIcon('md'), WaydirIconsRegular.fileMd);
+      expect(fileIcon('txt'), WaydirIconsRegular.fileTxt);
     });
   });
 

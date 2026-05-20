@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:waydir/ui/icons/waydir_icons.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:super_drag_and_drop/super_drag_and_drop.dart';
 import '../../core/database/app_database.dart';
@@ -58,41 +58,41 @@ class _SidebarState extends State<Sidebar> {
     super.initState();
     final h = PlatformPaths.homePath;
     _favorites = [
-      _SidebarItem(t.sidebar.home, PhosphorIconsRegular.house, h),
+      _SidebarItem(t.sidebar.home, WaydirIconsRegular.house, h),
       _SidebarItem(
         t.sidebar.desktop,
-        PhosphorIconsRegular.desktop,
+        WaydirIconsRegular.desktop,
         PlatformPaths.desktopPath,
       ),
       _SidebarItem(
         t.sidebar.documents,
-        PhosphorIconsRegular.notebook,
+        WaydirIconsRegular.notebook,
         PlatformPaths.documentsPath,
       ),
       _SidebarItem(
         t.sidebar.downloads,
-        PhosphorIconsRegular.downloadSimple,
+        WaydirIconsRegular.downloadSimple,
         PlatformPaths.downloadsPath,
       ),
       _SidebarItem(
         t.sidebar.pictures,
-        PhosphorIconsRegular.image,
+        WaydirIconsRegular.image,
         PlatformPaths.picturesPath,
       ),
       _SidebarItem(
         t.sidebar.music,
-        PhosphorIconsRegular.musicNote,
+        WaydirIconsRegular.musicNote,
         PlatformPaths.musicPath,
       ),
       _SidebarItem(
         t.sidebar.videos,
-        PhosphorIconsRegular.videoCamera,
+        WaydirIconsRegular.videoCamera,
         PlatformPaths.videosPath,
       ),
       if (PlatformPaths.canOpenTrash)
         _SidebarItem(
           t.sidebar.trash,
-          PhosphorIconsRegular.trashSimple,
+          WaydirIconsRegular.trashSimple,
           kTrashPath,
         ),
     ];
@@ -110,7 +110,7 @@ class _SidebarState extends State<Sidebar> {
     final result = await showCustomDialog<String>(
       context: context,
       title: t.menu.rename,
-      icon: PhosphorIconsRegular.pencilSimple,
+      icon: WaydirIconsRegular.pencilSimple,
       body: TextField(
         controller: controller,
         autofocus: true,
@@ -142,23 +142,23 @@ class _SidebarState extends State<Sidebar> {
       position: position,
       items: [
         ContextMenuItem(
-          icon: PhosphorIconsRegular.folderOpen,
+          icon: WaydirIconsRegular.folderOpen,
           label: t.menu.open,
           action: 'open',
         ),
         ContextMenuItem(
-          icon: PhosphorIconsRegular.arrowSquareOut,
+          icon: WaydirIconsRegular.arrowSquareOut,
           label: t.menu.openInNewTab,
           action: 'open_in_new_tab',
         ),
         ContextMenuItem.divider,
         ContextMenuItem(
-          icon: PhosphorIconsRegular.pencilSimple,
+          icon: WaydirIconsRegular.pencilSimple,
           label: t.menu.rename,
           action: 'rename',
         ),
         ContextMenuItem(
-          icon: PhosphorIconsRegular.trash,
+          icon: WaydirIconsRegular.trash,
           label: t.menu.removeBookmark,
           action: 'remove',
           danger: true,
@@ -250,8 +250,8 @@ class _SidebarState extends State<Sidebar> {
                         item: _SidebarItem(
                           drive.label,
                           drive.isRemovable
-                              ? PhosphorIconsRegular.usb
-                              : PhosphorIconsRegular.hardDrive,
+                              ? WaydirIconsRegular.usb
+                              : WaydirIconsRegular.hardDrive,
                           path,
                         ),
                         isSelected: isSelected,
@@ -462,7 +462,7 @@ class _BookmarksSection extends StatelessWidget {
             (bookmark) => _ItemRow(
               item: _SidebarItem(
                 bookmark.label,
-                PhosphorIconsRegular.bookmarkSimple,
+                WaydirIconsRegular.bookmarkSimple,
                 bookmark.path,
               ),
               isSelected: currentPath == bookmark.path,
@@ -499,10 +499,10 @@ class _SidebarHeaderState extends State<_SidebarHeader> {
   @override
   Widget build(BuildContext context) {
     final collapsed = widget.collapsed;
-    final icon = PhosphorIcon(
+    final icon = Icon(
       collapsed
-          ? PhosphorIconsRegular.sidebarSimple
-          : PhosphorIconsRegular.caretLeft,
+          ? WaydirIconsRegular.sidebarSimple
+          : WaydirIconsRegular.caretLeft,
       size: 14,
       color: _hovered ? AppColors.fg : AppColors.fgMuted,
     );
@@ -629,7 +629,7 @@ class _SidebarOperationsButtonState extends State<_SidebarOperationsButton> {
                           valueColor: AlwaysStoppedAnimation(AppColors.accent),
                         ),
                       ),
-                      PhosphorIcon(
+                      Icon(
                         _operationIcon(active),
                         size: 13,
                         color: AppColors.fgAccent,
@@ -677,7 +677,7 @@ class _SidebarOperationsButtonState extends State<_SidebarOperationsButton> {
                   children: [
                     Row(
                       children: [
-                        PhosphorIcon(
+                        Icon(
                           _operationIcon(active),
                           size: 15,
                           color: AppColors.fgAccent,
@@ -751,8 +751,8 @@ class _SidebarOperationsButtonState extends State<_SidebarOperationsButton> {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Center(
-                  child: PhosphorIcon(
-                    PhosphorIconsRegular.clockClockwise,
+                  child: Icon(
+                    WaydirIconsRegular.clockClockwise,
                     size: 15,
                     color: color,
                   ),
@@ -789,8 +789,8 @@ class _SidebarOperationsButtonState extends State<_SidebarOperationsButton> {
               ),
               child: Row(
                 children: [
-                  PhosphorIcon(
-                    PhosphorIconsRegular.clockClockwise,
+                  Icon(
+                    WaydirIconsRegular.clockClockwise,
                     size: 15,
                     color: color,
                   ),
@@ -821,18 +821,18 @@ class _SidebarOperationsButtonState extends State<_SidebarOperationsButton> {
   }
 
   static IconData _operationIcon(FileTask? task) {
-    if (task == null) return PhosphorIconsRegular.clockClockwise;
+    if (task == null) return WaydirIconsRegular.clockClockwise;
     if (task.status == TaskStatus.waitingConflicts) {
-      return PhosphorIconsRegular.warning;
+      return WaydirIconsRegular.warning;
     }
     return switch (task.type) {
-      TaskType.copy => PhosphorIconsRegular.copy,
-      TaskType.move => PhosphorIconsRegular.arrowRight,
-      TaskType.delete => PhosphorIconsRegular.trash,
-      TaskType.trash => PhosphorIconsRegular.trashSimple,
-      TaskType.extract => PhosphorIconsRegular.archive,
-      TaskType.compress => PhosphorIconsRegular.fileZip,
-      TaskType.archiveEdit => PhosphorIconsRegular.archive,
+      TaskType.copy => WaydirIconsRegular.copy,
+      TaskType.move => WaydirIconsRegular.arrowRight,
+      TaskType.delete => WaydirIconsRegular.trash,
+      TaskType.trash => WaydirIconsRegular.trashSimple,
+      TaskType.extract => WaydirIconsRegular.archive,
+      TaskType.compress => WaydirIconsRegular.fileZip,
+      TaskType.archiveEdit => WaydirIconsRegular.archive,
     };
   }
 }
@@ -952,7 +952,7 @@ class _ItemRowState extends State<_ItemRow> {
                           : null,
                     ),
                     alignment: Alignment.center,
-                    child: PhosphorIcon(
+                    child: Icon(
                       widget.item.icon,
                       size: 16,
                       color: widget.isSelected
@@ -978,7 +978,7 @@ class _ItemRowState extends State<_ItemRow> {
                   ),
                   child: Row(
                     children: [
-                      PhosphorIcon(
+                      Icon(
                         widget.item.icon,
                         size: 16,
                         color: widget.isSelected
@@ -1004,8 +1004,8 @@ class _ItemRowState extends State<_ItemRow> {
                       ),
                       if (widget.onUnmount != null)
                         IconButton(
-                          icon: PhosphorIcon(
-                            PhosphorIconsRegular.eject,
+                          icon: Icon(
+                            WaydirIconsRegular.eject,
                             size: 14,
                             color: AppColors.fgMuted,
                           ),

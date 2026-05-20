@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:waydir/ui/icons/waydir_icons.dart';
 
 import '../overlays/popup_overlay.dart';
 import '../theme/app_theme.dart';
@@ -112,7 +112,7 @@ class _AppDropdownState<T> extends State<AppDropdown<T>> {
           child: Row(
             children: [
               if (selected?.icon != null) ...[
-                PhosphorIcon(
+                Icon(
                   selected!.icon!,
                   size: 13,
                   color: AppColors.fgMuted,
@@ -127,8 +127,8 @@ class _AppDropdownState<T> extends State<AppDropdown<T>> {
                 ),
               ),
               const SizedBox(width: 8),
-              PhosphorIcon(
-                PhosphorIconsRegular.caretDown,
+              Icon(
+                WaydirIconsRegular.caretDown,
                 size: 12,
                 color: AppColors.fgMuted,
               ),
@@ -236,7 +236,7 @@ class _MenuTileState<T> extends State<_MenuTile<T>> {
           child: Row(
             children: [
               if (widget.item.icon != null) ...[
-                PhosphorIcon(widget.item.icon!, size: 13, color: fg),
+                Icon(widget.item.icon!, size: 13, color: fg),
                 const SizedBox(width: 8),
               ],
               Expanded(
@@ -262,8 +262,8 @@ class _MenuTileState<T> extends State<_MenuTile<T>> {
               ],
               if (widget.isSelected) ...[
                 const SizedBox(width: 8),
-                PhosphorIcon(
-                  PhosphorIconsRegular.check,
+                Icon(
+                  WaydirIconsRegular.check,
                   size: 12,
                   color: AppColors.accent,
                 ),

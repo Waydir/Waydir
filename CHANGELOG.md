@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Faster directory scanning in large folders thanks to improved parallel walk.
 
 ### Fixed
+- Windows: entering a drive without a trailing backslash (e.g. `X:`) no longer chops the first letter from breadcrumb segments and subpaths.
 - Right-click context menu on files now opens instantly instead of briefly hanging while resolving the default app.
 - Cascading context submenus now close when the pointer leaves both the parent item and the submenu.
 

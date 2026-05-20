@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'ui/window/window.dart';
 import 'app/app_info.dart';
 import 'app/waydir_app.dart';
 import 'core/fs/fs_worker_pool.dart';
@@ -38,13 +38,13 @@ void main(List<String> args) async {
       await AppInfo.init();
       runApp(TranslationProvider(child: const WaydirApp()));
 
-      doWhenWindowReady(() {
+      if (isWindowChromeSupported) {
         appWindow.minSize = const Size(700, 450);
         appWindow.size = const Size(1100, 700);
         appWindow.alignment = Alignment.center;
         appWindow.title = '';
         appWindow.show();
-      });
+      }
     },
     (error, stack) {
       log.error('zone', '$error', stack: stack);
