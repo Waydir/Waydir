@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 
+import '../logging/app_logger.dart';
 import 'platform_paths.dart';
 import 'recycle_bin.dart';
 
@@ -110,6 +111,7 @@ class TrashRepository {
 
   Future<List<TrashEntry>> _listWindowsRoot() async {
     final bin = await RecycleBinService.list();
+    log.warn('trash', 'windows recycle bin returned ${bin.length} entries');
     final out = <TrashEntry>[];
     for (final e in bin) {
       final seg0 = PlatformPaths.fileName(e.dataPath);

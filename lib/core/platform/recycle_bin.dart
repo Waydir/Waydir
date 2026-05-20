@@ -53,6 +53,10 @@ class RecycleBinService {
       );
       return const [];
     }
+    log.warn(
+      'recycle_bin',
+      'scanning ${sidDirs.length} SID dir(s): ${sidDirs.map((d) => d.path).join(", ")}',
+    );
     for (final binDir in sidDirs) {
       List<FileSystemEntity> children;
       try {
@@ -66,17 +70,30 @@ class RecycleBinService {
         );
         continue;
       }
+      var infoCount = 0;
+      var pairedCount = 0;
       for (final ent in children) {
         final name = PlatformPaths.fileName(ent.path);
         if (!name.startsWith(r'$I')) continue;
+        infoCount++;
         final dataName = '\$R${name.substring(2)}';
         final dataPath = '${binDir.path}\\$dataName';
         final isDir = Directory(dataPath).existsSync();
         final isFile = File(dataPath).existsSync();
-        if (!isDir && !isFile) continue;
+        if (!isDir && !isFile) {
+          log.warn(
+            'recycle_bin',
+            'no \$R pair for ${ent.path} (expected $dataPath)',
+          );
+          continue;
+        }
+        pairedCount++;
         try {
           final info = _parseInfo(ent.path);
-          if (info == null) continue;
+          if (info == null) {
+            log.warn('recycle_bin', 'unreadable \$I metadata at ${ent.path}');
+            continue;
+          }
           entries.add(
             RecycleBinEntry(
               dataPath: dataPath,
@@ -96,6 +113,10 @@ class RecycleBinService {
           );
         }
       }
+      log.warn(
+        'recycle_bin',
+        '${binDir.path}: ${children.length} children, $infoCount \$I files, $pairedCount paired',
+      );
     }
     entries.sort((a, b) => b.deletedAt.compareTo(a.deletedAt));
     return entries;
