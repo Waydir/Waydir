@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:waydir/ui/icons/waydir_icons.dart';
 import 'package:signals/signals_flutter.dart';
 import 'navigation_store.dart';
 import '../../ui/theme/app_theme.dart';
@@ -27,7 +27,7 @@ class PaneLocationBar extends StatelessWidget {
         children: [
           Watch(
             (context) => _ToolBtn(
-              PhosphorIconsRegular.arrowLeft,
+              WaydirIconsRegular.arrowLeft,
               store.goBack,
               store.canGoBack.value,
               t.toolbar.back,
@@ -35,14 +35,14 @@ class PaneLocationBar extends StatelessWidget {
           ),
           Watch(
             (context) => _ToolBtn(
-              PhosphorIconsRegular.arrowRight,
+              WaydirIconsRegular.arrowRight,
               store.goForward,
               store.canGoForward.value,
               t.toolbar.forward,
             ),
           ),
           _ToolBtn(
-            PhosphorIconsRegular.arrowUp,
+            WaydirIconsRegular.arrowUp,
             store.goUp,
             true,
             t.toolbar.up,
@@ -54,7 +54,7 @@ class PaneLocationBar extends StatelessWidget {
             margin: const EdgeInsets.symmetric(horizontal: 4),
           ),
           _ToolBtn(
-            PhosphorIconsRegular.arrowClockwise,
+            WaydirIconsRegular.arrowClockwise,
             store.refresh,
             true,
             t.toolbar.refresh,
@@ -64,7 +64,7 @@ class PaneLocationBar extends StatelessWidget {
           const SizedBox(width: 6),
           Watch(
             (context) => _ToolBtn(
-              PhosphorIconsRegular.magnifyingGlass,
+              WaydirIconsRegular.magnifyingGlass,
               () => store.searchActive.value
                   ? store.closeSearch()
                   : store.openSearch(),
@@ -114,7 +114,7 @@ class _ToolBtnState extends State<_ToolBtn> {
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(4),
             ),
-            child: PhosphorIcon(
+            child: Icon(
               widget.icon,
               size: 16,
               color: widget.enabled
@@ -263,8 +263,8 @@ class _PathBarState extends State<_PathBar> {
             onTap: _cancel,
             child: Padding(
               padding: const EdgeInsets.only(left: 2, right: 2),
-              child: PhosphorIcon(
-                PhosphorIconsRegular.x,
+              child: Icon(
+                WaydirIconsRegular.x,
                 size: 14,
                 color: AppColors.fgMuted,
               ),
@@ -291,8 +291,8 @@ class _PathBarState extends State<_PathBar> {
               onTap: atRoot ? null : () => widget.store.navigateTo(kTrashPath),
               child: Row(
                 children: [
-                  PhosphorIcon(
-                    PhosphorIconsRegular.trashSimple,
+                  Icon(
+                    WaydirIconsRegular.trashSimple,
                     size: 13,
                     color: AppColors.fgAccent,
                   ),
@@ -450,8 +450,8 @@ class _PathBarState extends State<_PathBar> {
   Widget _caretIcon() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 1),
-      child: PhosphorIcon(
-        PhosphorIconsRegular.caretRight,
+      child: Icon(
+        WaydirIconsRegular.caretRight,
         size: 14,
         color: AppColors.fgSubtle,
       ),
@@ -495,7 +495,7 @@ class _EllipsisMenuState extends State<_EllipsisMenu> {
       items: widget.hiddenIndices
           .map(
             (i) => ContextMenuItem(
-              icon: PhosphorIconsRegular.folder,
+              icon: WaydirIconsRegular.folder,
               label: widget.allSegments[i + widget.offset],
               action: '$i',
             ),
@@ -632,8 +632,8 @@ class _NewFolderButtonState extends State<_NewFolderButton> {
               color: _hovered ? AppColors.bgHover : Colors.transparent,
               borderRadius: BorderRadius.circular(4),
             ),
-            child: PhosphorIcon(
-              PhosphorIconsRegular.folderPlus,
+            child: Icon(
+              WaydirIconsRegular.folderPlus,
               size: 16,
               color: _hovered ? AppColors.fg : AppColors.fgMuted,
             ),

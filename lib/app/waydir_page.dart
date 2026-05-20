@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:waydir/ui/icons/waydir_icons.dart';
 import 'package:signals/signals_flutter.dart';
 import '../core/archive/archive_path.dart';
 import '../core/archive/archive_writer.dart';
@@ -218,8 +218,8 @@ class _WaydirPageState extends State<WaydirPage> {
       context: context,
       title: title,
       icon: isCopy
-          ? PhosphorIconsRegular.copy
-          : PhosphorIconsRegular.arrowsLeftRight,
+          ? WaydirIconsRegular.copy
+          : WaydirIconsRegular.arrowsLeftRight,
       iconColor: AppColors.accent,
       body: Text(message, style: context.txt.body.copyWith(height: 1.4)),
       actions: [
@@ -263,8 +263,8 @@ class _WaydirPageState extends State<WaydirPage> {
           ? t.dialog.confirmTrashTitle
           : t.dialog.confirmDeleteTitle,
       icon: useTrash
-          ? PhosphorIconsRegular.trashSimple
-          : PhosphorIconsRegular.trash,
+          ? WaydirIconsRegular.trashSimple
+          : WaydirIconsRegular.trash,
       iconColor: AppColors.danger,
       body: Text(message, style: context.txt.body.copyWith(height: 1.4)),
       actions: [
@@ -285,12 +285,12 @@ class _WaydirPageState extends State<WaydirPage> {
         position: position,
         items: [
           ContextMenuItem(
-            icon: PhosphorIconsRegular.arrowClockwise,
+            icon: WaydirIconsRegular.arrowClockwise,
             label: t.toolbar.refresh,
             action: 'refresh',
           ),
           ContextMenuItem(
-            icon: PhosphorIconsRegular.selectionAll,
+            icon: WaydirIconsRegular.selectionAll,
             label: t.menu.selectAll,
             action: 'select_all',
           ),
@@ -302,29 +302,29 @@ class _WaydirPageState extends State<WaydirPage> {
     final canPaste = store.canPaste.value;
     final items = <ContextMenuItem>[
       ContextMenuItem(
-        icon: PhosphorIconsRegular.clipboard,
+        icon: WaydirIconsRegular.clipboard,
         label: t.menu.paste,
         action: 'paste',
       ),
       ContextMenuItem.divider,
       ContextMenuItem(
-        icon: PhosphorIconsRegular.terminal,
+        icon: WaydirIconsRegular.terminal,
         label: t.menu.openInTerminal,
         action: 'open_in_terminal',
       ),
       ContextMenuItem(
-        icon: PhosphorIconsRegular.folderPlus,
+        icon: WaydirIconsRegular.folderPlus,
         label: t.toolbar.newFolder,
         action: 'new_folder',
       ),
       ContextMenuItem(
-        icon: PhosphorIconsRegular.arrowClockwise,
+        icon: WaydirIconsRegular.arrowClockwise,
         label: t.toolbar.refresh,
         action: 'refresh',
       ),
       ContextMenuItem.divider,
       ContextMenuItem(
-        icon: PhosphorIconsRegular.selectionAll,
+        icon: WaydirIconsRegular.selectionAll,
         label: t.menu.selectAll,
         action: 'select_all',
       ),
@@ -393,23 +393,23 @@ class _WaydirPageState extends State<WaydirPage> {
         : p.basename(store.currentPath.value);
     final compressItem = canCompress
         ? ContextMenuItem(
-            icon: PhosphorIconsRegular.fileZip,
+            icon: WaydirIconsRegular.fileZip,
             label: t.menu.compress,
             action: 'compress',
             children: [
               ContextMenuItem(
-                icon: PhosphorIconsRegular.fileZip,
+                icon: WaydirIconsRegular.fileZip,
                 label: t.menu.compressTo(name: '$compressBase.zip'),
                 action: 'compress_zip',
               ),
               ContextMenuItem(
-                icon: PhosphorIconsRegular.fileZip,
+                icon: WaydirIconsRegular.fileZip,
                 label: t.menu.compressTo(name: '$compressBase.tar.gz'),
                 action: 'compress_targz',
               ),
               ContextMenuItem.divider,
               ContextMenuItem(
-                icon: PhosphorIconsRegular.slidersHorizontal,
+                icon: WaydirIconsRegular.slidersHorizontal,
                 label: t.menu.compressOptions,
                 action: 'compress_options',
               ),
@@ -419,17 +419,17 @@ class _WaydirPageState extends State<WaydirPage> {
 
     final extractItem = canExtract
         ? ContextMenuItem(
-            icon: PhosphorIconsRegular.archive,
+            icon: WaydirIconsRegular.archive,
             label: t.menu.extract,
             action: 'extract',
             children: [
               ContextMenuItem(
-                icon: PhosphorIconsRegular.arrowLineDown,
+                icon: WaydirIconsRegular.arrowLineDown,
                 label: t.menu.extractHere,
                 action: 'extract_here',
               ),
               ContextMenuItem(
-                icon: PhosphorIconsRegular.folderPlus,
+                icon: WaydirIconsRegular.folderPlus,
                 label: count == 1
                     ? t.menu.extractToFolder(
                         name: FileSystemService.archiveBaseName(
@@ -447,14 +447,14 @@ class _WaydirPageState extends State<WaydirPage> {
       final binItems = <ContextMenuItem>[
         if (store.canRestoreFromTrash)
           ContextMenuItem(
-            icon: PhosphorIconsRegular.arrowCounterClockwise,
+            icon: WaydirIconsRegular.arrowCounterClockwise,
             label: count == 1
                 ? t.menu.restore
                 : t.menu.restoreItems(count: count),
             action: 'restore',
           ),
         ContextMenuItem(
-          icon: PhosphorIconsRegular.trash,
+          icon: WaydirIconsRegular.trash,
           label: count == 1
               ? t.menu.deletePermanently
               : t.menu.deletePermanentlyItems(count: count),
@@ -474,7 +474,7 @@ class _WaydirPageState extends State<WaydirPage> {
     final items = <ContextMenuItem>[
       if (!isSingleFile)
         ContextMenuItem(
-          icon: PhosphorIconsRegular.folderOpen,
+          icon: WaydirIconsRegular.folderOpen,
           label: count == 1 ? t.menu.open : t.menu.openItems(count: count),
           action: 'open',
         ),
@@ -483,62 +483,62 @@ class _WaydirPageState extends State<WaydirPage> {
       ?compressItem,
       if (isRecursive && count == 1)
         ContextMenuItem(
-          icon: PhosphorIconsRegular.arrowSquareOut,
+          icon: WaydirIconsRegular.arrowSquareOut,
           label: t.menu.openLocation,
           action: 'open_location',
         ),
       if (isSingleFolder) ...[
         ContextMenuItem(
-          icon: PhosphorIconsRegular.arrowSquareOut,
+          icon: WaydirIconsRegular.arrowSquareOut,
           label: t.menu.openInNewTab,
           action: 'open_in_new_tab',
         ),
         ContextMenuItem(
-          icon: PhosphorIconsRegular.terminal,
+          icon: WaydirIconsRegular.terminal,
           label: t.menu.openInTerminal,
           action: 'open_in_terminal',
         ),
       ],
       ContextMenuItem.divider,
       ContextMenuItem(
-        icon: PhosphorIconsRegular.copy,
+        icon: WaydirIconsRegular.copy,
         label: t.menu.copy,
         action: 'copy',
       ),
       ContextMenuItem(
-        icon: PhosphorIconsRegular.scissors,
+        icon: WaydirIconsRegular.scissors,
         label: t.menu.cut,
         action: 'cut',
       ),
       ContextMenuItem(
-        icon: PhosphorIconsRegular.clipboard,
+        icon: WaydirIconsRegular.clipboard,
         label: t.menu.paste,
         action: 'paste',
       ),
       if (count == 1) ContextMenuItem.divider,
       if (count == 1)
         ContextMenuItem(
-          icon: PhosphorIconsRegular.copy,
+          icon: WaydirIconsRegular.copy,
           label: t.menu.copyPath,
           action: 'copy_path',
         ),
       ContextMenuItem.divider,
       if (count == 1)
         ContextMenuItem(
-          icon: PhosphorIconsRegular.pencilSimple,
+          icon: WaydirIconsRegular.pencilSimple,
           label: t.menu.rename,
           action: 'rename',
           shortcut: 'F2',
         ),
       ContextMenuItem(
-        icon: PhosphorIconsRegular.trashSimple,
+        icon: WaydirIconsRegular.trashSimple,
         label: count == 1
             ? t.menu.moveToTrash
             : t.menu.moveToTrashItems(count: count),
         action: 'trash',
       ),
       ContextMenuItem(
-        icon: PhosphorIconsRegular.trash,
+        icon: WaydirIconsRegular.trash,
         label: count == 1
             ? t.menu.deletePermanently
             : t.menu.deletePermanentlyItems(count: count),
@@ -548,7 +548,7 @@ class _WaydirPageState extends State<WaydirPage> {
       if (count == 1) ContextMenuItem.divider,
       if (count == 1)
         ContextMenuItem(
-          icon: PhosphorIconsRegular.info,
+          icon: WaydirIconsRegular.info,
           label: t.menu.properties,
           action: 'properties',
         ),
@@ -563,13 +563,13 @@ class _WaydirPageState extends State<WaydirPage> {
   }
 
   ContextMenuItem get _openItem => ContextMenuItem(
-    icon: PhosphorIconsRegular.folderOpen,
+    icon: WaydirIconsRegular.folderOpen,
     label: t.menu.open,
     action: 'open',
   );
 
   ContextMenuItem get _chooserItem => ContextMenuItem(
-    icon: PhosphorIconsRegular.dotsThreeOutline,
+    icon: WaydirIconsRegular.dotsThreeOutline,
     label: t.menu.openWithChoose,
     action: 'open_with_choose',
   );
@@ -586,7 +586,7 @@ class _WaydirPageState extends State<WaydirPage> {
       return [
         _openItem,
         ContextMenuItem(
-          icon: PhosphorIconsRegular.dotsThreeOutline,
+          icon: WaydirIconsRegular.dotsThreeOutline,
           label: t.menu.openWithChoose,
           action: 'open_with_system',
         ),
@@ -611,7 +611,7 @@ class _WaydirPageState extends State<WaydirPage> {
           ? [_openItem, _chooserItem]
           : [
               ContextMenuItem(
-                icon: PhosphorIconsRegular.appWindow,
+                icon: WaydirIconsRegular.appWindow,
                 label: t.menu.openWithApp(app: preferred.name),
                 action: 'open',
                 iconPath: preferred.iconPath,
@@ -1167,7 +1167,7 @@ class _WaydirPageState extends State<WaydirPage> {
         label: 'View',
         items: [
           ContextMenuItem(
-            icon: PhosphorIconsRegular.columns,
+            icon: WaydirIconsRegular.columns,
             label: t.menu.dualPaneMode,
             action: 'toggle_dual',
             isToggle: true,
@@ -1175,7 +1175,7 @@ class _WaydirPageState extends State<WaydirPage> {
           ),
           ContextMenuItem.divider,
           ContextMenuItem(
-            icon: PhosphorIconsRegular.eye,
+            icon: WaydirIconsRegular.eye,
             label: t.menu.showHidden,
             action: 'toggle_hidden',
             isToggle: true,

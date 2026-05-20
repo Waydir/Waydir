@@ -7,6 +7,7 @@
 
 #include "flutter/generated_plugin_registrant.h"
 #include "system_scale.h"
+#include "window/window.h"
 
 struct _MyApplication {
   GtkApplication parent_instance;
@@ -50,6 +51,10 @@ static void my_application_activate(GApplication* application) {
 
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));
   system_scale_register(view);
+
+  waydir_window::init(window, view,
+                      waydir_window::kCustomFrame |
+                          waydir_window::kHideOnStartup);
 
   gtk_widget_grab_focus(GTK_WIDGET(view));
 }

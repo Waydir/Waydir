@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:waydir/ui/icons/waydir_icons.dart';
 import 'package:signals/signals_flutter.dart';
 import '../../core/models/file_operation.dart';
 import '../../ui/overlays/popup_overlay.dart';
@@ -54,8 +54,8 @@ class _OperationsPanelBody extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
             child: Row(
               children: [
-                PhosphorIcon(
-                  PhosphorIconsRegular.clockClockwise,
+                Icon(
+                  WaydirIconsRegular.clockClockwise,
                   size: 16,
                   color: AppColors.fgMuted,
                 ),
@@ -132,15 +132,15 @@ class _TaskTile extends StatelessWidget {
     };
 
     final statusIcon = switch (task.status) {
-      TaskStatus.queued => PhosphorIconsRegular.clock,
-      TaskStatus.preparing => PhosphorIconsRegular.arrowsClockwise,
-      TaskStatus.waitingConflicts => PhosphorIconsRegular.warning,
-      TaskStatus.running => PhosphorIconsRegular.arrowsClockwise,
-      TaskStatus.paused => PhosphorIconsRegular.pause,
-      TaskStatus.cancelling => PhosphorIconsRegular.stop,
-      TaskStatus.completed => PhosphorIconsRegular.check,
-      TaskStatus.failed => PhosphorIconsRegular.x,
-      TaskStatus.cancelled => PhosphorIconsRegular.prohibit,
+      TaskStatus.queued => WaydirIconsRegular.clock,
+      TaskStatus.preparing => WaydirIconsRegular.arrowsClockwise,
+      TaskStatus.waitingConflicts => WaydirIconsRegular.warning,
+      TaskStatus.running => WaydirIconsRegular.arrowsClockwise,
+      TaskStatus.paused => WaydirIconsRegular.pause,
+      TaskStatus.cancelling => WaydirIconsRegular.stop,
+      TaskStatus.completed => WaydirIconsRegular.check,
+      TaskStatus.failed => WaydirIconsRegular.x,
+      TaskStatus.cancelled => WaydirIconsRegular.prohibit,
     };
 
     final isActive =
@@ -161,7 +161,7 @@ class _TaskTile extends StatelessWidget {
         children: [
           Row(
             children: [
-              PhosphorIcon(statusIcon, size: 14, color: statusColor),
+              Icon(statusIcon, size: 14, color: statusColor),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -315,8 +315,8 @@ class _CancelBtnState extends State<_CancelBtn> {
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(4),
             ),
-            child: PhosphorIcon(
-              PhosphorIconsRegular.x,
+            child: Icon(
+              WaydirIconsRegular.x,
               size: 12,
               color: _hovered ? AppColors.danger : AppColors.fgMuted,
             ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:waydir/ui/icons/waydir_icons.dart';
 
 import '../../core/archive/archive_writer.dart';
 import '../../i18n/strings.g.dart';
@@ -93,7 +93,7 @@ class _CompressBodyState extends State<_CompressBody> {
           Row(
             children: [
               Icon(
-                PhosphorIconsRegular.fileZip,
+                WaydirIconsRegular.fileZip,
                 color: AppColors.accent,
                 size: 18,
               ),

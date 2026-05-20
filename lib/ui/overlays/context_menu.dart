@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:waydir/ui/icons/waydir_icons.dart';
 import 'package:signals/signals_flutter.dart';
 import '../theme/app_theme.dart';
 import '../theme/app_text_styles.dart';
@@ -297,7 +297,7 @@ class _ContextMenuItemTileState extends State<_ContextMenuItemTile> {
               if (item.iconPath != null)
                 AppIcon(path: item.iconPath, size: 16)
               else
-                PhosphorIcon(item.icon, size: 14, color: fg),
+                Icon(item.icon, size: 14, color: fg),
               const SizedBox(width: 8),
               Text(
                 item.label,
@@ -324,8 +324,8 @@ class _ContextMenuItemTileState extends State<_ContextMenuItemTile> {
               ],
               if (item.hasChildren) ...[
                 const SizedBox(width: 8),
-                PhosphorIcon(
-                  PhosphorIconsRegular.caretRight,
+                Icon(
+                  WaydirIconsRegular.caretRight,
                   size: 12,
                   color: fg,
                 ),
@@ -357,8 +357,8 @@ class _Checkbox extends StatelessWidget {
         ),
       ),
       child: value
-          ? PhosphorIcon(
-              PhosphorIconsRegular.check,
+          ? Icon(
+              WaydirIconsRegular.check,
               size: 10,
               color: Colors.white,
             )

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:waydir/ui/icons/waydir_icons.dart';
 import 'package:signals/signals_flutter.dart';
 import 'navigation_store.dart';
 import '../../app/app_info.dart';
@@ -108,7 +108,7 @@ class _StatusNotificationsButton extends StatelessWidget {
     return Watch((context) {
       final count = notificationStore.history.value.length;
       return _StatusIconButton(
-        icon: PhosphorIconsRegular.bell,
+        icon: WaydirIconsRegular.bell,
         tooltip: t.toolbar.notifications,
         badge: count,
         onTap: () => _open(context),
@@ -161,7 +161,7 @@ class _StatusIconButtonState extends State<_StatusIconButton> {
               clipBehavior: Clip.none,
               children: [
                 Center(
-                  child: PhosphorIcon(widget.icon, size: 13, color: iconColor),
+                  child: Icon(widget.icon, size: 13, color: iconColor),
                 ),
                 if (widget.badge > 0)
                   Positioned(

@@ -3,8 +3,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart' as intl;
-import 'package:phosphor_flutter/phosphor_flutter.dart'
-    show PhosphorIconsFill, PhosphorIconsRegular, PhosphorIcon;
+import 'package:waydir/ui/icons/waydir_icons.dart'
+    show WaydirIconsFill, WaydirIconsRegular;
 import 'package:signals/signals_flutter.dart';
 import 'package:super_drag_and_drop/super_drag_and_drop.dart';
 import '../../i18n/strings.g.dart';
@@ -437,10 +437,10 @@ class _ListHeader extends StatelessWidget {
             ),
             if (active) ...[
               const SizedBox(width: 3),
-              PhosphorIcon(
+              Icon(
                 ascending
-                    ? PhosphorIconsRegular.caretUp
-                    : PhosphorIconsRegular.caretDown,
+                    ? WaydirIconsRegular.caretUp
+                    : WaydirIconsRegular.caretDown,
                 size: 10,
                 color: AppColors.fgAccent,
               ),
@@ -716,8 +716,8 @@ class _ListRowState extends State<_ListRow> {
       ),
       child: Row(
         children: [
-          PhosphorIcon(
-            isFolder ? PhosphorIconsFill.folder : fileIcon(e.extension),
+          Icon(
+            isFolder ? WaydirIconsFill.folder : fileIcon(e.extension),
             size: 20,
             color: isFolder
                 ? AppColors.folderColor
@@ -797,8 +797,8 @@ class _ListRowState extends State<_ListRow> {
             opacity: opacity,
             child: Row(
               children: [
-                PhosphorIcon(
-                  isFolder ? PhosphorIconsFill.folder : fileIcon(e.extension),
+                Icon(
+                  isFolder ? WaydirIconsFill.folder : fileIcon(e.extension),
                   size: 16,
                   color: isFolder
                       ? AppColors.folderColor
@@ -923,8 +923,8 @@ class _ListRowState extends State<_ListRow> {
             opacity: opacity,
             child: Row(
               children: [
-                PhosphorIcon(
-                  isFolder ? PhosphorIconsFill.folder : fileIcon(e.extension),
+                Icon(
+                  isFolder ? WaydirIconsFill.folder : fileIcon(e.extension),
                   size: 16,
                   color: isFolder
                       ? AppColors.folderColor
@@ -1016,8 +1016,8 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            PhosphorIcon(
-              PhosphorIconsRegular.folderOpen,
+            Icon(
+              WaydirIconsRegular.folderOpen,
               size: 48,
               color: AppColors.fgSubtle,
             ),

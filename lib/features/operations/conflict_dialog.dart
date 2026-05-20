@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:waydir/ui/icons/waydir_icons.dart';
 import 'package:path/path.dart' as p;
 import '../../core/models/file_operation.dart';
 import '../../ui/dialogs/dialog.dart';
@@ -14,7 +14,7 @@ void showErrorListDialog({
   showCustomDialog<String>(
     context: context,
     title: t.operations.errors(count: errors.length),
-    icon: PhosphorIconsRegular.warningCircle,
+    icon: WaydirIconsRegular.warningCircle,
     iconColor: AppColors.danger,
     body: ConstrainedBox(
       constraints: const BoxConstraints(maxHeight: 300),

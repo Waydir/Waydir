@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:waydir/ui/icons/waydir_icons.dart';
 import 'package:signals/signals_flutter.dart';
 import '../../ui/theme/app_theme.dart';
 import '../../ui/theme/app_text_styles.dart';
@@ -73,8 +73,8 @@ class _TabChipState extends State<TabChip> {
               padding: const EdgeInsets.only(left: 10, right: 4),
               child: Row(
                 children: [
-                  PhosphorIcon(
-                    PhosphorIconsRegular.folder,
+                  Icon(
+                    WaydirIconsRegular.folder,
                     size: 14,
                     color: isActive ? AppColors.accent : fg,
                   ),
@@ -142,8 +142,8 @@ class _CloseButtonState extends State<_CloseButton> {
             color: _hovered ? AppColors.bgDivider : Colors.transparent,
             borderRadius: BorderRadius.circular(3),
           ),
-          child: PhosphorIcon(
-            PhosphorIconsRegular.x,
+          child: Icon(
+            WaydirIconsRegular.x,
             size: 11,
             color: _hovered ? AppColors.fg : AppColors.fgMuted,
           ),
