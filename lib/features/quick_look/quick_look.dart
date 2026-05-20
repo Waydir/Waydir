@@ -472,10 +472,10 @@ class _ProbeLoader extends StatelessWidget {
               showInfo: showInfo,
             );
           case QlKind.binary:
+          case QlKind.tooLarge:
             release();
             onCompactChanged(true);
             return PropertiesOnly(entry: entry);
-          case QlKind.tooLarge:
           case QlKind.error:
             release();
             onCompactChanged(true);
