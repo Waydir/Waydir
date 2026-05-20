@@ -17,6 +17,10 @@ import 'recycle_bin.dart';
 /// `::trash/<deleted-item>/<sub-dir>`.
 const String kTrashPath = '::trash';
 
+class TrashAccessDeniedException implements Exception {
+  const TrashAccessDeniedException();
+}
+
 bool isTrashPath(String path) =>
     path == kTrashPath || path.startsWith('$kTrashPath/');
 
@@ -171,7 +175,17 @@ class TrashRepository {
     final dir = Directory(filesDir);
     if (!dir.existsSync()) return const [];
     final out = <TrashEntry>[];
-    for (final ent in dir.listSync(followLinks: false)) {
+    late final List<FileSystemEntity> entries;
+    try {
+      entries = dir.listSync(followLinks: false);
+    } on FileSystemException catch (e) {
+      final code = e.osError?.errorCode;
+      if (code == 1 || code == 13) {
+        throw const TrashAccessDeniedException();
+      }
+      rethrow;
+    }
+    for (final ent in entries) {
       final name = PlatformPaths.fileName(ent.path);
       if (name == '.DS_Store') continue;
       FileStat stat;

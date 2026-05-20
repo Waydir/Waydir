@@ -28,7 +28,9 @@ private func windowResultOnMain<T>(_ fallback: T, _ body: @escaping (NSWindow) -
   return DispatchQueue.main.sync(execute: run)
 }
 
-class MainFlutterWindow: NSWindow {
+class MainFlutterWindow: NSWindow, NSWindowDelegate {
+  private static let titleBarHeight: CGFloat = 32
+
   override func awakeFromNib() {
     let flutterViewController = FlutterViewController()
     let windowFrame = self.frame
@@ -40,11 +42,44 @@ class MainFlutterWindow: NSWindow {
     self.contentViewController = flutterViewController
     self.setFrame(windowFrame, display: true)
     WaydirWindowState.window = self
+    self.delegate = self
+    positionTrafficLights()
 
     RegisterGeneratedPlugins(registry: flutterViewController)
     SystemScale.shared.register(controller: flutterViewController, window: self)
 
     super.awakeFromNib()
+    DispatchQueue.main.async { [weak self] in
+      self?.positionTrafficLights()
+    }
+  }
+
+  private func positionTrafficLights() {
+    let buttons: [NSWindow.ButtonType] = [.closeButton, .miniaturizeButton, .zoomButton]
+    let standardX: [CGFloat] = [10, 30, 50]
+    for (i, type) in buttons.enumerated() {
+      guard let button = self.standardWindowButton(type),
+            let titleBar = button.superview else { continue }
+      let y = (Self.titleBarHeight - button.frame.height) / 2
+      let topY = titleBar.frame.height - button.frame.height - y
+      button.setFrameOrigin(NSPoint(x: standardX[i], y: topY))
+    }
+  }
+
+  func windowDidResize(_ notification: Notification) {
+    positionTrafficLights()
+  }
+
+  func windowDidExitFullScreen(_ notification: Notification) {
+    positionTrafficLights()
+  }
+
+  func windowDidBecomeMain(_ notification: Notification) {
+    positionTrafficLights()
+  }
+
+  func windowDidBecomeKey(_ notification: Notification) {
+    positionTrafficLights()
   }
 }
 

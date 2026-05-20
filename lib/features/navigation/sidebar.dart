@@ -232,7 +232,10 @@ class _SidebarState extends State<Sidebar> {
                             ? () => widget.onOpenInNewTab!(item.path)
                             : null,
                         onDropFiles: (paths, {bool move = false}) {
-                          if (isRecycleBin) return;
+                          if (isRecycleBin) {
+                            widget.operationStore.enqueueTrash(paths);
+                            return;
+                          }
                           widget.store.dropFiles(paths, item.path, move: move);
                         },
                       );
@@ -250,11 +253,7 @@ class _SidebarState extends State<Sidebar> {
                           ? t.sidebar.root
                           : drive.label;
                       final canUnmount =
-                          isMounted &&
-                          drive.id != '/' &&
-                          (drive.isRemovable ||
-                              PlatformPaths.isLinux ||
-                              PlatformPaths.isMacOS);
+                          isMounted && drive.id != '/' && drive.isRemovable;
 
                       return _ItemRow(
                         item: _SidebarItem(

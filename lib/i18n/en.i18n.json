@@ -328,6 +328,11 @@
     "collapse": "Collapse sidebar",
     "expand": "Expand sidebar"
   },
+  "trash": {
+    "accessDeniedTitle": "Trash needs Full Disk Access",
+    "accessDeniedBody": "macOS protects the Trash folder. Grant Waydir Full Disk Access in System Settings, then relaunch the app.",
+    "openSystemSettings": "Open System Settings"
+  },
   "toolbar": {
     "back": "Back",
     "forward": "Forward",
