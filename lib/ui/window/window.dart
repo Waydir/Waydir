@@ -54,4 +54,4 @@ class AppWindow {
 final AppWindow appWindow = AppWindow._();
 
 bool get isWindowChromeSupported =>
-    !Platform.isMacOS && (Platform.isWindows || Platform.isLinux);
+    Platform.isMacOS || Platform.isWindows || Platform.isLinux;

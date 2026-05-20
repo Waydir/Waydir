@@ -40,7 +40,15 @@ class TitleBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (Platform.isMacOS) {
-      return PlatformMenuBar(menus: _platformMenus(), child: child);
+      return PlatformMenuBar(
+        menus: _platformMenus(),
+        child: Column(
+          children: [
+            _TitleBarRow(menuTrailing: menuTrailing),
+            Expanded(child: child),
+          ],
+        ),
+      );
     }
     return Column(
       children: [
@@ -113,12 +121,14 @@ class _TitleBarRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const SizedBox(width: 19),
-          Image.asset(AppInfo.iconAsset, width: 13, height: 13),
-          const SizedBox(width: 12),
+          SizedBox(width: Platform.isMacOS ? 76 : 19),
+          if (!Platform.isMacOS) ...[
+            Image.asset(AppInfo.iconAsset, width: 13, height: 13),
+            const SizedBox(width: 12),
+          ],
           _MenuBar(trailing: menuTrailing),
           const Expanded(child: MoveWindow()),
-          const _WindowButtons(),
+          if (!Platform.isMacOS) const _WindowButtons(),
         ],
       ),
     );
