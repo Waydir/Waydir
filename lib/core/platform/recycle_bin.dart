@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import '../logging/app_logger.dart';
 import 'platform_paths.dart';
 
 class RecycleBinEntry {
@@ -42,42 +43,90 @@ class RecycleBinService {
 
   static Future<List<RecycleBinEntry>> list() async {
     if (!Platform.isWindows) return const [];
-    final sid = await _getUserSid();
-    if (sid == null) return const [];
 
     final entries = <RecycleBinEntry>[];
-    for (var i = 0; i < 26; i++) {
-      final letter = String.fromCharCode(65 + i);
-      final binDir = Directory('$letter:\\\$Recycle.Bin\\$sid');
-      if (!binDir.existsSync()) continue;
+    final sidDirs = _findSidDirs();
+    if (sidDirs.isEmpty) {
+      log.warn(
+        'recycle_bin',
+        'no accessible \$Recycle.Bin\\<SID> folders found across drives',
+      );
+      return const [];
+    }
+    for (final binDir in sidDirs) {
+      List<FileSystemEntity> children;
       try {
-        for (final ent in binDir.listSync(followLinks: false)) {
-          final name = PlatformPaths.fileName(ent.path);
-          if (!name.startsWith(r'$I')) continue;
-          final dataName = '\$R${name.substring(2)}';
-          final dataPath = '${binDir.path}\\$dataName';
-          final isDir = Directory(dataPath).existsSync();
-          final isFile = File(dataPath).existsSync();
-          if (!isDir && !isFile) continue;
-          try {
-            final info = _parseInfo(ent.path);
-            if (info == null) continue;
-            entries.add(
-              RecycleBinEntry(
-                dataPath: dataPath,
-                infoPath: ent.path,
-                originalPath: info.originalPath,
-                deletedAt: info.deletedAt,
-                size: info.size,
-                isDirectory: isDir,
-              ),
-            );
-          } catch (_) {}
+        children = binDir.listSync(followLinks: false);
+      } catch (e, s) {
+        log.warn(
+          'recycle_bin',
+          'failed to list ${binDir.path}',
+          error: e,
+          stack: s,
+        );
+        continue;
+      }
+      for (final ent in children) {
+        final name = PlatformPaths.fileName(ent.path);
+        if (!name.startsWith(r'$I')) continue;
+        final dataName = '\$R${name.substring(2)}';
+        final dataPath = '${binDir.path}\\$dataName';
+        final isDir = Directory(dataPath).existsSync();
+        final isFile = File(dataPath).existsSync();
+        if (!isDir && !isFile) continue;
+        try {
+          final info = _parseInfo(ent.path);
+          if (info == null) continue;
+          entries.add(
+            RecycleBinEntry(
+              dataPath: dataPath,
+              infoPath: ent.path,
+              originalPath: info.originalPath,
+              deletedAt: info.deletedAt,
+              size: info.size,
+              isDirectory: isDir,
+            ),
+          );
+        } catch (e, s) {
+          log.warn(
+            'recycle_bin',
+            'failed to parse ${ent.path}',
+            error: e,
+            stack: s,
+          );
         }
-      } catch (_) {}
+      }
     }
     entries.sort((a, b) => b.deletedAt.compareTo(a.deletedAt));
     return entries;
+  }
+
+  /// Enumerates every `<drive>:\$Recycle.Bin\<SID>` folder the process can
+  /// read. Avoids the `whoami`/SID lookup so a single shell quirk can't hide
+  /// the entire trash, and naturally picks up bins on every drive.
+  static List<Directory> _findSidDirs() {
+    final out = <Directory>[];
+    for (var i = 0; i < 26; i++) {
+      final letter = String.fromCharCode(65 + i);
+      final root = Directory('$letter:\\\$Recycle.Bin');
+      if (!root.existsSync()) continue;
+      try {
+        for (final ent in root.listSync(followLinks: false)) {
+          if (ent is! Directory) continue;
+          final name = PlatformPaths.fileName(ent.path);
+          if (!name.startsWith('S-1-')) continue;
+          out.add(ent);
+        }
+      } catch (e, s) {
+        log.warn(
+          'recycle_bin',
+          'failed to list ${root.path}',
+          error: e,
+          stack: s,
+        );
+      }
+    }
+    return out;
   }
 
   static Future<void> restore(RecycleBinEntry e) async {
@@ -103,17 +152,6 @@ class RecycleBinService {
   static void _deleteIfExists(String path) {
     final f = File(path);
     if (f.existsSync()) f.deleteSync();
-  }
-
-  static Future<String?> _getUserSid() async {
-    try {
-      final r = await Process.run('whoami', ['/user', '/fo', 'csv', '/nh']);
-      if (r.exitCode != 0) return null;
-      final match = RegExp(r'"(S-1-[0-9-]+)"').firstMatch(r.stdout.toString());
-      return match?.group(1);
-    } catch (_) {
-      return null;
-    }
   }
 
   static _Info? _parseInfo(String path) {

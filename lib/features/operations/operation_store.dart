@@ -426,6 +426,11 @@ class OperationStore {
             ...task.errors,
             TaskError(path: msg.path, message: msg.message),
           ];
+          log.warn(
+            'operation',
+            '${task.type.name} task ${task.id} error'
+            '${msg.path.isNotEmpty ? ' at ${msg.path}' : ''}: ${msg.message}',
+          );
           _updateTask(task);
         } else if (msg is TaskDoneMessage) {
           final allErrors = [...task.errors, ...msg.errors];
