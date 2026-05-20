@@ -242,23 +242,17 @@ class _Header extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14),
       child: Row(
         children: [
-          Icon(
-            multi
-                ? WaydirIconsRegular.copy
-                : e == null
-                ? WaydirIconsRegular.file
-                : e.type == FileItemType.folder
-                ? WaydirIconsRegular.folder
-                : fileIcon(e.extension),
-            size: 18,
-            color: multi
-                ? AppColors.accent
-                : e == null
-                ? AppColors.fgMuted
-                : e.type == FileItemType.folder
-                ? AppColors.accent
-                : fileIconColor(e.extension),
-          ),
+          if (multi)
+            Icon(WaydirIconsRegular.copy, size: 18, color: AppColors.accent)
+          else if (e == null)
+            Icon(WaydirIconsRegular.file, size: 18, color: AppColors.fgMuted)
+          else
+            buildFileIcon(
+              name: e.name,
+              ext: e.extension,
+              isFolder: e.type == FileItemType.folder,
+              size: 18,
+            ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(

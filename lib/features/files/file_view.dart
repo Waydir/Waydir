@@ -3,8 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart' as intl;
-import 'package:waydir/ui/icons/waydir_icons.dart'
-    show WaydirIconsFill, WaydirIconsRegular;
+import 'package:waydir/ui/icons/waydir_icons.dart' show WaydirIconsRegular;
 import 'package:signals/signals_flutter.dart';
 import 'package:super_drag_and_drop/super_drag_and_drop.dart';
 import '../../i18n/strings.g.dart';
@@ -716,12 +715,11 @@ class _ListRowState extends State<_ListRow> {
       ),
       child: Row(
         children: [
-          Icon(
-            isFolder ? WaydirIconsFill.folder : fileIcon(e.extension),
+          buildFileIcon(
+            name: e.name,
+            ext: e.extension,
+            isFolder: isFolder,
             size: 20,
-            color: isFolder
-                ? AppColors.folderColor
-                : fileIconColor(e.extension),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -797,12 +795,11 @@ class _ListRowState extends State<_ListRow> {
             opacity: opacity,
             child: Row(
               children: [
-                Icon(
-                  isFolder ? WaydirIconsFill.folder : fileIcon(e.extension),
+                buildFileIcon(
+                  name: e.name,
+                  ext: e.extension,
+                  isFolder: isFolder,
                   size: 16,
-                  color: isFolder
-                      ? AppColors.folderColor
-                      : fileIconColor(e.extension),
                 ),
                 const SizedBox(width: 6),
                 Expanded(
@@ -923,12 +920,11 @@ class _ListRowState extends State<_ListRow> {
             opacity: opacity,
             child: Row(
               children: [
-                Icon(
-                  isFolder ? WaydirIconsFill.folder : fileIcon(e.extension),
+                buildFileIcon(
+                  name: e.name,
+                  ext: e.extension,
+                  isFolder: isFolder,
                   size: 16,
-                  color: isFolder
-                      ? AppColors.folderColor
-                      : fileIconColor(e.extension),
                 ),
                 const SizedBox(width: 6),
                 Expanded(

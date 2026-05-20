@@ -59,7 +59,9 @@ msix_config:
 
 flutter:
   uses-material-design: true
+
   assets:
+    - assets/icons/material/
     - assets/
   fonts:
     - family: PhosphorRegular

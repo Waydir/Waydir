@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Recursive search now streams results as they are found, with a live counter of scanned entries instead of waiting for the full scan to complete.
 
 ### Changed
+- Replaced old file icons with beautiful new SVG Material icons.
 - Completely rebuilt Quick Look for a cleaner preview experience with better file details, image viewing, and text/code editing.
 - Holding Up/Down now moves through files continuously at a controlled pace.
 - Faster directory scanning in large folders thanks to improved parallel walk.
