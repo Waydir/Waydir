@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 
-import 'package:bitsdojo_window/bitsdojo_window.dart';
+import '../window/move_window.dart';
+import '../window/window_buttons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -104,23 +105,21 @@ class _TitleBarRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return WindowTitleBarBox(
-      child: Container(
-        height: 32,
-        decoration: BoxDecoration(
-          color: AppColors.bgSidebar,
-          border: Border(bottom: BorderSide(color: AppColors.bgDivider)),
-        ),
-        child: Row(
-          children: [
-            const SizedBox(width: 19),
-            Image.asset(AppInfo.iconAsset, width: 13, height: 13),
-            const SizedBox(width: 12),
-            _MenuBar(trailing: menuTrailing),
-            Expanded(child: MoveWindow()),
-            const _WindowButtons(),
-          ],
-        ),
+    return Container(
+      height: 32,
+      decoration: BoxDecoration(
+        color: AppColors.bgSidebar,
+        border: Border(bottom: BorderSide(color: AppColors.bgDivider)),
+      ),
+      child: Row(
+        children: [
+          const SizedBox(width: 19),
+          Image.asset(AppInfo.iconAsset, width: 13, height: 13),
+          const SizedBox(width: 12),
+          _MenuBar(trailing: menuTrailing),
+          const Expanded(child: MoveWindow()),
+          const _WindowButtons(),
+        ],
       ),
     );
   }
