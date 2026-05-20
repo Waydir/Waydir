@@ -337,7 +337,7 @@ fn take_trash_items(ids: *const *const c_char, count: usize, out: &mut Vec<u8>) 
 }
 
 #[cfg(target_os = "windows")]
-fn finish_optional_buffer(mut out: Vec<u8>, out_len: *mut usize) -> *mut u8 {
+fn finish_optional_buffer(out: Vec<u8>, out_len: *mut usize) -> *mut u8 {
     if out.is_empty() {
         unsafe {
             *out_len = 0;
@@ -365,6 +365,21 @@ fn trash_item_size(item: &trash::TrashItem) -> (u64, bool) {
 }
 
 #[cfg(target_os = "windows")]
+fn finish_trash_list_error(err: impl std::fmt::Display, out_len: *mut usize) -> *mut u8 {
+    let msg = err.to_string();
+    let mut buf = Vec::with_capacity(8 + msg.len());
+    put_u32(&mut buf, u32::MAX);
+    put_bytes(&mut buf, msg.as_bytes());
+    let mut bytes = buf.into_boxed_slice();
+    unsafe {
+        *out_len = bytes.len();
+    }
+    let ptr = bytes.as_mut_ptr();
+    std::mem::forget(bytes);
+    ptr
+}
+
+#[cfg(target_os = "windows")]
 #[no_mangle]
 pub unsafe extern "C" fn waydir_trash_list(out_len: *mut usize) -> *mut u8 {
     if out_len.is_null() {
@@ -373,10 +388,7 @@ pub unsafe extern "C" fn waydir_trash_list(out_len: *mut usize) -> *mut u8 {
 
     let items = match trash::os_limited::list() {
         Ok(items) => items,
-        Err(_) => {
-            *out_len = 0;
-            return std::ptr::null_mut();
-        }
+        Err(err) => return finish_trash_list_error(err, out_len),
     };
 
     let mut cache = HashMap::with_capacity(items.len());

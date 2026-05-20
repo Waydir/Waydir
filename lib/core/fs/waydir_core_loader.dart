@@ -422,7 +422,12 @@ class WaydirCoreLoader {
       final len = outLen.value;
       final bytes = Uint8List.fromList(buf.asTypedList(len));
       free(buf, len);
-      return _decodeNativeTrashItems(bytes);
+      final items = _decodeNativeTrashItems(bytes);
+      log.warn(
+        'ffi.trash',
+        'native trash list returned ${items.length} entries; ${buildInfo()}',
+      );
+      return items;
     } finally {
       calloc.free(outLen);
     }
@@ -547,6 +552,12 @@ class WaydirCoreLoader {
       final value = utf8.decode(bytes.sublist(off, off + len));
       off += len;
       return value;
+    }
+
+    if (count == 0xFFFFFFFF) {
+      final message = readString() ?? 'native trash list failed';
+      log.error('ffi.trash', message);
+      throw WaydirCoreException('native trash list failed: $message');
     }
 
     for (var i = 0; i < count; i++) {
