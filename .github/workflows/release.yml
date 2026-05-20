@@ -195,36 +195,6 @@ jobs:
           name: macos-artifacts
           path: dist/**/*
 
-  submit-msix:
-    name: Submit MSIX to Microsoft Store
-    needs: build-windows
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
-    steps:
-      - uses: actions/download-artifact@v8
-        with:
-          name: windows-artifacts
-          path: dist
-
-      - name: Locate MSIX
-        id: msix
-        run: |
-          file=$(find dist -type f -name "*.msix" | head -n1)
-          if [ -z "$file" ]; then
-            echo "no msix package found" >&2
-            exit 1
-          fi
-          echo "path=$file" >> $GITHUB_OUTPUT
-
-      - name: Submit to Partner Center
-        uses: isaacrlevin/microsoftstore-app-submission-action@v1
-        with:
-          tenant-id: ${{ secrets.PARTNER_TENANT_ID }}
-          client-id: ${{ secrets.PARTNER_CLIENT_ID }}
-          client-secret: ${{ secrets.PARTNER_CLIENT_SECRET }}
-          app-id: ${{ secrets.PARTNER_APP_ID }}
-          package-path: ${{ steps.msix.outputs.path }}
-
   release:
     name: Publish GitHub Release
     needs: [build-linux, build-windows, build-macos]
