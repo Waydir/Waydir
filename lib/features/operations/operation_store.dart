@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:isolate';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
@@ -101,11 +102,21 @@ class OperationStore {
       return;
     }
     final sep = PlatformPaths.separator;
-    final filtered = resolved.where((s) {
+    final rejected = <String>[];
+    final filtered = <String>[];
+    for (final s in resolved) {
       final name = PlatformPaths.fileName(s);
       final dst = '$destination$sep$name';
-      return s != dst;
-    }).toList();
+      if (_samePath(s, dst)) continue;
+      if (_wouldNestTransfer(s, destination)) {
+        rejected.add(s);
+        continue;
+      }
+      filtered.add(s);
+    }
+    if (rejected.isNotEmpty) {
+      _showRejectedTransferNotification(type, rejected);
+    }
     if (filtered.isEmpty) return;
 
     final confirm = confirmTransfer;
@@ -517,6 +528,7 @@ class OperationStore {
     Color color;
     IconData icon;
     NotificationType type = NotificationType.autoDismiss;
+    List<NotificationAction> actions = const [];
 
     switch (task.status) {
       case TaskStatus.completed when task.errors.isNotEmpty:
@@ -541,6 +553,24 @@ class OperationStore {
         return;
     }
 
+    if (task.type == TaskType.trash && task.errors.isNotEmpty) {
+      final paths = task.errors
+          .map((e) => e.path)
+          .where((path) => path.isNotEmpty)
+          .toSet()
+          .toList();
+      if (paths.isNotEmpty) {
+        actions = [
+          NotificationAction(
+            label: t.menu.deletePermanently,
+            onTap: () => enqueueDelete(paths),
+            color: AppColors.danger,
+          ),
+        ];
+        type = NotificationType.persistent;
+      }
+    }
+
     ns.add(
       AppNotification(
         id: 'task_done_${task.id}',
@@ -548,8 +578,26 @@ class OperationStore {
         message: message,
         type: type,
         autoDismissDuration: const Duration(seconds: 4),
+        actions: actions,
         icon: icon,
         accentColor: color,
+      ),
+    );
+  }
+
+  void _showRejectedTransferNotification(TaskType type, List<String> sources) {
+    final ns = notificationStore;
+    if (ns == null) return;
+    ns.add(
+      AppNotification(
+        id: 'task_rejected_${DateTime.now().microsecondsSinceEpoch}',
+        title: type == TaskType.copy
+            ? t.tasks.copyingMultiple(count: sources.length)
+            : t.tasks.movingMultiple(count: sources.length),
+        message: t.errors.transferIntoSelf,
+        type: NotificationType.persistent,
+        icon: WaydirIconsRegular.warning,
+        accentColor: AppColors.danger,
       ),
     );
   }
@@ -699,6 +747,39 @@ class OperationStore {
       exitPort,
       sub,
     );
+  }
+
+  static bool _wouldNestTransfer(String source, String destination) {
+    final type = FileSystemEntity.typeSync(source, followLinks: false);
+    if (type != FileSystemEntityType.directory) return false;
+    final srcCanonical = _canonicalPath(source);
+    final destCanonical = _canonicalPath(destination);
+    return testDirIsParent(srcCanonical, destCanonical);
+  }
+
+  static bool testDirIsParent(String srcCanonical, String destCanonical) {
+    final sep = PlatformPaths.separator;
+    final src = _comparePath(srcCanonical);
+    final dest = _comparePath(destCanonical);
+    if (src == dest) return true;
+    final prefix = src.endsWith(sep) ? src : '$src$sep';
+    return dest.startsWith(prefix);
+  }
+
+  static bool _samePath(String a, String b) =>
+      _comparePath(a) == _comparePath(b);
+
+  static String _canonicalPath(String path) {
+    try {
+      return File(path).resolveSymbolicLinksSync();
+    } catch (_) {
+      return p.normalize(p.absolute(path));
+    }
+  }
+
+  static String _comparePath(String path) {
+    final normalized = p.normalize(path);
+    return PlatformPaths.isWindows ? normalized.toLowerCase() : normalized;
   }
 
   void _scheduleCleanup(FileTask task) {

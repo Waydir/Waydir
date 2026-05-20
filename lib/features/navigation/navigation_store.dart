@@ -384,6 +384,34 @@ class NavigationStore {
     loadDirectory(normalized);
   }
 
+  Future<bool> navigateToEnteredPath(String path) async {
+    final trimmed = path.trim();
+    if (trimmed.isEmpty) return false;
+    final normalized = isTrashPath(trimmed)
+        ? trimmed
+        : PlatformPaths.normalize(trimmed);
+    if (isTrashPath(normalized)) {
+      navigateTo(normalized);
+      return true;
+    }
+
+    final type = FileSystemEntity.typeSync(normalized);
+    if (type == FileSystemEntityType.directory) {
+      navigateTo(normalized);
+      return true;
+    }
+    if (type == FileSystemEntityType.file ||
+        type == FileSystemEntityType.link) {
+      final parent = PlatformPaths.parentOf(normalized);
+      if (parent.isEmpty || !await FileSystemService.isNavigable(parent)) {
+        return false;
+      }
+      revealInFolder(normalized);
+      return true;
+    }
+    return false;
+  }
+
   void goBack() {
     if (!canGoBack.value) return;
     historyIndex.value--;

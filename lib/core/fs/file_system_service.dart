@@ -1029,14 +1029,16 @@ class FileSystemService {
         if (cancelled) break;
 
         try {
-          final type = FileSystemEntity.typeSync(path, followLinks: false);
-          if (type == FileSystemEntityType.link) {
-            Link(path).deleteSync();
-          } else if (type == FileSystemEntityType.directory) {
-            Directory(path).deleteSync(recursive: false);
-          } else if (type == FileSystemEntityType.file) {
-            File(path).deleteSync();
-          }
+          await _withTransientRetry(() {
+            final type = FileSystemEntity.typeSync(path, followLinks: false);
+            if (type == FileSystemEntityType.link) {
+              Link(path).deleteSync();
+            } else if (type == FileSystemEntityType.directory) {
+              Directory(path).deleteSync(recursive: false);
+            } else if (type == FileSystemEntityType.file) {
+              File(path).deleteSync();
+            }
+          });
         } catch (e) {
           errors.add(TaskError(path: path, message: _friendlyError(e)));
         }
@@ -1123,18 +1125,27 @@ class FileSystemService {
 
     Future<void> executeTrash() async {
       final service = TrashService.instance;
-      for (final src in sources) {
-        if (cancelled) break;
+      if (!cancelled) {
         try {
-          await service.trash(src);
+          final failures = await service.trashAll(sources);
+          for (final failure in failures) {
+            final message = _friendlyError(
+              FileSystemException(failure.message, failure.path),
+            );
+            errors.add(TaskError(path: failure.path, message: message));
+            mainSendPort.send(
+              ErrorMessage(path: failure.path, message: message),
+            );
+          }
         } catch (e) {
-          errors.add(TaskError(path: src, message: _friendlyError(e)));
-          mainSendPort.send(
-            ErrorMessage(path: src, message: _friendlyError(e)),
-          );
+          for (final src in sources) {
+            final message = _friendlyError(e);
+            errors.add(TaskError(path: src, message: message));
+            mainSendPort.send(ErrorMessage(path: src, message: message));
+          }
         }
-        processedFiles++;
-        maybeReport(src.split(Platform.pathSeparator).last);
+        processedFiles = sources.length;
+        maybeReport('');
       }
       mainSendPort.send(TaskDoneMessage(cancelled: cancelled, errors: errors));
       workerReceivePort.close();
@@ -1588,11 +1599,13 @@ class FileSystemService {
     void Function(int bytes)? onProgress,
     bool Function()? isCancelled,
   }) async {
-    await SafeFileReplace.copyFile(
-      src,
-      dstPath,
-      onProgress: onProgress,
-      isCancelled: isCancelled,
+    await _withTransientRetry(
+      () => SafeFileReplace.copyFile(
+        src,
+        dstPath,
+        onProgress: onProgress,
+        isCancelled: isCancelled,
+      ),
     );
   }
 
@@ -1715,15 +1728,19 @@ class FileSystemService {
   }) async {
     final type = FileSystemEntity.typeSync(src, followLinks: false);
     if (type == FileSystemEntityType.link) {
-      final target = Link(src).targetSync();
-      Link(dst).createSync(target);
-      Link(src).deleteSync();
+      await _withTransientRetry(() {
+        final target = Link(src).targetSync();
+        Link(dst).createSync(target);
+        Link(src).deleteSync();
+      });
       return;
     }
     if (type == FileSystemEntityType.directory) {
       try {
-        Directory(src).renameSync(dst);
-        // Same-volume rename moves whole subtree instantly.
+        await _withTransientRetry(
+          () => Directory(src).renameSync(dst),
+          retryCrossDevice: false,
+        );
         onBytes?.call(renameCreditBytes);
       } on FileSystemException {
         await _copyDirectory(
@@ -1734,11 +1751,16 @@ class FileSystemService {
           onBytes,
         );
         if (isCancelled()) return;
-        Directory(src).deleteSync(recursive: true);
+        await _withTransientRetry(
+          () => Directory(src).deleteSync(recursive: true),
+        );
       }
     } else {
       try {
-        File(src).renameSync(dst);
+        await _withTransientRetry(
+          () => File(src).renameSync(dst),
+          retryCrossDevice: false,
+        );
         onBytes?.call(renameCreditBytes);
       } on FileSystemException {
         await _copyFile(
@@ -1750,7 +1772,7 @@ class FileSystemService {
         if (isCancelled()) {
           return;
         }
-        File(src).deleteSync();
+        await _withTransientRetry(() => File(src).deleteSync());
       }
     }
   }
@@ -1829,6 +1851,35 @@ class FileSystemService {
       }
     }
     return '$dir${Platform.pathSeparator}$name.${DateTime.now().microsecondsSinceEpoch}';
+  }
+
+  static Future<T> _withTransientRetry<T>(
+    FutureOr<T> Function() operation, {
+    bool retryCrossDevice = false,
+  }) async {
+    for (var attempt = 0; ; attempt++) {
+      try {
+        return await Future<T>.sync(operation);
+      } on FileSystemException catch (e) {
+        if (attempt >= 2 || !_isTransientFsError(e, retryCrossDevice)) {
+          rethrow;
+        }
+        await Future<void>.delayed(Duration(milliseconds: 40 * (attempt + 1)));
+      }
+    }
+  }
+
+  static bool _isTransientFsError(
+    FileSystemException e,
+    bool retryCrossDevice,
+  ) {
+    final code = e.osError?.errorCode;
+    if (code == 1 || code == 93) return true;
+    if (code == 18) return retryCrossDevice;
+    final msg = e.toString();
+    if (msg.contains('errno = 1') || msg.contains('errno = 93')) return true;
+    if (msg.contains('errno = 18')) return retryCrossDevice;
+    return false;
   }
 
   static String _friendlyError(Object e) {

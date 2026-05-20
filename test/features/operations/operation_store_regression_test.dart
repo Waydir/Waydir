@@ -69,6 +69,27 @@ void main() {
       expect(File(copiedLink).readAsStringSync(), 'payload');
     });
 
+    test('copy rejects a directory into its own child', () async {
+      final src = Directory(p.join(tmpDir.path, 'src'))..createSync();
+      final child = Directory(p.join(src.path, 'child'))..createSync();
+
+      store.enqueueCopy([src.path], child.path);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      expect(store.tasks.value, isEmpty);
+      expect(Directory(p.join(child.path, 'src')).existsSync(), isFalse);
+    });
+
+    test('move rejects a directory into itself', () async {
+      final src = Directory(p.join(tmpDir.path, 'src'))..createSync();
+
+      store.enqueueMove([src.path], src.path);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      expect(store.tasks.value, isEmpty);
+      expect(src.existsSync(), isTrue);
+    });
+
     test(
       'cancelling during preparing ends cancelled, never completed',
       () async {

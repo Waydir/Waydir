@@ -7,6 +7,7 @@
 // single buffer instead of materialising entries one by one.
 
 use std::ffi::{c_char, CStr, OsStr};
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
@@ -96,14 +97,7 @@ fn put_i64(buf: &mut Vec<u8>, v: i64) {
     buf.extend_from_slice(&v.to_be_bytes());
 }
 
-fn put_record(
-    buf: &mut Vec<u8>,
-    is_dir: bool,
-    size: i64,
-    mtime_ms: i64,
-    name: &[u8],
-    path: &[u8],
-) {
+fn put_record(buf: &mut Vec<u8>, is_dir: bool, size: i64, mtime_ms: i64, name: &[u8], path: &[u8]) {
     buf.push(if is_dir { 0 } else { 1 });
     put_i64(buf, size);
     put_i64(buf, mtime_ms);
@@ -159,9 +153,7 @@ pub unsafe extern "C" fn waydir_search(
         Ok(s) => s.to_owned(),
         Err(_) => return std::ptr::null_mut(),
     };
-    let query = CStr::from_ptr(query)
-        .to_string_lossy()
-        .to_lowercase();
+    let query = CStr::from_ptr(query).to_string_lossy().to_lowercase();
 
     let chunks: Mutex<Vec<(Vec<u8>, usize)>> = Mutex::new(Vec::new());
 
@@ -243,6 +235,48 @@ pub unsafe extern "C" fn waydir_free(ptr: *mut u8, len: usize) {
         return;
     }
     drop(Vec::from_raw_parts(ptr, len, len));
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn waydir_trash(
+    paths: *const *const c_char,
+    count: usize,
+    out_len: *mut usize,
+) -> *mut u8 {
+    if paths.is_null() || out_len.is_null() {
+        return std::ptr::null_mut();
+    }
+
+    let mut out = Vec::new();
+    for i in 0..count {
+        let ptr = *paths.add(i);
+        if ptr.is_null() {
+            continue;
+        }
+        let c_path = CStr::from_ptr(ptr);
+        let path = c_path.to_string_lossy().into_owned();
+        let fs_path = PathBuf::from(&path);
+        if let Err(err) = trash::delete(&fs_path) {
+            let path_bytes = path.as_bytes();
+            let msg = err.to_string();
+            let msg_bytes = msg.as_bytes();
+            put_u32(&mut out, path_bytes.len() as u32);
+            put_u32(&mut out, msg_bytes.len() as u32);
+            out.extend_from_slice(path_bytes);
+            out.extend_from_slice(msg_bytes);
+        }
+    }
+
+    if out.is_empty() {
+        *out_len = 0;
+        return std::ptr::null_mut();
+    }
+
+    let mut bytes = out.into_boxed_slice();
+    *out_len = bytes.len();
+    let ptr = bytes.as_mut_ptr();
+    std::mem::forget(bytes);
+    ptr
 }
 
 pub struct SearchSession {
@@ -379,7 +413,11 @@ pub unsafe extern "C" fn waydir_search_poll(
     };
 
     *out_scanned = session.scanned.load(Ordering::Relaxed);
-    *out_done = if session.finished.load(Ordering::Acquire) { 1 } else { 0 };
+    *out_done = if session.finished.load(Ordering::Acquire) {
+        1
+    } else {
+        0
+    };
 
     if count == 0 {
         *out_len = 0;
@@ -500,7 +538,11 @@ pub unsafe extern "C" fn waydir_folder_scan_poll(
     let session = &*session;
     *out_bytes = session.bytes.load(Ordering::Relaxed);
     *out_items = session.items.load(Ordering::Relaxed);
-    *out_done = if session.finished.load(Ordering::Acquire) { 1 } else { 0 };
+    *out_done = if session.finished.load(Ordering::Acquire) {
+        1
+    } else {
+        0
+    };
 }
 
 #[no_mangle]
@@ -714,7 +756,7 @@ pub unsafe extern "C" fn waydir_enumerate(
 
 #[no_mangle]
 pub extern "C" fn waydir_core_abi() -> u32 {
-    5
+    6
 }
 
 #[no_mangle]

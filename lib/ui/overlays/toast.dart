@@ -109,6 +109,7 @@ class _ToastEntryState extends State<_ToastEntry>
                 maxLines: 1,
                 style: context.txt.body.copyWith(
                   decoration: TextDecoration.none,
+                  fontWeight: FontWeight.w400,
                 ),
               ),
             ),
