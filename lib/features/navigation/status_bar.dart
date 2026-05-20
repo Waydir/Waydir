@@ -160,9 +160,7 @@ class _StatusIconButtonState extends State<_StatusIconButton> {
             child: Stack(
               clipBehavior: Clip.none,
               children: [
-                Center(
-                  child: Icon(widget.icon, size: 13, color: iconColor),
-                ),
+                Center(child: Icon(widget.icon, size: 13, color: iconColor)),
                 if (widget.badge > 0)
                   Positioned(
                     right: 4,

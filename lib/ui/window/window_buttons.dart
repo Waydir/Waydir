@@ -16,12 +16,12 @@ class WindowButtonColors {
     Color? iconNormal,
     Color? iconMouseOver,
     Color? iconMouseDown,
-  })  : normal = normal ?? _defaults.normal,
-        mouseOver = mouseOver ?? _defaults.mouseOver,
-        mouseDown = mouseDown ?? _defaults.mouseDown,
-        iconNormal = iconNormal ?? _defaults.iconNormal,
-        iconMouseOver = iconMouseOver ?? _defaults.iconMouseOver,
-        iconMouseDown = iconMouseDown ?? _defaults.iconMouseDown;
+  }) : normal = normal ?? _defaults.normal,
+       mouseOver = mouseOver ?? _defaults.mouseOver,
+       mouseDown = mouseDown ?? _defaults.mouseDown,
+       iconNormal = iconNormal ?? _defaults.iconNormal,
+       iconMouseOver = iconMouseOver ?? _defaults.iconMouseOver,
+       iconMouseDown = iconMouseDown ?? _defaults.iconMouseDown;
 
   final Color normal;
   final Color mouseOver;
@@ -131,11 +131,11 @@ class MinimizeWindowButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => _WindowButton(
-        colors: colors ?? _defaults,
-        animate: animate,
-        iconBuilder: (c) => _MinimizeIcon(color: c),
-        onPressed: onPressed ?? appWindow.minimize,
-      );
+    colors: colors ?? _defaults,
+    animate: animate,
+    iconBuilder: (c) => _MinimizeIcon(color: c),
+    onPressed: onPressed ?? appWindow.minimize,
+  );
 }
 
 class MaximizeWindowButton extends StatelessWidget {
@@ -152,11 +152,11 @@ class MaximizeWindowButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => _WindowButton(
-        colors: colors ?? _defaults,
-        animate: animate,
-        iconBuilder: (c) => _MaximizeIcon(color: c),
-        onPressed: onPressed ?? appWindow.maximizeOrRestore,
-      );
+    colors: colors ?? _defaults,
+    animate: animate,
+    iconBuilder: (c) => _MaximizeIcon(color: c),
+    onPressed: onPressed ?? appWindow.maximizeOrRestore,
+  );
 }
 
 class CloseWindowButton extends StatelessWidget {
@@ -173,11 +173,11 @@ class CloseWindowButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => _WindowButton(
-        colors: colors ?? _closeDefaults,
-        animate: animate,
-        iconBuilder: (c) => _CloseIcon(color: c),
-        onPressed: onPressed ?? appWindow.close,
-      );
+    colors: colors ?? _closeDefaults,
+    animate: animate,
+    iconBuilder: (c) => _CloseIcon(color: c),
+    onPressed: onPressed ?? appWindow.close,
+  );
 }
 
 class _CloseIcon extends StatelessWidget {
@@ -185,18 +185,20 @@ class _CloseIcon extends StatelessWidget {
   final Color color;
   @override
   Widget build(BuildContext context) => Align(
-        alignment: Alignment.topLeft,
-        child: Stack(children: [
-          Transform.rotate(
-            angle: pi * .25,
-            child: Center(child: Container(width: 14, height: 1, color: color)),
-          ),
-          Transform.rotate(
-            angle: pi * -.25,
-            child: Center(child: Container(width: 14, height: 1, color: color)),
-          ),
-        ]),
-      );
+    alignment: Alignment.topLeft,
+    child: Stack(
+      children: [
+        Transform.rotate(
+          angle: pi * .25,
+          child: Center(child: Container(width: 14, height: 1, color: color)),
+        ),
+        Transform.rotate(
+          angle: pi * -.25,
+          child: Center(child: Container(width: 14, height: 1, color: color)),
+        ),
+      ],
+    ),
+  );
 }
 
 class _MaximizeIcon extends StatelessWidget {
@@ -204,12 +206,12 @@ class _MaximizeIcon extends StatelessWidget {
   final Color color;
   @override
   Widget build(BuildContext context) => Align(
-        alignment: Alignment.center,
-        child: CustomPaint(
-          size: const Size(10, 10),
-          painter: _MaximizePainter(color),
-        ),
-      );
+    alignment: Alignment.center,
+    child: CustomPaint(
+      size: const Size(10, 10),
+      painter: _MaximizePainter(color),
+    ),
+  );
 }
 
 class _MaximizePainter extends CustomPainter {
@@ -233,12 +235,12 @@ class _MinimizeIcon extends StatelessWidget {
   final Color color;
   @override
   Widget build(BuildContext context) => Align(
-        alignment: Alignment.center,
-        child: CustomPaint(
-          size: const Size(10, 10),
-          painter: _MinimizePainter(color),
-        ),
-      );
+    alignment: Alignment.center,
+    child: CustomPaint(
+      size: const Size(10, 10),
+      painter: _MinimizePainter(color),
+    ),
+  );
 }
 
 class _MinimizePainter extends CustomPainter {
@@ -251,7 +253,10 @@ class _MinimizePainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
     canvas.drawLine(
-        Offset(0, size.height / 2), Offset(size.width, size.height / 2), p);
+      Offset(0, size.height / 2),
+      Offset(size.width, size.height / 2),
+      p,
+    );
   }
 
   @override

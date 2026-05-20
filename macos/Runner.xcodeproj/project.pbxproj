@@ -211,7 +211,6 @@
 				33CC10EA2044A3C60003C045 /* Frameworks */,
 				33CC10EB2044A3C60003C045 /* Resources */,
 				33CC110E2044A8840003C045 /* Bundle Framework */,
-				AA00000220440000AAAA0002 /* Bundle Libarchive */,
 				3399D490228B24CF009A79C7 /* ShellScript */,
 			);
 			buildRules = (
@@ -333,24 +332,7 @@
 			shellPath = /bin/sh;
 			shellScript = "\"$FLUTTER_ROOT\"/packages/flutter_tools/bin/macos_assemble.sh && touch Flutter/ephemeral/tripwire";
 		};
-		AA00000220440000AAAA0002 /* Bundle Libarchive */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "LIBARCHIVE_DIR=\"$SRCROOT/../third_party/libarchive/macos\"\nWAYDIR_CORE_DIR=\"$SRCROOT/../third_party/waydir_core/macos\"\nFRAMEWORKS_DIR=\"$TARGET_BUILD_DIR/$FRAMEWORKS_FOLDER_PATH\"\nif [ -d \"$LIBARCHIVE_DIR\" ]; then\n  mkdir -p \"$FRAMEWORKS_DIR\"\n  find \"$LIBARCHIVE_DIR\" -maxdepth 1 -name '*.dylib' -type f -exec cp -f {} \"$FRAMEWORKS_DIR\" \\;\nfi\nif [ -d \"$WAYDIR_CORE_DIR\" ]; then\n  mkdir -p \"$FRAMEWORKS_DIR\"\n  find \"$WAYDIR_CORE_DIR\" -maxdepth 1 -name '*.dylib' -type f -exec cp -f {} \"$FRAMEWORKS_DIR\" \\;\nfi\n";
-		};
-/* End PBXShellScriptBuildPhase section */
+	/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		331C80D1294CF70F00263BE5 /* Sources */ = {

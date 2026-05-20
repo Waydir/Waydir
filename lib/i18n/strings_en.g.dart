@@ -1004,9 +1004,6 @@ class TranslationsErrorsEn {
 	/// en: 'File appeared at destination during operation'
 	String get appearedDuring => 'File appeared at destination during operation';
 
-	/// en: 'Archive support is unavailable (libarchive not found)'
-	String get archiveUnavailable => 'Archive support is unavailable (libarchive not found)';
-
 	/// en: 'Could not read archive'
 	String get archiveError => 'Could not read archive';
 }
@@ -1885,7 +1882,6 @@ extension on Translations {
 			'errors.notEmpty' => 'Directory not empty',
 			'errors.crossDevice' => 'Cannot move across devices',
 			'errors.appearedDuring' => 'File appeared at destination during operation',
-			'errors.archiveUnavailable' => 'Archive support is unavailable (libarchive not found)',
 			'errors.archiveError' => 'Could not read archive',
 			'tasks.copyingSingle' => ({required Object name}) => 'Copying ${name}',
 			'tasks.copyingMultiple' => ({required Object count}) => 'Copying ${count} items',

@@ -14,15 +14,7 @@ class ArchiveLocation {
 class ArchivePath {
   ArchivePath._();
 
-  static const _compoundExtensions = <String>[
-    '.tar.gz',
-    '.tar.bz2',
-    '.tar.xz',
-    '.tar.zst',
-    '.tar.lz',
-    '.tar.lzma',
-    '.tar.z',
-  ];
+  static const _compoundExtensions = <String>['.tar.gz', '.tar.bz2', '.tar.xz'];
 
   static const _extensions = <String>{
     '.zip',
@@ -31,22 +23,6 @@ class ArchivePath {
     '.tbz',
     '.tbz2',
     '.txz',
-    '.tzst',
-    '.gz',
-    '.bz2',
-    '.xz',
-    '.zst',
-    '.7z',
-    '.rar',
-    '.iso',
-    '.cab',
-    '.lz',
-    '.lzma',
-    '.cpio',
-    '.ar',
-    '.a',
-    '.deb',
-    '.rpm',
     '.jar',
     '.war',
     '.apk',

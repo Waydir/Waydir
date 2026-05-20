@@ -100,17 +100,7 @@ install(FILES "${FLUTTER_ICU_DATA_FILE}" DESTINATION "${INSTALL_BUNDLE_DATA_DIR}
 install(FILES "${FLUTTER_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
   COMPONENT Runtime)
 
-set(LIBARCHIVE_BUNDLE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../third_party/libarchive/linux")
-if(EXISTS "${LIBARCHIVE_BUNDLE_DIR}")
-  file(GLOB LIBARCHIVE_BUNDLED_LIBRARIES
-    "${LIBARCHIVE_BUNDLE_DIR}/*.so"
-    "${LIBARCHIVE_BUNDLE_DIR}/*.so.*")
-  foreach(libarchive_library ${LIBARCHIVE_BUNDLED_LIBRARIES})
-    install(FILES "${libarchive_library}"
-      DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
-      COMPONENT Runtime)
-  endforeach(libarchive_library)
-endif()
+
 
 set(WAYDIR_CORE_BUNDLE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../third_party/waydir_core/linux")
 if(EXISTS "${WAYDIR_CORE_BUNDLE_DIR}")

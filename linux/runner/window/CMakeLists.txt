@@ -6,7 +6,7 @@ add_library(waydir_window STATIC
 apply_standard_settings(waydir_window)
 
 set_target_properties(waydir_window PROPERTIES
-  CXX_VISIBILITY_PRESET hidden)
+  CXX_VISIBILITY_PRESET default)
 
 target_include_directories(waydir_window PUBLIC
   "${CMAKE_CURRENT_SOURCE_DIR}")

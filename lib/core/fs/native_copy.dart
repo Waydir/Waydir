@@ -162,9 +162,7 @@ class NativeCopy {
           }
         }
       }
-      return remaining == 0
-          ? FastCopyResult.done
-          : FastCopyResult.unsupported;
+      return remaining == 0 ? FastCopyResult.done : FastCopyResult.unsupported;
     } catch (_) {
       return FastCopyResult.unsupported;
     } finally {

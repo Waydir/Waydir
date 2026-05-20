@@ -283,11 +283,7 @@ class _InlineCheckboxState extends State<_InlineCheckbox> {
                 ),
               ),
               child: widget.value
-                  ? Icon(
-                      WaydirIconsRegular.check,
-                      size: 9,
-                      color: Colors.white,
-                    )
+                  ? Icon(WaydirIconsRegular.check, size: 9, color: Colors.white)
                   : null,
             ),
             const SizedBox(width: 6),

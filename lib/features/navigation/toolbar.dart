@@ -41,12 +41,7 @@ class PaneLocationBar extends StatelessWidget {
               t.toolbar.forward,
             ),
           ),
-          _ToolBtn(
-            WaydirIconsRegular.arrowUp,
-            store.goUp,
-            true,
-            t.toolbar.up,
-          ),
+          _ToolBtn(WaydirIconsRegular.arrowUp, store.goUp, true, t.toolbar.up),
           Container(
             width: 1,
             height: 16,

@@ -4,11 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 import 'package:waydir/core/archive/archive_reader.dart';
 import 'package:waydir/core/archive/archive_writer.dart';
-import 'package:waydir/core/archive/libarchive_loader.dart';
 
 void main() {
-  final available = LibarchiveLoader.load().isAvailable;
-
   group('ArchiveWriter', () {
     late Directory tmp;
     late String filePath;
@@ -36,7 +33,6 @@ void main() {
       ArchiveFormat.tar,
       ArchiveFormat.tarGz,
       ArchiveFormat.tarXz,
-      ArchiveFormat.sevenZip,
     ]) {
       test('round-trips ${format.label}', () {
         final dest = p.join(tmp.path, 'out.${format.extension}');
@@ -87,5 +83,5 @@ void main() {
       expect(paths.contains('folder/a.txt'), isFalse);
       expect(paths.contains('folder/sub/b.txt'), isTrue);
     });
-  }, skip: available ? false : 'libarchive unavailable');
+  });
 }
