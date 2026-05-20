@@ -50,6 +50,13 @@ dev_dependencies:
   build_runner: ^2.4.9
   drift_dev: ^2.33.0
   slang_build_runner: ^4.14.0
+  msix: ^3.16.8
+
+msix_config:
+  display_name: Waydir
+  logo_path: assets/app_icon.png
+  capabilities: runFullTrust
+  store: true
 
 flutter:
   uses-material-design: true

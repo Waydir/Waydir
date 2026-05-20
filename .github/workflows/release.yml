@@ -113,6 +113,11 @@ jobs:
       - name: Install fastforge
         run: dart pub global activate fastforge
 
+      - name: Read version
+        id: version
+        shell: bash
+        run: echo "version=$(grep '^version:' pubspec.yaml | sed -E 's/version:\s*([0-9]+\.[0-9]+\.[0-9]+).*/\1/')" >> $GITHUB_OUTPUT
+
       - name: Build Windows release
         run: flutter build windows --release
 
@@ -121,6 +126,21 @@ jobs:
         run: |
           $env:Path += ";$env:LOCALAPPDATA\Pub\Cache\bin;C:\Program Files (x86)\Inno Setup 6"
           fastforge package --platform windows --targets exe,zip
+
+      - name: Build MSIX (Microsoft Store)
+        shell: pwsh
+        env:
+          MSIX_PUBLISHER: ${{ secrets.MSIX_PUBLISHER }}
+          MSIX_IDENTITY: ${{ secrets.MSIX_IDENTITY }}
+          MSIX_PUBLISHER_NAME: ${{ secrets.MSIX_PUBLISHER_NAME }}
+        run: |
+          dart run msix:create --store `
+            --publisher "$env:MSIX_PUBLISHER" `
+            --identity-name "$env:MSIX_IDENTITY" `
+            --publisher-display-name "$env:MSIX_PUBLISHER_NAME" `
+            --version ${{ steps.version.outputs.version }}.0 `
+            --output-path dist `
+            --output-name "waydir-${{ steps.version.outputs.version }}-store"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
@@ -174,6 +194,36 @@ jobs:
         with:
           name: macos-artifacts
           path: dist/**/*
+
+  submit-msix:
+    name: Submit MSIX to Microsoft Store
+    needs: build-windows
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: windows-artifacts
+          path: dist
+
+      - name: Locate MSIX
+        id: msix
+        run: |
+          file=$(find dist -type f -name "*.msix" | head -n1)
+          if [ -z "$file" ]; then
+            echo "no msix package found" >&2
+            exit 1
+          fi
+          echo "path=$file" >> $GITHUB_OUTPUT
+
+      - name: Submit to Partner Center
+        uses: isaacrlevin/microsoftstore-app-submission-action@v1
+        with:
+          tenant-id: ${{ secrets.PARTNER_TENANT_ID }}
+          client-id: ${{ secrets.PARTNER_CLIENT_ID }}
+          client-secret: ${{ secrets.PARTNER_CLIENT_SECRET }}
+          app-id: ${{ secrets.PARTNER_APP_ID }}
+          package-path: ${{ steps.msix.outputs.path }}
 
   release:
     name: Publish GitHub Release
