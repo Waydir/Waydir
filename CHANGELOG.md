@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-05-20
+
 ### Added
 - Confirmation dialogs before copying and moving files, with per-action toggles in Preferences (off for copy, on for move by default).
 - Confirmation dialogs can now be accepted with Enter or dismissed with Esc.

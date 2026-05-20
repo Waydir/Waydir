@@ -429,7 +429,7 @@ class OperationStore {
           log.warn(
             'operation',
             '${task.type.name} task ${task.id} error'
-            '${msg.path.isNotEmpty ? ' at ${msg.path}' : ''}: ${msg.message}',
+                '${msg.path.isNotEmpty ? ' at ${msg.path}' : ''}: ${msg.message}',
           );
           _updateTask(task);
         } else if (msg is TaskDoneMessage) {

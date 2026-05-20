@@ -319,7 +319,11 @@ fn encode_trash_error(id: &str, err: impl std::fmt::Display, out: &mut Vec<u8>) 
 }
 
 #[cfg(target_os = "windows")]
-fn take_trash_items(ids: *const *const c_char, count: usize, out: &mut Vec<u8>) -> Vec<trash::TrashItem> {
+fn take_trash_items(
+    ids: *const *const c_char,
+    count: usize,
+    out: &mut Vec<u8>,
+) -> Vec<trash::TrashItem> {
     let mut cache = trash_items().lock().unwrap();
     let mut items = Vec::new();
     for i in 0..count {
@@ -327,7 +331,9 @@ fn take_trash_items(ids: *const *const c_char, count: usize, out: &mut Vec<u8>) 
         if ptr.is_null() {
             continue;
         }
-        let id = unsafe { CStr::from_ptr(ptr) }.to_string_lossy().into_owned();
+        let id = unsafe { CStr::from_ptr(ptr) }
+            .to_string_lossy()
+            .into_owned();
         match cache.remove(&id) {
             Some(item) => items.push(item),
             None => encode_trash_error(&id, "Trash item is no longer available", out),
