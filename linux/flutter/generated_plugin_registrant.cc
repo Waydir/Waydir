@@ -6,14 +6,10 @@
 
 #include "generated_plugin_registrant.h"
 
-#include <bitsdojo_window_linux/bitsdojo_window_plugin.h>
 #include <irondash_engine_context/irondash_engine_context_plugin.h>
 #include <super_native_extensions/super_native_extensions_plugin.h>
 
 void fl_register_plugins(FlPluginRegistry* registry) {
-  g_autoptr(FlPluginRegistrar) bitsdojo_window_linux_registrar =
-      fl_plugin_registry_get_registrar_for_plugin(registry, "BitsdojoWindowPlugin");
-  bitsdojo_window_plugin_register_with_registrar(bitsdojo_window_linux_registrar);
   g_autoptr(FlPluginRegistrar) irondash_engine_context_registrar =
       fl_plugin_registry_get_registrar_for_plugin(registry, "IrondashEngineContextPlugin");
   irondash_engine_context_plugin_register_with_registrar(irondash_engine_context_registrar);
