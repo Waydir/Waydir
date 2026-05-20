@@ -358,11 +358,7 @@ class _SaveButtonState extends State<_SaveButton> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                WaydirIconsRegular.floppyDisk,
-                size: 13,
-                color: color,
-              ),
+              Icon(WaydirIconsRegular.floppyDisk, size: 13, color: color),
               const SizedBox(width: 6),
               Text(
                 '${t.quickLook.save}  ⌃S',

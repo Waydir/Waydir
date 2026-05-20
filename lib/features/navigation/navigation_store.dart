@@ -440,7 +440,6 @@ class NavigationStore {
       batch(() {
         files.value = [];
         loadError.value = switch (e) {
-          ArchiveUnavailableException() => t.errors.archiveUnavailable,
           ArchiveReadException() => t.errors.archiveError,
           FileSystemException(:final message) =>
             message.isNotEmpty ? message : e.toString(),
@@ -914,10 +913,7 @@ class NavigationStore {
     });
     final RegExp re;
     try {
-      re = RegExp(
-        '^(?:${alternatives.join('|')})\$',
-        caseSensitive: false,
-      );
+      re = RegExp('^(?:${alternatives.join('|')})\$', caseSensitive: false);
     } catch (_) {
       return 0;
     }

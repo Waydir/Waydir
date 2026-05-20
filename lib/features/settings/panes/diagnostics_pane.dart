@@ -150,11 +150,7 @@ class _DiagnosticsPaneState extends State<DiagnosticsPane> {
           const SizedBox(height: 12),
           Row(
             children: [
-              Icon(
-                WaydirIconsRegular.info,
-                size: 13,
-                color: AppColors.fgMuted,
-              ),
+              Icon(WaydirIconsRegular.info, size: 13, color: AppColors.fgMuted),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(

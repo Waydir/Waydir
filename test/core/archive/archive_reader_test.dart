@@ -3,11 +3,8 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 import 'package:waydir/core/archive/archive_reader.dart';
-import 'package:waydir/core/archive/libarchive_loader.dart';
 
 void main() {
-  final available = LibarchiveLoader.load().isAvailable;
-
   group('ArchiveReader', () {
     late Directory tmp;
     late String zipPath;
@@ -62,5 +59,5 @@ void main() {
       expect(staged, p.join(stage, 'sub'));
       expect(File(p.join(staged, 'b.txt')).readAsStringSync(), 'world');
     });
-  }, skip: available ? false : 'libarchive unavailable');
+  });
 }

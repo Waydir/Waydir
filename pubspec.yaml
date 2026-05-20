@@ -40,6 +40,7 @@ dependencies:
   exif: ^3.3.0
   mime: ^2.0.0
   flutter_svg: ^2.3.0
+  archive: ^4.0.9
 
 dev_dependencies:
   flutter_test:

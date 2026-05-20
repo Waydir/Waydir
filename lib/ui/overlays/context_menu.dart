@@ -324,11 +324,7 @@ class _ContextMenuItemTileState extends State<_ContextMenuItemTile> {
               ],
               if (item.hasChildren) ...[
                 const SizedBox(width: 8),
-                Icon(
-                  WaydirIconsRegular.caretRight,
-                  size: 12,
-                  color: fg,
-                ),
+                Icon(WaydirIconsRegular.caretRight, size: 12, color: fg),
               ],
             ],
           ),
@@ -357,11 +353,7 @@ class _Checkbox extends StatelessWidget {
         ),
       ),
       child: value
-          ? Icon(
-              WaydirIconsRegular.check,
-              size: 10,
-              color: Colors.white,
-            )
+          ? Icon(WaydirIconsRegular.check, size: 10, color: Colors.white)
           : null,
     );
   }

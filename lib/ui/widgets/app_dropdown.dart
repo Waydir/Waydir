@@ -112,11 +112,7 @@ class _AppDropdownState<T> extends State<AppDropdown<T>> {
           child: Row(
             children: [
               if (selected?.icon != null) ...[
-                Icon(
-                  selected!.icon!,
-                  size: 13,
-                  color: AppColors.fgMuted,
-                ),
+                Icon(selected!.icon!, size: 13, color: AppColors.fgMuted),
                 const SizedBox(width: 8),
               ],
               Expanded(

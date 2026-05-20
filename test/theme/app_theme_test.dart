@@ -32,13 +32,10 @@ void main() {
       expect(fileIconColor('tar'), fileIconColor('zip'));
     });
 
-    test(
-      'fileIcon returns WaydirIconsRegular.file for unknown extension',
-      () {
-        expect(fileIcon('xyz'), WaydirIconsRegular.file);
-        expect(fileIcon(''), WaydirIconsRegular.file);
-      },
-    );
+    test('fileIcon returns WaydirIconsRegular.file for unknown extension', () {
+      expect(fileIcon('xyz'), WaydirIconsRegular.file);
+      expect(fileIcon(''), WaydirIconsRegular.file);
+    });
 
     test('fileIcon returns correct icon for code files', () {
       expect(fileIcon('dart'), WaydirIconsRegular.fileCode);

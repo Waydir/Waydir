@@ -25,6 +25,11 @@ add_definitions(-DAPPLICATION_ID="${APPLICATION_ID}")
 # Add dependency libraries. Add any application-specific dependencies here.
 target_link_libraries(${BINARY_NAME} PRIVATE flutter)
 target_link_libraries(${BINARY_NAME} PRIVATE PkgConfig::GTK)
-target_link_libraries(${BINARY_NAME} PRIVATE waydir_window)
+# Force all symbols from waydir_window into the exe (needed for Dart FFI runtime lookup).
+target_link_libraries(${BINARY_NAME} PRIVATE
+  -Wl,--whole-archive waydir_window -Wl,--no-whole-archive)
 
 target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
+
+# Export symbols to dynamic symbol table for Dart FFI DynamicLibrary.process()
+set_target_properties(${BINARY_NAME} PROPERTIES ENABLE_EXPORTS TRUE)

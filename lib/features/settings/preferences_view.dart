@@ -127,11 +127,7 @@ class _Header extends StatelessWidget {
       decoration: BoxDecoration(color: AppColors.bgSidebar),
       child: Row(
         children: [
-          Icon(
-            WaydirIconsRegular.gearSix,
-            size: 16,
-            color: AppColors.fgAccent,
-          ),
+          Icon(WaydirIconsRegular.gearSix, size: 16, color: AppColors.fgAccent),
           const SizedBox(width: 8),
           Text(t.preferences.title, style: context.txt.dialogTitle),
           const Spacer(),
@@ -386,10 +382,7 @@ class SettingsRow extends StatelessWidget {
               flex: 2,
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 280),
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: control,
-                ),
+                child: Align(alignment: Alignment.centerRight, child: control),
               ),
             )
           else

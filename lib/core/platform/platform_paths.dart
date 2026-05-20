@@ -187,9 +187,7 @@ class PlatformPaths {
 
   static String _normalizeWindowsPath(String path) {
     var p = path.replaceAll('/', r'\');
-    if (p.length >= 2 &&
-        p[1] == ':' &&
-        (p.length == 2 || p[2] != r'\')) {
+    if (p.length >= 2 && p[1] == ':' && (p.length == 2 || p[2] != r'\')) {
       p = '${p.substring(0, 2)}\\${p.substring(2)}';
     }
     return p;

@@ -127,10 +127,7 @@ class _InfoRow extends StatelessWidget {
             ),
           ),
           if (onOpen != null)
-            _SmallIcon(
-              icon: WaydirIconsRegular.arrowSquareOut,
-              onTap: onOpen!,
-            ),
+            _SmallIcon(icon: WaydirIconsRegular.arrowSquareOut, onTap: onOpen!),
           if (onCopy != null) ...[
             const SizedBox(width: 4),
             _SmallIcon(icon: WaydirIconsRegular.copy, onTap: onCopy!),

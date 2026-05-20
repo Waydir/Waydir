@@ -779,10 +779,7 @@ class _SidebarOperationsButtonState extends State<_SidebarOperationsButton> {
             onTap: _openPanel,
             behavior: HitTestBehavior.opaque,
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 10,
-                vertical: 9,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
               decoration: BoxDecoration(
                 color: _hovered ? AppColors.bgHover : Colors.transparent,
                 borderRadius: BorderRadius.circular(6),
