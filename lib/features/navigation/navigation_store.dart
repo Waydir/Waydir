@@ -893,6 +893,11 @@ class NavigationStore {
 
   void _openEntry(FileEntry entry) {
     if (entry.type == FileItemType.folder) {
+      if (PlatformPaths.isWindows &&
+          currentPath.value == kTrashPath &&
+          isTrashPath(entry.path)) {
+        return;
+      }
       navigateTo(entry.path);
       return;
     }

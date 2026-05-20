@@ -2,9 +2,8 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 
-import '../logging/app_logger.dart';
+import '../fs/waydir_core_loader.dart';
 import 'platform_paths.dart';
-import 'recycle_bin.dart';
 
 /// Virtual path that represents the user's trash / recycle bin.
 ///
@@ -55,8 +54,8 @@ class TrashEntry {
   /// Linux only: path of the `.trashinfo` metadata file.
   final String? infoPath;
 
-  /// Windows only: backing recycle-bin entry used for restore/purge.
-  final RecycleBinEntry? recycleBinEntry;
+  /// Native trash identifier used for restore/purge on supported platforms.
+  final String? nativeId;
 
   const TrashEntry({
     required this.virtualPath,
@@ -67,7 +66,7 @@ class TrashEntry {
     required this.isDirectory,
     this.originalPath,
     this.infoPath,
-    this.recycleBinEntry,
+    this.nativeId,
   });
 }
 
@@ -110,26 +109,25 @@ class TrashRepository {
   }
 
   Future<List<TrashEntry>> _listWindowsRoot() async {
-    final bin = await RecycleBinService.list();
-    log.warn('trash', 'windows recycle bin returned ${bin.length} entries');
+    final items = WaydirCoreLoader.trashList();
     final out = <TrashEntry>[];
-    for (final e in bin) {
-      final seg0 = PlatformPaths.fileName(e.dataPath);
-      final vpath = '$kTrashPath/$seg0';
-      _realBase[vpath] = e.dataPath;
+    for (final e in items) {
+      final vpath = '$kTrashPath/${e.id}';
+      _realBase[vpath] = e.id;
       out.add(
         TrashEntry(
           virtualPath: vpath,
           displayName: e.name,
-          realDataPath: e.dataPath,
-          originalPath: e.originalPath,
+          realDataPath: '',
+          originalPath: e.originalPath.isEmpty ? null : e.originalPath,
           deletedAt: e.deletedAt,
           size: e.size,
           isDirectory: e.isDirectory,
-          recycleBinEntry: e,
+          nativeId: e.id,
         ),
       );
     }
+    out.sort((a, b) => b.deletedAt.compareTo(a.deletedAt));
     return out;
   }
 
@@ -231,6 +229,7 @@ class TrashRepository {
   }
 
   Future<List<TrashChild>> listSub(String virtualPath) async {
+    if (PlatformPaths.isWindows) return const [];
     final realDir = await _resolveRealDir(virtualPath);
     if (realDir == null) return const [];
     final dir = Directory(realDir);
@@ -260,8 +259,12 @@ class TrashRepository {
 
   Future<void> restore(TrashEntry e) async {
     if (PlatformPaths.isWindows) {
-      if (e.recycleBinEntry != null) {
-        await RecycleBinService.restore(e.recycleBinEntry!);
+      final id = e.nativeId;
+      if (id != null) {
+        final fails = WaydirCoreLoader.trashRestore([id]);
+        if (fails.isNotEmpty) {
+          throw FileSystemException(fails.first.message);
+        }
       }
       return;
     }
@@ -287,8 +290,12 @@ class TrashRepository {
 
   Future<void> deletePermanently(TrashEntry e) async {
     if (PlatformPaths.isWindows) {
-      if (e.recycleBinEntry != null) {
-        await RecycleBinService.deletePermanently(e.recycleBinEntry!);
+      final id = e.nativeId;
+      if (id != null) {
+        final fails = WaydirCoreLoader.trashPurge([id]);
+        if (fails.isNotEmpty) {
+          throw FileSystemException(fails.first.message);
+        }
       }
       return;
     }
