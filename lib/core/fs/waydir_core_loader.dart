@@ -147,6 +147,8 @@ class NativeTrashItem {
 class WaydirCoreLoader {
   WaydirCoreLoader._();
 
+  static const int _requiredAbi = 7;
+
   static DynamicLibrary? _cached;
   static bool _tried = false;
 
@@ -157,7 +159,7 @@ class WaydirCoreLoader {
       try {
         final lib = DynamicLibrary.open(path);
         final abi = lib.lookupFunction<_AbiNative, _AbiDart>('waydir_core_abi');
-        if (abi() < 1) continue;
+        if (abi() < _requiredAbi) continue;
         _cached = lib;
         return lib;
       } catch (_) {}
@@ -502,11 +504,11 @@ class WaydirCoreLoader {
       lib,
     );
     return [
+      devTarget,
       p.join(exeDir, 'lib', lib),
       p.join(exeDir, lib),
       if (Platform.isMacOS)
         p.normalize(p.join(exeDir, '..', 'Frameworks', lib)),
-      devTarget,
       lib,
     ];
   }

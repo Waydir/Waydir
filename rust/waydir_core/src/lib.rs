@@ -959,7 +959,7 @@ pub unsafe extern "C" fn waydir_enumerate(
 
 #[no_mangle]
 pub extern "C" fn waydir_core_abi() -> u32 {
-    6
+    7
 }
 
 #[no_mangle]
