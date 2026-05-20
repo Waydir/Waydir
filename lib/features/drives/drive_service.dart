@@ -71,6 +71,7 @@ class _WindowsDriveService implements DriveService {
                   mountPoint: rootPath,
                   isRemovable: driveType == DRIVE_REMOVABLE,
                   fsType: null,
+                  space: _windowsSpace(rootPath),
                 ),
               );
             } finally {
@@ -100,6 +101,25 @@ class _WindowsDriveService implements DriveService {
         '\$driveEject = New-Object -comObject Shell.Application; \$driveEject.Namespace(17).ParseName("$letter").InvokeVerb("Eject")';
     await Process.run('powershell', ['-NoProfile', '-Command', script]);
   }
+
+  DriveSpace? _windowsSpace(String rootPath) {
+    final path = rootPath.toNativeUtf16();
+    final freeToCaller = calloc<Uint64>();
+    final total = calloc<Uint64>();
+    final free = calloc<Uint64>();
+    try {
+      final ok = GetDiskFreeSpaceEx(path, freeToCaller, total, free);
+      if (ok == 0 || total.value <= 0) return null;
+      return DriveSpace(totalBytes: total.value, freeBytes: free.value);
+    } catch (_) {
+      return null;
+    } finally {
+      calloc.free(path);
+      calloc.free(freeToCaller);
+      calloc.free(total);
+      calloc.free(free);
+    }
+  }
 }
 
 class _LinuxDriveService implements DriveService {
@@ -118,9 +138,19 @@ class _LinuxDriveService implements DriveService {
       final devices = data['blockdevices'] as List<dynamic>? ?? [];
 
       final drives = <Drive>[];
+      drives.add(
+        Drive(
+          id: '/',
+          label: 'Root',
+          mountPoint: '/',
+          isRemovable: false,
+          fsType: null,
+          space: await _unixSpace('/'),
+        ),
+      );
 
       for (final device in devices) {
-        _processDevice(device as Map<String, dynamic>, drives);
+        await _processDevice(device as Map<String, dynamic>, drives);
       }
 
       return drives;
@@ -129,7 +159,10 @@ class _LinuxDriveService implements DriveService {
     }
   }
 
-  void _processDevice(Map<String, dynamic> device, List<Drive> drives) {
+  Future<void> _processDevice(
+    Map<String, dynamic> device,
+    List<Drive> drives,
+  ) async {
     final name = device['name'] as String?;
     final type = device['type'] as String?;
     final mountPoint = device['mountpoint'] as String?;
@@ -173,6 +206,7 @@ class _LinuxDriveService implements DriveService {
                 mountPoint: mountPoint,
                 isRemovable: isRemovable,
                 fsType: fstype,
+                space: mountPoint == null ? null : await _unixSpace(mountPoint),
               ),
             );
           }
@@ -183,7 +217,7 @@ class _LinuxDriveService implements DriveService {
     final children = device['children'] as List<dynamic>?;
     if (children != null) {
       for (final child in children) {
-        _processDevice(child as Map<String, dynamic>, drives);
+        await _processDevice(child as Map<String, dynamic>, drives);
       }
     }
   }
@@ -295,6 +329,7 @@ class _MacDriveService implements DriveService {
             mountPoint: mountPoint,
             isRemovable: isRemovable,
             fsType: null,
+            space: _spaceFromDfParts(parts),
           ),
         );
       }
@@ -319,4 +354,27 @@ class _MacDriveService implements DriveService {
   Future<void> unmount(Drive drive) async {
     await Process.run('diskutil', ['unmount', drive.id]);
   }
+}
+
+Future<DriveSpace?> _unixSpace(String path) async {
+  try {
+    final result = await Process.run('df', ['-Pk', path]);
+    if (result.exitCode != 0) return null;
+    final lines = (result.stdout as String)
+        .split('\n')
+        .where((line) => line.trim().isNotEmpty)
+        .toList();
+    if (lines.length < 2) return null;
+    return _spaceFromDfParts(lines.last.trim().split(RegExp(r'\s+')));
+  } catch (_) {
+    return null;
+  }
+}
+
+DriveSpace? _spaceFromDfParts(List<String> parts) {
+  if (parts.length < 4) return null;
+  final blocks = int.tryParse(parts[1]);
+  final available = int.tryParse(parts[3]);
+  if (blocks == null || available == null || blocks <= 0) return null;
+  return DriveSpace(totalBytes: blocks * 1024, freeBytes: available * 1024);
 }

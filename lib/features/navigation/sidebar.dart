@@ -17,6 +17,7 @@ import '../../core/platform/platform_paths.dart';
 import '../../core/platform/trash_location.dart';
 import '../../i18n/strings.g.dart';
 import '../../utils/drag_drop.dart';
+import '../../utils/format.dart';
 import '../operations/drag_hint.dart';
 import '../operations/operation_store.dart';
 import '../operations/operations_panel.dart';
@@ -245,10 +246,19 @@ class _SidebarState extends State<Sidebar> {
                       final path = drive.mountPoint ?? drive.id;
                       final isSelected = currentPath == path;
                       final isMounted = drive.isMounted;
+                      final label = drive.id == '/'
+                          ? t.sidebar.root
+                          : drive.label;
+                      final canUnmount =
+                          isMounted &&
+                          drive.id != '/' &&
+                          (drive.isRemovable ||
+                              PlatformPaths.isLinux ||
+                              PlatformPaths.isMacOS);
 
                       return _ItemRow(
                         item: _SidebarItem(
-                          drive.label,
+                          label,
                           drive.isRemovable
                               ? WaydirIconsRegular.usb
                               : WaydirIconsRegular.hardDrive,
@@ -256,6 +266,7 @@ class _SidebarState extends State<Sidebar> {
                         ),
                         isSelected: isSelected,
                         isMounted: isMounted,
+                        space: isMounted ? drive.space : null,
                         collapsed: collapsed,
                         onTap: (p) async {
                           if (isMounted) {
@@ -316,8 +327,7 @@ class _SidebarState extends State<Sidebar> {
                             widget.store.dropFiles(paths, path, move: move);
                           }
                         },
-                        onUnmount:
-                            (isMounted && drive.id != '/' && drive.isRemovable)
+                        onUnmount: canUnmount
                             ? () async {
                                 final currentPath =
                                     widget.store.currentPath.value;
@@ -851,6 +861,7 @@ class _ItemRow extends StatefulWidget {
   final _SidebarItem item;
   final bool isSelected;
   final bool isMounted;
+  final DriveSpace? space;
   final bool collapsed;
   final ValueChanged<String> onTap;
   final VoidCallback? onMiddleTap;
@@ -862,6 +873,7 @@ class _ItemRow extends StatefulWidget {
     required this.item,
     required this.isSelected,
     this.isMounted = true,
+    this.space,
     this.collapsed = false,
     required this.onTap,
     this.onMiddleTap,
@@ -961,7 +973,7 @@ class _ItemRowState extends State<_ItemRow> {
                   ),
                 )
               : Container(
-                  height: 28,
+                  height: widget.space == null ? 28 : 36,
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   margin: const EdgeInsets.symmetric(horizontal: 6),
                   decoration: BoxDecoration(
@@ -973,50 +985,91 @@ class _ItemRowState extends State<_ItemRow> {
                           )
                         : null,
                   ),
-                  child: Row(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        widget.item.icon,
-                        size: 16,
-                        color: widget.isSelected
-                            ? AppColors.fgAccent
-                            : AppColors.fgMuted,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          widget.item.label,
-                          overflow: TextOverflow.ellipsis,
-                          style: context.txt.body.copyWith(
+                      Row(
+                        children: [
+                          Icon(
+                            widget.item.icon,
+                            size: 16,
                             color: widget.isSelected
-                                ? AppColors.fg
-                                : (widget.isMounted
-                                      ? AppColors.fg.withValues(alpha: 0.85)
-                                      : AppColors.fgMuted),
-                            fontWeight: widget.isSelected
-                                ? FontWeight.w500
-                                : FontWeight.normal,
+                                ? AppColors.fgAccent
+                                : AppColors.fgMuted,
                           ),
-                        ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              widget.item.label,
+                              overflow: TextOverflow.ellipsis,
+                              style: context.txt.body.copyWith(
+                                color: widget.isSelected
+                                    ? AppColors.fg
+                                    : (widget.isMounted
+                                          ? AppColors.fg.withValues(alpha: 0.85)
+                                          : AppColors.fgMuted),
+                                fontWeight: widget.isSelected
+                                    ? FontWeight.w500
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                          ),
+                          if (widget.onUnmount != null)
+                            IconButton(
+                              icon: Icon(
+                                WaydirIconsRegular.eject,
+                                size: 14,
+                                color: AppColors.fgMuted,
+                              ),
+                              onPressed: widget.onUnmount,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(
+                                minWidth: 24,
+                                minHeight: 22,
+                              ),
+                              splashRadius: 12,
+                            ),
+                        ],
                       ),
-                      if (widget.onUnmount != null)
-                        IconButton(
-                          icon: Icon(
-                            WaydirIconsRegular.eject,
-                            size: 14,
-                            color: AppColors.fgMuted,
-                          ),
-                          onPressed: widget.onUnmount,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(
-                            minWidth: 24,
-                            minHeight: 24,
-                          ),
-                          splashRadius: 12,
-                        ),
+                      if (widget.space != null) ...[
+                        const SizedBox(height: 4),
+                        _DriveSpaceBar(space: widget.space!),
+                      ],
                     ],
                   ),
                 ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DriveSpaceBar extends StatelessWidget {
+  final DriveSpace space;
+
+  const _DriveSpaceBar({required this.space});
+
+  @override
+  Widget build(BuildContext context) {
+    final used = space.usedFraction;
+    final color = used >= 0.9
+        ? AppColors.danger
+        : used >= 0.75
+        ? AppColors.warning
+        : AppColors.success;
+    return Tooltip(
+      message:
+          '${formatBytes(space.freeBytes)} free of ${formatBytes(space.totalBytes)}',
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(2),
+        child: SizedBox(
+          height: 2,
+          child: LinearProgressIndicator(
+            value: used,
+            minHeight: 2,
+            backgroundColor: AppColors.bgDivider,
+            valueColor: AlwaysStoppedAnimation<Color>(color),
+          ),
         ),
       ),
     );

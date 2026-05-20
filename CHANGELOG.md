@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ctrl+S shortcut to select files by a pattern (e.g. `*.jpg`).
 - Quick Look now shows a combined summary (total size and item count) when multiple files and folders are selected.
 - Recursive search now streams results as they are found, with a live counter of scanned entries instead of waiting for the full scan to complete.
+- Devices in the sidebar now show mounted disk usage with a thin color-coded bar.
 
 ### Changed
 - Replaced old file icons with beautiful new SVG Material icons.
