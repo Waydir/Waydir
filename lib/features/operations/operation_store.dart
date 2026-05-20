@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:isolate';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:waydir/ui/icons/waydir_icons.dart';
 import 'package:path/path.dart' as p;
 import 'package:signals/signals.dart';
 import '../../core/logging/app_logger.dart';
@@ -522,21 +522,21 @@ class OperationStore {
       case TaskStatus.completed when task.errors.isNotEmpty:
         message = t.tasks.status.completedWithErrors(count: task.errors.length);
         color = AppColors.danger;
-        icon = PhosphorIconsRegular.warning;
+        icon = WaydirIconsRegular.warning;
         type = NotificationType.persistent;
       case TaskStatus.completed:
         message = t.tasks.status.completed;
         color = AppColors.success;
-        icon = PhosphorIconsRegular.check;
+        icon = WaydirIconsRegular.check;
       case TaskStatus.failed:
         message = t.tasks.status.failed;
         color = AppColors.danger;
-        icon = PhosphorIconsRegular.x;
+        icon = WaydirIconsRegular.x;
         type = NotificationType.persistent;
       case TaskStatus.cancelled:
         message = t.tasks.status.cancelled;
         color = AppColors.fgMuted;
-        icon = PhosphorIconsRegular.prohibit;
+        icon = WaydirIconsRegular.prohibit;
       default:
         return;
     }
@@ -593,7 +593,7 @@ class OperationStore {
         title: title,
         message: message,
         type: NotificationType.persistent,
-        icon: PhosphorIconsRegular.warning,
+        icon: WaydirIconsRegular.warning,
         accentColor: AppColors.warning,
         dismissible: false,
         applyToAllLabel: remaining > 0
@@ -651,19 +651,19 @@ class OperationStore {
   IconData _iconForType(TaskType type) {
     switch (type) {
       case TaskType.copy:
-        return PhosphorIconsRegular.copy;
+        return WaydirIconsRegular.copy;
       case TaskType.move:
-        return PhosphorIconsRegular.arrowRight;
+        return WaydirIconsRegular.arrowRight;
       case TaskType.delete:
-        return PhosphorIconsRegular.trash;
+        return WaydirIconsRegular.trash;
       case TaskType.trash:
-        return PhosphorIconsRegular.trashSimple;
+        return WaydirIconsRegular.trashSimple;
       case TaskType.extract:
-        return PhosphorIconsRegular.archive;
+        return WaydirIconsRegular.archive;
       case TaskType.compress:
-        return PhosphorIconsRegular.fileZip;
+        return WaydirIconsRegular.fileZip;
       case TaskType.archiveEdit:
-        return PhosphorIconsRegular.archive;
+        return WaydirIconsRegular.archive;
     }
   }
 

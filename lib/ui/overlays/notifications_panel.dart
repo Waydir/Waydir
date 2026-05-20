@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:waydir/ui/icons/waydir_icons.dart';
 import 'package:signals/signals_flutter.dart';
 import '../../core/models/app_notification.dart';
 import '../../i18n/strings.g.dart';
@@ -53,8 +53,8 @@ class _NotificationsPanelBody extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
             child: Row(
               children: [
-                PhosphorIcon(
-                  PhosphorIconsRegular.bell,
+                Icon(
+                  WaydirIconsRegular.bell,
                   size: 16,
                   color: AppColors.fgMuted,
                 ),
@@ -168,7 +168,7 @@ class _NotificationTileState extends State<_NotificationTile> {
             if (n.icon != null) ...[
               Padding(
                 padding: const EdgeInsets.only(top: 1),
-                child: PhosphorIcon(n.icon!, size: 14, color: accent),
+                child: Icon(n.icon!, size: 14, color: accent),
               ),
               const SizedBox(width: 8),
             ],
@@ -226,8 +226,8 @@ class _NotificationTileState extends State<_NotificationTile> {
                 onTap: widget.onRemove,
                 child: Padding(
                   padding: const EdgeInsets.only(left: 6, top: 2),
-                  child: PhosphorIcon(
-                    PhosphorIconsRegular.x,
+                  child: Icon(
+                    WaydirIconsRegular.x,
                     size: 12,
                     color: AppColors.fgMuted,
                   ),
@@ -283,8 +283,8 @@ class _InlineCheckboxState extends State<_InlineCheckbox> {
                 ),
               ),
               child: widget.value
-                  ? PhosphorIcon(
-                      PhosphorIconsRegular.check,
+                  ? Icon(
+                      WaydirIconsRegular.check,
                       size: 9,
                       color: Colors.white,
                     )

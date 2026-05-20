@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:waydir/ui/icons/waydir_icons.dart';
 import 'package:signals/signals.dart';
 
 import '../../i18n/strings.g.dart';
@@ -164,12 +164,12 @@ class SettingsRegistry {
         SettingChoice(
           value: 'trash',
           label: () => t.preferences.general.deleteKeyTrash,
-          icon: PhosphorIconsRegular.trashSimple,
+          icon: WaydirIconsRegular.trashSimple,
         ),
         SettingChoice(
           value: 'permanent',
           label: () => t.preferences.general.deleteKeyPermanent,
-          icon: PhosphorIconsRegular.trash,
+          icon: WaydirIconsRegular.trash,
         ),
       ],
     ),
@@ -184,12 +184,12 @@ class SettingsRegistry {
         SettingChoice(
           value: 'auto',
           label: () => t.preferences.general.terminalAuto,
-          icon: PhosphorIconsRegular.magicWand,
+          icon: WaydirIconsRegular.magicWand,
         ),
         SettingChoice(
           value: 'custom',
           label: () => t.preferences.general.terminalCustom,
-          icon: PhosphorIconsRegular.code,
+          icon: WaydirIconsRegular.code,
         ),
       ],
     ),
@@ -236,12 +236,12 @@ class SettingsRegistry {
         SettingChoice(
           value: 'comfortable',
           label: () => t.preferences.appearance.rowDensityComfortable,
-          icon: PhosphorIconsRegular.rows,
+          icon: WaydirIconsRegular.rows,
         ),
         SettingChoice(
           value: 'compact',
           label: () => t.preferences.appearance.rowDensityCompact,
-          icon: PhosphorIconsRegular.list,
+          icon: WaydirIconsRegular.list,
         ),
       ],
     ),
@@ -255,17 +255,17 @@ class SettingsRegistry {
         SettingChoice(
           value: 'iso',
           label: () => t.preferences.appearance.dateFormatIso,
-          icon: PhosphorIconsRegular.calendar,
+          icon: WaydirIconsRegular.calendar,
         ),
         SettingChoice(
           value: 'locale',
           label: () => t.preferences.appearance.dateFormatLocale,
-          icon: PhosphorIconsRegular.calendarBlank,
+          icon: WaydirIconsRegular.calendarBlank,
         ),
         SettingChoice(
           value: 'relative',
           label: () => t.preferences.appearance.dateFormatRelative,
-          icon: PhosphorIconsRegular.clockClockwise,
+          icon: WaydirIconsRegular.clockClockwise,
         ),
       ],
     ),
@@ -295,17 +295,17 @@ class SettingsRegistry {
         SettingChoice(
           value: 'name',
           label: () => t.preferences.appearance.sortKeyName,
-          icon: PhosphorIconsRegular.textAa,
+          icon: WaydirIconsRegular.textAa,
         ),
         SettingChoice(
           value: 'size',
           label: () => t.preferences.appearance.sortKeySize,
-          icon: PhosphorIconsRegular.ruler,
+          icon: WaydirIconsRegular.ruler,
         ),
         SettingChoice(
           value: 'date',
           label: () => t.preferences.appearance.sortKeyDate,
-          icon: PhosphorIconsRegular.calendar,
+          icon: WaydirIconsRegular.calendar,
         ),
       ],
     ),
@@ -341,7 +341,7 @@ class SettingsRegistry {
 }
 
 IconData _themeIcon(AppThemeDefinition theme) {
-  if (theme.id == 'light') return PhosphorIconsRegular.sun;
-  if (theme.id == 'dark') return PhosphorIconsRegular.moon;
-  return PhosphorIconsRegular.palette;
+  if (theme.id == 'light') return WaydirIconsRegular.sun;
+  if (theme.id == 'dark') return WaydirIconsRegular.moon;
+  return WaydirIconsRegular.palette;
 }

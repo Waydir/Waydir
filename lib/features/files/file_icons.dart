@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:waydir/ui/icons/waydir_icons.dart';
 import '../../ui/theme/app_theme.dart';
 
 Color fileIconColor(String ext) {
@@ -23,24 +23,24 @@ Color fileIconColor(String ext) {
 
 IconData fileIcon(String ext) {
   return switch (ext) {
-    'dart' || 'py' => PhosphorIconsRegular.fileCode,
-    'js' => PhosphorIconsRegular.fileJs,
-    'ts' => PhosphorIconsRegular.fileTs,
-    'html' || 'htm' => PhosphorIconsRegular.fileHtml,
-    'css' => PhosphorIconsRegular.fileCss,
-    'json' => PhosphorIconsRegular.fileCode,
-    'md' => PhosphorIconsRegular.fileMd,
+    'dart' || 'py' => WaydirIconsRegular.fileCode,
+    'js' => WaydirIconsRegular.fileJs,
+    'ts' => WaydirIconsRegular.fileTs,
+    'html' || 'htm' => WaydirIconsRegular.fileHtml,
+    'css' => WaydirIconsRegular.fileCss,
+    'json' => WaydirIconsRegular.fileCode,
+    'md' => WaydirIconsRegular.fileMd,
     'png' ||
     'jpg' ||
     'jpeg' ||
     'gif' ||
     'svg' ||
-    'webp' => PhosphorIconsRegular.fileImage,
-    'zip' || 'tar' || 'gz' || 'rar' || '7z' => PhosphorIconsRegular.fileZip,
-    'pdf' => PhosphorIconsRegular.filePdf,
-    'mp3' || 'wav' || 'flac' || 'ogg' => PhosphorIconsRegular.fileAudio,
-    'mp4' || 'avi' || 'mkv' || 'mov' => PhosphorIconsRegular.fileVideo,
-    'txt' || 'log' => PhosphorIconsRegular.fileTxt,
-    _ => PhosphorIconsRegular.file,
+    'webp' => WaydirIconsRegular.fileImage,
+    'zip' || 'tar' || 'gz' || 'rar' || '7z' => WaydirIconsRegular.fileZip,
+    'pdf' => WaydirIconsRegular.filePdf,
+    'mp3' || 'wav' || 'flac' || 'ogg' => WaydirIconsRegular.fileAudio,
+    'mp4' || 'avi' || 'mkv' || 'mov' => WaydirIconsRegular.fileVideo,
+    'txt' || 'log' => WaydirIconsRegular.fileTxt,
+    _ => WaydirIconsRegular.file,
   };
 }

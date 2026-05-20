@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:waydir/ui/icons/waydir_icons.dart';
 import 'package:signals/signals_flutter.dart';
 
 import '../../core/models/file_entry.dart';
@@ -242,13 +242,13 @@ class _Header extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14),
       child: Row(
         children: [
-          PhosphorIcon(
+          Icon(
             multi
-                ? PhosphorIconsRegular.copy
+                ? WaydirIconsRegular.copy
                 : e == null
-                ? PhosphorIconsRegular.file
+                ? WaydirIconsRegular.file
                 : e.type == FileItemType.folder
-                ? PhosphorIconsRegular.folder
+                ? WaydirIconsRegular.folder
                 : fileIcon(e.extension),
             size: 18,
             color: multi
@@ -270,7 +270,7 @@ class _Header extends StatelessWidget {
           const SizedBox(width: 8),
           if (hasPreview) ...[
             _HeaderButton(
-              icon: PhosphorIconsRegular.info,
+              icon: WaydirIconsRegular.info,
               active: showInfo,
               tooltip: 'Properties',
               onTap: onToggleInfo,
@@ -334,7 +334,7 @@ class _HeaderButtonState extends State<_HeaderButton> {
               color: bg,
               borderRadius: BorderRadius.circular(6),
             ),
-            child: PhosphorIcon(widget.icon, size: 16, color: fg),
+            child: Icon(widget.icon, size: 16, color: fg),
           ),
         ),
       ),

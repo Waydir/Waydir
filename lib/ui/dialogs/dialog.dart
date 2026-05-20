@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../theme/app_theme.dart';
 import '../theme/app_text_styles.dart';
 
@@ -141,7 +140,7 @@ class _DialogTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        PhosphorIcon(icon, size: 18, color: iconColor),
+        Icon(icon, size: 18, color: iconColor),
         const SizedBox(width: 8),
         Text(title, style: context.txt.heading),
       ],

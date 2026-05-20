@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:waydir/ui/icons/waydir_icons.dart';
 import 'package:signals/signals_flutter.dart';
 
 import '../../core/settings/settings_registry.dart';
@@ -34,22 +34,22 @@ class CategoryMeta {
 final categories = <CategoryMeta>[
   CategoryMeta(
     Category.general,
-    PhosphorIconsRegular.slidersHorizontal,
+    WaydirIconsRegular.slidersHorizontal,
     () => t.preferences.categories.general,
   ),
   CategoryMeta(
     Category.appearance,
-    PhosphorIconsRegular.palette,
+    WaydirIconsRegular.palette,
     () => t.preferences.categories.appearance,
   ),
   CategoryMeta(
     Category.diagnostics,
-    PhosphorIconsRegular.bug,
+    WaydirIconsRegular.bug,
     () => t.preferences.categories.diagnostics,
   ),
   CategoryMeta(
     Category.about,
-    PhosphorIconsRegular.info,
+    WaydirIconsRegular.info,
     () => t.preferences.categories.about,
   ),
 ];
@@ -127,8 +127,8 @@ class _Header extends StatelessWidget {
       decoration: BoxDecoration(color: AppColors.bgSidebar),
       child: Row(
         children: [
-          PhosphorIcon(
-            PhosphorIconsRegular.gearSix,
+          Icon(
+            WaydirIconsRegular.gearSix,
             size: 16,
             color: AppColors.fgAccent,
           ),
@@ -170,8 +170,8 @@ class _CloseButtonState extends State<_CloseButton> {
             color: _hovered ? AppColors.bgHover : Colors.transparent,
             borderRadius: BorderRadius.circular(4),
           ),
-          child: PhosphorIcon(
-            PhosphorIconsRegular.x,
+          child: Icon(
+            WaydirIconsRegular.x,
             size: 14,
             color: _hovered ? AppColors.fg : AppColors.fgMuted,
           ),
@@ -250,7 +250,7 @@ class _CategoryItemState extends State<_CategoryItem> {
           ),
           child: Row(
             children: [
-              PhosphorIcon(widget.meta.icon, size: 14, color: fg),
+              Icon(widget.meta.icon, size: 14, color: fg),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -563,7 +563,7 @@ class _SettingsActionButtonState extends State<SettingsActionButton> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              PhosphorIcon(widget.icon, size: 14, color: fg),
+              Icon(widget.icon, size: 14, color: fg),
               const SizedBox(width: 6),
               Text(widget.label, style: context.txt.body.copyWith(color: fg)),
             ],
