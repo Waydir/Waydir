@@ -9,6 +9,7 @@ import '../../core/platform/platform_paths.dart';
 import '../../core/platform/trash_location.dart';
 import '../../i18n/strings.g.dart';
 import '../../ui/overlays/context_menu.dart';
+import '../../ui/overlays/toast.dart';
 
 class PaneLocationBar extends StatelessWidget {
   final NavigationStore store;
@@ -143,6 +144,7 @@ class _PathBarState extends State<_PathBar> {
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.store.currentPath.value);
+    _focusNode.addListener(_handleFocusChanged);
     _initPathEffect();
   }
 
@@ -167,6 +169,7 @@ class _PathBarState extends State<_PathBar> {
   @override
   void dispose() {
     _disposePathListener?.call();
+    _focusNode.removeListener(_handleFocusChanged);
     _controller.dispose();
     _focusNode.dispose();
     _editorKeyFocusNode.dispose();
@@ -187,11 +190,23 @@ class _PathBarState extends State<_PathBar> {
     });
   }
 
-  void _submit() {
+  void _handleFocusChanged() {
+    if (!_focusNode.hasFocus && _editing) {
+      _cancel();
+    }
+  }
+
+  Future<void> _submit() async {
     final text = _controller.text.trim();
     setState(() => _editing = false);
-    if (text.isNotEmpty && text != widget.store.currentPath.value) {
-      widget.store.navigateTo(text);
+    if (text.isEmpty || text == widget.store.currentPath.value) {
+      _controller.text = widget.store.currentPath.value;
+      return;
+    }
+    final ok = await widget.store.navigateToEnteredPath(text);
+    if (!ok && mounted) {
+      _controller.text = widget.store.currentPath.value;
+      showToast(context: context, message: t.errors.pathNotFound);
     }
   }
 
@@ -238,6 +253,7 @@ class _PathBarState extends State<_PathBar> {
               controller: _controller,
               focusNode: _focusNode,
               onSubmitted: (_) => _submit(),
+              onTapOutside: (_) => _cancel(),
               style: context.txt.body,
               decoration: const InputDecoration(
                 isDense: true,

@@ -10,6 +10,7 @@ name = "waydir_core"
 
 [dependencies]
 ignore = "0.4"
+trash = "5.2.6"
 
 [profile.release]
 opt-level = 3

@@ -995,11 +995,17 @@ class TranslationsErrorsEn {
 	/// en: 'File not found'
 	String get notFound => 'File not found';
 
+	/// en: 'Path not found'
+	String get pathNotFound => 'Path not found';
+
 	/// en: 'Directory not empty'
 	String get notEmpty => 'Directory not empty';
 
 	/// en: 'Cannot move across devices'
 	String get crossDevice => 'Cannot move across devices';
+
+	/// en: 'Cannot copy or move a folder into itself.'
+	String get transferIntoSelf => 'Cannot copy or move a folder into itself.';
 
 	/// en: 'File appeared at destination during operation'
 	String get appearedDuring => 'File appeared at destination during operation';
@@ -1879,8 +1885,10 @@ extension on Translations {
 			'errors.noSpace' => 'No space left on device',
 			'errors.readOnly' => 'Read-only file system',
 			'errors.notFound' => 'File not found',
+			'errors.pathNotFound' => 'Path not found',
 			'errors.notEmpty' => 'Directory not empty',
 			'errors.crossDevice' => 'Cannot move across devices',
+			'errors.transferIntoSelf' => 'Cannot copy or move a folder into itself.',
 			'errors.appearedDuring' => 'File appeared at destination during operation',
 			'errors.archiveError' => 'Could not read archive',
 			'tasks.copyingSingle' => ({required Object name}) => 'Copying ${name}',

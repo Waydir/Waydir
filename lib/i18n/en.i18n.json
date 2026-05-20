@@ -434,8 +434,10 @@
     "noSpace": "No space left on device",
     "readOnly": "Read-only file system",
     "notFound": "File not found",
+    "pathNotFound": "Path not found",
     "notEmpty": "Directory not empty",
     "crossDevice": "Cannot move across devices",
+    "transferIntoSelf": "Cannot copy or move a folder into itself.",
     "appearedDuring": "File appeared at destination during operation",
     "archiveError": "Could not read archive"
   },

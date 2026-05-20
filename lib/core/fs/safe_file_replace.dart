@@ -10,6 +10,17 @@ import 'native_copy.dart';
 typedef _ChmodNative = Int32 Function(Pointer<Utf8>, Uint32);
 typedef _ChmodDart = int Function(Pointer<Utf8>, int);
 
+final class _Timeval extends Struct {
+  @IntPtr()
+  external int tvSec;
+
+  @IntPtr()
+  external int tvUsec;
+}
+
+typedef _UtimesNative = Int32 Function(Pointer<Utf8>, Pointer<_Timeval>);
+typedef _UtimesDart = int Function(Pointer<Utf8>, Pointer<_Timeval>);
+
 class SafeFileReplace {
   SafeFileReplace._();
 
@@ -167,7 +178,9 @@ class SafeFileReplace {
   static void _copyBasicMetadata(File source, File destination) {
     try {
       final stat = source.statSync();
-      destination.setLastModifiedSync(stat.modified);
+      if (!_copyTimes(destination.path, stat.accessed, stat.modified)) {
+        destination.setLastModifiedSync(stat.modified);
+      }
       if (!Platform.isWindows) {
         _chmod(destination.path, stat.mode);
       }
@@ -192,6 +205,27 @@ class SafeFileReplace {
     } catch (_) {
       return false;
     } finally {
+      calloc.free(nativePath);
+    }
+  }
+
+  static bool _copyTimes(String path, DateTime accessed, DateTime modified) {
+    if (Platform.isWindows) return false;
+    final libc = _libc;
+    if (libc == null) return false;
+    final nativePath = path.toNativeUtf8();
+    final times = calloc<_Timeval>(2);
+    try {
+      times[0].tvSec = accessed.millisecondsSinceEpoch ~/ 1000;
+      times[0].tvUsec = (accessed.microsecondsSinceEpoch % 1000000);
+      times[1].tvSec = modified.millisecondsSinceEpoch ~/ 1000;
+      times[1].tvUsec = (modified.microsecondsSinceEpoch % 1000000);
+      final utimes = libc.lookupFunction<_UtimesNative, _UtimesDart>('utimes');
+      return utimes(nativePath, times) == 0;
+    } catch (_) {
+      return false;
+    } finally {
+      calloc.free(times);
       calloc.free(nativePath);
     }
   }

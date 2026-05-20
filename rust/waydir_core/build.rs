@@ -19,11 +19,7 @@ fn main() {
         .map(|o| !o.stdout.is_empty())
         .unwrap_or(false);
 
-    let git = if dirty {
-        format!("{hash}-dirty")
-    } else {
-        hash
-    };
+    let git = if dirty { format!("{hash}-dirty") } else { hash };
 
     println!("cargo:rustc-env=WAYDIR_VERSION={version}");
     println!("cargo:rustc-env=WAYDIR_GIT={git}");

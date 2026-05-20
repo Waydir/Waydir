@@ -1,6 +1,7 @@
 import 'dart:ffi';
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:convert';
 
 import 'package:ffi/ffi.dart';
 import 'package:path/path.dart' as p;
@@ -73,6 +74,11 @@ typedef _EnumNative =
 typedef _EnumDart =
     Pointer<Uint8> Function(Pointer<Utf8>, bool, Pointer<IntPtr>);
 
+typedef _TrashNative =
+    Pointer<Uint8> Function(Pointer<Pointer<Utf8>>, IntPtr, Pointer<IntPtr>);
+typedef _TrashDart =
+    Pointer<Uint8> Function(Pointer<Pointer<Utf8>>, int, Pointer<IntPtr>);
+
 typedef _FreeNative = Void Function(Pointer<Uint8>, IntPtr);
 typedef _FreeDart = void Function(Pointer<Uint8>, int);
 
@@ -105,6 +111,13 @@ class FolderScanPollResult {
   final int items;
   final bool done;
   const FolderScanPollResult(this.bytes, this.items, this.done);
+}
+
+class WaydirTrashFailure {
+  final String path;
+  final String message;
+
+  const WaydirTrashFailure(this.path, this.message);
 }
 
 /// Loads the required `waydir_core` native helper (Rust). Cached.
@@ -344,6 +357,35 @@ class WaydirCoreLoader {
     }
   }
 
+  static List<WaydirTrashFailure> trash(List<String> paths) {
+    if (paths.isEmpty) return const [];
+    final lib = requireLib();
+    final fn = lib.lookupFunction<_TrashNative, _TrashDart>('waydir_trash');
+    final free = lib.lookupFunction<_FreeNative, _FreeDart>('waydir_free');
+    final pathPtrs = calloc<Pointer<Utf8>>(paths.length);
+    final allocated = <Pointer<Utf8>>[];
+    final outLen = calloc<IntPtr>();
+    try {
+      for (var i = 0; i < paths.length; i++) {
+        final ptr = paths[i].toNativeUtf8();
+        allocated.add(ptr);
+        pathPtrs[i] = ptr;
+      }
+      final buf = fn(pathPtrs, paths.length, outLen);
+      if (buf == nullptr) return const [];
+      final len = outLen.value;
+      final bytes = Uint8List.fromList(buf.asTypedList(len));
+      free(buf, len);
+      return _decodeTrashFailures(bytes);
+    } finally {
+      for (final ptr in allocated) {
+        calloc.free(ptr);
+      }
+      calloc.free(pathPtrs);
+      calloc.free(outLen);
+    }
+  }
+
   /// "{version} ({git}) abi={n}" for the loaded native lib, or null if
   /// the library is absent.
   static String? buildInfo() {
@@ -392,5 +434,23 @@ class WaydirCoreLoader {
       devTarget,
       lib,
     ];
+  }
+
+  static List<WaydirTrashFailure> _decodeTrashFailures(Uint8List bytes) {
+    final failures = <WaydirTrashFailure>[];
+    final data = ByteData.sublistView(bytes);
+    var off = 0;
+    while (off + 8 <= bytes.length) {
+      final pathLen = data.getUint32(off);
+      final msgLen = data.getUint32(off + 4);
+      off += 8;
+      if (off + pathLen + msgLen > bytes.length) break;
+      final path = utf8.decode(bytes.sublist(off, off + pathLen));
+      off += pathLen;
+      final msg = utf8.decode(bytes.sublist(off, off + msgLen));
+      off += msgLen;
+      failures.add(WaydirTrashFailure(path, msg));
+    }
+    return failures;
   }
 }
