@@ -702,6 +702,8 @@ class TranslationsSidebarEn {
 	/// en: 'Drop folder to bookmark'
 	String get dropBookmark => 'Drop folder to bookmark';
 
+	late final TranslationsSidebarDriveSpaceEn driveSpace = TranslationsSidebarDriveSpaceEn.internal(_root);
+
 	/// en: 'Collapse sidebar'
 	String get collapse => 'Collapse sidebar';
 
@@ -1509,6 +1511,24 @@ class TranslationsFileViewColumnsEn {
 	String get location => 'Location';
 }
 
+// Path: sidebar.driveSpace
+class TranslationsSidebarDriveSpaceEn {
+	TranslationsSidebarDriveSpaceEn.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Used'
+	String get used => 'Used';
+
+	/// en: 'Free'
+	String get free => 'Free';
+
+	/// en: 'Total'
+	String get total => 'Total';
+}
+
 // Path: tasks.status
 class TranslationsTasksStatusEn {
 	TranslationsTasksStatusEn.internal(this._root);
@@ -1827,6 +1847,9 @@ extension on Translations {
 			'sidebar.root' => 'Root',
 			'sidebar.bookmarks' => 'Bookmarks',
 			'sidebar.dropBookmark' => 'Drop folder to bookmark',
+			'sidebar.driveSpace.used' => 'Used',
+			'sidebar.driveSpace.free' => 'Free',
+			'sidebar.driveSpace.total' => 'Total',
 			'sidebar.collapse' => 'Collapse sidebar',
 			'sidebar.expand' => 'Expand sidebar',
 			'trash.accessDeniedTitle' => 'Trash needs Full Disk Access',

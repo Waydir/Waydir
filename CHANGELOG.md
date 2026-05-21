@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Devices tooltip now shows numeric disk usage details.
+
 ## [0.4.1] - 2026-05-21
 
 ### Changed

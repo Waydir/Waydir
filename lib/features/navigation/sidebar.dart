@@ -940,106 +940,128 @@ class _ItemRowState extends State<_ItemRow> {
           onSecondaryTapUp: widget.onContextMenu != null
               ? (details) => widget.onContextMenu!(details.globalPosition)
               : null,
-          child: widget.collapsed
-              ? Tooltip(
-                  message: widget.item.label,
-                  waitDuration: const Duration(milliseconds: 400),
-                  child: Container(
-                    height: 32,
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 1,
-                    ),
-                    decoration: BoxDecoration(
-                      color: bg,
-                      borderRadius: BorderRadius.circular(4),
-                      border: _dragOver
-                          ? Border.all(
-                              color: AppColors.accent.withValues(alpha: 0.4),
-                            )
-                          : null,
-                    ),
-                    alignment: Alignment.center,
-                    child: Icon(
-                      widget.item.icon,
-                      size: 16,
-                      color: widget.isSelected
-                          ? AppColors.fgAccent
-                          : (widget.isMounted
-                                ? AppColors.fg.withValues(alpha: 0.85)
-                                : AppColors.fgMuted),
-                    ),
-                  ),
-                )
-              : Container(
-                  height: widget.space == null ? 28 : 36,
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  margin: const EdgeInsets.symmetric(horizontal: 6),
-                  decoration: BoxDecoration(
-                    color: bg,
-                    borderRadius: BorderRadius.circular(4),
-                    border: _dragOver
-                        ? Border.all(
-                            color: AppColors.accent.withValues(alpha: 0.4),
-                          )
-                        : null,
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Row(
+          child: Builder(
+            builder: (context) {
+              final row = widget.collapsed
+                  ? Container(
+                      height: 32,
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 1,
+                      ),
+                      decoration: BoxDecoration(
+                        color: bg,
+                        borderRadius: BorderRadius.circular(4),
+                        border: _dragOver
+                            ? Border.all(
+                                color: AppColors.accent.withValues(alpha: 0.4),
+                              )
+                            : null,
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(
+                        widget.item.icon,
+                        size: 16,
+                        color: widget.isSelected
+                            ? AppColors.fgAccent
+                            : (widget.isMounted
+                                  ? AppColors.fg.withValues(alpha: 0.85)
+                                  : AppColors.fgMuted),
+                      ),
+                    )
+                  : Container(
+                      height: widget.space == null ? 28 : 36,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      margin: const EdgeInsets.symmetric(horizontal: 6),
+                      decoration: BoxDecoration(
+                        color: bg,
+                        borderRadius: BorderRadius.circular(4),
+                        border: _dragOver
+                            ? Border.all(
+                                color: AppColors.accent.withValues(alpha: 0.4),
+                              )
+                            : null,
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            widget.item.icon,
-                            size: 16,
-                            color: widget.isSelected
-                                ? AppColors.fgAccent
-                                : AppColors.fgMuted,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              widget.item.label,
-                              overflow: TextOverflow.ellipsis,
-                              style: context.txt.body.copyWith(
+                          Row(
+                            children: [
+                              Icon(
+                                widget.item.icon,
+                                size: 16,
                                 color: widget.isSelected
-                                    ? AppColors.fg
-                                    : (widget.isMounted
-                                          ? AppColors.fg.withValues(alpha: 0.85)
-                                          : AppColors.fgMuted),
-                                fontWeight: widget.isSelected
-                                    ? FontWeight.w500
-                                    : FontWeight.normal,
+                                    ? AppColors.fgAccent
+                                    : AppColors.fgMuted,
                               ),
-                            ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  widget.item.label,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: context.txt.body.copyWith(
+                                    color: widget.isSelected
+                                        ? AppColors.fg
+                                        : (widget.isMounted
+                                              ? AppColors.fg.withValues(
+                                                  alpha: 0.85,
+                                                )
+                                              : AppColors.fgMuted),
+                                    fontWeight: widget.isSelected
+                                        ? FontWeight.w500
+                                        : FontWeight.normal,
+                                  ),
+                                ),
+                              ),
+                              if (widget.onUnmount != null)
+                                IconButton(
+                                  icon: Icon(
+                                    WaydirIconsRegular.eject,
+                                    size: 14,
+                                    color: AppColors.fgMuted,
+                                  ),
+                                  onPressed: widget.onUnmount,
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(
+                                    minWidth: 24,
+                                    minHeight: 22,
+                                  ),
+                                  splashRadius: 12,
+                                ),
+                            ],
                           ),
-                          if (widget.onUnmount != null)
-                            IconButton(
-                              icon: Icon(
-                                WaydirIconsRegular.eject,
-                                size: 14,
-                                color: AppColors.fgMuted,
-                              ),
-                              onPressed: widget.onUnmount,
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(
-                                minWidth: 24,
-                                minHeight: 22,
-                              ),
-                              splashRadius: 12,
-                            ),
+                          if (widget.space != null) ...[
+                            const SizedBox(height: 4),
+                            _DriveSpaceBar(space: widget.space!),
+                          ],
                         ],
                       ),
-                      if (widget.space != null) ...[
-                        const SizedBox(height: 4),
-                        _DriveSpaceBar(space: widget.space!),
-                      ],
-                    ],
-                  ),
-                ),
+                    );
+              final tooltipMessage = _tooltipMessage();
+              if (tooltipMessage == null) return row;
+              return Tooltip(
+                message: tooltipMessage,
+                waitDuration: const Duration(milliseconds: 400),
+                child: row,
+              );
+            },
+          ),
         ),
       ),
     );
+  }
+
+  String? _tooltipMessage() {
+    final space = widget.space;
+    if (space == null) return widget.collapsed ? widget.item.label : null;
+
+    final usedPercent = (space.usedFraction * 100).toStringAsFixed(1);
+    return [
+      widget.item.label,
+      '${t.sidebar.driveSpace.used}: ${formatBytes(space.usedBytes)} ($usedPercent%)',
+      '${t.sidebar.driveSpace.free}: ${formatBytes(space.freeBytes)}',
+      '${t.sidebar.driveSpace.total}: ${formatBytes(space.totalBytes)}',
+    ].join('\n');
   }
 }
 
@@ -1056,19 +1078,15 @@ class _DriveSpaceBar extends StatelessWidget {
         : used >= 0.75
         ? AppColors.warning
         : AppColors.success;
-    return Tooltip(
-      message:
-          '${formatBytes(space.freeBytes)} free of ${formatBytes(space.totalBytes)}',
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(2),
-        child: SizedBox(
-          height: 2,
-          child: LinearProgressIndicator(
-            value: used,
-            minHeight: 2,
-            backgroundColor: AppColors.bgDivider,
-            valueColor: AlwaysStoppedAnimation<Color>(color),
-          ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(2),
+      child: SizedBox(
+        height: 2,
+        child: LinearProgressIndicator(
+          value: used,
+          minHeight: 2,
+          backgroundColor: AppColors.bgDivider,
+          valueColor: AlwaysStoppedAnimation<Color>(color),
         ),
       ),
     );

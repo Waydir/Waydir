@@ -325,6 +325,11 @@
     "root": "Root",
     "bookmarks": "Bookmarks",
     "dropBookmark": "Drop folder to bookmark",
+    "driveSpace": {
+      "used": "Used",
+      "free": "Free",
+      "total": "Total"
+    },
     "collapse": "Collapse sidebar",
     "expand": "Expand sidebar"
   },
