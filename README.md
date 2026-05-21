@@ -40,7 +40,7 @@ tar -xzf waydir-*-linux-x64.tar.gz
 - Recursive search that streams results live with a scanned-entry counter
 - Copy / move / delete with conflict resolution and progress tracking
 - Clipboard integration
-- Archive support: browse, extract, compress, and edit ZIP, TAR, 7z, RAR, and more
+- Archive support: browse, extract, compress, and edit ZIP, TAR, and more
 - Quick Look file preview with Space - images, text, and code
 - Open files with a chosen app and manage defaults per file type
 - Git status bar with branch switching and stash management
