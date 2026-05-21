@@ -92,7 +92,6 @@ class _FolderSizeRowsState extends State<_FolderSizeRows> {
   Timer? _timer;
   int? _session;
   FolderStats? _stats;
-  bool _failed = false;
 
   @override
   void initState() {
@@ -107,7 +106,6 @@ class _FolderSizeRowsState extends State<_FolderSizeRows> {
       _stop(cancel: true);
       setState(() {
         _stats = null;
-        _failed = false;
       });
       _start();
     }
@@ -125,10 +123,7 @@ class _FolderSizeRowsState extends State<_FolderSizeRows> {
     } catch (_) {
       _session = null;
     }
-    if (_session == null) {
-      _failed = true;
-      return;
-    }
+    if (_session == null) return;
     _poll();
     _timer = Timer.periodic(const Duration(milliseconds: 120), (_) => _poll());
   }
@@ -141,13 +136,9 @@ class _FolderSizeRowsState extends State<_FolderSizeRows> {
       if (!mounted) return;
       setState(() {
         _stats = FolderStats(r.bytes, r.items, done: r.done);
-        _failed = false;
       });
       if (r.done) _stop(cancel: false);
     } catch (_) {
-      if (mounted) {
-        setState(() => _failed = true);
-      }
       _stop(cancel: true);
     }
   }
@@ -168,16 +159,12 @@ class _FolderSizeRowsState extends State<_FolderSizeRows> {
   Widget build(BuildContext context) {
     final calc = t.quickLook.calculating;
     final stats = _stats;
-    final size = _failed
-        ? t.quickLook.readError
-        : stats == null
+    final size = stats == null
         ? calc
         : stats.done
         ? formatBytes(stats.bytes)
         : '${formatBytes(stats.bytes)} · $calc';
-    final contains = _failed
-        ? t.quickLook.readError
-        : stats == null
+    final contains = stats == null
         ? calc
         : stats.done
         ? t.quickLook.items(count: stats.items)
@@ -279,9 +266,8 @@ class InfoPanel extends StatelessWidget {
 
 class PropertiesOnly extends StatelessWidget {
   final FileEntry? entry;
-  final String? note;
 
-  const PropertiesOnly({super.key, required this.entry, this.note});
+  const PropertiesOnly({super.key, required this.entry});
 
   @override
   Widget build(BuildContext context) {
@@ -289,50 +275,11 @@ class PropertiesOnly extends StatelessWidget {
     if (e == null) {
       return QlCentered(message: t.quickLook.noSelection);
     }
-    final hasNote = note != null;
-    if (!hasNote) {
-      return Container(
-        color: AppColors.bgSidebar,
-        child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-          children: propertyRows(e),
-        ),
-      );
-    }
     return Container(
-      color: AppColors.bg,
-      alignment: Alignment.center,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(vertical: 28),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 460),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                note!,
-                textAlign: TextAlign.center,
-                style: context.txt.caption.copyWith(color: AppColors.fgMuted),
-              ),
-              const SizedBox(height: 18),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.bgSidebar,
-                  border: Border.all(color: AppColors.borderColor),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: propertyRows(e),
-                ),
-              ),
-            ],
-          ),
-        ),
+      color: AppColors.bgSidebar,
+      child: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        children: propertyRows(e),
       ),
     );
   }
@@ -363,7 +310,6 @@ class MultiProperties extends StatefulWidget {
 class _MultiPropertiesState extends State<MultiProperties> {
   Timer? _timer;
   final List<_FolderJob> _jobs = [];
-  bool _failed = false;
 
   @override
   void initState() {
@@ -380,7 +326,6 @@ class _MultiPropertiesState extends State<MultiProperties> {
       _stopAll();
       setState(() {
         _jobs.clear();
-        _failed = false;
       });
       _start();
     }
@@ -401,10 +346,7 @@ class _MultiPropertiesState extends State<MultiProperties> {
       } catch (_) {
         session = null;
       }
-      if (session == null) {
-        _failed = true;
-        continue;
-      }
+      if (session == null) continue;
       _jobs.add(_FolderJob(session));
     }
     if (_jobs.isEmpty) return;
@@ -427,7 +369,6 @@ class _MultiPropertiesState extends State<MultiProperties> {
           _free(j);
         }
       } catch (_) {
-        _failed = true;
         j.done = true;
         _free(j);
       }
@@ -485,9 +426,7 @@ class _MultiPropertiesState extends State<MultiProperties> {
           SectionLabel(t.quickLook.sectionGeneral),
           PropRow(
             label: t.quickLook.size,
-            value: _failed
-                ? t.quickLook.readError
-                : live(formatBytes(totalBytes)),
+            value: live(formatBytes(totalBytes)),
           ),
           PropRow(
             label: t.quickLook.contains,

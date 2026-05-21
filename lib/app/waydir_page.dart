@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
@@ -336,6 +338,12 @@ class _WaydirPageState extends State<WaydirPage> {
         label: t.menu.selectAll,
         action: 'select_all',
       ),
+      ContextMenuItem.divider,
+      ContextMenuItem(
+        icon: WaydirIconsRegular.info,
+        label: t.menu.properties,
+        action: 'properties',
+      ),
     ];
     if (!canPaste) items.removeAt(0);
 
@@ -360,7 +368,50 @@ class _WaydirPageState extends State<WaydirPage> {
         store.selectAll();
       case 'open_in_terminal':
         FileSystemService.openInTerminal(store.currentPath.value);
+      case 'properties':
+        _openFolderProperties(store.currentPath.value);
     }
+  }
+
+  void _openPropertiesFromMenu(NavigationStore store) {
+    final entries = store.selectedEntries;
+    if (entries.isEmpty) {
+      _openFolderProperties(store.currentPath.value);
+      return;
+    }
+    if (entries.length == 1) {
+      showQuickLook(
+        context: context,
+        store: store,
+        explicitEntry: entries.first,
+      ).then((_) => _restoreFocus());
+      return;
+    }
+    showQuickLook(
+      context: context,
+      store: store,
+    ).then((_) => _restoreFocus());
+  }
+
+  void _openFolderProperties(String path) {
+    if (path.isEmpty) return;
+    final dir = Directory(path);
+    if (!dir.existsSync()) return;
+    final stat = dir.statSync();
+    final entry = FileEntry(
+      name: PlatformPaths.fileName(path).isEmpty
+          ? path
+          : PlatformPaths.fileName(path),
+      path: path,
+      type: FileItemType.folder,
+      size: 0,
+      modified: stat.modified,
+    );
+    showQuickLook(
+      context: context,
+      store: _active,
+      explicitEntry: entry,
+    ).then((_) => _restoreFocus());
   }
 
   Future<void> _handleContextMenu(
@@ -472,6 +523,12 @@ class _WaydirPageState extends State<WaydirPage> {
           action: 'delete_permanent_bin',
           danger: true,
         ),
+        ContextMenuItem.divider,
+        ContextMenuItem(
+          icon: WaydirIconsRegular.info,
+          label: t.menu.properties,
+          action: 'properties',
+        ),
       ];
       showContextMenu(
         context: context,
@@ -556,13 +613,12 @@ class _WaydirPageState extends State<WaydirPage> {
         action: 'delete_permanent',
         danger: true,
       ),
-      if (count == 1) ContextMenuItem.divider,
-      if (count == 1)
-        ContextMenuItem(
-          icon: WaydirIconsRegular.info,
-          label: t.menu.properties,
-          action: 'properties',
-        ),
+      ContextMenuItem.divider,
+      ContextMenuItem(
+        icon: WaydirIconsRegular.info,
+        label: t.menu.properties,
+        action: 'properties',
+      ),
     ];
 
     showContextMenu(
@@ -712,13 +768,7 @@ class _WaydirPageState extends State<WaydirPage> {
           _shell.activePane.value!.tabs.addTab(entries.first.path);
         }
       case 'properties':
-        final entries = store.selectedEntries;
-        if (entries.length == 1) {
-          showQuickLook(
-            context: context,
-            store: store,
-          ).then((_) => _restoreFocus());
-        }
+        _openPropertiesFromMenu(store);
     }
   }
 

@@ -18,6 +18,7 @@ import 'quick_look_io.dart';
 Future<void> showQuickLook({
   required BuildContext context,
   required NavigationStore store,
+  FileEntry? explicitEntry,
 }) {
   return showGeneralDialog<void>(
     context: context,
@@ -26,7 +27,7 @@ Future<void> showQuickLook({
     barrierColor: Colors.black.withValues(alpha: 0.5),
     transitionDuration: const Duration(milliseconds: 110),
     pageBuilder: (context, animation, secondaryAnimation) {
-      return _QuickLook(store: store);
+      return _QuickLook(store: store, explicitEntry: explicitEntry);
     },
     transitionBuilder: (context, animation, secondaryAnimation, child) {
       final curved = CurvedAnimation(parent: animation, curve: Curves.easeOut);
@@ -43,8 +44,9 @@ Future<void> showQuickLook({
 
 class _QuickLook extends StatefulWidget {
   final NavigationStore store;
+  final FileEntry? explicitEntry;
 
-  const _QuickLook({required this.store});
+  const _QuickLook({required this.store, this.explicitEntry});
 
   @override
   State<_QuickLook> createState() => _QuickLookState();
@@ -163,6 +165,22 @@ class _QuickLookState extends State<_QuickLook> {
               ],
             ),
             child: Watch((_) {
+              final override = widget.explicitEntry;
+              if (override != null) {
+                return Column(
+                  children: [
+                    _Header(
+                      entry: override,
+                      compact: true,
+                      showInfo: true,
+                      onToggleInfo: () {},
+                      onClose: () => Navigator.of(context).pop(),
+                    ),
+                    Container(height: 1, color: AppColors.bgDivider),
+                    Expanded(child: PropertiesOnly(entry: override)),
+                  ],
+                );
+              }
               final selected = widget.store.selectedPaths.value;
               if (selected.length > 1) {
                 final entries = widget.store.selectedEntries;
@@ -326,7 +344,7 @@ class _HeaderButtonState extends State<_HeaderButton> {
             height: 28,
             decoration: BoxDecoration(
               color: bg,
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.zero,
             ),
             child: Icon(widget.icon, size: 16, color: fg),
           ),
@@ -362,7 +380,7 @@ class _CloseButtonState extends State<_CloseButton> {
           height: 28,
           decoration: BoxDecoration(
             color: _hover ? AppColors.bgHover : Colors.transparent,
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.zero,
           ),
           child: Icon(
             Icons.close,
@@ -479,7 +497,7 @@ class _ProbeLoader extends StatelessWidget {
           case QlKind.error:
             release();
             onCompactChanged(true);
-            return PropertiesOnly(entry: entry, note: res.note);
+            return PropertiesOnly(entry: entry);
         }
       },
     );
