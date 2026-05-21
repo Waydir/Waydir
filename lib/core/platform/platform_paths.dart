@@ -5,6 +5,8 @@ import 'package:xdg_directories/xdg_directories.dart' as xdg;
 class PlatformPaths {
   PlatformPaths._();
 
+  static String? trashPathOverride;
+
   static String get separator => Platform.pathSeparator;
 
   static String get homePath {
@@ -99,6 +101,8 @@ class PlatformPaths {
   static String get videosPath => _xdgDir('VIDEOS') ?? join(homePath, 'Videos');
 
   static String? get trashPath {
+    final override = trashPathOverride;
+    if (override != null) return override;
     if (Platform.isLinux) {
       final xdgData = Platform.environment['XDG_DATA_HOME'];
       final base = (xdgData == null || xdgData.isEmpty)

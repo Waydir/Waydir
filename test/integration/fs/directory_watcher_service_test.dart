@@ -1,3 +1,6 @@
+@Tags(<String>['integration'])
+library;
+
 import 'dart:async';
 import 'dart:io';
 

@@ -28,8 +28,33 @@ jobs:
       - name: Analyze
         run: flutter analyze --fatal-infos --fatal-warnings
 
-  test:
-    name: Tests
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Run unit tests
+        run: flutter test --exclude-tags=integration --coverage
+
+      - name: Upload coverage
+        if: success()
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage
+          path: coverage/lcov.info
+
+  integration-tests:
+    name: Integration tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -43,18 +68,11 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Build waydir_core (hard dependency)
+      - name: Build waydir_core
         run: scripts/build_waydir_core.sh
 
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Run tests
-        run: flutter test --coverage
-
-      - name: Upload coverage
-        if: success()
-        uses: actions/upload-artifact@v7
-        with:
-          name: coverage
-          path: coverage/lcov.info
+      - name: Run integration tests
+        run: flutter test --tags=integration

@@ -1,3 +1,6 @@
+@Tags(<String>['integration'])
+library;
+
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:waydir/core/models/file_entry.dart';
