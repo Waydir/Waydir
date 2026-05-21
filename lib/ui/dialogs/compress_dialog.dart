@@ -58,18 +58,26 @@ class _CompressBody extends StatefulWidget {
 class _CompressBodyState extends State<_CompressBody> {
   late final TextEditingController _name = TextEditingController(
     text: widget.defaultBaseName,
-  );
+  )..addListener(_onNameChanged);
   ArchiveFormat _format = ArchiveFormat.zip;
   CompressionLevel _level = CompressionLevel.normal;
 
+  String get _sanitized =>
+      _name.text.replaceAll(RegExp(r'[\\/:]'), '').trim();
+
+  bool get _valid => _sanitized.isNotEmpty;
+
+  void _onNameChanged() => setState(() {});
+
   @override
   void dispose() {
+    _name.removeListener(_onNameChanged);
     _name.dispose();
     super.dispose();
   }
 
   void _submit() {
-    final base = _name.text.trim();
+    final base = _sanitized;
     if (base.isEmpty) return;
     Navigator.of(
       context,
@@ -164,8 +172,8 @@ class _CompressBodyState extends State<_CompressBody> {
               const SizedBox(width: 8),
               DialogButton(
                 label: t.compress.create,
-                color: AppColors.accent,
-                onTap: _submit,
+                color: _valid ? AppColors.accent : AppColors.fgSubtle,
+                onTap: _valid ? _submit : () {},
               ),
             ],
           ),
