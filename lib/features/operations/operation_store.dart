@@ -226,6 +226,9 @@ class OperationStore {
       task.status = TaskStatus.cancelling;
       _updateTask(task);
       _currentWorker?.sendPort.send(CancelCommand());
+      if (_currentTaskId == id && _isArchiveTask(task.type)) {
+        _hardCancelCurrent(task);
+      }
     } else if (task.status == TaskStatus.queued) {
       _queue.removeWhere((t) => t.id == id);
       task.status = TaskStatus.cancelled;
@@ -234,6 +237,27 @@ class OperationStore {
       _scheduleCleanup(task);
     }
     _dismissTaskConflictNotification(id);
+  }
+
+  bool _isArchiveTask(TaskType type) =>
+      type == TaskType.compress ||
+      type == TaskType.extract ||
+      type == TaskType.archiveEdit;
+
+  void _hardCancelCurrent(FileTask task) {
+    final worker = _currentWorker;
+    if (worker == null) return;
+    worker.dispose();
+    _currentWorker = null;
+    if (task.type == TaskType.compress) {
+      final dest = task.destination;
+      if (dest != null && dest.isNotEmpty) {
+        try {
+          final f = File(dest);
+          if (f.existsSync()) f.deleteSync();
+        } catch (_) {}
+      }
+    }
   }
 
   void resolveCurrentConflict(
@@ -481,12 +505,16 @@ class OperationStore {
 
       handle.exitPort.listen((_) {
         if (completer.isCompleted) return;
-        log.error('operation', 'task ${task.id} worker exited unexpectedly');
-        task.status = TaskStatus.failed;
-        task.errors = [
-          ...task.errors,
-          const TaskError(path: '', message: 'Worker exited unexpectedly'),
-        ];
+        if (task.status == TaskStatus.cancelling) {
+          task.status = TaskStatus.cancelled;
+        } else {
+          log.error('operation', 'task ${task.id} worker exited unexpectedly');
+          task.status = TaskStatus.failed;
+          task.errors = [
+            ...task.errors,
+            const TaskError(path: '', message: 'Worker exited unexpectedly'),
+          ];
+        }
         task.endTime = DateTime.now();
         _updateTask(task);
         _dismissTaskConflictNotification(task.id);
