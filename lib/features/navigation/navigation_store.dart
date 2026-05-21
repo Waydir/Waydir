@@ -64,7 +64,6 @@ class NavigationStore {
   final searchResults = signal<List<FileEntry>>([]);
   final isSearching = signal(false);
   final searchScannedDirs = signal(0);
-  final searchTruncated = signal(false);
   final searchCurrentDir = signal<String?>(null);
   final searchFocusRequest = signal(0);
   final renameAttempt = signal(0);
@@ -74,7 +73,6 @@ class NavigationStore {
   Timer? _searchUiFlush;
   void Function()? _showHiddenDisposer;
   List<FileEntry>? _pendingSearchResults;
-  static const _kSearchLimit = 5000;
   static const _kSearchUiFlushMs = 250;
 
   late final canGoBack = computed(() => historyIndex.value > 0);
@@ -250,7 +248,6 @@ class NavigationStore {
       searchResults.value = [];
       isSearching.value = false;
       searchScannedDirs.value = 0;
-      searchTruncated.value = false;
       searchCurrentDir.value = null;
       cursorIndex.value = -1;
       anchorIndex.value = -1;
@@ -292,7 +289,6 @@ class NavigationStore {
     batch(() {
       searchResults.value = [];
       searchScannedDirs.value = 0;
-      searchTruncated.value = false;
       searchCurrentDir.value = null;
       isSearching.value = false;
       cursorIndex.value = -1;
@@ -309,18 +305,6 @@ class NavigationStore {
       includeHidden: showHidden.value,
       onBatch: (b) {
         acc.addAll(b);
-        if (acc.length >= _kSearchLimit) {
-          _searchUiFlush?.cancel();
-          _searchUiFlush = null;
-          _pendingSearchResults = null;
-          batch(() {
-            searchTruncated.value = true;
-            searchResults.value = List.of(acc.take(_kSearchLimit));
-            isSearching.value = false;
-          });
-          _searchHandle?.cancel();
-          return;
-        }
         _pendingSearchResults = acc;
         _scheduleSearchUiFlush();
       },

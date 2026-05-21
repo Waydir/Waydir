@@ -175,9 +175,6 @@ class _StatusText extends StatelessWidget {
       text =
           '${t.search.found(count: count)} · ${t.search.scanning(dirs: store.searchScannedDirs.value)}';
     }
-    if (store.searchTruncated.value) {
-      text += ' ${t.search.truncated(limit: 5000)}';
-    }
     return Text(text, style: context.txt.bodyMuted);
   }
 }
