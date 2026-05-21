@@ -135,7 +135,7 @@ class _AppSearchBarState extends State<AppSearchBar> {
           _RecursiveToggle(store: widget.store),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6),
-            child: Watch((context) => _StatusText(store: widget.store)),
+            child: _StatusText(store: widget.store),
           ),
           _CloseButton(onTap: widget.store.closeSearch),
         ],
@@ -150,6 +150,10 @@ class _StatusText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return Watch((context) => _buildText(context));
+  }
+
+  Widget _buildText(BuildContext context) {
     final recursive = store.searchRecursive.value;
     final searching = store.isSearching.value;
     final query = store.searchQuery.value.trim();
