@@ -119,8 +119,15 @@ LRESULT HandleNcCalcSize(HWND window, WPARAM wparam, LPARAM lparam) {
   int scale_int = static_cast<int>(ceil(scale));
 
   if (IsZoomed(window)) {
-    int top_cut = scale_int + 1;
-    params->rgrc[0].top -= top_cut;
+    UINT dpi = GetDpiForWindow(window);
+    int frame_x = GetSystemMetricsForDpi(SM_CXSIZEFRAME, dpi);
+    int frame_y = GetSystemMetricsForDpi(SM_CYSIZEFRAME, dpi);
+    int padding = GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi);
+    params->rgrc[0].left += frame_x + padding;
+    params->rgrc[0].right -= frame_x + padding;
+    params->rgrc[0].top += frame_y + padding;
+    params->rgrc[0].bottom -= frame_y + padding;
+    params->rgrc[0].top -= scale_int + 1;
   } else {
     params->rgrc[0].top -= 1;
   }
