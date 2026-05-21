@@ -58,6 +58,9 @@ class NavigationStore {
   bool get isTrashRoot => currentPath.value == kTrashPath;
   final DirectoryWatcherService _watcher = DirectoryWatcherService();
 
+  final _folderStateCache = <String, _FolderState>{};
+  String? _restorePathOnLoad;
+
   final searchActive = signal(false);
   final searchQuery = signal('');
   final searchRecursive = signal(false);
@@ -356,8 +359,16 @@ class NavigationStore {
     });
   }
 
-  void navigateTo(String path, {bool addToHistory = true}) {
+  void navigateTo(
+    String path, {
+    bool addToHistory = true,
+    bool restoreState = false,
+  }) {
     final normalized = isTrashPath(path) ? path : PlatformPaths.normalize(path);
+    final previous = currentPath.value;
+    if (previous.isNotEmpty && previous != normalized) {
+      _saveFolderState(previous);
+    }
     closeSearch();
     if (addToHistory) {
       history.value = history.value.sublist(0, historyIndex.value + 1)
@@ -370,8 +381,45 @@ class NavigationStore {
       anchorIndex.value = -1;
       currentPath.value = normalized;
     });
+    _restorePathOnLoad = restoreState ? normalized : null;
     _loadSortFor(normalized);
     loadDirectory(normalized);
+  }
+
+  void _saveFolderState(String path) {
+    if (path.isEmpty) return;
+    final idx = cursorIndex.value;
+    final list = _vf;
+    final cursorPath = (idx >= 0 && idx < list.length) ? list[idx].path : null;
+    _folderStateCache[path] = _FolderState(
+      selectedPaths: Set<String>.from(selectedPaths.value),
+      cursorPath: cursorPath,
+    );
+  }
+
+  void _restoreFolderStateIfMatches(String path) {
+    if (_restorePathOnLoad != path) return;
+    _restorePathOnLoad = null;
+    final state = _folderStateCache[path];
+    if (state == null) return;
+    final list = _vf;
+    if (list.isEmpty) return;
+    final visiblePaths = {for (final f in list) f.path};
+    final restored = state.selectedPaths.intersection(visiblePaths);
+    int cursor = -1;
+    if (state.cursorPath != null) {
+      cursor = list.indexWhere((f) => f.path == state.cursorPath);
+    }
+    if (cursor < 0 && restored.isNotEmpty) {
+      cursor = list.indexWhere((f) => f.path == restored.first);
+    }
+    batch(() {
+      if (restored.isNotEmpty) selectedPaths.value = restored;
+      if (cursor >= 0) {
+        cursorIndex.value = cursor;
+        anchorIndex.value = cursor;
+      }
+    });
   }
 
   Future<bool> navigateToEnteredPath(String path) async {
@@ -405,13 +453,21 @@ class NavigationStore {
   void goBack() {
     if (!canGoBack.value) return;
     historyIndex.value--;
-    navigateTo(history.value[historyIndex.value], addToHistory: false);
+    navigateTo(
+      history.value[historyIndex.value],
+      addToHistory: false,
+      restoreState: true,
+    );
   }
 
   void goForward() {
     if (!canGoForward.value) return;
     historyIndex.value++;
-    navigateTo(history.value[historyIndex.value], addToHistory: false);
+    navigateTo(
+      history.value[historyIndex.value],
+      addToHistory: false,
+      restoreState: true,
+    );
   }
 
   void goUp() async {
@@ -446,6 +502,7 @@ class NavigationStore {
         trashAccessDenied.value = false;
         isLoading.value = false;
       });
+      _restoreFolderStateIfMatches(path);
       if (isTrashPath(path)) {
         _watcher.stop();
       } else {
@@ -633,16 +690,21 @@ class NavigationStore {
         ? newEntries
         : newEntries.where((f) => !f.isHidden).toList();
 
+    final oldCursor = cursorIndex.value;
     int newCursor = -1;
-    if (cursorIndex.value >= 0 && cursorIndex.value < _vf.length) {
-      final cursorPath = _vf[cursorIndex.value].path;
+    if (oldCursor >= 0 && oldCursor < _vf.length) {
+      final cursorPath = _vf[oldCursor].path;
       newCursor = visible.indexWhere((e) => e.path == cursorPath);
+    }
+    if (newCursor < 0 && oldCursor >= 0 && visible.isNotEmpty) {
+      newCursor = oldCursor.clamp(0, visible.length - 1);
     }
     int newAnchor = -1;
     if (anchorIndex.value >= 0 && anchorIndex.value < _vf.length) {
       final anchorPath = _vf[anchorIndex.value].path;
       newAnchor = visible.indexWhere((e) => e.path == anchorPath);
     }
+    if (newAnchor < 0) newAnchor = newCursor;
 
     batch(() {
       files.value = newEntries;
@@ -1231,4 +1293,12 @@ class NavigationStore {
       cursorIndex.value = next;
     });
   }
+}
+
+
+class _FolderState {
+  final Set<String> selectedPaths;
+  final String? cursorPath;
+
+  _FolderState({required this.selectedPaths, required this.cursorPath});
 }
