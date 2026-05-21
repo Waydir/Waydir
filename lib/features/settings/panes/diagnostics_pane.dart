@@ -85,7 +85,7 @@ class _DiagnosticsPaneState extends State<DiagnosticsPane> {
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     decoration: BoxDecoration(
                       color: AppColors.bgInput,
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.zero,
                       border: Border.all(
                         color: _searchFocused
                             ? AppColors.accent
@@ -125,7 +125,7 @@ class _DiagnosticsPaneState extends State<DiagnosticsPane> {
           Container(
             decoration: BoxDecoration(
               color: AppColors.bgSurface,
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.zero,
               border: Border.all(color: AppColors.borderColor),
             ),
             constraints: const BoxConstraints(minHeight: 120),
@@ -187,7 +187,7 @@ class _LogRow extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(3),
+                  borderRadius: BorderRadius.zero,
                 ),
                 child: Text(
                   entry.level.label,
@@ -242,7 +242,7 @@ class _BtnState extends State<_Btn> {
           padding: const EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
             color: enabled && _hovered ? AppColors.bgHover : AppColors.bgInput,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.zero,
             border: Border.all(color: AppColors.borderColor),
           ),
           child: Row(

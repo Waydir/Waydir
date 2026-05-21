@@ -209,7 +209,7 @@ class _RecursiveToggleState extends State<_RecursiveToggle> {
                 color: active
                     ? AppColors.accent.withValues(alpha: 0.15)
                     : (_hovered ? AppColors.bgHover : Colors.transparent),
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.zero,
                 border: active
                     ? Border.all(color: AppColors.accent.withValues(alpha: 0.4))
                     : null,
@@ -266,7 +266,7 @@ class _CloseButtonState extends State<_CloseButton> {
             height: 24,
             decoration: BoxDecoration(
               color: _hovered ? AppColors.bgHover : Colors.transparent,
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.zero,
             ),
             child: Icon(
               WaydirIconsRegular.x,

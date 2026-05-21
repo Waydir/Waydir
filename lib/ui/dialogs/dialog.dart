@@ -180,7 +180,7 @@ class _DialogButtonState extends State<DialogButton> {
             color: _hovered
                 ? widget.color.withValues(alpha: 0.15)
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.zero,
             border: Border.all(
               color: _hovered
                   ? widget.color

@@ -108,7 +108,7 @@ class _ToolBtnState extends State<_ToolBtn> {
               color: _hovered && widget.enabled
                   ? AppColors.bgHover
                   : Colors.transparent,
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.zero,
             ),
             child: Icon(
               widget.icon,
@@ -225,7 +225,7 @@ class _PathBarState extends State<_PathBar> {
           height: 26,
           decoration: BoxDecoration(
             color: AppColors.bgInput,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.zero,
             border: Border.all(
               color: _editing ? AppColors.accent : AppColors.borderColor,
             ),
@@ -532,7 +532,7 @@ class _EllipsisMenuState extends State<_EllipsisMenu> {
           decoration: _hovered
               ? BoxDecoration(
                   color: AppColors.bgHover,
-                  borderRadius: BorderRadius.circular(3),
+                  borderRadius: BorderRadius.zero,
                 )
               : null,
           child: Tooltip(
@@ -600,7 +600,7 @@ class _BreadcrumbSegmentState extends State<_BreadcrumbSegment> {
           decoration: _hovered
               ? BoxDecoration(
                   color: AppColors.bgHover,
-                  borderRadius: BorderRadius.circular(3),
+                  borderRadius: BorderRadius.zero,
                 )
               : null,
           child: text,
@@ -641,7 +641,7 @@ class _NewFolderButtonState extends State<_NewFolderButton> {
             margin: const EdgeInsets.symmetric(horizontal: 1),
             decoration: BoxDecoration(
               color: _hovered ? AppColors.bgHover : Colors.transparent,
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.zero,
             ),
             child: Icon(
               WaydirIconsRegular.folderPlus,

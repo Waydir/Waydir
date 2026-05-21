@@ -189,7 +189,7 @@ class _BranchButton extends StatelessWidget {
       fit: FlexFit.loose,
       child: InkWell(
         onTap: () => _openSwitcher(context),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.zero,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
           child: Row(
@@ -301,7 +301,7 @@ class _StashButton extends StatelessWidget {
       padding: const EdgeInsets.only(left: 8),
       child: InkWell(
         onTap: () => _open(context),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.zero,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
           child: Row(
@@ -339,7 +339,7 @@ class _StateBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: AppColors.warning.withValues(alpha: 0.18),
-        borderRadius: BorderRadius.circular(3),
+        borderRadius: BorderRadius.zero,
       ),
       child: Text(
         label,

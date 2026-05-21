@@ -252,7 +252,7 @@ class _PromptButtonState extends State<_PromptButton> {
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
             color: bg,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.zero,
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,

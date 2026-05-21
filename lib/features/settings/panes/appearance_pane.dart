@@ -287,15 +287,15 @@ class _ThemeNameDialogState extends State<_ThemeNameDialog> {
               filled: true,
               fillColor: AppColors.bgInput,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.zero,
                 borderSide: BorderSide(color: AppColors.borderColor),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.zero,
                 borderSide: BorderSide(color: AppColors.borderColor),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.zero,
                 borderSide: BorderSide(color: AppColors.accent),
               ),
             ),
@@ -430,7 +430,7 @@ class _ThemeFileRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
         color: AppColors.bgInput,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.zero,
         border: Border.all(color: AppColors.borderColor),
       ),
       child: Row(

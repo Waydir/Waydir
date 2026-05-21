@@ -155,7 +155,7 @@ class _StatusIconButtonState extends State<_StatusIconButton> {
             margin: const EdgeInsets.only(left: 2),
             decoration: BoxDecoration(
               color: _hovered ? AppColors.bgHover : Colors.transparent,
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.zero,
             ),
             child: Stack(
               clipBehavior: Clip.none,
@@ -170,7 +170,7 @@ class _StatusIconButtonState extends State<_StatusIconButton> {
                       height: 5,
                       decoration: BoxDecoration(
                         color: AppColors.accent,
-                        borderRadius: BorderRadius.circular(3),
+                        borderRadius: BorderRadius.zero,
                       ),
                     ),
                   ),

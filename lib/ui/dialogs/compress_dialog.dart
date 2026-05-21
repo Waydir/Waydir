@@ -189,11 +189,11 @@ class _CompressBodyState extends State<_CompressBody> {
     suffixStyle: context.txt.body.copyWith(color: AppColors.fgMuted),
     contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
     enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: BorderRadius.zero,
       borderSide: BorderSide(color: AppColors.borderColor),
     ),
     focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: BorderRadius.zero,
       borderSide: BorderSide(color: AppColors.accent),
     ),
   );

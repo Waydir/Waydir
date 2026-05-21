@@ -164,7 +164,7 @@ class _CloseButtonState extends State<_CloseButton> {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: _hovered ? AppColors.bgHover : Colors.transparent,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.zero,
           ),
           child: Icon(
             WaydirIconsRegular.x,
@@ -239,7 +239,7 @@ class _CategoryItemState extends State<_CategoryItem> {
           padding: const EdgeInsets.symmetric(horizontal: 8),
           decoration: BoxDecoration(
             color: bg,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.zero,
             border: widget.selected
                 ? Border(left: BorderSide(color: AppColors.accent, width: 2))
                 : null,
@@ -322,7 +322,7 @@ class SettingsSection extends StatelessWidget {
         DecoratedBox(
           decoration: BoxDecoration(
             color: AppColors.bgSurface,
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.zero,
             border: Border.all(color: AppColors.borderColor),
           ),
           child: Column(
@@ -486,15 +486,15 @@ class _SettingsTextFieldState extends State<SettingsTextField> {
         filled: true,
         fillColor: AppColors.bgInput,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.zero,
           borderSide: BorderSide(color: AppColors.borderColor),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.zero,
           borderSide: BorderSide(color: AppColors.borderColor),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.zero,
           borderSide: BorderSide(color: AppColors.accent),
         ),
       ),
@@ -550,7 +550,7 @@ class _SettingsActionButtonState extends State<SettingsActionButton> {
           padding: const EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
             color: _hovered ? AppColors.bgHover : AppColors.bgInput,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.zero,
             border: Border.all(color: AppColors.borderColor),
           ),
           child: Row(
@@ -583,7 +583,7 @@ class _SettingsToggleState extends State<SettingsToggle> {
           padding: const EdgeInsets.all(2),
           decoration: BoxDecoration(
             color: on ? AppColors.accent : AppColors.bgInput,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.zero,
             border: Border.all(
               color: on ? AppColors.accent : AppColors.borderColor,
             ),

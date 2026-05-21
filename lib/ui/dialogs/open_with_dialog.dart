@@ -328,7 +328,7 @@ class _AppTileState extends State<_AppTile> {
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
           decoration: BoxDecoration(
             color: bg,
-            borderRadius: BorderRadius.circular(5),
+            borderRadius: BorderRadius.zero,
           ),
           child: Row(
             children: [
@@ -384,7 +384,7 @@ class _DefaultCheckbox extends StatelessWidget {
               height: 16,
               decoration: BoxDecoration(
                 color: value && enabled ? AppColors.accent : Colors.transparent,
-                borderRadius: BorderRadius.circular(3),
+                borderRadius: BorderRadius.zero,
                 border: Border.all(
                   color: value && enabled
                       ? AppColors.accent
@@ -437,7 +437,7 @@ class _TextButtonState extends State<_TextButton> {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
             color: _hovered ? AppColors.bgHoverStrong : Colors.transparent,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.zero,
           ),
           child: Text(widget.label, style: context.txt.body),
         ),
@@ -480,7 +480,7 @@ class _PrimaryButtonState extends State<_PrimaryButton> {
               color: _hovered && enabled
                   ? AppColors.accent.withValues(alpha: 0.18)
                   : AppColors.accent.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.zero,
               border: Border.all(color: AppColors.accent),
             ),
             child: Text(

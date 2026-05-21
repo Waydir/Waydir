@@ -352,7 +352,7 @@ class _SaveButtonState extends State<_SaveButton> {
             color: _hover && widget.enabled
                 ? AppColors.accent.withValues(alpha: 0.15)
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(5),
+            borderRadius: BorderRadius.zero,
             border: Border.all(color: color.withValues(alpha: 0.5)),
           ),
           child: Row(

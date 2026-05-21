@@ -93,7 +93,7 @@ class _ToastEntryState extends State<_ToastEntry>
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: AppColors.bgSurface,
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: BorderRadius.zero,
                 border: Border.all(color: AppColors.borderColor),
                 boxShadow: [
                   BoxShadow(

@@ -230,7 +230,7 @@ class _TitleMenuButtonState extends State<TitleMenuButton> {
           padding: const EdgeInsets.symmetric(horizontal: 8),
           decoration: BoxDecoration(
             color: _hovered ? AppColors.bgHover : Colors.transparent,
-            borderRadius: BorderRadius.circular(5),
+            borderRadius: BorderRadius.zero,
           ),
           alignment: Alignment.center,
           child: Text(

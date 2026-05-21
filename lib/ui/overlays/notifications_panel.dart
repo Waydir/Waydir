@@ -36,7 +36,7 @@ class _NotificationsPanelBody extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: AppColors.bgSurface,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.zero,
         border: Border.all(color: AppColors.borderColor),
         boxShadow: [
           BoxShadow(
@@ -275,7 +275,7 @@ class _InlineCheckboxState extends State<_InlineCheckbox> {
               height: 13,
               decoration: BoxDecoration(
                 color: widget.value ? AppColors.accent : Colors.transparent,
-                borderRadius: BorderRadius.circular(3),
+                borderRadius: BorderRadius.zero,
                 border: Border.all(
                   color: widget.value
                       ? AppColors.accent
@@ -333,7 +333,7 @@ class _PanelActionButtonState extends State<_PanelActionButton> {
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           decoration: BoxDecoration(
             color: _hovered ? color.withValues(alpha: 0.2) : Colors.transparent,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.zero,
             border: Border.all(color: _hovered ? color : AppColors.borderColor),
           ),
           child: Text(

@@ -378,7 +378,7 @@ class _FileListState extends State<FileList> {
                               color: AppColors.accent.withValues(alpha: 0.4),
                               width: 1,
                             ),
-                            borderRadius: BorderRadius.circular(4),
+                            borderRadius: BorderRadius.zero,
                           ),
                         ),
                       ),
@@ -703,7 +703,7 @@ class _ListRowState extends State<_ListRow> {
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         color: AppColors.bgSidebar,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.zero,
         border: Border.all(color: AppColors.bgDivider),
         boxShadow: [
           BoxShadow(
@@ -877,21 +877,21 @@ class _ListRowState extends State<_ListRow> {
                         filled: true,
                         fillColor: AppColors.bgInput,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(3),
+                          borderRadius: BorderRadius.zero,
                           borderSide: BorderSide(
                             color: AppColors.accent,
                             width: 1,
                           ),
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(3),
+                          borderRadius: BorderRadius.zero,
                           borderSide: BorderSide(
                             color: AppColors.bgDivider,
                             width: 1,
                           ),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(3),
+                          borderRadius: BorderRadius.zero,
                           borderSide: BorderSide(
                             color: AppColors.accent,
                             width: 1,
@@ -966,7 +966,7 @@ class _ListRowState extends State<_ListRow> {
           decoration: BoxDecoration(
             color: _bg,
             borderRadius: widget.isFolderDragOver
-                ? BorderRadius.circular(4)
+                ? BorderRadius.zero
                 : null,
             border: _border,
           ),

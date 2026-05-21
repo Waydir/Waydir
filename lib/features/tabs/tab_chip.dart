@@ -140,7 +140,7 @@ class _CloseButtonState extends State<_CloseButton> {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: _hovered ? AppColors.bgDivider : Colors.transparent,
-            borderRadius: BorderRadius.circular(3),
+            borderRadius: BorderRadius.zero,
           ),
           child: Icon(
             WaydirIconsRegular.x,

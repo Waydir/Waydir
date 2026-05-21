@@ -84,7 +84,7 @@ class _PasswordDialogState extends State<_PasswordDialog> {
                 height: 36,
                 decoration: BoxDecoration(
                   color: AppColors.bgInput,
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.zero,
                   border: Border.all(color: AppColors.borderColor),
                 ),
                 child: Row(
@@ -141,7 +141,7 @@ class _PasswordDialogState extends State<_PasswordDialog> {
                       ),
                       elevation: 0,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.zero,
                       ),
                     ),
                     child: const Text('Unlock'),

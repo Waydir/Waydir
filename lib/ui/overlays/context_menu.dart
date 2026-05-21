@@ -169,7 +169,7 @@ class _ContextMenuBody extends StatelessWidget {
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
               color: AppColors.bgSurface,
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.zero,
               border: Border.all(color: AppColors.borderColor),
               boxShadow: [
                 BoxShadow(
@@ -290,7 +290,7 @@ class _ContextMenuItemTileState extends State<_ContextMenuItemTile> {
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
             color: _hovered ? hoverBg : Colors.transparent,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.zero,
           ),
           child: Row(
             children: [
@@ -346,7 +346,7 @@ class _Checkbox extends StatelessWidget {
       height: 14,
       decoration: BoxDecoration(
         color: value ? AppColors.accent : Colors.transparent,
-        borderRadius: BorderRadius.circular(3),
+        borderRadius: BorderRadius.zero,
         border: Border.all(
           color: value ? AppColors.accent : AppColors.borderColor,
           width: 1,

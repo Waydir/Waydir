@@ -61,7 +61,7 @@ class AboutPane extends StatelessWidget {
         Container(
           decoration: BoxDecoration(
             color: AppColors.bgSurface,
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.zero,
             border: Border.all(color: AppColors.borderColor),
           ),
           child: Column(
@@ -164,7 +164,7 @@ class _SmallIconState extends State<_SmallIcon> {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: _hovered ? AppColors.bgInput : Colors.transparent,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.zero,
           ),
           child: Icon(
             widget.icon,

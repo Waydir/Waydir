@@ -211,7 +211,7 @@ class _SearchBar extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10),
         decoration: BoxDecoration(
           color: AppColors.bgInput,
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.zero,
           border: Border.all(color: AppColors.borderColor),
         ),
         child: Row(
@@ -306,7 +306,7 @@ class _CloseButtonState extends State<_CloseButton> {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: _hovered ? AppColors.bgHover : Colors.transparent,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.zero,
           ),
           child: Icon(
             WaydirIconsRegular.x,
@@ -496,7 +496,7 @@ class _KeyCap extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
         color: AppColors.bgInput,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.zero,
         border: Border.all(color: AppColors.borderColor),
         boxShadow: [
           BoxShadow(

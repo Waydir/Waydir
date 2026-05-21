@@ -149,7 +149,7 @@ class _ScrollThumb extends StatelessWidget {
       height: height,
       decoration: BoxDecoration(
         color: AppColors.fgMuted.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(3),
+        borderRadius: BorderRadius.zero,
       ),
     );
   }

@@ -102,7 +102,7 @@ class _AppDropdownState<T> extends State<AppDropdown<T>> {
           padding: const EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
             color: AppColors.bgInput,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.zero,
             border: Border.all(
               color: (_hovered || _open)
                   ? AppColors.accent.withValues(alpha: 0.6)
@@ -156,7 +156,7 @@ class _AppDropdownMenu<T> extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: AppColors.bgSurface,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.zero,
         border: Border.all(color: AppColors.borderColor),
         boxShadow: [
           BoxShadow(
@@ -227,7 +227,7 @@ class _MenuTileState<T> extends State<_MenuTile<T>> {
                 : (widget.isSelected
                       ? AppColors.bgSelectedMuted
                       : Colors.transparent),
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.zero,
           ),
           child: Row(
             children: [

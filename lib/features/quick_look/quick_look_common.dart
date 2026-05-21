@@ -137,7 +137,7 @@ class QlHudChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: AppColors.bgSurface.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(5),
+        borderRadius: BorderRadius.zero,
         border: Border.all(color: AppColors.borderColor),
       ),
       child: Text(text, style: context.txt.caption),

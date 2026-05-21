@@ -113,7 +113,7 @@ class _NotificationCardState extends State<_NotificationCard>
           margin: const EdgeInsets.only(bottom: 8),
           decoration: BoxDecoration(
             color: AppColors.bgSurface,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.zero,
             border: Border.all(color: AppColors.borderColor),
             boxShadow: [
               BoxShadow(
@@ -130,9 +130,7 @@ class _NotificationCardState extends State<_NotificationCard>
                 height: 3,
                 decoration: BoxDecoration(
                   color: accent,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(8),
-                  ),
+                  borderRadius: BorderRadius.zero,
                 ),
               ),
               Padding(
@@ -254,7 +252,7 @@ class _ApplyToAllCheckboxState extends State<_ApplyToAllCheckbox> {
                 height: 14,
                 decoration: BoxDecoration(
                   color: widget.value ? AppColors.accent : Colors.transparent,
-                  borderRadius: BorderRadius.circular(3),
+                  borderRadius: BorderRadius.zero,
                   border: Border.all(
                     color: widget.value
                         ? AppColors.accent
@@ -322,7 +320,7 @@ class _ActionButtonState extends State<_ActionButton> {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
             color: _hovered ? color.withValues(alpha: 0.2) : Colors.transparent,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.zero,
             border: Border.all(color: _hovered ? color : AppColors.borderColor),
           ),
           child: Text(

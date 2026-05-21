@@ -131,7 +131,7 @@ class AppTheme {
               ),
       scrollbarTheme: ScrollbarThemeData(
         thumbColor: WidgetStateProperty.all(AppColors.fgSubtle),
-        radius: const Radius.circular(4),
+        radius: Radius.zero,
         thickness: WidgetStateProperty.all(6),
         thumbVisibility: WidgetStateProperty.all(false),
       ),
@@ -140,7 +140,7 @@ class AppTheme {
         decoration: BoxDecoration(
           color: AppColors.bgSurface,
           border: Border.all(color: AppColors.borderColor),
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.zero,
         ),
         textStyle: TextStyle(
           fontSize: 13,
@@ -148,6 +148,101 @@ class AppTheme {
           fontFamily: _systemFont,
         ),
         waitDuration: const Duration(milliseconds: 600),
+      ),
+      cardTheme: const CardThemeData(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      ),
+      dialogTheme: const DialogThemeData(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      ),
+      popupMenuTheme: const PopupMenuThemeData(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      ),
+      menuTheme: const MenuThemeData(
+        style: MenuStyle(
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+          ),
+        ),
+      ),
+      menuButtonTheme: const MenuButtonThemeData(
+        style: ButtonStyle(
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+          ),
+        ),
+      ),
+      snackBarTheme: const SnackBarThemeData(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      ),
+      chipTheme: const ChipThemeData(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      ),
+      inputDecorationTheme: const InputDecorationTheme(
+        border: OutlineInputBorder(borderRadius: BorderRadius.zero),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.zero),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.zero),
+        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.zero),
+        focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.zero),
+        disabledBorder: OutlineInputBorder(borderRadius: BorderRadius.zero),
+      ),
+      elevatedButtonTheme: const ElevatedButtonThemeData(
+        style: ButtonStyle(
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+          ),
+        ),
+      ),
+      filledButtonTheme: const FilledButtonThemeData(
+        style: ButtonStyle(
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+          ),
+        ),
+      ),
+      outlinedButtonTheme: const OutlinedButtonThemeData(
+        style: ButtonStyle(
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+          ),
+        ),
+      ),
+      textButtonTheme: const TextButtonThemeData(
+        style: ButtonStyle(
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+          ),
+        ),
+      ),
+      iconButtonTheme: const IconButtonThemeData(
+        style: ButtonStyle(
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+          ),
+        ),
+      ),
+      segmentedButtonTheme: const SegmentedButtonThemeData(
+        style: ButtonStyle(
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+          ),
+        ),
+      ),
+      checkboxTheme: const CheckboxThemeData(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      ),
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        borderRadius: BorderRadius.zero,
+      ),
+      sliderTheme: const SliderThemeData(
+        overlayShape: RoundSliderOverlayShape(overlayRadius: 0),
+        thumbShape: RoundSliderThumbShape(enabledThumbRadius: 6),
+      ),
+      tabBarTheme: const TabBarThemeData(
+        indicator: BoxDecoration(),
       ),
     );
   }

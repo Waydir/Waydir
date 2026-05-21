@@ -532,7 +532,7 @@ class _SidebarHeaderState extends State<_SidebarHeader> {
             child: DecoratedBox(
               decoration: BoxDecoration(
                 color: _hovered ? AppColors.bgHover : Colors.transparent,
-                borderRadius: BorderRadius.circular(5),
+                borderRadius: BorderRadius.zero,
               ),
               child: SizedBox(
                 width: 26,
@@ -620,7 +620,7 @@ class _SidebarOperationsButtonState extends State<_SidebarOperationsButton> {
                     color: AppColors.accent.withValues(
                       alpha: _hovered ? 0.22 : 0.14,
                     ),
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.zero,
                     border: Border.all(
                       color: AppColors.accent.withValues(alpha: 0.42),
                     ),
@@ -676,7 +676,7 @@ class _SidebarOperationsButtonState extends State<_SidebarOperationsButton> {
                   color: AppColors.accent.withValues(
                     alpha: _hovered ? 0.18 : 0.11,
                   ),
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.zero,
                   border: Border.all(
                     color: AppColors.accent.withValues(alpha: 0.42),
                   ),
@@ -715,7 +715,7 @@ class _SidebarOperationsButtonState extends State<_SidebarOperationsButton> {
                     ),
                     const SizedBox(height: 7),
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(3),
+                      borderRadius: BorderRadius.zero,
                       child: LinearProgressIndicator(
                         value: active.totalFiles > 0 ? progress : null,
                         minHeight: 3,
@@ -757,7 +757,7 @@ class _SidebarOperationsButtonState extends State<_SidebarOperationsButton> {
                 height: 34,
                 decoration: BoxDecoration(
                   color: _hovered ? AppColors.bgHover : Colors.transparent,
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.zero,
                 ),
                 child: Center(
                   child: Icon(
@@ -791,7 +791,7 @@ class _SidebarOperationsButtonState extends State<_SidebarOperationsButton> {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
               decoration: BoxDecoration(
                 color: _hovered ? AppColors.bgHover : Colors.transparent,
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: BorderRadius.zero,
               ),
               child: Row(
                 children: [
@@ -953,7 +953,7 @@ class _ItemRowState extends State<_ItemRow> {
                       ),
                       decoration: BoxDecoration(
                         color: bg,
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.zero,
                         border: _dragOver
                             ? Border.all(
                                 color: AppColors.accent.withValues(alpha: 0.4),
@@ -977,7 +977,7 @@ class _ItemRowState extends State<_ItemRow> {
                       margin: const EdgeInsets.symmetric(horizontal: 6),
                       decoration: BoxDecoration(
                         color: bg,
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.zero,
                         border: _dragOver
                             ? Border.all(
                                 color: AppColors.accent.withValues(alpha: 0.4),
@@ -1081,7 +1081,7 @@ class _DriveSpaceBar extends StatelessWidget {
         ? AppColors.warning
         : AppColors.success;
     return ClipRRect(
-      borderRadius: BorderRadius.circular(2),
+      borderRadius: BorderRadius.zero,
       child: SizedBox(
         height: 2,
         child: LinearProgressIndicator(

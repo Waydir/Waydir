@@ -120,15 +120,15 @@ class _SelectPatternDialogState extends State<_SelectPatternDialog> {
               filled: true,
               fillColor: AppColors.bgInput,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.zero,
                 borderSide: BorderSide(color: AppColors.borderColor),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.zero,
                 borderSide: BorderSide(color: AppColors.borderColor),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.zero,
                 borderSide: BorderSide(color: AppColors.accent),
               ),
             ),

@@ -37,7 +37,7 @@ class _OperationsPanelBody extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: AppColors.bgSurface,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.zero,
         border: Border.all(color: AppColors.borderColor),
         boxShadow: [
           BoxShadow(
@@ -178,7 +178,7 @@ class _TaskTile extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: statusColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(3),
+                    borderRadius: BorderRadius.zero,
                   ),
                   child: Text(
                     '${(task.progress * 100).round()}%',
@@ -200,7 +200,7 @@ class _TaskTile extends StatelessWidget {
           if (showProgress) ...[
             const SizedBox(height: 6),
             ClipRRect(
-              borderRadius: BorderRadius.circular(3),
+              borderRadius: BorderRadius.zero,
               child: LinearProgressIndicator(
                 value: task.totalFiles > 0 ? task.progress : null,
                 minHeight: 4,
@@ -313,7 +313,7 @@ class _CancelBtnState extends State<_CancelBtn> {
               color: _hovered
                   ? AppColors.danger.withValues(alpha: 0.15)
                   : Colors.transparent,
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.zero,
             ),
             child: Icon(
               WaydirIconsRegular.x,
