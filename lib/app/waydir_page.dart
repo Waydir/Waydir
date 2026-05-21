@@ -65,6 +65,11 @@ class _WaydirPageState extends State<WaydirPage> {
 
   static const _cursorRepeatInterval = Duration(milliseconds: 70);
 
+  String? _typeAheadLetter;
+  int _typeAheadIndex = -1;
+  DateTime? _typeAheadLastAt;
+  static const _typeAheadResetAfter = Duration(milliseconds: 1500);
+
   NavigationStore get _active => _shell.activeStore.value!;
 
   @override
@@ -1133,7 +1138,66 @@ class _WaydirPageState extends State<WaydirPage> {
       return KeyEventResult.handled;
     }
 
+    if (!ctrl && !alt) {
+      final ch = _typeAheadChar(event, key);
+      if (ch != null) {
+        _handleTypeAhead(store, ch);
+        return KeyEventResult.handled;
+      }
+    }
+
     return KeyEventResult.ignored;
+  }
+
+  String? _typeAheadChar(KeyEvent event, LogicalKeyboardKey key) {
+    final ch = event.character;
+    if (ch == null || ch.isEmpty) return null;
+    final code = ch.codeUnitAt(0);
+    if (code < 0x20 || code == 0x7f) return null;
+    if (key == LogicalKeyboardKey.space ||
+        key == LogicalKeyboardKey.tab ||
+        key == LogicalKeyboardKey.enter) {
+      return null;
+    }
+    return ch.toLowerCase();
+  }
+
+  void _handleTypeAhead(NavigationStore store, String ch) {
+    final files = store.visibleFiles.value;
+    if (files.isEmpty) return;
+    final now = DateTime.now();
+    final lastAt = _typeAheadLastAt;
+    final sameLetter =
+        _typeAheadLetter == ch &&
+        lastAt != null &&
+        now.difference(lastAt) < _typeAheadResetAfter;
+
+    int startFrom;
+    if (sameLetter) {
+      startFrom = (_typeAheadIndex + 1) % files.length;
+    } else {
+      startFrom = 0;
+    }
+
+    int found = -1;
+    for (int i = 0; i < files.length; i++) {
+      final idx = (startFrom + i) % files.length;
+      final name = files[idx].name.toLowerCase();
+      if (name.startsWith(ch)) {
+        found = idx;
+        break;
+      }
+    }
+    if (found < 0) {
+      _typeAheadLetter = null;
+      _typeAheadIndex = -1;
+      _typeAheadLastAt = null;
+      return;
+    }
+    _typeAheadLetter = ch;
+    _typeAheadIndex = found;
+    _typeAheadLastAt = now;
+    store.jumpToIndex(found);
   }
 
   void _openInNewTab(String path) {

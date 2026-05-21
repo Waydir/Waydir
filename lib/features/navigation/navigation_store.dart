@@ -1187,6 +1187,16 @@ class NavigationStore {
     }
   }
 
+  void jumpToIndex(int index) {
+    batch(() {
+      if (_vf.isEmpty) return;
+      if (index < 0 || index >= _vf.length) return;
+      cursorIndex.value = index;
+      anchorIndex.value = index;
+      selectedPaths.value = {_vf[index].path};
+    });
+  }
+
   void moveCursor(int delta) {
     batch(() {
       if (_vf.isEmpty) return;
