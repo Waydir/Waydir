@@ -73,7 +73,7 @@ class NavigationStore {
   Timer? _searchUiFlush;
   void Function()? _showHiddenDisposer;
   List<FileEntry>? _pendingSearchResults;
-  static const _kSearchUiFlushMs = 250;
+  static const _kSearchUiFlushMs = 100;
 
   late final canGoBack = computed(() => historyIndex.value > 0);
   late final canGoForward = computed(
@@ -342,12 +342,17 @@ class NavigationStore {
 
   void _scheduleSearchUiFlush() {
     if (_searchUiFlush?.isActive ?? false) return;
-    _searchUiFlush = Timer(const Duration(milliseconds: _kSearchUiFlushMs), () {
-      _searchUiFlush = null;
-      final pending = _pendingSearchResults;
-      if (pending == null) return;
+    final pending = _pendingSearchResults;
+    if (pending != null) {
       _pendingSearchResults = null;
       searchResults.value = List.of(pending);
+    }
+    _searchUiFlush = Timer(const Duration(milliseconds: _kSearchUiFlushMs), () {
+      _searchUiFlush = null;
+      final p = _pendingSearchResults;
+      if (p == null) return;
+      _pendingSearchResults = null;
+      searchResults.value = List.of(p);
     });
   }
 
