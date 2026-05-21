@@ -520,29 +520,36 @@ class NavigationStore {
 
   bool get canRestoreFromTrash => TrashRepository.instance.canRestore;
 
-  Future<void> restoreSelectedFromTrash() =>
-      _applyToSelectedTrashEntries(TrashRepository.instance.restore);
+  Future<void> restoreSelectedFromTrash() async {
+    final entries = _selectedTrashEntries();
+    if (entries.isEmpty) return;
+    operationStore.enqueueTrashRestore(entries);
+    _clearTrashSelection();
+  }
 
-  Future<void> deletePermanentlySelectedFromTrash() =>
-      _applyToSelectedTrashEntries(TrashRepository.instance.deletePermanently);
+  Future<void> deletePermanentlySelectedFromTrash() async {
+    final entries = _selectedTrashEntries();
+    if (entries.isEmpty) return;
+    operationStore.enqueueTrashDelete(entries);
+    _clearTrashSelection();
+  }
 
-  Future<void> _applyToSelectedTrashEntries(
-    Future<void> Function(TrashEntry) op,
-  ) async {
-    if (!isTrashView) return;
+  List<TrashEntry> _selectedTrashEntries() {
+    if (!isTrashView) return const [];
+    final entries = <TrashEntry>[];
     for (final p in selectedPaths.value.toList()) {
       final e = _trashEntries[p];
-      if (e == null) continue;
-      try {
-        await op(e);
-      } catch (_) {}
+      if (e != null) entries.add(e);
     }
+    return entries;
+  }
+
+  void _clearTrashSelection() {
     batch(() {
       selectedPaths.value = {};
       cursorIndex.value = -1;
       anchorIndex.value = -1;
     });
-    refresh();
   }
 
   void _onWatcherEvent(

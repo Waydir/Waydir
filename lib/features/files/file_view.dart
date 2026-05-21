@@ -739,23 +739,14 @@ class _ListRowState extends State<_ListRow> {
   }
 
   Future<DragItem?> _provideDragItem(DragItemRequest request) async {
-    List<String> pathsToDrag;
-
     if (!widget.selected) {
       widget.onSelect(
         FileSelectionEvent(entry: widget.entry, index: widget.index),
       );
-      pathsToDrag = [widget.entry.path];
-    } else {
-      pathsToDrag = widget.selectedPaths.toList();
     }
 
-    final item = DragItem(localData: {'paths': pathsToDrag});
-    item.add(formatLocalFile(pathsToDrag.join('\n')));
-
-    for (final path in pathsToDrag) {
-      item.add(Formats.fileUri(Uri.file(path)));
-    }
+    final pathsToDrag = _pathsToDrag();
+    final item = _dragItemForPaths(pathsToDrag);
 
     final initialMode = HardwareKeyboard.instance.isAltPressed
         ? DragMode.move
@@ -775,6 +766,69 @@ class _ListRowState extends State<_ListRow> {
     updateDragging();
 
     return item;
+  }
+
+  List<String> _pathsToDrag() {
+    final selectedPaths = widget.selectedPaths.toList();
+    if (widget.selected && selectedPaths.isNotEmpty) return selectedPaths;
+    return [widget.entry.path];
+  }
+
+  DragItem _dragItemForPaths(List<String> paths) {
+    final item = DragItem(
+      localData: {'paths': paths},
+      suggestedName: paths.length == 1 ? p.basename(paths.first) : null,
+    );
+    item.add(formatLocalFile(paths.join('\n')));
+
+    for (final path in paths) {
+      item.add(Formats.fileUri(Uri.file(path)));
+    }
+
+    return item;
+  }
+
+  Future<DragConfiguration> _expandDragConfiguration(
+    DragConfiguration configuration,
+    DragSession session,
+  ) async {
+    final paths = _pathsToDrag();
+    if (paths.length <= 1 || configuration.items.isEmpty) {
+      return configuration;
+    }
+
+    final preview = configuration.items.first;
+    final extraImages = <TargetedWidgetSnapshot>[];
+    for (var i = 1; i < paths.length; i++) {
+      extraImages.add(await _transparentDragSnapshot(preview.image));
+    }
+
+    return DragConfiguration(
+      items: [
+        for (final (index, path) in paths.indexed)
+          DragConfigurationItem(
+            item: _dragItemForPaths([path]),
+            image: index == 0 ? preview.image : extraImages[index - 1],
+          ),
+      ],
+      allowedOperations: configuration.allowedOperations,
+      options: configuration.options,
+    );
+  }
+
+  Future<TargetedWidgetSnapshot> _transparentDragSnapshot(
+    TargetedWidgetSnapshot preview,
+  ) async {
+    final recorder = ui.PictureRecorder();
+    final canvas = ui.Canvas(recorder);
+    canvas.drawColor(Colors.transparent, ui.BlendMode.clear);
+    final picture = recorder.endRecording();
+    final image = await picture.toImage(1, 1);
+    picture.dispose();
+    return TargetedWidgetSnapshot(
+      WidgetSnapshot.image(image),
+      Rect.fromLTWH(preview.rect.left, preview.rect.top, 1, 1),
+    );
   }
 
   @override
@@ -993,7 +1047,10 @@ class _ListRowState extends State<_ListRow> {
       allowedOperations: () => [DropOperation.copy, DropOperation.move],
       canAddItemToExistingSession: true,
       dragBuilder: _buildDragImage,
-      child: DraggableWidget(child: row),
+      child: DraggableWidget(
+        onDragConfiguration: _expandDragConfiguration,
+        child: row,
+      ),
     );
   }
 }
