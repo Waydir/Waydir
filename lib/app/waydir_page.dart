@@ -390,7 +390,10 @@ class _WaydirPageState extends State<WaydirPage> {
         ? (entries.first.type == FileItemType.folder
               ? entries.first.name
               : p.basenameWithoutExtension(entries.first.name))
-        : p.basename(store.currentPath.value);
+        : _sanitizeArchiveBase(
+            p.basename(store.currentPath.value),
+            store.currentPath.value,
+          );
     final compressItem = canCompress
         ? ContextMenuItem(
             icon: WaydirIconsRegular.fileZip,
@@ -727,7 +730,18 @@ class _WaydirPageState extends State<WaydirPage> {
           ? e.name
           : p.basenameWithoutExtension(e.name);
     }
-    return p.basename(store.currentPath.value);
+    return _sanitizeArchiveBase(
+      p.basename(store.currentPath.value),
+      store.currentPath.value,
+    );
+  }
+
+  String _sanitizeArchiveBase(String name, String fullPath) {
+    final cleaned = name.replaceAll(RegExp(r'[\\/:]'), '').trim();
+    if (cleaned.isNotEmpty) return cleaned;
+    final drive = RegExp(r'^([A-Za-z]):').firstMatch(fullPath);
+    if (drive != null) return drive.group(1)!;
+    return 'archive';
   }
 
   void _quickCompress(ArchiveFormat format) {
