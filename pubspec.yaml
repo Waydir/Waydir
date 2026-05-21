@@ -1,7 +1,7 @@
 name: waydir
 description: "Waydir - A fast, minimal desktop file manager built with Flutter. Custom dark theme, custom title bar, and keyboard-driven workflow."
 publish_to: 'none'
-version: 0.4.0+5
+version: 0.4.1+6
 
 homepage: https://github.com/mikolajbadyl/waydir
 repository: https://github.com/mikolajbadyl/waydir
@@ -50,13 +50,6 @@ dev_dependencies:
   drift_dev: ^2.33.0
   slang_build_runner: ^4.14.0
   sqlite3: ^3.3.1
-  msix: ^3.16.8
-
-msix_config:
-  display_name: Waydir
-  logo_path: assets/app_icon.png
-  capabilities: runFullTrust
-  store: true
 
 flutter:
   uses-material-design: true

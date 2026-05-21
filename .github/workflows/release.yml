@@ -116,21 +116,6 @@ jobs:
           $env:Path += ";$env:LOCALAPPDATA\Pub\Cache\bin;C:\Program Files (x86)\Inno Setup 6"
           fastforge package --platform windows --targets exe,zip
 
-      - name: Build MSIX (Microsoft Store)
-        shell: pwsh
-        env:
-          MSIX_PUBLISHER: ${{ secrets.MSIX_PUBLISHER }}
-          MSIX_IDENTITY: ${{ secrets.MSIX_IDENTITY }}
-          MSIX_PUBLISHER_NAME: ${{ secrets.MSIX_PUBLISHER_NAME }}
-        run: |
-          dart run msix:create --store `
-            --publisher "$env:MSIX_PUBLISHER" `
-            --identity-name "$env:MSIX_IDENTITY" `
-            --publisher-display-name "$env:MSIX_PUBLISHER_NAME" `
-            --version ${{ steps.version.outputs.version }}.0 `
-            --output-path dist `
-            --output-name "waydir-${{ steps.version.outputs.version }}-store"
-
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
         with:

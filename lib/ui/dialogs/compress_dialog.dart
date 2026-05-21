@@ -62,8 +62,7 @@ class _CompressBodyState extends State<_CompressBody> {
   ArchiveFormat _format = ArchiveFormat.zip;
   CompressionLevel _level = CompressionLevel.normal;
 
-  String get _sanitized =>
-      _name.text.replaceAll(RegExp(r'[\\/:]'), '').trim();
+  String get _sanitized => _name.text.replaceAll(RegExp(r'[\\/:]'), '').trim();
 
   bool get _valid => _sanitized.isNotEmpty;
 

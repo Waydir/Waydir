@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-05-21
+
+### Changed
+- Removed the 5,000 result cap on recursive search. Results stream in faster on fast drives.
+
+### Fixed
+- Search result counter now updates with the query.
+- Archive name no longer ends up empty at filesystem root; uses the drive letter on Windows or `archive` otherwise. Empty names are also blocked in the compress dialog.
+- Cancel button now actually stops archive operations.
+- Windows: maximized window no longer overflows past the screen edges.
+
 ## [0.4.0] - 2026-05-20
 
 ### Added
