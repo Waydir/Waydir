@@ -836,6 +836,8 @@ class _SidebarOperationsButtonState extends State<_SidebarOperationsButton> {
       TaskType.move => WaydirIconsRegular.arrowRight,
       TaskType.delete => WaydirIconsRegular.trash,
       TaskType.trash => WaydirIconsRegular.trashSimple,
+      TaskType.trashRestore => WaydirIconsRegular.arrowCounterClockwise,
+      TaskType.trashDelete => WaydirIconsRegular.trash,
       TaskType.extract => WaydirIconsRegular.archive,
       TaskType.compress => WaydirIconsRegular.fileZip,
       TaskType.archiveEdit => WaydirIconsRegular.archive,

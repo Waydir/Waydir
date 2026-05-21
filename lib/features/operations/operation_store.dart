@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 import 'package:collection/collection.dart';
@@ -11,6 +12,7 @@ import '../../core/models/app_notification.dart';
 import '../../core/models/file_operation.dart';
 import '../../core/fs/file_system_service.dart';
 import '../../core/platform/platform_paths.dart';
+import '../../core/platform/trash_location.dart';
 import '../../i18n/strings.g.dart';
 import '../../ui/overlays/notification_store.dart';
 import '../../ui/theme/app_theme.dart';
@@ -154,6 +156,45 @@ class OperationStore {
       startTime: DateTime.now(),
     );
     _enqueue(task);
+  }
+
+  void enqueueTrashRestore(List<TrashEntry> entries) {
+    _enqueueTrashEntryTask(TaskType.trashRestore, entries);
+  }
+
+  void enqueueTrashDelete(List<TrashEntry> entries) {
+    _enqueueTrashEntryTask(TaskType.trashDelete, entries);
+  }
+
+  void _enqueueTrashEntryTask(TaskType type, List<TrashEntry> entries) {
+    if (entries.isEmpty) return;
+
+    final task = FileTask(
+      id: '${_idCounter++}',
+      type: type,
+      sources: [for (final entry in entries) entry.displayName],
+      destination: kTrashPath,
+      options: {'entries': _encodeTrashEntries(entries)},
+      startTime: DateTime.now(),
+    );
+    _enqueue(task);
+  }
+
+  String _encodeTrashEntries(List<TrashEntry> entries) {
+    return jsonEncode([
+      for (final e in entries)
+        {
+          'virtualPath': e.virtualPath,
+          'displayName': e.displayName,
+          'realDataPath': e.realDataPath,
+          'originalPath': e.originalPath,
+          'deletedAt': e.deletedAt.millisecondsSinceEpoch,
+          'size': e.size,
+          'isDirectory': e.isDirectory,
+          'infoPath': e.infoPath,
+          'nativeId': e.nativeId,
+        },
+    ]);
   }
 
   void enqueueExtract(List<String> sources, String destination) {
@@ -370,6 +411,9 @@ class OperationStore {
         entryPoint = FileSystemService.deleteWorker;
       case TaskType.trash:
         entryPoint = FileSystemService.trashWorker;
+      case TaskType.trashRestore:
+      case TaskType.trashDelete:
+        entryPoint = FileSystemService.trashEntryWorker;
       case TaskType.extract:
         entryPoint = FileSystemService.extractWorker;
       case TaskType.compress:
@@ -739,6 +783,10 @@ class OperationStore {
         return WaydirIconsRegular.trash;
       case TaskType.trash:
         return WaydirIconsRegular.trashSimple;
+      case TaskType.trashRestore:
+        return WaydirIconsRegular.arrowCounterClockwise;
+      case TaskType.trashDelete:
+        return WaydirIconsRegular.trash;
       case TaskType.extract:
         return WaydirIconsRegular.archive;
       case TaskType.compress:

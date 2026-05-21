@@ -90,6 +90,9 @@ class _WaydirPageState extends State<WaydirPage> {
             if (task == null) return;
             for (final store in _shell.allStores) {
               if (task.destination == store.currentPath.value ||
+                  ((task.type == TaskType.trashRestore ||
+                          task.type == TaskType.trashDelete) &&
+                      store.isTrashView) ||
                   ((task.type == TaskType.delete ||
                           task.type == TaskType.trash) &&
                       task.sources.any(

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 import 'package:path/path.dart' as p;
@@ -9,6 +10,7 @@ import '../models/file_entry.dart';
 import '../models/file_operation.dart';
 import '../open/open_service.dart';
 import '../platform/platform_paths.dart';
+import '../platform/trash_location.dart';
 import '../settings/settings_store.dart';
 import '../terminal/terminal.dart';
 import '../../i18n/strings.g.dart';
@@ -1192,6 +1194,127 @@ class FileSystemService {
         workerReceivePort.close();
       }
     });
+  }
+
+  static void trashEntryWorker(List<dynamic> args) {
+    final mainSendPort = args[0] as SendPort;
+    final workerReceivePort = ReceivePort();
+    mainSendPort.send(workerReceivePort.sendPort);
+
+    var type = TaskType.trashDelete;
+    var entries = const <TrashEntry>[];
+    var cancelled = false;
+    final errors = <TaskError>[];
+    var processedFiles = 0;
+    final reportClock = Stopwatch()..start();
+    var lastReportMs = 0;
+
+    void maybeReport(String currentFile) {
+      if (reportClock.elapsedMilliseconds - lastReportMs > 50 ||
+          processedFiles % 50 == 0) {
+        mainSendPort.send(
+          ProgressMessage(
+            processedFiles: processedFiles,
+            processedBytes: 0,
+            currentFile: currentFile,
+          ),
+        );
+        lastReportMs = reportClock.elapsedMilliseconds;
+      }
+    }
+
+    Future<void> executeTrashEntries() async {
+      final repo = TrashRepository.instance;
+      for (final entry in entries) {
+        if (cancelled) break;
+        try {
+          if (type == TaskType.trashRestore) {
+            await repo.restore(entry);
+          } else {
+            await repo.deletePermanently(entry);
+          }
+        } catch (e) {
+          final message = _friendlyError(e);
+          errors.add(TaskError(path: entry.virtualPath, message: message));
+          mainSendPort.send(
+            ErrorMessage(path: entry.virtualPath, message: message),
+          );
+        }
+        processedFiles++;
+        maybeReport(entry.displayName);
+        if (processedFiles % 4 == 0) {
+          await Future.delayed(Duration.zero);
+        }
+      }
+
+      mainSendPort.send(TaskDoneMessage(cancelled: cancelled, errors: errors));
+      workerReceivePort.close();
+    }
+
+    workerReceivePort.listen((msg) {
+      try {
+        if (msg is StartCommand) {
+          type = msg.type;
+          entries = _decodeTrashEntries(msg.options['entries'] ?? '[]');
+          mainSendPort.send(
+            PreScanResultMessage(
+              totalFiles: entries.length,
+              totalBytes: null,
+              allPaths: [for (final e in entries) e.virtualPath],
+              conflicts: const [],
+            ),
+          );
+        } else if (msg is ExecuteCommand) {
+          executeTrashEntries().catchError((e, st) {
+            mainSendPort.send(
+              TaskDoneMessage(
+                cancelled: cancelled,
+                errors: [
+                  ...errors,
+                  TaskError(path: '', message: e.toString()),
+                ],
+              ),
+            );
+            workerReceivePort.close();
+          });
+        } else if (msg is CancelCommand) {
+          cancelled = true;
+        }
+      } catch (e) {
+        mainSendPort.send(
+          TaskDoneMessage(
+            cancelled: cancelled,
+            errors: [
+              ...errors,
+              TaskError(path: '', message: e.toString()),
+            ],
+          ),
+        );
+        workerReceivePort.close();
+      }
+    });
+  }
+
+  static List<TrashEntry> _decodeTrashEntries(String raw) {
+    final decoded = jsonDecode(raw);
+    if (decoded is! List) return const [];
+    return [
+      for (final item in decoded)
+        if (item is Map)
+          TrashEntry(
+            virtualPath: item['virtualPath'] as String? ?? '',
+            displayName: item['displayName'] as String? ?? '',
+            realDataPath: item['realDataPath'] as String? ?? '',
+            originalPath: item['originalPath'] as String?,
+            deletedAt: DateTime.fromMillisecondsSinceEpoch(
+              item['deletedAt'] as int? ?? 0,
+            ),
+            size: item['size'] as int? ?? 0,
+            isDirectory: item['isDirectory'] as bool? ?? false,
+            infoPath: item['infoPath'] as String?,
+            nativeId: item['nativeId'] as String?,
+          ),
+    ];
   }
 
   static void extractWorker(List<dynamic> args) {

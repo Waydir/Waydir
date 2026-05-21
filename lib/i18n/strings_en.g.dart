@@ -1067,6 +1067,18 @@ class TranslationsTasksEn {
 	/// en: 'Moving $count items to Trash'
 	String trashingMultiple({required Object count}) => 'Moving ${count} items to Trash';
 
+	/// en: 'Restoring $name from Trash'
+	String restoringTrashSingle({required Object name}) => 'Restoring ${name} from Trash';
+
+	/// en: 'Restoring $count items from Trash'
+	String restoringTrashMultiple({required Object count}) => 'Restoring ${count} items from Trash';
+
+	/// en: 'Deleting $name from Trash'
+	String deletingTrashSingle({required Object name}) => 'Deleting ${name} from Trash';
+
+	/// en: 'Deleting $count items from Trash'
+	String deletingTrashMultiple({required Object count}) => 'Deleting ${count} items from Trash';
+
 	/// en: 'Extracting $name'
 	String extractingSingle({required Object name}) => 'Extracting ${name}';
 
@@ -1944,6 +1956,10 @@ extension on Translations {
 			'tasks.deletingMultiple' => ({required Object count}) => 'Deleting ${count} items',
 			'tasks.trashingSingle' => ({required Object name}) => 'Moving ${name} to Trash',
 			'tasks.trashingMultiple' => ({required Object count}) => 'Moving ${count} items to Trash',
+			'tasks.restoringTrashSingle' => ({required Object name}) => 'Restoring ${name} from Trash',
+			'tasks.restoringTrashMultiple' => ({required Object count}) => 'Restoring ${count} items from Trash',
+			'tasks.deletingTrashSingle' => ({required Object name}) => 'Deleting ${name} from Trash',
+			'tasks.deletingTrashMultiple' => ({required Object count}) => 'Deleting ${count} items from Trash',
 			'tasks.extractingSingle' => ({required Object name}) => 'Extracting ${name}',
 			'tasks.extractingMultiple' => ({required Object count}) => 'Extracting ${count} archives',
 			'tasks.compressingTo' => ({required Object name}) => 'Compressing to ${name}',
