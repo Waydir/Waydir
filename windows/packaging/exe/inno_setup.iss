@@ -17,6 +17,8 @@ WizardStyle=modern
 PrivilegesRequired={{PRIVILEGES_REQUIRED}}
 ArchitecturesAllowed=x64
 ArchitecturesInstallIn64BitMode=x64
+CloseApplications=yes
+RestartApplications=yes
 
 [Languages]
 {% for locale in LOCALES %}

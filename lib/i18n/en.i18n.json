@@ -186,6 +186,33 @@
       "copy": "Copy"
     }
   },
+  "update": {
+    "title": "Updates",
+    "available": "Update available",
+    "downloading": "Downloading update",
+    "ready": "Ready to install",
+    "launching": "Launching installer...",
+    "error": "Update error",
+    "checking": "Checking for updates...",
+    "upToDate": "You're on the latest version (v${version}).",
+    "noRelease": "No release information.",
+    "noMatch": "No matching download for this platform.",
+    "noNotes": "No release notes provided.",
+    "tooltipAvailable": "Update available - v${version}",
+    "tooltipUpToDate": "Up to date",
+    "checkForUpdates": "Check for updates",
+    "releasePage": "Release page",
+    "downloaded": "Downloaded",
+    "btnDownload": "Download",
+    "btnDownloading": "Downloading...",
+    "btnCheckNow": "Check now",
+    "btnRetry": "Retry",
+    "btnInstall": "Install",
+    "btnUpdate": "Update",
+    "btnOpenDmg": "Open DMG",
+    "statusCheckingInline": "checking...",
+    "statusUpToDateInline": "up to date"
+  },
   "appMenu": {
     "quit": "Quit"
   },

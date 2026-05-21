@@ -6,6 +6,8 @@ import 'package:waydir/ui/icons/waydir_icons.dart';
 import 'package:signals/signals_flutter.dart';
 
 import '../../../app/app_info.dart';
+import '../../../core/update/update_store.dart';
+import '../../../features/update/update_dialog.dart';
 import '../../../i18n/strings.g.dart';
 import '../../../ui/overlays/toast.dart';
 import '../../../ui/theme/app_theme.dart';
@@ -66,13 +68,32 @@ class AboutPane extends StatelessWidget {
           ),
           child: Column(
             children: [
-              Watch(
-                (_) => _InfoRow(
+              Watch((_) {
+                final status = UpdateStore.instance.status.value;
+                final available =
+                    UpdateStore.instance.updateAvailable.value;
+                final latest =
+                    UpdateStore.instance.latestRelease.value?.version;
+                final suffix = available && latest != null
+                    ? '  →  v$latest'
+                    : status == UpdateStatus.checking
+                    ? '  ·  ${t.update.statusCheckingInline}'
+                    : status == UpdateStatus.upToDate
+                    ? '  ·  ${t.update.statusUpToDateInline}'
+                    : '';
+                return _InfoRow(
                   label: t.preferences.about.version,
-                  value: AppInfo.versionLabel.value,
+                  value: '${AppInfo.versionLabel.value}$suffix',
+                  valueColor: available ? AppColors.warning : null,
                   onCopy: () => _copy(context, AppInfo.version.value),
-                ),
-              ),
+                  trailing: _CheckUpdatesButton(
+                    onTap: () async {
+                      await UpdateStore.instance.check(force: true);
+                      if (context.mounted) await showUpdateDialog(context);
+                    },
+                  ),
+                );
+              }),
               Container(height: 1, color: AppColors.bgDivider),
               _InfoRow(
                 label: t.preferences.about.repository,
@@ -96,14 +117,18 @@ class AboutPane extends StatelessWidget {
 class _InfoRow extends StatelessWidget {
   final String label;
   final String value;
+  final Color? valueColor;
   final VoidCallback? onCopy;
   final VoidCallback? onOpen;
+  final Widget? trailing;
 
   const _InfoRow({
     required this.label,
     required this.value,
+    this.valueColor,
     this.onCopy,
     this.onOpen,
+    this.trailing,
   });
 
   @override
@@ -122,10 +147,14 @@ class _InfoRow extends StatelessWidget {
           Expanded(
             child: Text(
               value,
-              style: context.txt.body,
+              style: context.txt.body.copyWith(color: valueColor),
               overflow: TextOverflow.ellipsis,
             ),
           ),
+          if (trailing != null) ...[
+            const SizedBox(width: 6),
+            trailing!,
+          ],
           if (onOpen != null)
             _SmallIcon(icon: WaydirIconsRegular.arrowSquareOut, onTap: onOpen!),
           if (onCopy != null) ...[
@@ -133,6 +162,43 @@ class _InfoRow extends StatelessWidget {
             _SmallIcon(icon: WaydirIconsRegular.copy, onTap: onCopy!),
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _CheckUpdatesButton extends StatefulWidget {
+  final VoidCallback onTap;
+  const _CheckUpdatesButton({required this.onTap});
+
+  @override
+  State<_CheckUpdatesButton> createState() => _CheckUpdatesButtonState();
+}
+
+class _CheckUpdatesButtonState extends State<_CheckUpdatesButton> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: _hovered ? AppColors.bgInput : Colors.transparent,
+            border: Border.all(color: AppColors.borderColor),
+          ),
+          child: Text(
+            t.update.checkForUpdates,
+            style: context.txt.caption.copyWith(
+              color: _hovered ? AppColors.fg : AppColors.fgMuted,
+            ),
+          ),
+        ),
       ),
     );
   }

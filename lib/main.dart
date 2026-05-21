@@ -8,6 +8,7 @@ import 'app/waydir_app.dart';
 import 'core/fs/fs_worker_pool.dart';
 import 'core/logging/app_logger.dart';
 import 'core/settings/settings_store.dart';
+import 'core/update/update_store.dart';
 import 'i18n/strings.g.dart';
 import 'ui/theme/app_theme_registry.dart';
 
@@ -36,6 +37,13 @@ void main(List<String> args) async {
       await AppThemeRegistry.instance.load();
       await SettingsStore.instance.load();
       await AppInfo.init();
+      const fakeVersion = String.fromEnvironment('WAYDIR_FAKE_VERSION');
+      UpdateStore.init(
+        currentVersion: fakeVersion.isNotEmpty
+            ? fakeVersion
+            : AppInfo.version.value,
+      );
+      unawaited(UpdateStore.instance.checkOnStartup());
       runApp(TranslationProvider(child: const WaydirApp()));
 
       if (isWindowChromeSupported) {

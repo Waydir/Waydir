@@ -11,9 +11,12 @@ import '../core/fs/file_system_service.dart';
 import '../core/open/open_service.dart';
 import '../core/keyboard/keyboard_shortcuts.dart';
 import '../core/platform/platform_paths.dart';
+import '../core/models/app_notification.dart';
 import '../core/models/file_entry.dart';
 import '../core/models/file_operation.dart';
 import '../core/settings/settings_store.dart';
+import '../core/update/update_store.dart';
+import '../features/update/update_dialog.dart';
 import '../features/navigation/navigation_store.dart';
 import '../features/navigation/sidebar.dart';
 import '../features/navigation/status_bar.dart';
@@ -143,6 +146,39 @@ class _WaydirPageState extends State<WaydirPage> {
         if (!_shell.ready.value) return;
         _shell.panes.value;
         _installRenameErrorEffects();
+      }),
+    );
+    _installUpdateNotification();
+  }
+
+  String? _lastNotifiedUpdateVersion;
+  void _installUpdateNotification() {
+    _effectDisposers.add(
+      effect(() {
+        final available = UpdateStore.instance.updateAvailable.value;
+        final release = UpdateStore.instance.latestRelease.value;
+        if (!available || release == null) return;
+        if (_lastNotifiedUpdateVersion == release.version) return;
+        _lastNotifiedUpdateVersion = release.version;
+        _notificationStore.add(
+          AppNotification(
+            id: 'update-${release.version}',
+            title: t.update.available,
+            message: 'v${release.version}',
+            type: NotificationType.persistent,
+            icon: WaydirIconsRegular.arrowUp,
+            accentColor: AppColors.warning,
+            actions: [
+              NotificationAction(
+                label: t.update.btnUpdate,
+                color: AppColors.warning,
+                onTap: () {
+                  if (mounted) showUpdateDialog(context);
+                },
+              ),
+            ],
+          ),
+        );
       }),
     );
   }
