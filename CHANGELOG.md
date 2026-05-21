@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Devices tooltip now shows numeric disk usage details.
 - Trash restore and permanent delete operations now show titles and progress in the operations panel.
+- Jump to files by typing a letter. Press the same letter again to cycle through matches.
+- Selection and cursor position are now restored when going back/forward and preserved across file operations.
+
+### Changed
+- UI improvements.
+- Properties view no longer shows read-error messages; it always displays the available details.
 
 ## [0.4.1] - 2026-05-21
 
