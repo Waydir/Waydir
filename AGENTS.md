@@ -35,6 +35,8 @@ Each feature has its own folder with views and store.
 - `dart format .` - format code
 - `flutter analyze` - static analysis
 - `flutter test` - run tests
+- `flutter test --exclude-tags=integration` - run fast unit tests only
+- `flutter test --tags=integration` - run integration tests only
 - `dart run slang` - regenerate translations after JSON changes
 
 ## Git

@@ -1,9 +1,14 @@
+@Tags(<String>['integration'])
+library;
+
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 import 'package:waydir/core/models/file_operation.dart';
 import 'package:waydir/features/operations/operation_store.dart';
+
+import '../../support/ops.dart';
 
 void main() {
   group('OperationStore conflicts', () {
@@ -39,7 +44,7 @@ void main() {
 
       store.enqueueCopy([sourceFolder.path], destination.path);
 
-      final waiting = await _waitForTask(
+      final waiting = await waitForTask(
         store,
         (task) => task.status == TaskStatus.waitingConflicts,
       );
@@ -51,7 +56,7 @@ void main() {
 
       store.resolveCurrentConflict(waiting.id, ConflictResolution.rename);
 
-      final done = await _waitForTask(
+      final done = await waitForTask(
         store,
         (task) => task.status == TaskStatus.completed,
       );
@@ -87,7 +92,7 @@ void main() {
 
       store.enqueueMove([sourceFolder.path], destination.path);
 
-      final waiting = await _waitForTask(
+      final waiting = await waitForTask(
         store,
         (task) => task.status == TaskStatus.waitingConflicts,
       );
@@ -95,7 +100,7 @@ void main() {
 
       store.resolveCurrentConflict(waiting.id, ConflictResolution.rename);
 
-      final done = await _waitForTask(
+      final done = await waitForTask(
         store,
         (task) => task.status == TaskStatus.completed,
       );
@@ -129,7 +134,7 @@ void main() {
       final dest = Directory(p.join(tmpDir.path, 'out'))..createSync();
       store.enqueueExtract([zip], dest.path);
 
-      final done = await _waitForTask(
+      final done = await waitForTask(
         store,
         (task) =>
             task.type == TaskType.extract &&
@@ -157,7 +162,7 @@ void main() {
       File(p.join(dest.path, 'a.txt')).writeAsStringSync('old');
       store.enqueueExtract([zip], dest.path);
 
-      final waiting = await _waitForTask(
+      final waiting = await waitForTask(
         store,
         (task) =>
             task.type == TaskType.extract &&
@@ -166,7 +171,7 @@ void main() {
       expect(waiting.conflicts, isNotEmpty);
       store.resolveCurrentConflict(waiting.id, ConflictResolution.rename);
 
-      final done = await _waitForTask(
+      final done = await waitForTask(
         store,
         (task) =>
             task.type == TaskType.extract &&
@@ -177,18 +182,4 @@ void main() {
       expect(File(p.join(dest.path, 'a (1).txt')).readAsStringSync(), 'fresh');
     });
   });
-}
-
-Future<FileTask> _waitForTask(
-  OperationStore store,
-  bool Function(FileTask task) predicate,
-) async {
-  final deadline = DateTime.now().add(const Duration(seconds: 5));
-  while (DateTime.now().isBefore(deadline)) {
-    for (final task in store.tasks.value) {
-      if (predicate(task)) return task;
-    }
-    await Future<void>.delayed(const Duration(milliseconds: 20));
-  }
-  fail('Timed out waiting for task state');
 }

@@ -1,3 +1,6 @@
+@Tags(<String>['integration'])
+library;
+
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -109,11 +112,7 @@ void main() {
 
         final terminal = await waitForTask(
           store,
-          (t) =>
-              t.id == preparing.id &&
-              (t.status == TaskStatus.cancelled ||
-                  t.status == TaskStatus.completed ||
-                  t.status == TaskStatus.failed),
+          (t) => t.id == preparing.id && isTerminalTask(t),
         );
         expect(
           terminal.status,
