@@ -60,10 +60,13 @@ class SwapInstaller {
     if (staging.existsSync()) staging.deleteSync(recursive: true);
     staging.createSync(recursive: true);
 
+    final aEsc = archive.path.replaceAll("'", "''");
+    final sEsc = staging.path.replaceAll("'", "''");
     final extract = await Process.run('powershell', [
       '-NoProfile',
+      '-NonInteractive',
       '-Command',
-      'Expand-Archive -LiteralPath "${archive.path}" -DestinationPath "${staging.path}" -Force',
+      "Expand-Archive -LiteralPath '$aEsc' -DestinationPath '$sEsc' -Force",
     ]);
     if (extract.exitCode != 0) {
       staging.deleteSync(recursive: true);
@@ -163,12 +166,20 @@ rm -- "\$0" 2>/dev/null
     final old = '${bundle.path}.old';
     script.writeAsStringSync('''
 @echo off
-timeout /t 2 /nobreak >nul
+setlocal
 set "BUNDLE=${bundle.path}"
 set "STAGING=${staging.path}"
 set "OLD=$old"
 if exist "%OLD%" rmdir /s /q "%OLD%"
-move "%BUNDLE%" "%OLD%" >nul || exit /b 1
+set /a TRIES=0
+:retry
+move "%BUNDLE%" "%OLD%" >nul 2>&1
+if not errorlevel 1 goto moved
+set /a TRIES+=1
+if %TRIES% GEQ 30 exit /b 1
+timeout /t 1 /nobreak >nul
+goto retry
+:moved
 move "%STAGING%" "%BUNDLE%" >nul
 if errorlevel 1 (
   move "%OLD%" "%BUNDLE%" >nul

@@ -267,12 +267,16 @@ class _ReleaseNotes extends StatelessWidget {
       selectable: true,
       onTapLink: (text, href, title) {
         if (href == null || href.isEmpty) return;
+        final uri = Uri.tryParse(href);
+        if (uri == null || (uri.scheme != 'http' && uri.scheme != 'https')) {
+          return;
+        }
         final cmd = Platform.isWindows
             ? 'explorer'
             : Platform.isMacOS
             ? 'open'
             : 'xdg-open';
-        Process.start(cmd, [href], mode: ProcessStartMode.detached);
+        Process.start(cmd, [uri.toString()], mode: ProcessStartMode.detached);
       },
       styleSheet: MarkdownStyleSheet(
         p: baseFont,

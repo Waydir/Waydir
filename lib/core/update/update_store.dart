@@ -7,6 +7,7 @@ import 'package:signals/signals.dart';
 
 import 'github_releases.dart';
 import 'install_format.dart';
+import 'package_installer.dart';
 import 'swap_installer.dart';
 
 enum UpdateStatus {
@@ -21,13 +22,18 @@ enum UpdateStatus {
 }
 
 class UpdateStore {
-  static const _owner = 'mikolajbadyl';
-  static const _repo = 'waydir';
+  static const _owner = 'Waydir';
+  static const _repo = 'Waydir';
   static const _cacheTtl = Duration(hours: 1);
 
   static UpdateStore? _instance;
-  static UpdateStore get instance =>
-      _instance ??= UpdateStore(currentVersion: '0.0.0');
+  static UpdateStore get instance {
+    final i = _instance;
+    if (i == null) {
+      throw StateError('UpdateStore.init() must be called before instance');
+    }
+    return i;
+  }
   static void init({required String currentVersion}) {
     _instance = UpdateStore(currentVersion: currentVersion);
   }
@@ -122,7 +128,12 @@ class UpdateStore {
 
       final dir = await getTemporaryDirectory();
       final outDir = Directory('${dir.path}/waydir-update');
-      if (!outDir.existsSync()) outDir.createSync(recursive: true);
+      if (outDir.existsSync()) {
+        try {
+          outDir.deleteSync(recursive: true);
+        } catch (_) {}
+      }
+      outDir.createSync(recursive: true);
       final outFile = File('${outDir.path}/${asset.name}');
       final sink = outFile.openWrite();
 
@@ -160,8 +171,16 @@ class UpdateStore {
       switch (fmt) {
         case InstallFormat.linuxDeb:
         case InstallFormat.linuxRpm:
-          await Process.start('xdg-open', [file.path], mode: ProcessStartMode.detached);
-          return true;
+          final ok = await PackageInstaller.install(file, fmt);
+          if (!ok) {
+            errorMessage.value =
+                'Could not launch package installer. Open the file '
+                'manually: ${file.path}';
+            status.value = UpdateStatus.error;
+            return false;
+          }
+          status.value = UpdateStatus.idle;
+          return false;
         case InstallFormat.linuxPortable:
           final ok = await SwapInstaller.installLinuxPortable(file);
           if (!ok) {
@@ -199,12 +218,16 @@ class UpdateStore {
   void openReleasePage() {
     final url = latestRelease.value?.htmlUrl;
     if (url == null || url.isEmpty) return;
+    final uri = Uri.tryParse(url);
+    if (uri == null || (uri.scheme != 'http' && uri.scheme != 'https')) {
+      return;
+    }
     final cmd = Platform.isWindows
         ? 'explorer'
         : Platform.isMacOS
         ? 'open'
         : 'xdg-open';
-    Process.start(cmd, [url], mode: ProcessStartMode.detached);
+    Process.start(cmd, [uri.toString()], mode: ProcessStartMode.detached);
   }
 
   void reset() {
@@ -258,18 +281,36 @@ class UpdateStore {
     final a = _parseVersion(candidate);
     final b = _parseVersion(current);
     for (var i = 0; i < 3; i++) {
-      if (a[i] > b[i]) return true;
-      if (a[i] < b[i]) return false;
+      if (a.parts[i] > b.parts[i]) return true;
+      if (a.parts[i] < b.parts[i]) return false;
+    }
+    // Equal core: stable > prerelease.
+    if (a.pre == null && b.pre != null) return true;
+    if (a.pre != null && b.pre == null) return false;
+    if (a.pre != null && b.pre != null) {
+      return a.pre!.compareTo(b.pre!) > 0;
     }
     return false;
   }
 
-  static List<int> _parseVersion(String v) {
-    final clean = v.split('+').first.split('-').first;
-    final parts = clean.split('.');
-    return [
-      for (var i = 0; i < 3; i++)
-        i < parts.length ? (int.tryParse(parts[i]) ?? 0) : 0,
-    ];
+  static _Version _parseVersion(String v) {
+    final noBuild = v.split('+').first;
+    final dash = noBuild.indexOf('-');
+    final core = dash < 0 ? noBuild : noBuild.substring(0, dash);
+    final pre = dash < 0 ? null : noBuild.substring(dash + 1);
+    final parts = core.split('.');
+    return _Version(
+      [
+        for (var i = 0; i < 3; i++)
+          i < parts.length ? (int.tryParse(parts[i]) ?? 0) : 0,
+      ],
+      pre,
+    );
   }
+}
+
+class _Version {
+  final List<int> parts;
+  final String? pre;
+  _Version(this.parts, this.pre);
 }
