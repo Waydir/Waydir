@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io' show Platform;
 
 import 'package:http/http.dart' as http;
 
@@ -81,7 +82,18 @@ class GithubReleasesClient {
     http.Client? httpClient,
   }) : _http = httpClient ?? http.Client();
 
-  Uri get _base => Uri.parse('https://api.github.com/repos/$owner/$repo');
+  static String get _apiOrigin {
+    const compiled = String.fromEnvironment('WAYDIR_GITHUB_API_BASE');
+    if (compiled.isNotEmpty) return _stripTrailingSlash(compiled);
+    final env = Platform.environment['WAYDIR_GITHUB_API_BASE'];
+    if (env != null && env.isNotEmpty) return _stripTrailingSlash(env);
+    return 'https://api.github.com';
+  }
+
+  static String _stripTrailingSlash(String s) =>
+      s.endsWith('/') ? s.substring(0, s.length - 1) : s;
+
+  Uri get _base => Uri.parse('$_apiOrigin/repos/$owner/$repo');
 
   Map<String, String> get _headers => const {
     'Accept': 'application/vnd.github+json',

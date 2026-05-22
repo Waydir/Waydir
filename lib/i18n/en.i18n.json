@@ -210,6 +210,9 @@
     "btnInstall": "Install",
     "btnUpdate": "Update",
     "btnOpenDmg": "Open DMG",
+    "btnRestart": "Restart Waydir",
+    "installed": "Update installed",
+    "restartHint": "Restart Waydir to start using v${version}.",
     "statusCheckingInline": "checking...",
     "statusUpToDateInline": "up to date"
   },

@@ -68,7 +68,7 @@ class PackageInstaller {
           '${elevate}dpkg -i $path || '
           '${elevate}apt-get install --fix-broken -y';
     } else if (await _has('dnf')) {
-      inner = '${elevate}dnf install -y --allow-unsigned-rpm $path';
+      inner = '${elevate}dnf install -y $path';
     } else if (await _has('zypper')) {
       inner = '${elevate}zypper --non-interactive install '
           '--allow-unsigned-rpm $path';
@@ -78,11 +78,18 @@ class PackageInstaller {
 
     return '''
 #!/bin/bash
-set -e
 $inner
-echo
-echo "--- Press Enter to close ---"
-read -r _
+status=\$?
+if [ -t 0 ]; then
+  echo
+  if [ \$status -eq 0 ]; then
+    echo "--- Install OK. Press Enter to close ---"
+  else
+    echo "--- Install failed (exit \$status). Press Enter to close ---"
+  fi
+  read -r _
+fi
+exit \$status
 ''';
   }
 

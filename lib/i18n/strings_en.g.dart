@@ -387,6 +387,15 @@ class TranslationsUpdateEn {
 	/// en: 'Open DMG'
 	String get btnOpenDmg => 'Open DMG';
 
+	/// en: 'Restart Waydir'
+	String get btnRestart => 'Restart Waydir';
+
+	/// en: 'Update installed'
+	String get installed => 'Update installed';
+
+	/// en: 'Restart Waydir to start using v${version}.'
+	String restartHint({required Object version}) => 'Restart Waydir to start using v${version}.';
+
 	/// en: 'checking...'
 	String get statusCheckingInline => 'checking...';
 
@@ -1851,6 +1860,9 @@ extension on Translations {
 			'update.btnInstall' => 'Install',
 			'update.btnUpdate' => 'Update',
 			'update.btnOpenDmg' => 'Open DMG',
+			'update.btnRestart' => 'Restart Waydir',
+			'update.installed' => 'Update installed',
+			'update.restartHint' => ({required Object version}) => 'Restart Waydir to start using v${version}.',
 			'update.statusCheckingInline' => 'checking...',
 			'update.statusUpToDateInline' => 'up to date',
 			'appMenu.quit' => 'Quit',
