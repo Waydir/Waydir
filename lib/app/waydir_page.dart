@@ -573,10 +573,10 @@ class _WaydirPageState extends State<WaydirPage> {
     }
 
     final items = <ContextMenuItem>[
-      if (!isSingleFile)
+      if (count == 1 && !isSingleFile)
         ContextMenuItem(
           icon: WaydirIconsRegular.folderOpen,
-          label: count == 1 ? t.menu.open : t.menu.openItems(count: count),
+          label: t.menu.open,
           action: 'open',
         ),
       ...openWithItems,
