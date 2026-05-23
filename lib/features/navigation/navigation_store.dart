@@ -282,10 +282,16 @@ class NavigationStore {
   }
 
   void cycleSearchMode() {
-    final s = SettingsStore.instance;
     const order = ['substring', 'glob', 'regex'];
+    final s = SettingsStore.instance;
     final idx = order.indexOf(s.searchMode.value);
-    s.searchMode.value = order[(idx + 1) % order.length];
+    setSearchMode(order[(idx + 1) % order.length]);
+  }
+
+  void setSearchMode(String mode) {
+    final s = SettingsStore.instance;
+    if (s.searchMode.value == mode) return;
+    s.searchMode.value = mode;
     searchPatternError.value = validateSearchPattern(
       searchQuery.value.trim(),
       _currentSearchMode(),

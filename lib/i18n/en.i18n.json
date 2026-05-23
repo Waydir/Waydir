@@ -449,7 +449,6 @@
     "modeSubstring": "Substring",
     "modeGlob": "Glob",
     "modeRegex": "Regex",
-    "modeTooltip": "Match mode (click to cycle)",
     "invalidGlob": "Invalid glob pattern",
     "invalidRegex": "Invalid regex"
   },

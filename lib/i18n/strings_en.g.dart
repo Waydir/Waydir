@@ -989,9 +989,6 @@ class TranslationsSearchEn {
 	/// en: 'Regex'
 	String get modeRegex => 'Regex';
 
-	/// en: 'Match mode (click to cycle)'
-	String get modeTooltip => 'Match mode (click to cycle)';
-
 	/// en: 'Invalid glob pattern'
 	String get invalidGlob => 'Invalid glob pattern';
 
@@ -2328,7 +2325,6 @@ extension on Translations {
 			'search.modeSubstring' => 'Substring',
 			'search.modeGlob' => 'Glob',
 			'search.modeRegex' => 'Regex',
-			'search.modeTooltip' => 'Match mode (click to cycle)',
 			'search.invalidGlob' => 'Invalid glob pattern',
 			'search.invalidRegex' => 'Invalid regex',
 			'statusBar.items' => ({required Object count}) => '${count} items',

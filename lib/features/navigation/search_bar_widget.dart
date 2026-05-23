@@ -249,67 +249,106 @@ class _RecursiveToggleState extends State<_RecursiveToggle> {
   }
 }
 
-class _ModeToggle extends StatefulWidget {
+class _ModeToggle extends StatelessWidget {
   final NavigationStore store;
 
   const _ModeToggle({required this.store});
 
   @override
-  State<_ModeToggle> createState() => _ModeToggleState();
+  Widget build(BuildContext context) {
+    return Watch((context) {
+      final current = SettingsStore.instance.searchMode.value;
+      return Container(
+        height: 24,
+        margin: const EdgeInsets.only(right: 4),
+        decoration: BoxDecoration(
+          border: Border.all(color: AppColors.bgDivider),
+          borderRadius: BorderRadius.zero,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _ModeSegment(
+              mode: 'substring',
+              label: 'Aa',
+              tooltip: t.search.modeSubstring,
+              active: current == 'substring',
+              onTap: () => store.setSearchMode('substring'),
+            ),
+            Container(width: 1, height: 24, color: AppColors.bgDivider),
+            _ModeSegment(
+              mode: 'glob',
+              label: '*',
+              tooltip: t.search.modeGlob,
+              active: current == 'glob',
+              onTap: () => store.setSearchMode('glob'),
+            ),
+            Container(width: 1, height: 24, color: AppColors.bgDivider),
+            _ModeSegment(
+              mode: 'regex',
+              label: '.*',
+              tooltip: t.search.modeRegex,
+              active: current == 'regex',
+              onTap: () => store.setSearchMode('regex'),
+            ),
+          ],
+        ),
+      );
+    });
+  }
 }
 
-class _ModeToggleState extends State<_ModeToggle> {
-  bool _hovered = false;
+class _ModeSegment extends StatefulWidget {
+  final String mode;
+  final String label;
+  final String tooltip;
+  final bool active;
+  final VoidCallback onTap;
 
-  String _label(String mode) {
-    switch (mode) {
-      case 'glob':
-        return t.search.modeGlob;
-      case 'regex':
-        return t.search.modeRegex;
-      default:
-        return t.search.modeSubstring;
-    }
-  }
+  const _ModeSegment({
+    required this.mode,
+    required this.label,
+    required this.tooltip,
+    required this.active,
+    required this.onTap,
+  });
+
+  @override
+  State<_ModeSegment> createState() => _ModeSegmentState();
+}
+
+class _ModeSegmentState extends State<_ModeSegment> {
+  bool _hovered = false;
 
   @override
   Widget build(BuildContext context) {
-    return Watch((context) {
-      final mode = SettingsStore.instance.searchMode.value;
-      final active = mode != 'substring';
-      return Tooltip(
-        message: t.search.modeTooltip,
-        child: MouseRegion(
-          onEnter: (_) => setState(() => _hovered = true),
-          onExit: (_) => setState(() => _hovered = false),
-          child: GestureDetector(
-            onTap: widget.store.cycleSearchMode,
-            child: Container(
-              height: 24,
-              margin: const EdgeInsets.only(right: 4),
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              decoration: BoxDecoration(
-                color: active
-                    ? AppColors.accent.withValues(alpha: 0.15)
-                    : (_hovered ? AppColors.bgHover : Colors.transparent),
-                borderRadius: BorderRadius.zero,
-                border: active
-                    ? Border.all(color: AppColors.accent.withValues(alpha: 0.4))
-                    : null,
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                _label(mode),
-                style: context.txt.row.copyWith(
-                  color: active ? AppColors.accent : AppColors.fgMuted,
-                  fontWeight: active ? FontWeight.w600 : FontWeight.normal,
-                ),
+    final active = widget.active;
+    return Tooltip(
+      message: widget.tooltip,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: Container(
+            height: 24,
+            constraints: const BoxConstraints(minWidth: 26),
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            alignment: Alignment.center,
+            color: active
+                ? AppColors.accent.withValues(alpha: 0.15)
+                : (_hovered ? AppColors.bgHover : Colors.transparent),
+            child: Text(
+              widget.label,
+              style: context.txt.row.copyWith(
+                color: active ? AppColors.accent : AppColors.fgMuted,
+                fontWeight: active ? FontWeight.w600 : FontWeight.normal,
               ),
             ),
           ),
         ),
-      );
-    });
+      ),
+    );
   }
 }
 
