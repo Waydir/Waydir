@@ -41,7 +41,8 @@ dependencies:
   mime: ^2.0.0
   flutter_svg: ^2.3.0
   archive: ^4.0.9
-
+  http: ^1.6.0
+  flutter_markdown_plus: ^1.0.7
 dev_dependencies:
   flutter_test:
     sdk: flutter

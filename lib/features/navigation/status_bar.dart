@@ -3,6 +3,8 @@ import 'package:waydir/ui/icons/waydir_icons.dart';
 import 'package:signals/signals_flutter.dart';
 import 'navigation_store.dart';
 import '../../app/app_info.dart';
+import '../../core/update/update_store.dart';
+import '../../features/update/update_dialog.dart';
 import '../operations/operation_store.dart';
 import '../../ui/overlays/notification_store.dart';
 import '../../ui/overlays/notifications_panel.dart';
@@ -60,12 +62,7 @@ class StatusBar extends StatelessWidget {
             );
           }),
           const Spacer(),
-          Watch(
-            (context) => _statusText(
-              context,
-              '${t.app.title} ${AppInfo.versionLabel.value}',
-            ),
-          ),
+          _StatusVersion(),
           const SizedBox(width: 8),
           _StatusNotificationsButton(notificationStore: notificationStore),
         ],
@@ -85,6 +82,65 @@ class StatusBar extends StatelessWidget {
         style: context.txt.row.copyWith(color: AppColors.fgSubtle),
       ),
     );
+  }
+}
+
+class _StatusVersion extends StatefulWidget {
+  @override
+  State<_StatusVersion> createState() => _StatusVersionState();
+}
+
+class _StatusVersionState extends State<_StatusVersion> {
+  bool _hover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Watch((context) {
+      final available = UpdateStore.instance.updateAvailable.value;
+      final label = '${t.app.title} ${AppInfo.versionLabel.value}';
+      final latest = UpdateStore.instance.latestRelease.value?.version;
+      final color = available
+          ? AppColors.warning
+          : (_hover ? AppColors.fg : AppColors.fgMuted);
+      final tooltip = available && latest != null
+          ? t.update.tooltipAvailable(version: latest)
+          : t.update.tooltipUpToDate;
+
+      final inner = Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: context.txt.muted.copyWith(
+              color: color,
+              fontWeight: available ? FontWeight.w600 : FontWeight.w400,
+            ),
+          ),
+          if (available) ...[
+            const SizedBox(width: 4),
+            Icon(WaydirIconsRegular.arrowUp, size: 11, color: color),
+          ],
+        ],
+      );
+
+      return Tooltip(
+        message: tooltip,
+        waitDuration: const Duration(milliseconds: 400),
+        child: MouseRegion(
+          cursor: available ? SystemMouseCursors.click : MouseCursor.defer,
+          onEnter: (_) => setState(() => _hover = true),
+          onExit: (_) => setState(() => _hover = false),
+          child: GestureDetector(
+            onTap: available ? () => showUpdateDialog(context) : null,
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              child: inner,
+            ),
+          ),
+        ),
+      );
+    });
   }
 }
 

@@ -45,6 +45,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final TranslationsCompressEn compress = TranslationsCompressEn.internal(_root);
 	late final TranslationsPropertiesEn properties = TranslationsPropertiesEn.internal(_root);
 	late final TranslationsPreferencesEn preferences = TranslationsPreferencesEn.internal(_root);
+	late final TranslationsUpdateEn update = TranslationsUpdateEn.internal(_root);
 	late final TranslationsAppMenuEn appMenu = TranslationsAppMenuEn.internal(_root);
 	late final TranslationsKeybindingsEn keybindings = TranslationsKeybindingsEn.internal(_root);
 	late final TranslationsCommandPaletteEn commandPalette = TranslationsCommandPaletteEn.internal(_root);
@@ -319,6 +320,135 @@ class TranslationsPreferencesEn {
 	late final TranslationsPreferencesBookmarksEn bookmarks = TranslationsPreferencesBookmarksEn.internal(_root);
 	late final TranslationsPreferencesDiagnosticsEn diagnostics = TranslationsPreferencesDiagnosticsEn.internal(_root);
 	late final TranslationsPreferencesAboutEn about = TranslationsPreferencesAboutEn.internal(_root);
+}
+
+// Path: update
+class TranslationsUpdateEn {
+	TranslationsUpdateEn.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Updates'
+	String get title => 'Updates';
+
+	/// en: 'Update available'
+	String get available => 'Update available';
+
+	/// en: 'Downloading update'
+	String get downloading => 'Downloading update';
+
+	/// en: 'Ready to install'
+	String get ready => 'Ready to install';
+
+	/// en: 'Launching installer...'
+	String get launching => 'Launching installer...';
+
+	/// en: 'Update error'
+	String get error => 'Update error';
+
+	/// en: 'Checking for updates...'
+	String get checking => 'Checking for updates...';
+
+	/// en: 'Unknown error'
+	String get unknownError => 'Unknown error';
+
+	/// en: 'You're on the latest version (v${version}).'
+	String upToDate({required Object version}) => 'You\'re on the latest version (v${version}).';
+
+	/// en: 'No release information.'
+	String get noRelease => 'No release information.';
+
+	/// en: 'No matching download for this platform.'
+	String get noMatch => 'No matching download for this platform.';
+
+	/// en: 'No release notes provided.'
+	String get noNotes => 'No release notes provided.';
+
+	/// en: 'v$version'
+	String versionLabel({required Object version}) => 'v${version}';
+
+	/// en: '$title - v$version'
+	String titleWithVersion({required Object title, required Object version}) => '${title} - v${version}';
+
+	/// en: 'Update available - v${version}'
+	String tooltipAvailable({required Object version}) => 'Update available - v${version}';
+
+	/// en: 'Up to date'
+	String get tooltipUpToDate => 'Up to date';
+
+	/// en: 'Check for updates'
+	String get checkForUpdates => 'Check for updates';
+
+	/// en: 'Release page'
+	String get releasePage => 'Release page';
+
+	/// en: 'Downloaded'
+	String get downloaded => 'Downloaded';
+
+	/// en: 'Download'
+	String get btnDownload => 'Download';
+
+	/// en: 'Downloading...'
+	String get btnDownloading => 'Downloading...';
+
+	/// en: 'Check now'
+	String get btnCheckNow => 'Check now';
+
+	/// en: 'Retry'
+	String get btnRetry => 'Retry';
+
+	/// en: 'Install'
+	String get btnInstall => 'Install';
+
+	/// en: 'Update'
+	String get btnUpdate => 'Update';
+
+	/// en: 'Open DMG'
+	String get btnOpenDmg => 'Open DMG';
+
+	/// en: 'Restart Waydir'
+	String get btnRestart => 'Restart Waydir';
+
+	/// en: 'Update installed'
+	String get installed => 'Update installed';
+
+	/// en: 'Restart Waydir to start using v${version}.'
+	String restartHint({required Object version}) => 'Restart Waydir to start using v${version}.';
+
+	/// en: 'checking...'
+	String get statusCheckingInline => 'checking...';
+
+	/// en: 'up to date'
+	String get statusUpToDateInline => 'up to date';
+
+	/// en: 'installer'
+	String get formatInstaller => 'installer';
+
+	/// en: 'portable'
+	String get formatPortable => 'portable';
+
+	/// en: 'unknown'
+	String get formatUnknown => 'unknown';
+
+	/// en: 'Download failed: HTTP $statusCode'
+	String downloadFailed({required Object statusCode}) => 'Download failed: HTTP ${statusCode}';
+
+	/// en: 'GitHub API $statusCode: $reason'
+	String githubApiError({required Object statusCode, required Object reason}) => 'GitHub API ${statusCode}: ${reason}';
+
+	/// en: 'Could not launch package installer. Open the file manually: $path'
+	String packageInstallerLaunchFailed({required Object path}) => 'Could not launch package installer. Open the file manually: ${path}';
+
+	/// en: 'Cannot write to bundle directory. Install the new version manually.'
+	String get bundleNotWritable => 'Cannot write to bundle directory. Install the new version manually.';
+
+	/// en: 'Failed to launch installer: $error'
+	String installerLaunchFailed({required Object error}) => 'Failed to launch installer: ${error}';
+
+	/// en: 'Failed to relaunch: $error'
+	String relaunchFailed({required Object error}) => 'Failed to relaunch: ${error}';
 }
 
 // Path: appMenu
@@ -1973,6 +2103,46 @@ extension on Translations {
 			'preferences.about.repository' => 'Repository',
 			'preferences.about.license' => 'License',
 			'preferences.about.copy' => 'Copy',
+			'update.title' => 'Updates',
+			'update.available' => 'Update available',
+			'update.downloading' => 'Downloading update',
+			'update.ready' => 'Ready to install',
+			'update.launching' => 'Launching installer...',
+			'update.error' => 'Update error',
+			'update.checking' => 'Checking for updates...',
+			'update.unknownError' => 'Unknown error',
+			'update.upToDate' => ({required Object version}) => 'You\'re on the latest version (v${version}).',
+			'update.noRelease' => 'No release information.',
+			'update.noMatch' => 'No matching download for this platform.',
+			'update.noNotes' => 'No release notes provided.',
+			'update.versionLabel' => ({required Object version}) => 'v${version}',
+			'update.titleWithVersion' => ({required Object title, required Object version}) => '${title} - v${version}',
+			'update.tooltipAvailable' => ({required Object version}) => 'Update available - v${version}',
+			'update.tooltipUpToDate' => 'Up to date',
+			'update.checkForUpdates' => 'Check for updates',
+			'update.releasePage' => 'Release page',
+			'update.downloaded' => 'Downloaded',
+			'update.btnDownload' => 'Download',
+			'update.btnDownloading' => 'Downloading...',
+			'update.btnCheckNow' => 'Check now',
+			'update.btnRetry' => 'Retry',
+			'update.btnInstall' => 'Install',
+			'update.btnUpdate' => 'Update',
+			'update.btnOpenDmg' => 'Open DMG',
+			'update.btnRestart' => 'Restart Waydir',
+			'update.installed' => 'Update installed',
+			'update.restartHint' => ({required Object version}) => 'Restart Waydir to start using v${version}.',
+			'update.statusCheckingInline' => 'checking...',
+			'update.statusUpToDateInline' => 'up to date',
+			'update.formatInstaller' => 'installer',
+			'update.formatPortable' => 'portable',
+			'update.formatUnknown' => 'unknown',
+			'update.downloadFailed' => ({required Object statusCode}) => 'Download failed: HTTP ${statusCode}',
+			'update.githubApiError' => ({required Object statusCode, required Object reason}) => 'GitHub API ${statusCode}: ${reason}',
+			'update.packageInstallerLaunchFailed' => ({required Object path}) => 'Could not launch package installer. Open the file manually: ${path}',
+			'update.bundleNotWritable' => 'Cannot write to bundle directory. Install the new version manually.',
+			'update.installerLaunchFailed' => ({required Object error}) => 'Failed to launch installer: ${error}',
+			'update.relaunchFailed' => ({required Object error}) => 'Failed to relaunch: ${error}',
 			'appMenu.quit' => 'Quit',
 			'keybindings.title' => 'Keyboard Shortcuts',
 			'keybindings.menuLabel' => 'Shortcuts',
