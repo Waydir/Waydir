@@ -556,7 +556,7 @@ class OperationStore {
           task.status = TaskStatus.failed;
           task.errors = [
             ...task.errors,
-            const TaskError(path: '', message: 'Worker exited unexpectedly'),
+            TaskError(path: '', message: t.errors.workerExitedUnexpectedly),
           ];
         }
         task.endTime = DateTime.now();

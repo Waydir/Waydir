@@ -16,7 +16,7 @@ Future<void> showUpdateDialog(BuildContext context) {
   return showGeneralDialog<void>(
     context: context,
     barrierDismissible: true,
-    barrierLabel: 'Update',
+    barrierLabel: t.update.title,
     barrierColor: Colors.black.withValues(alpha: 0.5),
     transitionDuration: const Duration(milliseconds: 120),
     pageBuilder: (ctx, _, _) => const _UpdateDialog(),
@@ -87,6 +87,7 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final version = this.version;
     final title = switch (status) {
       UpdateStatus.idle ||
       UpdateStatus.checking ||
@@ -108,7 +109,9 @@ class _Header extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              version == null ? title : '$title - v$version',
+              version == null
+                  ? title
+                  : t.update.titleWithVersion(title: title, version: version),
               style: context.txt.bodyEmphasis,
               overflow: TextOverflow.ellipsis,
             ),
@@ -168,7 +171,7 @@ class _Body extends StatelessWidget {
       final status = store.status.value;
       if (status == UpdateStatus.error) {
         return _CenterMessage(
-          message: store.errorMessage.value ?? 'Unknown error',
+          message: store.errorMessage.value ?? t.update.unknownError,
           color: AppColors.danger,
         );
       }
@@ -181,7 +184,8 @@ class _Body extends StatelessWidget {
         );
       }
       if (status == UpdateStatus.installed) {
-        final v = store.pendingRestartVersion.value ??
+        final v =
+            store.pendingRestartVersion.value ??
             store.latestRelease.value?.version ??
             '';
         return _CenterMessage(
@@ -229,12 +233,12 @@ class _CurrentVersionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Text('v$current', style: context.txt.muted),
+        Text(t.update.versionLabel(version: current), style: context.txt.muted),
         const SizedBox(width: 8),
         Icon(Icons.arrow_forward, size: 14, color: AppColors.fgSubtle),
         const SizedBox(width: 8),
         Text(
-          'v$next',
+          t.update.versionLabel(version: next),
           style: context.txt.bodyEmphasis.copyWith(color: AppColors.warning),
         ),
       ],
@@ -411,10 +415,10 @@ class _AssetRow extends StatelessWidget {
     InstallFormat.linuxDeb => 'deb',
     InstallFormat.linuxRpm => 'rpm',
     InstallFormat.linuxPortable => 'tar.gz',
-    InstallFormat.windowsInstaller => 'installer',
-    InstallFormat.windowsPortable => 'portable',
+    InstallFormat.windowsInstaller => t.update.formatInstaller,
+    InstallFormat.windowsPortable => t.update.formatPortable,
     InstallFormat.macDmg => 'dmg',
-    InstallFormat.unknown => 'unknown',
+    InstallFormat.unknown => t.update.formatUnknown,
   };
 }
 
@@ -566,8 +570,7 @@ class _PrimaryButtonState extends State<_PrimaryButton> {
     if (status == UpdateStatus.downloading) return t.update.btnDownloading;
     if (status == UpdateStatus.ready) {
       return switch (fmt) {
-        InstallFormat.linuxDeb || InstallFormat.linuxRpm =>
-          t.update.btnInstall,
+        InstallFormat.linuxDeb || InstallFormat.linuxRpm => t.update.btnInstall,
         InstallFormat.linuxPortable => t.update.btnUpdate,
         InstallFormat.windowsInstaller => t.update.btnUpdate,
         InstallFormat.windowsPortable => t.update.btnUpdate,

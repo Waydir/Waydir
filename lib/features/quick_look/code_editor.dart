@@ -311,7 +311,7 @@ class _StatusBar extends StatelessWidget {
           Text(label, style: context.txt.caption),
           const Spacer(),
           Text(
-            'Ln $line / $lineCount',
+            t.quickLook.linePosition(line: line, count: lineCount),
             style: context.txt.caption.copyWith(color: AppColors.fgMuted),
           ),
           const SizedBox(width: 14),

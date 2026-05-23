@@ -97,7 +97,7 @@ class _StatusVersionState extends State<_StatusVersion> {
   Widget build(BuildContext context) {
     return Watch((context) {
       final available = UpdateStore.instance.updateAvailable.value;
-      final label = '${AppInfo.name} ${AppInfo.versionLabel.value}';
+      final label = '${t.app.title} ${AppInfo.versionLabel.value}';
       final latest = UpdateStore.instance.latestRelease.value?.version;
       final color = available
           ? AppColors.warning
@@ -127,9 +127,7 @@ class _StatusVersionState extends State<_StatusVersion> {
         message: tooltip,
         waitDuration: const Duration(milliseconds: 400),
         child: MouseRegion(
-          cursor: available
-              ? SystemMouseCursors.click
-              : MouseCursor.defer,
+          cursor: available ? SystemMouseCursors.click : MouseCursor.defer,
           onEnter: (_) => setState(() => _hover = true),
           onExit: (_) => setState(() => _hover = false),
           child: GestureDetector(

@@ -3,6 +3,8 @@ import 'dart:io' show Platform;
 
 import 'package:http/http.dart' as http;
 
+import '../../i18n/strings.g.dart';
+
 class GithubAsset {
   final String name;
   final String downloadUrl;
@@ -101,20 +103,20 @@ class GithubReleasesClient {
     'User-Agent': 'waydir-update-checker',
   };
 
-  /// Returns the most recent stable (non-prerelease) release, or null if
-  /// none exist. Uses `/releases?per_page=10` and filters locally instead
-  /// of `/releases/latest`, since the latter can return prereleases on
-  /// repos that have only ever published prereleases.
   Future<GithubRelease?> latestStable() async {
     final res = await _http.get(
-      _base.replace(path: '${_base.path}/releases', queryParameters: {
-        'per_page': '10',
-      }),
+      _base.replace(
+        path: '${_base.path}/releases',
+        queryParameters: {'per_page': '10'},
+      ),
       headers: _headers,
     );
     if (res.statusCode != 200) {
       throw GithubReleasesException(
-        'GitHub API ${res.statusCode}: ${res.reasonPhrase ?? ''}',
+        t.update.githubApiError(
+          statusCode: res.statusCode,
+          reason: res.reasonPhrase ?? '',
+        ),
       );
     }
     final list = (jsonDecode(res.body) as List).cast<Map<String, dynamic>>();

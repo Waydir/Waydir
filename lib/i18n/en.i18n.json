@@ -1,8 +1,11 @@
 {
   "app": {
-    "title": "Waydir"
+    "title": "Waydir",
+    "tagline": "Navigate your files. Your way.",
+    "description": "A fast, keyboard-driven desktop file manager built with Flutter."
   },
   "menu": {
+    "view": "View",
     "open": "Open",
     "openItems(one)": "Open 1 Item",
     "openItems(other)": "Open $count Items",
@@ -94,6 +97,7 @@
       "restoreSessionHint": "Reopen previously open tabs and panes on launch.",
       "defaultPath": "Default starting path",
       "defaultPathHint": "Used when session restore is disabled or empty.",
+      "defaultPathPlaceholder": "/home/user",
       "browse": "Browse…",
       "fileOpsSection": "File operations",
       "confirmDelete": "Confirm before delete",
@@ -121,6 +125,9 @@
       "themeSection": "Theme",
       "theme": "Theme",
       "themeHint": "Choose a built-in or custom theme.",
+      "themeDark": "Dark",
+      "themeLight": "Light",
+      "themeNord": "Nord",
       "customThemes": "Custom themes",
       "customThemesHint": "Place theme JSON files in this folder. Changes are loaded when you switch themes.",
       "addTheme": "Add theme",
@@ -175,7 +182,9 @@
       "copy": "Copy visible",
       "clear": "Clear",
       "copied": "Copied to clipboard",
-      "privacyNote": "Logs may contain file paths. Review before sharing."
+      "privacyNote": "Logs may contain file paths. Review before sharing.",
+      "native": "Native",
+      "unavailable": "unavailable"
     },
     "about": {
       "title": "About",
@@ -194,10 +203,13 @@
     "launching": "Launching installer...",
     "error": "Update error",
     "checking": "Checking for updates...",
+    "unknownError": "Unknown error",
     "upToDate": "You're on the latest version (v${version}).",
     "noRelease": "No release information.",
     "noMatch": "No matching download for this platform.",
     "noNotes": "No release notes provided.",
+    "versionLabel": "v$version",
+    "titleWithVersion": "$title - v$version",
     "tooltipAvailable": "Update available - v${version}",
     "tooltipUpToDate": "Up to date",
     "checkForUpdates": "Check for updates",
@@ -214,7 +226,16 @@
     "installed": "Update installed",
     "restartHint": "Restart Waydir to start using v${version}.",
     "statusCheckingInline": "checking...",
-    "statusUpToDateInline": "up to date"
+    "statusUpToDateInline": "up to date",
+    "formatInstaller": "installer",
+    "formatPortable": "portable",
+    "formatUnknown": "unknown",
+    "downloadFailed": "Download failed: HTTP $statusCode",
+    "githubApiError": "GitHub API $statusCode: $reason",
+    "packageInstallerLaunchFailed": "Could not launch package installer. Open the file manually: $path",
+    "bundleNotWritable": "Cannot write to bundle directory. Install the new version manually.",
+    "installerLaunchFailed": "Failed to launch installer: $error",
+    "relaunchFailed": "Failed to relaunch: $error"
   },
   "appMenu": {
     "quit": "Quit"
@@ -230,6 +251,8 @@
       "selection": "Selection",
       "search": "Search"
     },
+    "or": "or",
+    "dualHint": "dual",
     "openItem": "Open",
     "goUp": "Go up",
     "goBack": "Go back",
@@ -274,6 +297,7 @@
     "disabled": "Disabled"
   },
   "quickLook": {
+    "title": "Quick Look",
     "noSelection": "No file selected",
     "folder": "Folder",
     "noPreview": "No preview available",
@@ -308,6 +332,7 @@
     "iso": "ISO",
     "focalLength": "Focal length",
     "dateTaken": "Date taken",
+    "linePosition": "Ln $line / $count",
     "lines": "Lines",
     "characters": "Characters",
     "sectionGeneral": "General",
@@ -334,6 +359,21 @@
     "movingItems(one)": "Moving 1 item",
     "movingItems(other)": "Moving $count items",
     "empty": "Folder is empty",
+    "date": {
+      "justNow": "just now",
+      "minutesAgo(one)": "1m ago",
+      "minutesAgo(other)": "${count}m ago",
+      "hoursAgo(one)": "1h ago",
+      "hoursAgo(other)": "${count}h ago",
+      "daysAgo(one)": "1d ago",
+      "daysAgo(other)": "${count}d ago",
+      "weeksAgo(one)": "1w ago",
+      "weeksAgo(other)": "${count}w ago",
+      "monthsAgo(one)": "1mo ago",
+      "monthsAgo(other)": "${count}mo ago",
+      "yearsAgo(one)": "1y ago",
+      "yearsAgo(other)": "${count}y ago"
+    },
     "columns": {
       "name": "Name",
       "size": "Size",
@@ -359,6 +399,14 @@
       "used": "Used",
       "free": "Free",
       "total": "Total"
+    },
+    "drives": {
+      "localDisk": "Local Disk",
+      "usbDrive": "USB Drive",
+      "unknownDrive": "Unknown Drive",
+      "macintoshHd": "Macintosh HD",
+      "windowsDriveLabel": "$name ($letter:)",
+      "mountTitle": "Mount $name"
     },
     "collapse": "Collapse sidebar",
     "expand": "Expand sidebar"
@@ -387,6 +435,7 @@
   "search": {
     "placeholder": "Filter…",
     "subfolders": "Subfolders",
+    "subfoldersShortcut": "Subfolders (Ctrl+Shift+F)",
     "close": "Close search",
     "results(one)": "1 result",
     "results(other)": "$count results",
@@ -434,6 +483,18 @@
     "confirmMoveMultiple(one)": "Move 1 item here?",
     "confirmMoveMultiple(other)": "Move $count items here?"
   },
+  "password": {
+    "authenticationRequired": "Authentication Required",
+    "dismiss": "Dismiss",
+    "mountPrompt": "Enter your password to mount this drive.",
+    "unlock": "Unlock"
+  },
+  "selectPattern": {
+    "title": "Select by pattern",
+    "hint": "*.jpg, *.png",
+    "help": "Wildcards: * (any), ? (one char). Separate patterns with commas.",
+    "select": "Select"
+  },
   "operations": {
     "title": "Operations",
     "clear": "Clear",
@@ -478,6 +539,7 @@
     "notEmpty": "Directory not empty",
     "crossDevice": "Cannot move across devices",
     "transferIntoSelf": "Cannot copy or move a folder into itself.",
+    "workerExitedUnexpectedly": "Worker exited unexpectedly",
     "appearedDuring": "File appeared at destination during operation",
     "archiveError": "Could not read archive"
   },
@@ -518,6 +580,29 @@
       "failed": "Failed",
       "cancelled": "Cancelled"
     }
+  },
+  "git": {
+    "clean": "clean",
+    "detachedHead": "detached HEAD",
+    "merging": "MERGING",
+    "rebasing": "REBASING",
+    "cherryPicking": "CHERRY-PICK",
+    "reverting": "REVERTING",
+    "bisecting": "BISECTING",
+    "checkoutFailed": "Checkout failed: $message",
+    "uncommittedChanges": "Uncommitted changes",
+    "stashPrompt": "Your local changes would be overwritten by switching to '$branch'.\n\nStash them now? They stay saved in a stash you can restore later on this branch.",
+    "stashSwitch": "Stash & Switch",
+    "stashSwitchFailed": "Stash & switch failed: $message",
+    "stashEntry": "stash@{$index} · $message",
+    "stashPop": "Pop (apply & remove)",
+    "stashApply": "Apply (keep stash)",
+    "stashDrop": "Drop",
+    "stashFailed": "Stash failed: $message",
+    "noRepository": "No repository",
+    "gitCheckoutFailed": "git checkout failed",
+    "gitStashFailed": "git stash failed",
+    "changesStashedSwitchFailed": "Changes stashed, but switch failed: $message"
   },
   "openWith": {
     "title": "Open With",

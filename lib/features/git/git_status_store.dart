@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:io';
 import 'package:signals/signals.dart';
 
+import '../../i18n/strings.g.dart';
+
 enum RepoState { clean, merging, rebasing, cherryPicking, reverting, bisecting }
 
 enum CheckoutOutcome { ok, needsStash, failed }
@@ -143,14 +145,11 @@ class GitStatusStore {
   Future<CheckoutResult> checkout(String branch) async {
     final root = status.value?.root;
     if (root == null) {
-      return const CheckoutResult(CheckoutOutcome.failed, 'No repository');
+      return CheckoutResult(CheckoutOutcome.failed, t.git.noRepository);
     }
     final result = await _git(root, ['checkout', branch]);
     if (result == null) {
-      return const CheckoutResult(
-        CheckoutOutcome.failed,
-        'git checkout failed',
-      );
+      return CheckoutResult(CheckoutOutcome.failed, t.git.gitCheckoutFailed);
     }
     if (result.exitCode != 0) {
       final err = result.stderr.toString().trim();
@@ -161,7 +160,7 @@ class GitStatusStore {
       }
       return CheckoutResult(
         CheckoutOutcome.failed,
-        err.isEmpty ? 'git checkout failed' : err,
+        err.isEmpty ? t.git.gitCheckoutFailed : err,
       );
     }
     await refresh(root);
@@ -173,7 +172,7 @@ class GitStatusStore {
   /// Returns an error message on failure, null on success.
   Future<String?> stashAndCheckout(String branch) async {
     final root = status.value?.root;
-    if (root == null) return 'No repository';
+    if (root == null) return t.git.noRepository;
     final stashResult = await _git(root, [
       'stash',
       'push',
@@ -183,14 +182,14 @@ class GitStatusStore {
     ]);
     if (stashResult == null || stashResult.exitCode != 0) {
       final err = stashResult?.stderr.toString().trim();
-      return (err == null || err.isEmpty) ? 'git stash failed' : err;
+      return (err == null || err.isEmpty) ? t.git.gitStashFailed : err;
     }
     final result = await checkout(branch);
     if (result.outcome == CheckoutOutcome.ok) return null;
     // Changes are safely stashed but we did not switch — make that explicit
     // so the user knows where their work went.
-    final why = result.message ?? 'git checkout failed';
-    return 'Changes stashed, but switch failed: $why';
+    final why = result.message ?? t.git.gitCheckoutFailed;
+    return t.git.changesStashedSwitchFailed(message: why);
   }
 
   Future<GitStatus?> _load(String path) async {
@@ -341,12 +340,12 @@ class GitStatusStore {
 
   Future<String?> _stashOp(List<String> args) async {
     final root = status.value?.root;
-    if (root == null) return 'No repository';
+    if (root == null) return t.git.noRepository;
     final result = await _git(root, ['stash', ...args]);
-    if (result == null) return 'git stash failed';
+    if (result == null) return t.git.gitStashFailed;
     if (result.exitCode != 0) {
       final err = result.stderr.toString().trim();
-      return err.isEmpty ? 'git stash failed' : err;
+      return err.isEmpty ? t.git.gitStashFailed : err;
     }
     await refresh(root);
     return null;

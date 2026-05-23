@@ -60,9 +60,12 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final TranslationsSearchEn search = TranslationsSearchEn.internal(_root);
 	late final TranslationsStatusBarEn statusBar = TranslationsStatusBarEn.internal(_root);
 	late final TranslationsDialogEn dialog = TranslationsDialogEn.internal(_root);
+	late final TranslationsPasswordEn password = TranslationsPasswordEn.internal(_root);
+	late final TranslationsSelectPatternEn selectPattern = TranslationsSelectPatternEn.internal(_root);
 	late final TranslationsOperationsEn operations = TranslationsOperationsEn.internal(_root);
 	late final TranslationsErrorsEn errors = TranslationsErrorsEn.internal(_root);
 	late final TranslationsTasksEn tasks = TranslationsTasksEn.internal(_root);
+	late final TranslationsGitEn git = TranslationsGitEn.internal(_root);
 	late final TranslationsOpenWithEn openWith = TranslationsOpenWithEn.internal(_root);
 }
 
@@ -76,6 +79,12 @@ class TranslationsAppEn {
 
 	/// en: 'Waydir'
 	String get title => 'Waydir';
+
+	/// en: 'Navigate your files. Your way.'
+	String get tagline => 'Navigate your files. Your way.';
+
+	/// en: 'A fast, keyboard-driven desktop file manager built with Flutter.'
+	String get description => 'A fast, keyboard-driven desktop file manager built with Flutter.';
 }
 
 // Path: menu
@@ -85,6 +94,9 @@ class TranslationsMenuEn {
 	final Translations _root; // ignore: unused_field
 
 	// Translations
+
+	/// en: 'View'
+	String get view => 'View';
 
 	/// en: 'Open'
 	String get open => 'Open';
@@ -339,6 +351,9 @@ class TranslationsUpdateEn {
 	/// en: 'Checking for updates...'
 	String get checking => 'Checking for updates...';
 
+	/// en: 'Unknown error'
+	String get unknownError => 'Unknown error';
+
 	/// en: 'You're on the latest version (v${version}).'
 	String upToDate({required Object version}) => 'You\'re on the latest version (v${version}).';
 
@@ -350,6 +365,12 @@ class TranslationsUpdateEn {
 
 	/// en: 'No release notes provided.'
 	String get noNotes => 'No release notes provided.';
+
+	/// en: 'v$version'
+	String versionLabel({required Object version}) => 'v${version}';
+
+	/// en: '$title - v$version'
+	String titleWithVersion({required Object title, required Object version}) => '${title} - v${version}';
 
 	/// en: 'Update available - v${version}'
 	String tooltipAvailable({required Object version}) => 'Update available - v${version}';
@@ -401,6 +422,33 @@ class TranslationsUpdateEn {
 
 	/// en: 'up to date'
 	String get statusUpToDateInline => 'up to date';
+
+	/// en: 'installer'
+	String get formatInstaller => 'installer';
+
+	/// en: 'portable'
+	String get formatPortable => 'portable';
+
+	/// en: 'unknown'
+	String get formatUnknown => 'unknown';
+
+	/// en: 'Download failed: HTTP $statusCode'
+	String downloadFailed({required Object statusCode}) => 'Download failed: HTTP ${statusCode}';
+
+	/// en: 'GitHub API $statusCode: $reason'
+	String githubApiError({required Object statusCode, required Object reason}) => 'GitHub API ${statusCode}: ${reason}';
+
+	/// en: 'Could not launch package installer. Open the file manually: $path'
+	String packageInstallerLaunchFailed({required Object path}) => 'Could not launch package installer. Open the file manually: ${path}';
+
+	/// en: 'Cannot write to bundle directory. Install the new version manually.'
+	String get bundleNotWritable => 'Cannot write to bundle directory. Install the new version manually.';
+
+	/// en: 'Failed to launch installer: $error'
+	String installerLaunchFailed({required Object error}) => 'Failed to launch installer: ${error}';
+
+	/// en: 'Failed to relaunch: $error'
+	String relaunchFailed({required Object error}) => 'Failed to relaunch: ${error}';
 }
 
 // Path: appMenu
@@ -430,6 +478,12 @@ class TranslationsKeybindingsEn {
 	String get menuLabel => 'Shortcuts';
 
 	late final TranslationsKeybindingsCategoriesEn categories = TranslationsKeybindingsCategoriesEn.internal(_root);
+
+	/// en: 'or'
+	String get or => 'or';
+
+	/// en: 'dual'
+	String get dualHint => 'dual';
 
 	/// en: 'Open'
 	String get openItem => 'Open';
@@ -569,6 +623,9 @@ class TranslationsQuickLookEn {
 
 	// Translations
 
+	/// en: 'Quick Look'
+	String get title => 'Quick Look';
+
 	/// en: 'No file selected'
 	String get noSelection => 'No file selected';
 
@@ -671,6 +728,9 @@ class TranslationsQuickLookEn {
 	/// en: 'Date taken'
 	String get dateTaken => 'Date taken';
 
+	/// en: 'Ln $line / $count'
+	String linePosition({required Object line, required Object count}) => 'Ln ${line} / ${count}';
+
 	/// en: 'Lines'
 	String get lines => 'Lines';
 
@@ -746,6 +806,7 @@ class TranslationsFileViewEn {
 	/// en: 'Folder is empty'
 	String get empty => 'Folder is empty';
 
+	late final TranslationsFileViewDateEn date = TranslationsFileViewDateEn.internal(_root);
 	late final TranslationsFileViewColumnsEn columns = TranslationsFileViewColumnsEn.internal(_root);
 }
 
@@ -797,6 +858,7 @@ class TranslationsSidebarEn {
 	String get dropBookmark => 'Drop folder to bookmark';
 
 	late final TranslationsSidebarDriveSpaceEn driveSpace = TranslationsSidebarDriveSpaceEn.internal(_root);
+	late final TranslationsSidebarDrivesEn drives = TranslationsSidebarDrivesEn.internal(_root);
 
 	/// en: 'Collapse sidebar'
 	String get collapse => 'Collapse sidebar';
@@ -890,6 +952,9 @@ class TranslationsSearchEn {
 
 	/// en: 'Subfolders'
 	String get subfolders => 'Subfolders';
+
+	/// en: 'Subfolders (Ctrl+Shift+F)'
+	String get subfoldersShortcut => 'Subfolders (Ctrl+Shift+F)';
 
 	/// en: 'Close search'
 	String get close => 'Close search';
@@ -1004,6 +1069,48 @@ class TranslationsDialogEn {
 
 	/// en: 'Move $count items here?'
 	String confirmMoveMultiple({required Object count}) => 'Move ${count} items here?';
+}
+
+// Path: password
+class TranslationsPasswordEn {
+	TranslationsPasswordEn.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Authentication Required'
+	String get authenticationRequired => 'Authentication Required';
+
+	/// en: 'Dismiss'
+	String get dismiss => 'Dismiss';
+
+	/// en: 'Enter your password to mount this drive.'
+	String get mountPrompt => 'Enter your password to mount this drive.';
+
+	/// en: 'Unlock'
+	String get unlock => 'Unlock';
+}
+
+// Path: selectPattern
+class TranslationsSelectPatternEn {
+	TranslationsSelectPatternEn.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Select by pattern'
+	String get title => 'Select by pattern';
+
+	/// en: '*.jpg, *.png'
+	String get hint => '*.jpg, *.png';
+
+	/// en: 'Wildcards: * (any), ? (one char). Separate patterns with commas.'
+	String get help => 'Wildcards: * (any), ? (one char). Separate patterns with commas.';
+
+	/// en: 'Select'
+	String get select => 'Select';
 }
 
 // Path: operations
@@ -1122,6 +1229,9 @@ class TranslationsErrorsEn {
 	/// en: 'Cannot copy or move a folder into itself.'
 	String get transferIntoSelf => 'Cannot copy or move a folder into itself.';
 
+	/// en: 'Worker exited unexpectedly'
+	String get workerExitedUnexpectedly => 'Worker exited unexpectedly';
+
 	/// en: 'File appeared at destination during operation'
 	String get appearedDuring => 'File appeared at destination during operation';
 
@@ -1186,6 +1296,78 @@ class TranslationsTasksEn {
 	String get updatingArchive => 'Updating archive';
 
 	late final TranslationsTasksStatusEn status = TranslationsTasksStatusEn.internal(_root);
+}
+
+// Path: git
+class TranslationsGitEn {
+	TranslationsGitEn.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'clean'
+	String get clean => 'clean';
+
+	/// en: 'detached HEAD'
+	String get detachedHead => 'detached HEAD';
+
+	/// en: 'MERGING'
+	String get merging => 'MERGING';
+
+	/// en: 'REBASING'
+	String get rebasing => 'REBASING';
+
+	/// en: 'CHERRY-PICK'
+	String get cherryPicking => 'CHERRY-PICK';
+
+	/// en: 'REVERTING'
+	String get reverting => 'REVERTING';
+
+	/// en: 'BISECTING'
+	String get bisecting => 'BISECTING';
+
+	/// en: 'Checkout failed: $message'
+	String checkoutFailed({required Object message}) => 'Checkout failed: ${message}';
+
+	/// en: 'Uncommitted changes'
+	String get uncommittedChanges => 'Uncommitted changes';
+
+	/// en: 'Your local changes would be overwritten by switching to '$branch'. Stash them now? They stay saved in a stash you can restore later on this branch.'
+	String stashPrompt({required Object branch}) => 'Your local changes would be overwritten by switching to \'${branch}\'.\n\nStash them now? They stay saved in a stash you can restore later on this branch.';
+
+	/// en: 'Stash & Switch'
+	String get stashSwitch => 'Stash & Switch';
+
+	/// en: 'Stash & switch failed: $message'
+	String stashSwitchFailed({required Object message}) => 'Stash & switch failed: ${message}';
+
+	/// en: 'stash@{$index} · $message'
+	String stashEntry({required Object index, required Object message}) => 'stash@{${index}} · ${message}';
+
+	/// en: 'Pop (apply & remove)'
+	String get stashPop => 'Pop (apply & remove)';
+
+	/// en: 'Apply (keep stash)'
+	String get stashApply => 'Apply (keep stash)';
+
+	/// en: 'Drop'
+	String get stashDrop => 'Drop';
+
+	/// en: 'Stash failed: $message'
+	String stashFailed({required Object message}) => 'Stash failed: ${message}';
+
+	/// en: 'No repository'
+	String get noRepository => 'No repository';
+
+	/// en: 'git checkout failed'
+	String get gitCheckoutFailed => 'git checkout failed';
+
+	/// en: 'git stash failed'
+	String get gitStashFailed => 'git stash failed';
+
+	/// en: 'Changes stashed, but switch failed: $message'
+	String changesStashedSwitchFailed({required Object message}) => 'Changes stashed, but switch failed: ${message}';
 }
 
 // Path: openWith
@@ -1286,6 +1468,9 @@ class TranslationsPreferencesGeneralEn {
 	/// en: 'Used when session restore is disabled or empty.'
 	String get defaultPathHint => 'Used when session restore is disabled or empty.';
 
+	/// en: '/home/user'
+	String get defaultPathPlaceholder => '/home/user';
+
 	/// en: 'Browse…'
 	String get browse => 'Browse…';
 
@@ -1369,6 +1554,15 @@ class TranslationsPreferencesAppearanceEn {
 
 	/// en: 'Choose a built-in or custom theme.'
 	String get themeHint => 'Choose a built-in or custom theme.';
+
+	/// en: 'Dark'
+	String get themeDark => 'Dark';
+
+	/// en: 'Light'
+	String get themeLight => 'Light';
+
+	/// en: 'Nord'
+	String get themeNord => 'Nord';
 
 	/// en: 'Custom themes'
 	String get customThemes => 'Custom themes';
@@ -1540,6 +1734,12 @@ class TranslationsPreferencesDiagnosticsEn {
 
 	/// en: 'Logs may contain file paths. Review before sharing.'
 	String get privacyNote => 'Logs may contain file paths. Review before sharing.';
+
+	/// en: 'Native'
+	String get native => 'Native';
+
+	/// en: 'unavailable'
+	String get unavailable => 'unavailable';
 }
 
 // Path: preferences.about
@@ -1596,6 +1796,36 @@ class TranslationsKeybindingsCategoriesEn {
 	String get search => 'Search';
 }
 
+// Path: fileView.date
+class TranslationsFileViewDateEn {
+	TranslationsFileViewDateEn.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'just now'
+	String get justNow => 'just now';
+
+	/// en: '${count}m ago'
+	String minutesAgo({required Object count}) => '${count}m ago';
+
+	/// en: '${count}h ago'
+	String hoursAgo({required Object count}) => '${count}h ago';
+
+	/// en: '${count}d ago'
+	String daysAgo({required Object count}) => '${count}d ago';
+
+	/// en: '${count}w ago'
+	String weeksAgo({required Object count}) => '${count}w ago';
+
+	/// en: '${count}mo ago'
+	String monthsAgo({required Object count}) => '${count}mo ago';
+
+	/// en: '${count}y ago'
+	String yearsAgo({required Object count}) => '${count}y ago';
+}
+
 // Path: fileView.columns
 class TranslationsFileViewColumnsEn {
 	TranslationsFileViewColumnsEn.internal(this._root);
@@ -1633,6 +1863,33 @@ class TranslationsSidebarDriveSpaceEn {
 
 	/// en: 'Total'
 	String get total => 'Total';
+}
+
+// Path: sidebar.drives
+class TranslationsSidebarDrivesEn {
+	TranslationsSidebarDrivesEn.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Local Disk'
+	String get localDisk => 'Local Disk';
+
+	/// en: 'USB Drive'
+	String get usbDrive => 'USB Drive';
+
+	/// en: 'Unknown Drive'
+	String get unknownDrive => 'Unknown Drive';
+
+	/// en: 'Macintosh HD'
+	String get macintoshHd => 'Macintosh HD';
+
+	/// en: '$name ($letter:)'
+	String windowsDriveLabel({required Object name, required Object letter}) => '${name} (${letter}:)';
+
+	/// en: 'Mount $name'
+	String mountTitle({required Object name}) => 'Mount ${name}';
 }
 
 // Path: tasks.status
@@ -1680,6 +1937,9 @@ extension on Translations {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
 			'app.title' => 'Waydir',
+			'app.tagline' => 'Navigate your files. Your way.',
+			'app.description' => 'A fast, keyboard-driven desktop file manager built with Flutter.',
+			'menu.view' => 'View',
 			'menu.open' => 'Open',
 			'menu.openItems' => ({required Object count}) => 'Open ${count} Items',
 			'menu.copy' => 'Copy',
@@ -1755,6 +2015,7 @@ extension on Translations {
 			'preferences.general.restoreSessionHint' => 'Reopen previously open tabs and panes on launch.',
 			'preferences.general.defaultPath' => 'Default starting path',
 			'preferences.general.defaultPathHint' => 'Used when session restore is disabled or empty.',
+			'preferences.general.defaultPathPlaceholder' => '/home/user',
 			'preferences.general.browse' => 'Browse…',
 			'preferences.general.fileOpsSection' => 'File operations',
 			'preferences.general.confirmDelete' => 'Confirm before delete',
@@ -1780,6 +2041,9 @@ extension on Translations {
 			'preferences.appearance.themeSection' => 'Theme',
 			'preferences.appearance.theme' => 'Theme',
 			'preferences.appearance.themeHint' => 'Choose a built-in or custom theme.',
+			'preferences.appearance.themeDark' => 'Dark',
+			'preferences.appearance.themeLight' => 'Light',
+			'preferences.appearance.themeNord' => 'Nord',
 			'preferences.appearance.customThemes' => 'Custom themes',
 			'preferences.appearance.customThemesHint' => 'Place theme JSON files in this folder. Changes are loaded when you switch themes.',
 			'preferences.appearance.addTheme' => 'Add theme',
@@ -1831,6 +2095,8 @@ extension on Translations {
 			'preferences.diagnostics.clear' => 'Clear',
 			'preferences.diagnostics.copied' => 'Copied to clipboard',
 			'preferences.diagnostics.privacyNote' => 'Logs may contain file paths. Review before sharing.',
+			'preferences.diagnostics.native' => 'Native',
+			'preferences.diagnostics.unavailable' => 'unavailable',
 			'preferences.about.title' => 'About',
 			'preferences.about.version' => 'Version',
 			'preferences.about.build' => 'Build',
@@ -1844,10 +2110,13 @@ extension on Translations {
 			'update.launching' => 'Launching installer...',
 			'update.error' => 'Update error',
 			'update.checking' => 'Checking for updates...',
+			'update.unknownError' => 'Unknown error',
 			'update.upToDate' => ({required Object version}) => 'You\'re on the latest version (v${version}).',
 			'update.noRelease' => 'No release information.',
 			'update.noMatch' => 'No matching download for this platform.',
 			'update.noNotes' => 'No release notes provided.',
+			'update.versionLabel' => ({required Object version}) => 'v${version}',
+			'update.titleWithVersion' => ({required Object title, required Object version}) => '${title} - v${version}',
 			'update.tooltipAvailable' => ({required Object version}) => 'Update available - v${version}',
 			'update.tooltipUpToDate' => 'Up to date',
 			'update.checkForUpdates' => 'Check for updates',
@@ -1865,6 +2134,15 @@ extension on Translations {
 			'update.restartHint' => ({required Object version}) => 'Restart Waydir to start using v${version}.',
 			'update.statusCheckingInline' => 'checking...',
 			'update.statusUpToDateInline' => 'up to date',
+			'update.formatInstaller' => 'installer',
+			'update.formatPortable' => 'portable',
+			'update.formatUnknown' => 'unknown',
+			'update.downloadFailed' => ({required Object statusCode}) => 'Download failed: HTTP ${statusCode}',
+			'update.githubApiError' => ({required Object statusCode, required Object reason}) => 'GitHub API ${statusCode}: ${reason}',
+			'update.packageInstallerLaunchFailed' => ({required Object path}) => 'Could not launch package installer. Open the file manually: ${path}',
+			'update.bundleNotWritable' => 'Cannot write to bundle directory. Install the new version manually.',
+			'update.installerLaunchFailed' => ({required Object error}) => 'Failed to launch installer: ${error}',
+			'update.relaunchFailed' => ({required Object error}) => 'Failed to relaunch: ${error}',
 			'appMenu.quit' => 'Quit',
 			'keybindings.title' => 'Keyboard Shortcuts',
 			'keybindings.menuLabel' => 'Shortcuts',
@@ -1874,6 +2152,8 @@ extension on Translations {
 			'keybindings.categories.fileOps' => 'File Operations',
 			'keybindings.categories.selection' => 'Selection',
 			'keybindings.categories.search' => 'Search',
+			'keybindings.or' => 'or',
+			'keybindings.dualHint' => 'dual',
 			'keybindings.openItem' => 'Open',
 			'keybindings.goUp' => 'Go up',
 			'keybindings.goBack' => 'Go back',
@@ -1914,6 +2194,7 @@ extension on Translations {
 			'commandPalette.preferencesSubtitle' => 'Open the full settings dialog',
 			'commandPalette.enabled' => 'Enabled',
 			'commandPalette.disabled' => 'Disabled',
+			'quickLook.title' => 'Quick Look',
 			'quickLook.noSelection' => 'No file selected',
 			'quickLook.folder' => 'Folder',
 			'quickLook.noPreview' => 'No preview available',
@@ -1948,6 +2229,7 @@ extension on Translations {
 			'quickLook.iso' => 'ISO',
 			'quickLook.focalLength' => 'Focal length',
 			'quickLook.dateTaken' => 'Date taken',
+			'quickLook.linePosition' => ({required Object line, required Object count}) => 'Ln ${line} / ${count}',
 			'quickLook.lines' => 'Lines',
 			'quickLook.characters' => 'Characters',
 			'quickLook.sectionGeneral' => 'General',
@@ -1964,6 +2246,13 @@ extension on Translations {
 			'dragHint.tabToSwitch' => '(Alt+drag to move)',
 			'fileView.movingItems' => ({required Object count}) => 'Moving ${count} items',
 			'fileView.empty' => 'Folder is empty',
+			'fileView.date.justNow' => 'just now',
+			'fileView.date.minutesAgo' => ({required Object count}) => '${count}m ago',
+			'fileView.date.hoursAgo' => ({required Object count}) => '${count}h ago',
+			'fileView.date.daysAgo' => ({required Object count}) => '${count}d ago',
+			'fileView.date.weeksAgo' => ({required Object count}) => '${count}w ago',
+			'fileView.date.monthsAgo' => ({required Object count}) => '${count}mo ago',
+			'fileView.date.yearsAgo' => ({required Object count}) => '${count}y ago',
 			'fileView.columns.name' => 'Name',
 			'fileView.columns.size' => 'Size',
 			'fileView.columns.dateModified' => 'Date modified',
@@ -1984,6 +2273,12 @@ extension on Translations {
 			'sidebar.driveSpace.used' => 'Used',
 			'sidebar.driveSpace.free' => 'Free',
 			'sidebar.driveSpace.total' => 'Total',
+			'sidebar.drives.localDisk' => 'Local Disk',
+			'sidebar.drives.usbDrive' => 'USB Drive',
+			'sidebar.drives.unknownDrive' => 'Unknown Drive',
+			'sidebar.drives.macintoshHd' => 'Macintosh HD',
+			'sidebar.drives.windowsDriveLabel' => ({required Object name, required Object letter}) => '${name} (${letter}:)',
+			'sidebar.drives.mountTitle' => ({required Object name}) => 'Mount ${name}',
 			'sidebar.collapse' => 'Collapse sidebar',
 			'sidebar.expand' => 'Expand sidebar',
 			'trash.accessDeniedTitle' => 'Trash needs Full Disk Access',
@@ -2003,6 +2298,7 @@ extension on Translations {
 			'notifications.clear' => 'Clear',
 			'search.placeholder' => 'Filter…',
 			'search.subfolders' => 'Subfolders',
+			'search.subfoldersShortcut' => 'Subfolders (Ctrl+Shift+F)',
 			'search.close' => 'Close search',
 			'search.results' => ({required Object count}) => '${count} results',
 			'search.found' => ({required Object count}) => '${count} found',
@@ -2035,6 +2331,14 @@ extension on Translations {
 			'dialog.confirmMoveTitle' => 'Move items?',
 			'dialog.confirmMoveSingle' => ({required Object name}) => 'Move "${name}" here?',
 			'dialog.confirmMoveMultiple' => ({required Object count}) => 'Move ${count} items here?',
+			'password.authenticationRequired' => 'Authentication Required',
+			'password.dismiss' => 'Dismiss',
+			'password.mountPrompt' => 'Enter your password to mount this drive.',
+			'password.unlock' => 'Unlock',
+			'selectPattern.title' => 'Select by pattern',
+			'selectPattern.hint' => '*.jpg, *.png',
+			'selectPattern.help' => 'Wildcards: * (any), ? (one char). Separate patterns with commas.',
+			'selectPattern.select' => 'Select',
 			'operations.title' => 'Operations',
 			'operations.clear' => 'Clear',
 			'operations.noActive' => 'No active operations',
@@ -2068,6 +2372,7 @@ extension on Translations {
 			'errors.notEmpty' => 'Directory not empty',
 			'errors.crossDevice' => 'Cannot move across devices',
 			'errors.transferIntoSelf' => 'Cannot copy or move a folder into itself.',
+			'errors.workerExitedUnexpectedly' => 'Worker exited unexpectedly',
 			'errors.appearedDuring' => 'File appeared at destination during operation',
 			'errors.archiveError' => 'Could not read archive',
 			'tasks.copyingSingle' => ({required Object name}) => 'Copying ${name}',
@@ -2095,6 +2400,27 @@ extension on Translations {
 			'tasks.status.completed' => 'Completed',
 			'tasks.status.failed' => 'Failed',
 			'tasks.status.cancelled' => 'Cancelled',
+			'git.clean' => 'clean',
+			'git.detachedHead' => 'detached HEAD',
+			'git.merging' => 'MERGING',
+			'git.rebasing' => 'REBASING',
+			'git.cherryPicking' => 'CHERRY-PICK',
+			'git.reverting' => 'REVERTING',
+			'git.bisecting' => 'BISECTING',
+			'git.checkoutFailed' => ({required Object message}) => 'Checkout failed: ${message}',
+			'git.uncommittedChanges' => 'Uncommitted changes',
+			'git.stashPrompt' => ({required Object branch}) => 'Your local changes would be overwritten by switching to \'${branch}\'.\n\nStash them now? They stay saved in a stash you can restore later on this branch.',
+			'git.stashSwitch' => 'Stash & Switch',
+			'git.stashSwitchFailed' => ({required Object message}) => 'Stash & switch failed: ${message}',
+			'git.stashEntry' => ({required Object index, required Object message}) => 'stash@{${index}} · ${message}',
+			'git.stashPop' => 'Pop (apply & remove)',
+			'git.stashApply' => 'Apply (keep stash)',
+			'git.stashDrop' => 'Drop',
+			'git.stashFailed' => ({required Object message}) => 'Stash failed: ${message}',
+			'git.noRepository' => 'No repository',
+			'git.gitCheckoutFailed' => 'git checkout failed',
+			'git.gitStashFailed' => 'git stash failed',
+			'git.changesStashedSwitchFailed' => ({required Object message}) => 'Changes stashed, but switch failed: ${message}',
 			'openWith.title' => 'Open With',
 			'openWith.subtitle' => ({required Object name}) => 'Choose an application to open "${name}"',
 			'openWith.recent' => 'Recent',

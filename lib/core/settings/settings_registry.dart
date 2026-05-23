@@ -62,7 +62,8 @@ class ToggleSetting extends AppSetting<bool> {
   void toggle() => value = !value;
 
   @override
-  String displayValue() => value ? 'On' : 'Off';
+  String displayValue() =>
+      value ? t.commandPalette.enabled : t.commandPalette.disabled;
 }
 
 class ChoiceSetting<T> extends AppSetting<T> {
@@ -125,7 +126,7 @@ class SettingsRegistry {
       category: SettingsCategory.general,
       label: () => t.preferences.general.defaultPath,
       hint: () => t.preferences.general.defaultPathHint,
-      hintText: '/home/user',
+      hintText: t.preferences.general.defaultPathPlaceholder,
       searchTerms: const ['startup', 'home', 'path'],
       signal: SettingsStore.instance.defaultStartingPath,
     ),
@@ -213,7 +214,7 @@ class SettingsRegistry {
         for (final theme in AppThemeRegistry.instance.themes)
           SettingChoice(
             value: theme.id,
-            label: () => theme.name,
+            label: () => _themeLabel(theme),
             icon: _themeIcon(theme),
           ),
       ],
@@ -333,12 +334,19 @@ class SettingsRegistry {
       for (final theme in AppThemeRegistry.instance.themes)
         SettingChoice(
           value: theme.id,
-          label: () => theme.name,
+          label: () => _themeLabel(theme),
           icon: _themeIcon(theme),
         ),
     ];
   }
 }
+
+String _themeLabel(AppThemeDefinition theme) => switch (theme.id) {
+  'dark' => t.preferences.appearance.themeDark,
+  'light' => t.preferences.appearance.themeLight,
+  'nord' => t.preferences.appearance.themeNord,
+  _ => theme.name,
+};
 
 IconData _themeIcon(AppThemeDefinition theme) {
   if (theme.id == 'light') return WaydirIconsRegular.sun;

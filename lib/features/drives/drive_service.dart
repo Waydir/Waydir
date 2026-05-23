@@ -6,6 +6,7 @@ import 'package:win32/win32.dart';
 
 import 'drive_model.dart';
 import '../../core/platform/platform_paths.dart';
+import '../../i18n/strings.g.dart';
 
 abstract class DriveService {
   Future<List<Drive>> getDrives();
@@ -54,20 +55,23 @@ class _WindowsDriveService implements DriveService {
                 0,
               );
 
-              String label = 'Local Disk';
+              String label = t.sidebar.drives.localDisk;
               if (result != 0) {
                 label = volumeNameBuffer.toDartString();
               }
               if (label.isEmpty) {
                 label = driveType == DRIVE_REMOVABLE
-                    ? 'USB Drive'
-                    : 'Local Disk';
+                    ? t.sidebar.drives.usbDrive
+                    : t.sidebar.drives.localDisk;
               }
 
               drives.add(
                 Drive(
                   id: rootPath,
-                  label: '$label ($letter:)',
+                  label: t.sidebar.drives.windowsDriveLabel(
+                    name: label,
+                    letter: letter,
+                  ),
                   mountPoint: rootPath,
                   isRemovable: driveType == DRIVE_REMOVABLE,
                   fsType: null,
@@ -141,7 +145,7 @@ class _LinuxDriveService implements DriveService {
       drives.add(
         Drive(
           id: '/',
-          label: 'Root',
+          label: t.sidebar.root,
           mountPoint: '/',
           isRemovable: false,
           fsType: null,
@@ -202,7 +206,7 @@ class _LinuxDriveService implements DriveService {
             drives.add(
               Drive(
                 id: id,
-                label: label ?? name ?? 'Unknown Drive',
+                label: label ?? name ?? t.sidebar.drives.unknownDrive,
                 mountPoint: mountPoint,
                 isRemovable: isRemovable,
                 fsType: fstype,
@@ -304,7 +308,7 @@ class _MacDriveService implements DriveService {
         if (!isRoot && !isVolumes) continue;
 
         final label = isRoot
-            ? 'Macintosh HD'
+            ? t.sidebar.drives.macintoshHd
             : mountPoint.substring('/Volumes/'.length);
 
         bool isRemovable = false;

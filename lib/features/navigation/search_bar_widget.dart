@@ -196,7 +196,7 @@ class _RecursiveToggleState extends State<_RecursiveToggle> {
     return Watch((context) {
       final active = widget.store.searchRecursive.value;
       return Tooltip(
-        message: '${t.search.subfolders} (Ctrl+Shift+F)',
+        message: t.search.subfoldersShortcut,
         child: MouseRegion(
           onEnter: (_) => setState(() => _hovered = true),
           onExit: (_) => setState(() => _hovered = false),

@@ -7,6 +7,7 @@ import 'package:signals/signals.dart';
 
 import 'github_releases.dart';
 import 'install_format.dart';
+import '../../i18n/strings.g.dart';
 import 'package_installer.dart';
 import 'swap_installer.dart';
 
@@ -35,6 +36,7 @@ class UpdateStore {
     }
     return i;
   }
+
   static void init({required String currentVersion}) {
     _instance = UpdateStore(currentVersion: currentVersion);
   }
@@ -146,7 +148,7 @@ class UpdateStore {
   Future<void> download() async {
     final asset = selectedAsset.value;
     if (asset == null) {
-      errorMessage.value = 'No matching download for this platform';
+      errorMessage.value = t.update.noMatch;
       status.value = UpdateStatus.error;
       return;
     }
@@ -162,7 +164,7 @@ class UpdateStore {
       final res = await _downloadClient!.send(req);
       if (res.statusCode != 200) {
         throw HttpException(
-          'Download failed: HTTP ${res.statusCode}',
+          t.update.downloadFailed(statusCode: res.statusCode),
           uri: req.url,
         );
       }
@@ -202,9 +204,6 @@ class UpdateStore {
     }
   }
 
-  /// Launches the installer / opens the downloaded file in the system
-  /// and signals the caller to quit when needed (deb/rpm/exe/dmg).
-  /// Returns true if the host app should exit after this call.
   Future<bool> launchInstaller() async {
     final file = downloadedFile.value;
     final fmt = installFormat.value;
@@ -216,9 +215,9 @@ class UpdateStore {
         case InstallFormat.linuxRpm:
           final ok = await PackageInstaller.install(file, fmt);
           if (!ok) {
-            errorMessage.value =
-                'Could not launch package installer. Open the file '
-                'manually: ${file.path}';
+            errorMessage.value = t.update.packageInstallerLaunchFailed(
+              path: file.path,
+            );
             status.value = UpdateStatus.error;
             return false;
           }
@@ -232,32 +231,36 @@ class UpdateStore {
         case InstallFormat.linuxPortable:
           final ok = await SwapInstaller.installLinuxPortable(file);
           if (!ok) {
-            errorMessage.value =
-                'Cannot write to bundle directory. Install the new version manually.';
+            errorMessage.value = t.update.bundleNotWritable;
             status.value = UpdateStatus.error;
             return false;
           }
           return true;
         case InstallFormat.windowsInstaller:
-          await Process.start(file.path, const [], mode: ProcessStartMode.detached);
+          await Process.start(
+            file.path,
+            const [],
+            mode: ProcessStartMode.detached,
+          );
           return true;
         case InstallFormat.windowsPortable:
           final ok = await SwapInstaller.installWindowsPortable(file);
           if (!ok) {
-            errorMessage.value =
-                'Cannot write to bundle directory. Install the new version manually.';
+            errorMessage.value = t.update.bundleNotWritable;
             status.value = UpdateStatus.error;
             return false;
           }
           return true;
         case InstallFormat.macDmg:
-          await Process.start('open', [file.path], mode: ProcessStartMode.detached);
+          await Process.start('open', [
+            file.path,
+          ], mode: ProcessStartMode.detached);
           return true;
         case InstallFormat.unknown:
           return false;
       }
     } catch (e) {
-      errorMessage.value = 'Failed to launch installer: $e';
+      errorMessage.value = t.update.installerLaunchFailed(error: e);
       status.value = UpdateStatus.error;
       return false;
     }
@@ -270,7 +273,7 @@ class UpdateStore {
       await _clearPendingRestart();
       return true;
     } catch (e) {
-      errorMessage.value = 'Failed to relaunch: $e';
+      errorMessage.value = t.update.relaunchFailed(error: e);
       return false;
     }
   }
@@ -359,13 +362,10 @@ class UpdateStore {
     final core = dash < 0 ? noBuild : noBuild.substring(0, dash);
     final pre = dash < 0 ? null : noBuild.substring(dash + 1);
     final parts = core.split('.');
-    return _Version(
-      [
-        for (var i = 0; i < 3; i++)
-          i < parts.length ? (int.tryParse(parts[i]) ?? 0) : 0,
-      ],
-      pre,
-    );
+    return _Version([
+      for (var i = 0; i < 3; i++)
+        i < parts.length ? (int.tryParse(parts[i]) ?? 0) : 0,
+    ], pre);
   }
 }
 

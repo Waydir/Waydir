@@ -61,7 +61,7 @@ class TitleBar extends StatelessWidget {
   List<PlatformMenuItem> _platformMenus() {
     return [
       PlatformMenu(
-        label: 'Waydir',
+        label: t.app.title,
         menus: [
           PlatformMenuItemGroup(
             members: [
@@ -146,7 +146,7 @@ class _MenuBar extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         TitleMenuButton(
-          label: 'Waydir',
+          label: t.app.title,
           items: [
             ContextMenuItem(
               icon: WaydirIconsRegular.gearSix,

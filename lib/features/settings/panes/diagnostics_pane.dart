@@ -68,7 +68,7 @@ class _DiagnosticsPaneState extends State<DiagnosticsPane> {
           Text(t.preferences.diagnostics.subtitle, style: context.txt.muted),
           const SizedBox(height: 8),
           SelectableText(
-            'Native: ${WaydirCoreLoader.buildInfo() ?? 'unavailable'}',
+            '${t.preferences.diagnostics.native}: ${WaydirCoreLoader.buildInfo() ?? t.preferences.diagnostics.unavailable}',
             style: context.txt.muted,
           ),
           const SizedBox(height: 16),

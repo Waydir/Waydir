@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:waydir/ui/icons/waydir_icons.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../ui/dialogs/dialog.dart';
 import '../../ui/overlays/context_menu.dart';
 import '../../ui/theme/app_theme.dart';
@@ -77,7 +78,7 @@ class _GitStatusBarState extends State<GitStatusBar>
               status.behind == 0 &&
               status.state == RepoState.clean) ...[
             const SizedBox(width: 8),
-            Text('clean', style: context.txt.muted),
+            Text(t.git.clean, style: context.txt.muted),
           ],
         ],
       ),
@@ -89,15 +90,15 @@ class _GitStatusBarState extends State<GitStatusBar>
       case RepoState.clean:
         return null;
       case RepoState.merging:
-        return 'MERGING';
+        return t.git.merging;
       case RepoState.rebasing:
-        return 'REBASING';
+        return t.git.rebasing;
       case RepoState.cherryPicking:
-        return 'CHERRY-PICK';
+        return t.git.cherryPicking;
       case RepoState.reverting:
-        return 'REVERTING';
+        return t.git.reverting;
       case RepoState.bisecting:
-        return 'BISECTING';
+        return t.git.bisecting;
     }
   }
 }
@@ -140,7 +141,10 @@ class _BranchButton extends StatelessWidget {
           case CheckoutOutcome.ok:
             return;
           case CheckoutOutcome.failed:
-            _snack(context, 'Checkout failed: ${result.message}');
+            _snack(
+              context,
+              t.git.checkoutFailed(message: result.message ?? ''),
+            );
           case CheckoutOutcome.needsStash:
             await _confirmStashAndSwitch(context, action);
         }
@@ -154,24 +158,19 @@ class _BranchButton extends StatelessWidget {
   ) async {
     final choice = await showCustomDialog<String>(
       context: context,
-      title: 'Uncommitted changes',
+      title: t.git.uncommittedChanges,
       icon: WaydirIconsRegular.warning,
       iconColor: AppColors.warning,
-      body: Text(
-        "Your local changes would be overwritten by switching to '$branch'.\n\n"
-        'Stash them now? They stay saved in a stash you can restore later '
-        'on this branch.',
-        style: context.txt.body,
-      ),
+      body: Text(t.git.stashPrompt(branch: branch), style: context.txt.body),
       actions: [
-        DialogAction(label: 'Cancel', color: AppColors.bgHoverStrong),
-        DialogAction(label: 'Stash & Switch', color: AppColors.accent),
+        DialogAction(label: t.dialog.cancel, color: AppColors.bgHoverStrong),
+        DialogAction(label: t.git.stashSwitch, color: AppColors.accent),
       ],
     );
-    if (choice != 'Stash & Switch' || !context.mounted) return;
+    if (choice != t.git.stashSwitch || !context.mounted) return;
     final error = await store.stashAndCheckout(branch);
     if (error != null && context.mounted) {
-      _snack(context, 'Stash & switch failed: $error');
+      _snack(context, t.git.stashSwitchFailed(message: error));
     }
   }
 
@@ -205,7 +204,7 @@ class _BranchButton extends StatelessWidget {
               const SizedBox(width: 5),
               Flexible(
                 child: Text(
-                  status.detached ? 'detached HEAD' : status.branch,
+                  status.detached ? t.git.detachedHead : status.branch,
                   style: context.txt.rowEmphasis.copyWith(color: color),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -245,22 +244,22 @@ class _StashButton extends StatelessWidget {
         for (final s in stashes)
           ContextMenuItem(
             icon: WaydirIconsRegular.archive,
-            label: 'stash@{${s.index}} · ${s.message}',
+            label: t.git.stashEntry(index: s.index, message: s.message),
             action: 'stash:${s.index}',
             children: [
               ContextMenuItem(
                 icon: WaydirIconsRegular.arrowCounterClockwise,
-                label: 'Pop (apply & remove)',
+                label: t.git.stashPop,
                 action: 'pop:${s.index}',
               ),
               ContextMenuItem(
                 icon: WaydirIconsRegular.copy,
-                label: 'Apply (keep stash)',
+                label: t.git.stashApply,
                 action: 'apply:${s.index}',
               ),
               ContextMenuItem(
                 icon: WaydirIconsRegular.trash,
-                label: 'Drop',
+                label: t.git.stashDrop,
                 action: 'drop:${s.index}',
                 danger: true,
               ),
@@ -286,7 +285,7 @@ class _StashButton extends StatelessWidget {
         if (error != null && context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Stash failed: $error'),
+              content: Text(t.git.stashFailed(message: error)),
               backgroundColor: AppColors.danger,
             ),
           );

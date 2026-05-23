@@ -164,7 +164,7 @@ class _WaydirPageState extends State<WaydirPage> {
           AppNotification(
             id: 'update-${release.version}',
             title: t.update.available,
-            message: 'v${release.version}',
+            message: t.update.versionLabel(version: release.version),
             type: NotificationType.persistent,
             icon: WaydirIconsRegular.arrowUp,
             accentColor: AppColors.warning,
@@ -423,10 +423,7 @@ class _WaydirPageState extends State<WaydirPage> {
       ).then((_) => _restoreFocus());
       return;
     }
-    showQuickLook(
-      context: context,
-      store: store,
-    ).then((_) => _restoreFocus());
+    showQuickLook(context: context, store: store).then((_) => _restoreFocus());
   }
 
   void _openFolderProperties(String path) {
@@ -1331,7 +1328,7 @@ class _WaydirPageState extends State<WaydirPage> {
     return Watch((_) {
       if (!_shell.ready.value) return const SizedBox.shrink();
       return TitleMenuButton(
-        label: 'View',
+        label: t.menu.view,
         items: [
           ContextMenuItem(
             icon: WaydirIconsRegular.columns,
@@ -1364,7 +1361,7 @@ class _WaydirPageState extends State<WaydirPage> {
   List<PlatformMenu> _platformViewMenus() {
     return [
       PlatformMenu(
-        label: 'View',
+        label: t.menu.view,
         menus: [
           PlatformMenuItem(
             label: t.menu.dualPaneMode,
