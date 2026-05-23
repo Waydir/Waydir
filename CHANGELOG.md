@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - UI improvements.
 - Properties view no longer shows read-error messages; it always displays the available details.
 
+### Fixed
+- Pressing D no longer toggles dual pane.
+
 ## [0.4.1] - 2026-05-21
 
 ### Changed

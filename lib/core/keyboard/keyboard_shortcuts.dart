@@ -193,7 +193,6 @@ class AppShortcuts {
       key: LogicalKeyboardKey.f9,
       altKey: LogicalKeyboardKey.keyD,
       altCtrl: true,
-      altShift: true,
     ),
     ShortcutDef(
       id: 'toggle_sidebar',

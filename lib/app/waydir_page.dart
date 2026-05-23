@@ -980,7 +980,12 @@ class _WaydirPageState extends State<WaydirPage> {
       return KeyEventResult.ignored;
     }
 
-    if (AppShortcuts.isKey('toggle_dual', key)) {
+    final toggleDual = AppShortcuts.getById('toggle_dual');
+    final toggleDualPrimary =
+        !ctrl && !shift && !alt && toggleDual.matchesKey(key);
+    final toggleDualAlt =
+        ctrl && !shift && !alt && toggleDual.matchesAltKey(key);
+    if (toggleDualPrimary || toggleDualAlt) {
       _shell.toggleDual();
       return KeyEventResult.handled;
     }
