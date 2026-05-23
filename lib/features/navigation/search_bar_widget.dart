@@ -27,7 +27,16 @@ class _AppSearchBarState extends State<AppSearchBar> {
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.store.searchQuery.value);
-    _focusNode = FocusNode();
+    _focusNode = FocusNode(
+      onKeyEvent: (node, event) {
+        if (event is KeyDownEvent &&
+            event.logicalKey == LogicalKeyboardKey.tab) {
+          widget.store.cycleSearchMode();
+          return KeyEventResult.handled;
+        }
+        return KeyEventResult.ignored;
+      },
+    );
     _wrapperFocusNode = FocusNode();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _focusNode.requestFocus();
