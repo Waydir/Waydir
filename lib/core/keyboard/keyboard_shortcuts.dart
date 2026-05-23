@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 
+import '../../i18n/strings.g.dart';
+
 enum ShortcutGroup { navigation, tabs, panes, fileOps, selection, search }
 
 class ShortcutDef {
@@ -248,14 +250,14 @@ class AppShortcuts {
     ShortcutDef(
       id: 'dual_copy',
       label: () => '',
-      hint: () => 'dual',
+      hint: () => t.keybindings.dualHint,
       group: ShortcutGroup.fileOps,
       key: LogicalKeyboardKey.f5,
     ),
     ShortcutDef(
       id: 'dual_move',
       label: () => '',
-      hint: () => 'dual',
+      hint: () => t.keybindings.dualHint,
       group: ShortcutGroup.fileOps,
       key: LogicalKeyboardKey.f6,
     ),

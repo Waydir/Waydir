@@ -459,7 +459,7 @@ class _KeyBadge extends StatelessWidget {
         if (alternate != null) ...[
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6),
-            child: Text('or', style: context.txt.micro),
+            child: Text(t.keybindings.or, style: context.txt.micro),
           ),
           ..._renderCombo(context, alternate!),
         ],

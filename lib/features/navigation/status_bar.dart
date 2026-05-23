@@ -63,7 +63,7 @@ class StatusBar extends StatelessWidget {
           Watch(
             (context) => _statusText(
               context,
-              '${AppInfo.name} ${AppInfo.versionLabel.value}',
+              '${t.app.title} ${AppInfo.versionLabel.value}',
             ),
           ),
           const SizedBox(width: 8),

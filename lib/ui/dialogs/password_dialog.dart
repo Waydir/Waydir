@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
+import '../../i18n/strings.g.dart';
 import '../../ui/theme/app_theme.dart';
 import '../../ui/theme/app_text_styles.dart';
 
-Future<String?> showPasswordDialog(
-  BuildContext context, {
-  String title = 'Authentication Required',
-}) {
+Future<String?> showPasswordDialog(BuildContext context, {String? title}) {
   return showGeneralDialog<String>(
     context: context,
     barrierColor: Colors.black54,
     barrierDismissible: true,
-    barrierLabel: 'Dismiss',
+    barrierLabel: t.password.dismiss,
     transitionDuration: const Duration(milliseconds: 200),
     pageBuilder: (context, animation, secondaryAnimation) {
       return FadeTransition(
         opacity: animation,
         child: ScaleTransition(
           scale: CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
-          child: _PasswordDialog(title: title),
+          child: _PasswordDialog(
+            title: title ?? t.password.authenticationRequired,
+          ),
         ),
       );
     },
@@ -76,7 +76,7 @@ class _PasswordDialogState extends State<_PasswordDialog> {
               Text(widget.title, style: context.txt.dialogTitle),
               const SizedBox(height: 8),
               Text(
-                'Enter your password to mount this drive.',
+                t.password.mountPrompt,
                 style: context.txt.body.copyWith(color: AppColors.fgMuted),
               ),
               const SizedBox(height: 16),
@@ -128,7 +128,7 @@ class _PasswordDialogState extends State<_PasswordDialog> {
                       foregroundColor: AppColors.fgMuted,
                       textStyle: context.txt.body,
                     ),
-                    child: const Text('Cancel'),
+                    child: Text(t.dialog.cancel),
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton(
@@ -144,7 +144,7 @@ class _PasswordDialogState extends State<_PasswordDialog> {
                         borderRadius: BorderRadius.zero,
                       ),
                     ),
-                    child: const Text('Unlock'),
+                    child: Text(t.password.unlock),
                   ),
                 ],
               ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:waydir/ui/icons/waydir_icons.dart';
 
+import '../../i18n/strings.g.dart';
 import '../../ui/dialogs/dialog.dart';
 import '../../ui/theme/app_theme.dart';
 import '../../ui/theme/app_text_styles.dart';
@@ -100,7 +101,7 @@ class _SelectPatternDialogState extends State<_SelectPatternDialog> {
                 color: AppColors.accent,
               ),
               const SizedBox(width: 8),
-              Text('Select by pattern', style: context.txt.heading),
+              Text(t.selectPattern.title, style: context.txt.heading),
             ],
           ),
           const SizedBox(height: 12),
@@ -115,7 +116,7 @@ class _SelectPatternDialogState extends State<_SelectPatternDialog> {
                 horizontal: 10,
                 vertical: 8,
               ),
-              hintText: '*.jpg, *.png',
+              hintText: t.selectPattern.hint,
               hintStyle: context.txt.body.copyWith(color: AppColors.fgMuted),
               filled: true,
               fillColor: AppColors.bgInput,
@@ -135,16 +136,13 @@ class _SelectPatternDialogState extends State<_SelectPatternDialog> {
             cursorColor: AppColors.accent,
           ),
           const SizedBox(height: 8),
-          Text(
-            'Wildcards: * (any), ? (one char). Separate patterns with commas.',
-            style: context.txt.muted,
-          ),
+          Text(t.selectPattern.help, style: context.txt.muted),
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               DialogButton(
-                label: 'Cancel',
+                label: t.dialog.cancel,
                 color: AppColors.fgMuted,
                 onTap: widget.onCancel,
               ),
@@ -154,7 +152,7 @@ class _SelectPatternDialogState extends State<_SelectPatternDialog> {
                 child: IgnorePointer(
                   ignoring: !_valid,
                   child: DialogButton(
-                    label: 'Select',
+                    label: t.selectPattern.select,
                     color: AppColors.accent,
                     onTap: _submit,
                   ),

@@ -291,7 +291,9 @@ class _SidebarState extends State<Sidebar> {
                                 if (context.mounted) {
                                   final pwd = await showPasswordDialog(
                                     context,
-                                    title: 'Mount ${drive.label}',
+                                    title: t.sidebar.drives.mountTitle(
+                                      name: drive.label,
+                                    ),
                                   );
                                   if (pwd != null) {
                                     try {
