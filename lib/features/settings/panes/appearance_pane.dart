@@ -421,7 +421,7 @@ class _ThemeFileRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = file.theme;
-    final title = theme == null ? p.basename(file.path) : theme.name;
+    final title = theme == null ? p.basename(file.path) : _themeLabel(theme);
     final subtitle = theme == null
         ? '${t.preferences.appearance.invalidTheme}: ${file.error}'
         : '${theme.id} - ${p.basename(file.path)}';
@@ -480,6 +480,13 @@ class _ThemeFileRow extends StatelessWidget {
     );
   }
 }
+
+String _themeLabel(AppThemeDefinition theme) => switch (theme.id) {
+  'dark' => t.preferences.appearance.themeDark,
+  'light' => t.preferences.appearance.themeLight,
+  'nord' => t.preferences.appearance.themeNord,
+  _ => theme.name,
+};
 
 class _ThemeFilesState {
   final String themesPath;

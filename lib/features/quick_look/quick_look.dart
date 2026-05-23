@@ -23,7 +23,7 @@ Future<void> showQuickLook({
   return showGeneralDialog<void>(
     context: context,
     barrierDismissible: true,
-    barrierLabel: 'Quick Look',
+    barrierLabel: t.quickLook.title,
     barrierColor: Colors.black.withValues(alpha: 0.5),
     transitionDuration: const Duration(milliseconds: 110),
     pageBuilder: (context, animation, secondaryAnimation) {
@@ -284,7 +284,7 @@ class _Header extends StatelessWidget {
             _HeaderButton(
               icon: WaydirIconsRegular.info,
               active: showInfo,
-              tooltip: 'Properties',
+              tooltip: t.menu.properties,
               onTap: onToggleInfo,
             ),
             const SizedBox(width: 4),

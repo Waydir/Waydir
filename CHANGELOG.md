@@ -120,7 +120,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Custom dark theme and custom title bar.
 - Settings store with persistent user preferences.
 
-[Unreleased]: https://github.com/mikolajbadyl/waydir/compare/v0.2.0...HEAD
-[0.2.0]: https://github.com/mikolajbadyl/waydir/compare/v0.1.1...v0.2.0
-[0.1.1]: https://github.com/mikolajbadyl/waydir/compare/v0.1.0...v0.1.1
-[0.1.0]: https://github.com/mikolajbadyl/waydir/releases/tag/v0.1.0
+[Unreleased]: https://github.com/Waydir/Waydir/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/Waydir/Waydir/compare/v0.1.1...v0.2.0
+[0.1.1]: https://github.com/Waydir/Waydir/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/Waydir/Waydir/releases/tag/v0.1.0

@@ -2,7 +2,7 @@ display_name: Waydir
 description: A fast, keyboard-driven desktop file manager built with Flutter.
 icon: linux/packaging/rpm/waydir.png
 license: MIT
-url: https://github.com/mikolajbadyl/Waydir
+url: https://github.com/Waydir/Waydir
 group: Applications/File
 vendor: mikolajbadyl
 packager: mikolajbadyl <mikolajbadyl0@gmail.com>

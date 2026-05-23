@@ -50,9 +50,9 @@ class AboutPane extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(AppInfo.name, style: context.txt.dialogTitle),
+                  Text(t.app.title, style: context.txt.dialogTitle),
                   const SizedBox(height: 4),
-                  Text(AppInfo.tagline, style: context.txt.muted),
+                  Text(t.app.tagline, style: context.txt.muted),
                 ],
               ),
             ],

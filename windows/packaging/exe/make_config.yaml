@@ -2,7 +2,7 @@ app_id: B6E1F2A4-9C3F-4D6A-9A2C-7E1D8B0F5A11
 display_name: Waydir
 executable_name: waydir
 publisher_name: mikolajbadyl
-publisher_url: https://github.com/mikolajbadyl/Waydir
+publisher_url: https://github.com/Waydir/Waydir
 setup_icon_file: windows/runner/resources/app_icon.ico
 create_desktop_icon: false
 script_template: inno_setup.iss
