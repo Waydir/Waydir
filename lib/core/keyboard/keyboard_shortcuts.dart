@@ -287,6 +287,22 @@ class AppShortcuts {
       key: LogicalKeyboardKey.insert,
     ),
     ShortcutDef(
+      id: 'save_selection',
+      label: () => '',
+      group: ShortcutGroup.selection,
+      key: LogicalKeyboardKey.keyS,
+      ctrl: true,
+      shift: true,
+    ),
+    ShortcutDef(
+      id: 'load_selection',
+      label: () => '',
+      group: ShortcutGroup.selection,
+      key: LogicalKeyboardKey.keyL,
+      ctrl: true,
+      shift: true,
+    ),
+    ShortcutDef(
       id: 'search',
       label: () => '',
       group: ShortcutGroup.search,

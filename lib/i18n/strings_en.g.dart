@@ -51,6 +51,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final TranslationsCommandPaletteEn commandPalette = TranslationsCommandPaletteEn.internal(_root);
 	late final TranslationsQuickLookEn quickLook = TranslationsQuickLookEn.internal(_root);
 	late final TranslationsToastEn toast = TranslationsToastEn.internal(_root);
+	late final TranslationsSelectionFileEn selectionFile = TranslationsSelectionFileEn.internal(_root);
 	late final TranslationsDragHintEn dragHint = TranslationsDragHintEn.internal(_root);
 	late final TranslationsFileViewEn fileView = TranslationsFileViewEn.internal(_root);
 	late final TranslationsSidebarEn sidebar = TranslationsSidebarEn.internal(_root);
@@ -145,6 +146,18 @@ class TranslationsMenuEn {
 
 	/// en: 'Select All'
 	String get selectAll => 'Select All';
+
+	/// en: 'Select by Pattern…'
+	String get selectByPattern => 'Select by Pattern…';
+
+	/// en: 'Deselect All'
+	String get deselectAll => 'Deselect All';
+
+	/// en: 'Save Selection to File…'
+	String get saveSelection => 'Save Selection to File…';
+
+	/// en: 'Load Selection from File…'
+	String get loadSelection => 'Load Selection from File…';
 
 	/// en: 'Open in Terminal'
 	String get openInTerminal => 'Open in Terminal';
@@ -569,6 +582,12 @@ class TranslationsKeybindingsEn {
 	/// en: 'Toggle select'
 	String get toggleSelect => 'Toggle select';
 
+	/// en: 'Save selection to file'
+	String get saveSelection => 'Save selection to file';
+
+	/// en: 'Load selection from file'
+	String get loadSelection => 'Load selection from file';
+
 	/// en: 'Search'
 	String get search => 'Search';
 
@@ -761,6 +780,18 @@ class TranslationsToastEn {
 	/// en: 'Cut $count items'
 	String cutItems({required Object count}) => 'Cut ${count} items';
 
+	/// en: 'Saved $count names to $path'
+	String selectionSaved({required Object count, required Object path}) => 'Saved ${count} names to ${path}';
+
+	/// en: 'Selected $count visible items'
+	String selectionLoaded({required Object count}) => 'Selected ${count} visible items';
+
+	/// en: 'No visible items matched'
+	String get selectionLoadEmpty => 'No visible items matched';
+
+	/// en: 'Selection file error: $message'
+	String selectionFileError({required Object message}) => 'Selection file error: ${message}';
+
 	/// en: '$label — $count errors'
 	String taskErrors({required Object label, required Object count}) => '${label} — ${count} errors';
 
@@ -772,6 +803,33 @@ class TranslationsToastEn {
 
 	/// en: 'Could not rename: $message'
 	String renameError({required Object message}) => 'Could not rename: ${message}';
+}
+
+// Path: selectionFile
+class TranslationsSelectionFileEn {
+	TranslationsSelectionFileEn.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Save Selection'
+	String get saveTitle => 'Save Selection';
+
+	/// en: 'Load Selection'
+	String get loadTitle => 'Load Selection';
+
+	/// en: 'Text file'
+	String get pathLabel => 'Text file';
+
+	/// en: 'selection.txt'
+	String get pathHint => 'selection.txt';
+
+	/// en: 'Save'
+	String get save => 'Save';
+
+	/// en: 'Load'
+	String get load => 'Load';
 }
 
 // Path: dragHint
@@ -1971,6 +2029,10 @@ extension on Translations {
 			'menu.restoreItems' => ({required Object count}) => 'Restore ${count} Items',
 			'menu.showHidden' => 'Show Hidden Files',
 			'menu.selectAll' => 'Select All',
+			'menu.selectByPattern' => 'Select by Pattern…',
+			'menu.deselectAll' => 'Deselect All',
+			'menu.saveSelection' => 'Save Selection to File…',
+			'menu.loadSelection' => 'Load Selection from File…',
 			'menu.openInTerminal' => 'Open in Terminal',
 			'menu.rename' => 'Rename',
 			'menu.openLocation' => 'Open Location',
@@ -2197,6 +2259,8 @@ extension on Translations {
 			'keybindings.selectPattern' => 'Select by pattern',
 			'keybindings.deselectAll' => 'Deselect all',
 			'keybindings.toggleSelect' => 'Toggle select',
+			'keybindings.saveSelection' => 'Save selection to file',
+			'keybindings.loadSelection' => 'Load selection from file',
 			'keybindings.search' => 'Search',
 			'keybindings.recursiveSearch' => 'Recursive search',
 			'keybindings.closeSearch' => 'Close search',
@@ -2252,10 +2316,20 @@ extension on Translations {
 			'quickLook.sectionText' => 'Text',
 			'toast.copiedItems' => ({required Object count}) => 'Copied ${count} items',
 			'toast.cutItems' => ({required Object count}) => 'Cut ${count} items',
+			'toast.selectionSaved' => ({required Object count, required Object path}) => 'Saved ${count} names to ${path}',
+			'toast.selectionLoaded' => ({required Object count}) => 'Selected ${count} visible items',
+			'toast.selectionLoadEmpty' => 'No visible items matched',
+			'toast.selectionFileError' => ({required Object message}) => 'Selection file error: ${message}',
 			'toast.taskErrors' => ({required Object label, required Object count}) => '${label} — ${count} errors',
 			'toast.renameAlreadyExists' => ({required Object name}) => 'An item named \'${name}\' already exists',
 			'toast.renameInvalidName' => 'Invalid name',
 			'toast.renameError' => ({required Object message}) => 'Could not rename: ${message}',
+			'selectionFile.saveTitle' => 'Save Selection',
+			'selectionFile.loadTitle' => 'Load Selection',
+			'selectionFile.pathLabel' => 'Text file',
+			'selectionFile.pathHint' => 'selection.txt',
+			'selectionFile.save' => 'Save',
+			'selectionFile.load' => 'Load',
 			'dragHint.copyTo' => ({required Object name}) => 'Copy to "${name}"',
 			'dragHint.moveTo' => ({required Object name}) => 'Move to "${name}"',
 			'dragHint.tabToSwitch' => '(Alt+drag to move)',
@@ -2447,6 +2521,8 @@ extension on Translations {
 			'openWith.recommended' => 'Recommended Applications',
 			'openWith.allApps' => 'All Applications',
 			'openWith.noApps' => 'No applications found for this file type.',
+			_ => null,
+		} ?? switch (path) {
 			'openWith.setDefault' => 'Always use for this file type',
 			'openWith.setDefaultUnavailable' => 'Default cannot be changed on this platform',
 			'openWith.moreApps' => 'More applications…',

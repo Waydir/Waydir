@@ -1115,6 +1115,44 @@ class NavigationStore {
     selectedPaths.value = Set<String>.from(_vf.map((f) => f.path));
   }
 
+  List<String> selectedNamesForFile() {
+    final selected = selectedPaths.value;
+    if (selected.isEmpty) return const [];
+    return [
+      for (final entry in _vf)
+        if (selected.contains(entry.path)) entry.name,
+    ];
+  }
+
+  int selectNamesFromFile(Iterable<String> names) {
+    final wanted = names
+        .map(
+          (name) =>
+              name.endsWith('\r') ? name.substring(0, name.length - 1) : name,
+        )
+        .map((name) => name.startsWith('\uFEFF') ? name.substring(1) : name)
+        .where((name) => name.isNotEmpty)
+        .toSet();
+    if (wanted.isEmpty) {
+      deselectAll();
+      return 0;
+    }
+    final matched = <String>{};
+    var cursor = -1;
+    for (var i = 0; i < _vf.length; i++) {
+      final entry = _vf[i];
+      if (!wanted.contains(entry.name)) continue;
+      matched.add(entry.path);
+      cursor = cursor < 0 ? i : cursor;
+    }
+    batch(() {
+      selectedPaths.value = matched;
+      cursorIndex.value = cursor;
+      anchorIndex.value = cursor;
+    });
+    return matched.length;
+  }
+
   /// Selects every visible entry whose name matches the given shell-style
   /// glob (`*`, `?`, character classes), case-insensitively. Returns the
   /// number of entries matched.

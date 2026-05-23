@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
@@ -27,8 +28,8 @@ import '../features/panes/shell_store.dart';
 import '../features/settings/preferences_view.dart';
 import '../i18n/strings.g.dart';
 import '../ui/chrome/title_bar.dart';
-import '../ui/dialogs/dialog.dart';
 import '../ui/dialogs/compress_dialog.dart';
+import '../ui/dialogs/dialog.dart';
 import '../ui/dialogs/open_with_dialog.dart';
 import '../ui/overlays/context_menu.dart';
 import '../ui/overlays/notification_overlay.dart';
@@ -949,6 +950,72 @@ class _WaydirPageState extends State<WaydirPage> {
     });
   }
 
+  Future<void> _saveSelectionToFile() async {
+    if (_isModalRouteOnTop()) return;
+    final store = _active;
+    final names = store.selectedNamesForFile();
+    if (names.isEmpty) return;
+    try {
+      final path = await FilePicker.saveFile(
+        dialogTitle: t.selectionFile.saveTitle,
+        fileName: 'selection.txt',
+        initialDirectory: store.currentPath.value,
+        type: FileType.custom,
+        allowedExtensions: const ['txt'],
+        lockParentWindow: true,
+      );
+      if (!mounted) return;
+      _restoreFocus();
+      if (path == null) return;
+      await File(path).writeAsString('${names.join('\n')}\n');
+      if (!mounted) return;
+      showToast(
+        context: context,
+        message: t.toast.selectionSaved(count: names.length, path: path),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      showToast(
+        context: context,
+        message: t.toast.selectionFileError(message: e.toString()),
+      );
+    }
+  }
+
+  Future<void> _loadSelectionFromFile() async {
+    if (_isModalRouteOnTop()) return;
+    final store = _active;
+    if (store.visibleFiles.value.isEmpty) return;
+    try {
+      final result = await FilePicker.pickFiles(
+        dialogTitle: t.selectionFile.loadTitle,
+        initialDirectory: store.currentPath.value,
+        type: FileType.custom,
+        allowedExtensions: const ['txt'],
+        lockParentWindow: true,
+      );
+      if (!mounted) return;
+      _restoreFocus();
+      final path = result?.files.single.path;
+      if (path == null) return;
+      final lines = await File(path).readAsLines();
+      final count = store.selectNamesFromFile(lines);
+      if (!mounted) return;
+      showToast(
+        context: context,
+        message: count == 0
+            ? t.toast.selectionLoadEmpty
+            : t.toast.selectionLoaded(count: count),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      showToast(
+        context: context,
+        message: t.toast.selectionFileError(message: e.toString()),
+      );
+    }
+  }
+
   bool _acceptCursorRepeat() {
     final now = DateTime.now();
     final last = _lastCursorRepeatAt;
@@ -1100,6 +1167,16 @@ class _WaydirPageState extends State<WaydirPage> {
 
     if (ctrl && !shift && AppShortcuts.isKey('select_pattern', key)) {
       _openSelectPattern();
+      return KeyEventResult.handled;
+    }
+
+    if (ctrl && shift && AppShortcuts.isKey('save_selection', key)) {
+      _saveSelectionToFile();
+      return KeyEventResult.handled;
+    }
+
+    if (ctrl && shift && AppShortcuts.isKey('load_selection', key)) {
+      _loadSelectionFromFile();
       return KeyEventResult.handled;
     }
 
@@ -1332,38 +1409,107 @@ class _WaydirPageState extends State<WaydirPage> {
   Widget _buildViewMenu() {
     return Watch((_) {
       if (!_shell.ready.value) return const SizedBox.shrink();
-      return TitleMenuButton(
-        label: t.menu.view,
-        items: [
-          ContextMenuItem(
-            icon: WaydirIconsRegular.columns,
-            label: t.menu.dualPaneMode,
-            action: 'toggle_dual',
-            isToggle: true,
-            toggleSignal: _shell.isDual,
+      final store = _active;
+      final selectedCount = store.selectedCount.value;
+      final hasVisibleFiles = store.visibleFiles.value.isNotEmpty;
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TitleMenuButton(
+            label: t.menu.view,
+            items: [
+              ContextMenuItem(
+                icon: WaydirIconsRegular.columns,
+                label: t.menu.dualPaneMode,
+                action: 'toggle_dual',
+                isToggle: true,
+                toggleSignal: _shell.isDual,
+              ),
+              ContextMenuItem.divider,
+              ContextMenuItem(
+                icon: WaydirIconsRegular.eye,
+                label: t.menu.showHidden,
+                action: 'toggle_hidden',
+                isToggle: true,
+                toggleSignal: SettingsStore.instance.showHiddenDefault,
+              ),
+            ],
+            onSelect: (action) {
+              switch (action) {
+                case 'toggle_dual':
+                  _shell.toggleDual();
+                case 'toggle_hidden':
+                  _toggleShowHiddenGlobal();
+              }
+            },
           ),
-          ContextMenuItem.divider,
-          ContextMenuItem(
-            icon: WaydirIconsRegular.eye,
-            label: t.menu.showHidden,
-            action: 'toggle_hidden',
-            isToggle: true,
-            toggleSignal: SettingsStore.instance.showHiddenDefault,
+          TitleMenuButton(
+            label: t.keybindings.categories.selection,
+            items: [
+              ContextMenuItem(
+                icon: WaydirIconsRegular.selectionAll,
+                label: t.menu.selectAll,
+                action: 'select_all',
+                shortcut: AppShortcuts.getById('select_all').displayKeys,
+                enabled: hasVisibleFiles,
+              ),
+              ContextMenuItem(
+                icon: WaydirIconsRegular.selectionAll,
+                label: t.menu.selectByPattern,
+                action: 'select_pattern',
+                shortcut: AppShortcuts.getById('select_pattern').displayKeys,
+                enabled: hasVisibleFiles,
+              ),
+              ContextMenuItem(
+                icon: WaydirIconsRegular.selectionAll,
+                label: t.menu.deselectAll,
+                action: 'deselect_all',
+                shortcut: AppShortcuts.getById('deselect_all').displayKeys,
+                enabled: selectedCount > 0,
+              ),
+              ContextMenuItem.divider,
+              ContextMenuItem(
+                icon: WaydirIconsRegular.floppyDisk,
+                label: t.menu.saveSelection,
+                action: 'save_selection',
+                shortcut: AppShortcuts.getById('save_selection').displayKeys,
+                enabled: selectedCount > 0,
+              ),
+              ContextMenuItem(
+                icon: WaydirIconsRegular.fileTxt,
+                label: t.menu.loadSelection,
+                action: 'load_selection',
+                shortcut: AppShortcuts.getById('load_selection').displayKeys,
+                enabled: hasVisibleFiles,
+              ),
+            ],
+            onSelect: _handleSelectionMenuAction,
           ),
         ],
-        onSelect: (action) {
-          switch (action) {
-            case 'toggle_dual':
-              _shell.toggleDual();
-            case 'toggle_hidden':
-              _toggleShowHiddenGlobal();
-          }
-        },
       );
     });
   }
 
+  void _handleSelectionMenuAction(String action) {
+    final store = _active;
+    switch (action) {
+      case 'select_all':
+        store.selectAll();
+      case 'select_pattern':
+        _openSelectPattern();
+      case 'deselect_all':
+        store.deselectAll();
+      case 'save_selection':
+        _saveSelectionToFile();
+      case 'load_selection':
+        _loadSelectionFromFile();
+    }
+  }
+
   List<PlatformMenu> _platformViewMenus() {
+    final store = _shell.ready.value ? _active : null;
+    final selectedCount = store?.selectedCount.value ?? 0;
+    final hasVisibleFiles = store?.visibleFiles.value.isNotEmpty ?? false;
     return [
       PlatformMenu(
         label: t.menu.view,
@@ -1380,6 +1526,54 @@ class _WaydirPageState extends State<WaydirPage> {
           ),
         ],
       ),
+      PlatformMenu(
+        label: t.keybindings.categories.selection,
+        menus: [
+          PlatformMenuItem(
+            label: t.menu.selectAll,
+            shortcut: const SingleActivator(
+              LogicalKeyboardKey.keyA,
+              meta: true,
+            ),
+            onSelected: hasVisibleFiles ? () => _active.selectAll() : null,
+          ),
+          PlatformMenuItem(
+            label: t.menu.selectByPattern,
+            shortcut: const SingleActivator(
+              LogicalKeyboardKey.keyS,
+              meta: true,
+            ),
+            onSelected: hasVisibleFiles ? _openSelectPattern : null,
+          ),
+          PlatformMenuItem(
+            label: t.menu.deselectAll,
+            shortcut: const SingleActivator(LogicalKeyboardKey.escape),
+            onSelected: selectedCount > 0 ? () => _active.deselectAll() : null,
+          ),
+          PlatformMenuItemGroup(
+            members: [
+              PlatformMenuItem(
+                label: t.menu.saveSelection,
+                shortcut: const SingleActivator(
+                  LogicalKeyboardKey.keyS,
+                  meta: true,
+                  shift: true,
+                ),
+                onSelected: selectedCount > 0 ? _saveSelectionToFile : null,
+              ),
+              PlatformMenuItem(
+                label: t.menu.loadSelection,
+                shortcut: const SingleActivator(
+                  LogicalKeyboardKey.keyL,
+                  meta: true,
+                  shift: true,
+                ),
+                onSelected: hasVisibleFiles ? _loadSelectionFromFile : null,
+              ),
+            ],
+          ),
+        ],
+      ),
     ];
   }
 
@@ -1392,112 +1586,118 @@ class _WaydirPageState extends State<WaydirPage> {
         onKeyEvent: _handleKeyEvent,
         child: Stack(
           children: [
-            TitleBar(
-              menuTrailing: _buildViewMenu(),
-              platformMenus: _platformViewMenus(),
-              child: Watch((context) {
-                if (!_shell.ready.value) {
-                  return Center(
-                    child: SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: AppColors.fgMuted,
+            Watch((_) {
+              if (_shell.ready.value) {
+                _active.selectedCount.value;
+                _active.visibleFiles.value.length;
+              }
+              return TitleBar(
+                menuTrailing: _buildViewMenu(),
+                platformMenus: _platformViewMenus(),
+                child: Watch((context) {
+                  if (!_shell.ready.value) {
+                    return Center(
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.fgMuted,
+                        ),
                       ),
-                    ),
-                  );
-                }
-                return Column(
-                  children: [
-                    Expanded(
-                      child: Row(
-                        children: [
-                          _SidebarHost(
-                            active: _active,
-                            operationStore: _operationStore,
-                            onOpenInNewTab: _openInNewTab,
-                          ),
-                          Container(width: 1, color: AppColors.bgDivider),
-                          Expanded(
-                            child: LayoutBuilder(
-                              builder: (context, constraints) {
-                                return Watch((_) {
-                                  final dual = _shell.isDual.value;
-                                  final panes = _shell.panes.value;
-                                  final activeIdx =
-                                      _shell.activePaneIndex.value;
-
-                                  if (!dual) {
-                                    return PaneView(
-                                      pane: panes[0],
-                                      isActive: true,
-                                      onActivate: _restoreFocus,
-                                      onBackgroundContextMenu:
-                                          _handleBackgroundContextMenu,
-                                      onContextMenu: _handleContextMenu,
-                                      onMenuAction: _handleMenuAction,
-                                      onOpenInNewTab: _openInNewTab,
-                                    );
-                                  }
-
-                                  final ratio = _shell.splitRatio.value;
-                                  final leftFlex = (ratio * 1000).round();
-                                  final rightFlex = ((1 - ratio) * 1000)
-                                      .round();
-
-                                  return Row(
-                                    children: [
-                                      Flexible(
-                                        flex: leftFlex,
-                                        child: PaneView(
-                                          pane: panes[0],
-                                          isActive: activeIdx == 0,
-                                          onActivate: _activatePane(0),
-                                          onBackgroundContextMenu:
-                                              _handleBackgroundContextMenu,
-                                          onContextMenu: _handleContextMenu,
-                                          onMenuAction: _handleMenuAction,
-                                          onOpenInNewTab: _openInNewTab,
-                                        ),
-                                      ),
-                                      PaneDivider(
-                                        shell: _shell,
-                                        totalWidth: constraints.maxWidth,
-                                      ),
-                                      Flexible(
-                                        flex: rightFlex,
-                                        child: PaneView(
-                                          pane: panes[1],
-                                          isActive: activeIdx == 1,
-                                          onActivate: _activatePane(1),
-                                          onBackgroundContextMenu:
-                                              _handleBackgroundContextMenu,
-                                          onContextMenu: _handleContextMenu,
-                                          onMenuAction: _handleMenuAction,
-                                          onOpenInNewTab: _openInNewTab,
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                });
-                              },
+                    );
+                  }
+                  return Column(
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            _SidebarHost(
+                              active: _active,
+                              operationStore: _operationStore,
+                              onOpenInNewTab: _openInNewTab,
                             ),
-                          ),
-                        ],
+                            Container(width: 1, color: AppColors.bgDivider),
+                            Expanded(
+                              child: LayoutBuilder(
+                                builder: (context, constraints) {
+                                  return Watch((_) {
+                                    final dual = _shell.isDual.value;
+                                    final panes = _shell.panes.value;
+                                    final activeIdx =
+                                        _shell.activePaneIndex.value;
+
+                                    if (!dual) {
+                                      return PaneView(
+                                        pane: panes[0],
+                                        isActive: true,
+                                        onActivate: _restoreFocus,
+                                        onBackgroundContextMenu:
+                                            _handleBackgroundContextMenu,
+                                        onContextMenu: _handleContextMenu,
+                                        onMenuAction: _handleMenuAction,
+                                        onOpenInNewTab: _openInNewTab,
+                                      );
+                                    }
+
+                                    final ratio = _shell.splitRatio.value;
+                                    final leftFlex = (ratio * 1000).round();
+                                    final rightFlex = ((1 - ratio) * 1000)
+                                        .round();
+
+                                    return Row(
+                                      children: [
+                                        Flexible(
+                                          flex: leftFlex,
+                                          child: PaneView(
+                                            pane: panes[0],
+                                            isActive: activeIdx == 0,
+                                            onActivate: _activatePane(0),
+                                            onBackgroundContextMenu:
+                                                _handleBackgroundContextMenu,
+                                            onContextMenu: _handleContextMenu,
+                                            onMenuAction: _handleMenuAction,
+                                            onOpenInNewTab: _openInNewTab,
+                                          ),
+                                        ),
+                                        PaneDivider(
+                                          shell: _shell,
+                                          totalWidth: constraints.maxWidth,
+                                        ),
+                                        Flexible(
+                                          flex: rightFlex,
+                                          child: PaneView(
+                                            pane: panes[1],
+                                            isActive: activeIdx == 1,
+                                            onActivate: _activatePane(1),
+                                            onBackgroundContextMenu:
+                                                _handleBackgroundContextMenu,
+                                            onContextMenu: _handleContextMenu,
+                                            onMenuAction: _handleMenuAction,
+                                            onOpenInNewTab: _openInNewTab,
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  });
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    Watch(
-                      (context) => StatusBar(
-                        store: _active,
-                        operationStore: _operationStore,
-                        notificationStore: _notificationStore,
+                      Watch(
+                        (context) => StatusBar(
+                          store: _active,
+                          operationStore: _operationStore,
+                          notificationStore: _notificationStore,
+                        ),
                       ),
-                    ),
-                  ],
-                );
-              }),
-            ),
+                    ],
+                  );
+                }),
+              );
+            }),
             NotificationOverlay(store: _notificationStore),
           ],
         ),
