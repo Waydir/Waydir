@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Selection and cursor position are now restored when going back/forward and preserved across file operations.
 - Selection can now be saved to a text file and loaded back by matching visible item names in the current view.
 - Search supports regex and glob patterns alongside substring matching. Switch between modes from the new segmented toggle in the search bar.
+- File operations now show current transfer speed and ETA in the operations panel.
 
 ### Changed
 - UI improvements.
