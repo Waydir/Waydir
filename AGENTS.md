@@ -2,16 +2,20 @@
 
 Desktop file manager built with Flutter/Dart. Fast, minimal, dark theme, keyboard-driven navigation. Targets: Linux, macOS, Windows.
 
+Linux and Windows are the primary development and testing targets. macOS builds come from the same codebase but are not regularly tested - treat parity as best-effort and flag macOS-specific risks rather than assuming they work.
+
 ## Project structure
 
 Feature-driven structure:
 
-- `lib/core/` - models, FS services, keyboard, clipboard
-- `lib/features/` - features (navigation, operations, files)
-- `lib/ui/` - shared UI components (theme, dialogs, overlays)
+- `lib/core/` - cross-cutting services: `archive`, `clipboard`, `database`, `fs`, `keyboard`, `logging`, `models`, `open`, `platform`, `settings`, `terminal`
+- `lib/features/` - feature modules: `drives`, `files`, `git`, `navigation`, `operations`, `panes`, `quick_look`, `settings`, `tabs`
+- `lib/ui/` - shared UI: `chrome`, `dialogs`, `icons`, `overlays`, `theme`, `widgets`, `window`
 - `lib/app/` - main app widget and page
-- `lib/i18n/` - translations (slang)
-- `test/` - tests (mirrors `lib/` structure)
+- `lib/i18n/` - translations (slang); currently English only
+- `rust/waydir_core/` - native Rust core (cdylib) for path-heavy work (listing, search, trash)
+- `third_party/waydir_core/{linux,windows,macos}/` - vendored prebuilt native libs loaded at runtime via `lib/core/fs/waydir_core_loader.dart`
+- `test/unit/`, `test/integration/`, `test/support/` - tests split by kind, not a strict mirror of `lib/`
 
 Each feature has its own folder with views and store.
 
@@ -20,6 +24,9 @@ Each feature has its own folder with views and store.
 - **Signals** (`signals` package) - all reactive state via `signal()`, `computed()`, `batch()`
 - **Isolated operations** - copy/move/delete run in separate Isolates, never block UI
 - **FsWorkerPool** - isolate pool for simple FS ops (list, stat, exists, etc.)
+- **Native Rust core** - heavy FS work (recursive list, search, trash) goes through `rust/waydir_core` via FFI, off the UI thread
+- **drift + sqlite3** - persistent state in `lib/core/database/app_database.dart`; regenerate with build_runner after schema changes
+- **Custom window chrome** - `bitsdojo_window`-based custom title bar in `lib/ui/chrome/` and `lib/ui/window/`
 - **slang** for i18n - translations in `lib/i18n/*.i18n.json`, generated via `slang_build_runner`
 
 ## Signals usage
@@ -38,13 +45,16 @@ Each feature has its own folder with views and store.
 - `flutter test --exclude-tags=integration` - run fast unit tests only
 - `flutter test --tags=integration` - run integration tests only
 - `dart run slang` - regenerate translations after JSON changes
+- `dart run build_runner build --delete-conflicting-outputs` - regenerate drift code after DB schema changes
+- `scripts/build_waydir_core.sh` / `scripts/build_waydir_core_windows.ps1` - build and vendor the native Rust core
+- `fastforge package --platform <linux|windows|macos> --targets <deb|rpm|appimage|exe|zip|dmg>` - build installable artifacts (config in `distribute_options.yaml` and `*/packaging/`). Windows `exe` target requires Inno Setup installed.
 
 ## Git
 
 - NEVER push
 - Each feature on a separate branch
 - Conventional commits: `feat:`, `fix:`, `refactor:`, `chore:`, `test:`
-- Short, clear commit messages
+- Commit messages: title only, no body
 
 ## Styling
 
@@ -57,5 +67,5 @@ Each feature has its own folder with views and store.
 
 - No code comments
 - No unnecessary dependencies
-- Tests mirror `lib/` structure
+- Tests split into `unit/` and `integration/` under `test/`
 - Translation keys in English
