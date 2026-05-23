@@ -290,6 +290,18 @@ class $AppSettingsTable extends AppSettings
     ),
     defaultValue: const Constant(true),
   );
+  static const VerificationMeta _searchModeMeta = const VerificationMeta(
+    'searchMode',
+  );
+  @override
+  late final GeneratedColumn<String> searchMode = GeneratedColumn<String>(
+    'search_mode',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('substring'),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -313,6 +325,7 @@ class $AppSettingsTable extends AppSettings
     sortKey,
     sortAscending,
     foldersFirst,
+    searchMode,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -488,6 +501,12 @@ class $AppSettingsTable extends AppSettings
         ),
       );
     }
+    if (data.containsKey('search_mode')) {
+      context.handle(
+        _searchModeMeta,
+        searchMode.isAcceptableOrUnknown(data['search_mode']!, _searchModeMeta),
+      );
+    }
     return context;
   }
 
@@ -581,6 +600,10 @@ class $AppSettingsTable extends AppSettings
         DriftSqlType.bool,
         data['${effectivePrefix}folders_first'],
       )!,
+      searchMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}search_mode'],
+      )!,
     );
   }
 
@@ -612,6 +635,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
   final String sortKey;
   final bool sortAscending;
   final bool foldersFirst;
+  final String searchMode;
   const AppSetting({
     required this.id,
     required this.themeMode,
@@ -634,6 +658,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     required this.sortKey,
     required this.sortAscending,
     required this.foldersFirst,
+    required this.searchMode,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -659,6 +684,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     map['sort_key'] = Variable<String>(sortKey);
     map['sort_ascending'] = Variable<bool>(sortAscending);
     map['folders_first'] = Variable<bool>(foldersFirst);
+    map['search_mode'] = Variable<String>(searchMode);
     return map;
   }
 
@@ -685,6 +711,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       sortKey: Value(sortKey),
       sortAscending: Value(sortAscending),
       foldersFirst: Value(foldersFirst),
+      searchMode: Value(searchMode),
     );
   }
 
@@ -721,6 +748,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       sortKey: serializer.fromJson<String>(json['sortKey']),
       sortAscending: serializer.fromJson<bool>(json['sortAscending']),
       foldersFirst: serializer.fromJson<bool>(json['foldersFirst']),
+      searchMode: serializer.fromJson<String>(json['searchMode']),
     );
   }
   @override
@@ -748,6 +776,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       'sortKey': serializer.toJson<String>(sortKey),
       'sortAscending': serializer.toJson<bool>(sortAscending),
       'foldersFirst': serializer.toJson<bool>(foldersFirst),
+      'searchMode': serializer.toJson<String>(searchMode),
     };
   }
 
@@ -773,6 +802,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     String? sortKey,
     bool? sortAscending,
     bool? foldersFirst,
+    String? searchMode,
   }) => AppSetting(
     id: id ?? this.id,
     themeMode: themeMode ?? this.themeMode,
@@ -795,6 +825,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     sortKey: sortKey ?? this.sortKey,
     sortAscending: sortAscending ?? this.sortAscending,
     foldersFirst: foldersFirst ?? this.foldersFirst,
+    searchMode: searchMode ?? this.searchMode,
   );
   AppSetting copyWithCompanion(AppSettingsCompanion data) {
     return AppSetting(
@@ -851,6 +882,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       foldersFirst: data.foldersFirst.present
           ? data.foldersFirst.value
           : this.foldersFirst,
+      searchMode: data.searchMode.present
+          ? data.searchMode.value
+          : this.searchMode,
     );
   }
 
@@ -877,7 +911,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           ..write('deleteKeyBehavior: $deleteKeyBehavior, ')
           ..write('sortKey: $sortKey, ')
           ..write('sortAscending: $sortAscending, ')
-          ..write('foldersFirst: $foldersFirst')
+          ..write('foldersFirst: $foldersFirst, ')
+          ..write('searchMode: $searchMode')
           ..write(')'))
         .toString();
   }
@@ -905,6 +940,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     sortKey,
     sortAscending,
     foldersFirst,
+    searchMode,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -930,7 +966,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           other.deleteKeyBehavior == this.deleteKeyBehavior &&
           other.sortKey == this.sortKey &&
           other.sortAscending == this.sortAscending &&
-          other.foldersFirst == this.foldersFirst);
+          other.foldersFirst == this.foldersFirst &&
+          other.searchMode == this.searchMode);
 }
 
 class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
@@ -955,6 +992,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
   final Value<String> sortKey;
   final Value<bool> sortAscending;
   final Value<bool> foldersFirst;
+  final Value<String> searchMode;
   const AppSettingsCompanion({
     this.id = const Value.absent(),
     this.themeMode = const Value.absent(),
@@ -977,6 +1015,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.sortKey = const Value.absent(),
     this.sortAscending = const Value.absent(),
     this.foldersFirst = const Value.absent(),
+    this.searchMode = const Value.absent(),
   });
   AppSettingsCompanion.insert({
     this.id = const Value.absent(),
@@ -1000,6 +1039,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.sortKey = const Value.absent(),
     this.sortAscending = const Value.absent(),
     this.foldersFirst = const Value.absent(),
+    this.searchMode = const Value.absent(),
   });
   static Insertable<AppSetting> custom({
     Expression<int>? id,
@@ -1023,6 +1063,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Expression<String>? sortKey,
     Expression<bool>? sortAscending,
     Expression<bool>? foldersFirst,
+    Expression<String>? searchMode,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1049,6 +1090,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       if (sortKey != null) 'sort_key': sortKey,
       if (sortAscending != null) 'sort_ascending': sortAscending,
       if (foldersFirst != null) 'folders_first': foldersFirst,
+      if (searchMode != null) 'search_mode': searchMode,
     });
   }
 
@@ -1074,6 +1116,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Value<String>? sortKey,
     Value<bool>? sortAscending,
     Value<bool>? foldersFirst,
+    Value<String>? searchMode,
   }) {
     return AppSettingsCompanion(
       id: id ?? this.id,
@@ -1098,6 +1141,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       sortKey: sortKey ?? this.sortKey,
       sortAscending: sortAscending ?? this.sortAscending,
       foldersFirst: foldersFirst ?? this.foldersFirst,
+      searchMode: searchMode ?? this.searchMode,
     );
   }
 
@@ -1171,6 +1215,9 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     if (foldersFirst.present) {
       map['folders_first'] = Variable<bool>(foldersFirst.value);
     }
+    if (searchMode.present) {
+      map['search_mode'] = Variable<String>(searchMode.value);
+    }
     return map;
   }
 
@@ -1197,7 +1244,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
           ..write('deleteKeyBehavior: $deleteKeyBehavior, ')
           ..write('sortKey: $sortKey, ')
           ..write('sortAscending: $sortAscending, ')
-          ..write('foldersFirst: $foldersFirst')
+          ..write('foldersFirst: $foldersFirst, ')
+          ..write('searchMode: $searchMode')
           ..write(')'))
         .toString();
   }
@@ -3043,6 +3091,7 @@ typedef $$AppSettingsTableCreateCompanionBuilder =
       Value<String> sortKey,
       Value<bool> sortAscending,
       Value<bool> foldersFirst,
+      Value<String> searchMode,
     });
 typedef $$AppSettingsTableUpdateCompanionBuilder =
     AppSettingsCompanion Function({
@@ -3067,6 +3116,7 @@ typedef $$AppSettingsTableUpdateCompanionBuilder =
       Value<String> sortKey,
       Value<bool> sortAscending,
       Value<bool> foldersFirst,
+      Value<String> searchMode,
     });
 
 class $$AppSettingsTableFilterComposer
@@ -3180,6 +3230,11 @@ class $$AppSettingsTableFilterComposer
 
   ColumnFilters<bool> get foldersFirst => $composableBuilder(
     column: $table.foldersFirst,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get searchMode => $composableBuilder(
+    column: $table.searchMode,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -3297,6 +3352,11 @@ class $$AppSettingsTableOrderingComposer
     column: $table.foldersFirst,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get searchMode => $composableBuilder(
+    column: $table.searchMode,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$AppSettingsTableAnnotationComposer
@@ -3402,6 +3462,11 @@ class $$AppSettingsTableAnnotationComposer
     column: $table.foldersFirst,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get searchMode => $composableBuilder(
+    column: $table.searchMode,
+    builder: (column) => column,
+  );
 }
 
 class $$AppSettingsTableTableManager
@@ -3456,6 +3521,7 @@ class $$AppSettingsTableTableManager
                 Value<String> sortKey = const Value.absent(),
                 Value<bool> sortAscending = const Value.absent(),
                 Value<bool> foldersFirst = const Value.absent(),
+                Value<String> searchMode = const Value.absent(),
               }) => AppSettingsCompanion(
                 id: id,
                 themeMode: themeMode,
@@ -3478,6 +3544,7 @@ class $$AppSettingsTableTableManager
                 sortKey: sortKey,
                 sortAscending: sortAscending,
                 foldersFirst: foldersFirst,
+                searchMode: searchMode,
               ),
           createCompanionCallback:
               ({
@@ -3502,6 +3569,7 @@ class $$AppSettingsTableTableManager
                 Value<String> sortKey = const Value.absent(),
                 Value<bool> sortAscending = const Value.absent(),
                 Value<bool> foldersFirst = const Value.absent(),
+                Value<String> searchMode = const Value.absent(),
               }) => AppSettingsCompanion.insert(
                 id: id,
                 themeMode: themeMode,
@@ -3524,6 +3592,7 @@ class $$AppSettingsTableTableManager
                 sortKey: sortKey,
                 sortAscending: sortAscending,
                 foldersFirst: foldersFirst,
+                searchMode: searchMode,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

@@ -13,6 +13,7 @@ typedef _SearchNative =
       Pointer<Utf8>,
       Pointer<Utf8>,
       Bool,
+      Uint8,
       Pointer<IntPtr>,
     );
 typedef _SearchDart =
@@ -20,13 +21,14 @@ typedef _SearchDart =
       Pointer<Utf8>,
       Pointer<Utf8>,
       bool,
+      int,
       Pointer<IntPtr>,
     );
 
 typedef _SearchStartNative =
-    Pointer<Void> Function(Pointer<Utf8>, Pointer<Utf8>, Bool);
+    Pointer<Void> Function(Pointer<Utf8>, Pointer<Utf8>, Bool, Uint8);
 typedef _SearchStartDart =
-    Pointer<Void> Function(Pointer<Utf8>, Pointer<Utf8>, bool);
+    Pointer<Void> Function(Pointer<Utf8>, Pointer<Utf8>, bool, int);
 
 typedef _SearchPollNative =
     Pointer<Uint8> Function(
@@ -185,7 +187,12 @@ class WaydirCoreLoader {
 
   /// Runs the native recursive search. Returns a FileEntryCodec buffer.
   /// Throws [WaydirCoreException] if the library is missing.
-  static Uint8List? search(String root, String query, bool includeHidden) {
+  static Uint8List? search(
+    String root,
+    String query,
+    bool includeHidden, {
+    int mode = 0,
+  }) {
     final lib = requireLib();
     final search = lib.lookupFunction<_SearchNative, _SearchDart>(
       'waydir_search',
@@ -195,7 +202,7 @@ class WaydirCoreLoader {
     final queryPtr = query.toNativeUtf8();
     final outLen = calloc<IntPtr>();
     try {
-      final buf = search(rootPtr, queryPtr, includeHidden, outLen);
+      final buf = search(rootPtr, queryPtr, includeHidden, mode, outLen);
       if (buf == nullptr) return null;
       final len = outLen.value;
       final copy = Uint8List.fromList(buf.asTypedList(len));
@@ -210,7 +217,12 @@ class WaydirCoreLoader {
     }
   }
 
-  static int? searchStart(String root, String query, bool includeHidden) {
+  static int? searchStart(
+    String root,
+    String query,
+    bool includeHidden, {
+    int mode = 0,
+  }) {
     final lib = requireLib();
     final start = lib.lookupFunction<_SearchStartNative, _SearchStartDart>(
       'waydir_search_start',
@@ -218,7 +230,7 @@ class WaydirCoreLoader {
     final rootPtr = root.toNativeUtf8();
     final queryPtr = query.toNativeUtf8();
     try {
-      final session = start(rootPtr, queryPtr, includeHidden);
+      final session = start(rootPtr, queryPtr, includeHidden, mode);
       if (session == nullptr) return null;
       return session.address;
     } catch (_) {

@@ -35,6 +35,8 @@ class AppSettings extends Table {
   TextColumn get sortKey => text().withDefault(const Constant('name'))();
   BoolColumn get sortAscending => boolean().withDefault(const Constant(true))();
   BoolColumn get foldersFirst => boolean().withDefault(const Constant(true))();
+  TextColumn get searchMode =>
+      text().withDefault(const Constant('substring'))();
 }
 
 class SessionTabs extends Table {
@@ -103,7 +105,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -164,6 +166,9 @@ class AppDatabase extends _$AppDatabase {
       if (from < 13) {
         await addSettingColumn(appSettings.confirmCopy);
         await addSettingColumn(appSettings.confirmMove);
+      }
+      if (from < 14) {
+        await addSettingColumn(appSettings.searchMode);
       }
     },
   );

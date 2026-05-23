@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:waydir/ui/icons/waydir_icons.dart';
 import 'package:signals/signals_flutter.dart';
+import '../../core/settings/settings_store.dart';
 import '../../i18n/strings.g.dart';
 import '../../ui/theme/app_theme.dart';
 import '../../ui/theme/app_text_styles.dart';
@@ -132,6 +133,7 @@ class _AppSearchBarState extends State<AppSearchBar> {
               ),
             );
           }),
+          _ModeToggle(store: widget.store),
           _RecursiveToggle(store: widget.store),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6),
@@ -154,6 +156,13 @@ class _StatusText extends StatelessWidget {
   }
 
   Widget _buildText(BuildContext context) {
+    final err = store.searchPatternError.value;
+    if (err != null) {
+      return Text(
+        err,
+        style: context.txt.bodyMuted.copyWith(color: AppColors.danger),
+      );
+    }
     final recursive = store.searchRecursive.value;
     final searching = store.isSearching.value;
     final query = store.searchQuery.value.trim();
@@ -231,6 +240,70 @@ class _RecursiveToggleState extends State<_RecursiveToggle> {
                     ),
                   ),
                 ],
+              ),
+            ),
+          ),
+        ),
+      );
+    });
+  }
+}
+
+class _ModeToggle extends StatefulWidget {
+  final NavigationStore store;
+
+  const _ModeToggle({required this.store});
+
+  @override
+  State<_ModeToggle> createState() => _ModeToggleState();
+}
+
+class _ModeToggleState extends State<_ModeToggle> {
+  bool _hovered = false;
+
+  String _label(String mode) {
+    switch (mode) {
+      case 'glob':
+        return t.search.modeGlob;
+      case 'regex':
+        return t.search.modeRegex;
+      default:
+        return t.search.modeSubstring;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Watch((context) {
+      final mode = SettingsStore.instance.searchMode.value;
+      final active = mode != 'substring';
+      return Tooltip(
+        message: t.search.modeTooltip,
+        child: MouseRegion(
+          onEnter: (_) => setState(() => _hovered = true),
+          onExit: (_) => setState(() => _hovered = false),
+          child: GestureDetector(
+            onTap: widget.store.cycleSearchMode,
+            child: Container(
+              height: 24,
+              margin: const EdgeInsets.only(right: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              decoration: BoxDecoration(
+                color: active
+                    ? AppColors.accent.withValues(alpha: 0.15)
+                    : (_hovered ? AppColors.bgHover : Colors.transparent),
+                borderRadius: BorderRadius.zero,
+                border: active
+                    ? Border.all(color: AppColors.accent.withValues(alpha: 0.4))
+                    : null,
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                _label(mode),
+                style: context.txt.row.copyWith(
+                  color: active ? AppColors.accent : AppColors.fgMuted,
+                  fontWeight: active ? FontWeight.w600 : FontWeight.normal,
+                ),
               ),
             ),
           ),
