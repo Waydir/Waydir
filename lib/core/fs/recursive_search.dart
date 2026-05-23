@@ -23,11 +23,14 @@ class _ErrorMsg {
   const _ErrorMsg(this.message);
 }
 
+enum SearchMode { substring, glob, regex }
+
 class _StartMsg {
   final String root;
   final String query;
   final bool includeHidden;
-  const _StartMsg(this.root, this.query, this.includeHidden);
+  final SearchMode mode;
+  const _StartMsg(this.root, this.query, this.includeHidden, this.mode);
 }
 
 class _CancelMsg {
@@ -63,6 +66,7 @@ class RecursiveSearch {
     required SearchProgressCallback onProgress,
     required void Function() onDone,
     required void Function(Object error) onError,
+    SearchMode mode = SearchMode.substring,
   }) {
     final handle = SearchHandle._();
     final receivePort = ReceivePort();
@@ -87,7 +91,7 @@ class RecursiveSearch {
       if (!startSent && msg is SendPort) {
         startSent = true;
         handle._setCommandPort(msg);
-        msg.send(_StartMsg(root, query, includeHidden));
+        msg.send(_StartMsg(root, query, includeHidden, mode));
         if (handle._done) handle._commandPort?.send(const _CancelMsg());
         return;
       }
@@ -135,6 +139,7 @@ class RecursiveSearch {
           msg.root,
           msg.query,
           msg.includeHidden,
+          msg.mode,
           () => cancelled,
         ).whenComplete(() {
           commandPort.close();
@@ -153,6 +158,7 @@ class RecursiveSearch {
     String root,
     String query,
     bool includeHidden,
+    SearchMode mode,
     bool Function() isCancelled,
   ) async {
     const pollInterval = Duration(milliseconds: 120);
@@ -163,7 +169,12 @@ class RecursiveSearch {
 
     final int? session;
     try {
-      session = WaydirCoreLoader.searchStart(root, query, includeHidden);
+      session = WaydirCoreLoader.searchStart(
+        root,
+        query,
+        includeHidden,
+        mode: mode.index,
+      );
     } catch (e) {
       mainPort.send(_ErrorMsg(e.toString()));
       return;

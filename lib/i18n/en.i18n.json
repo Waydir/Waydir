@@ -445,7 +445,12 @@
     "truncated(limit)": "(first $limit)",
     "noMatches": "No matches",
     "starting": "Starting…",
-    "clear": "Clear search"
+    "clear": "Clear search",
+    "modeSubstring": "Substring",
+    "modeGlob": "Glob",
+    "modeRegex": "Regex",
+    "invalidGlob": "Invalid glob pattern",
+    "invalidRegex": "Invalid regex"
   },
   "statusBar": {
     "items(one)": "1 item",

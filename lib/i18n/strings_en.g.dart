@@ -979,6 +979,21 @@ class TranslationsSearchEn {
 
 	/// en: 'Clear search'
 	String get clear => 'Clear search';
+
+	/// en: 'Substring'
+	String get modeSubstring => 'Substring';
+
+	/// en: 'Glob'
+	String get modeGlob => 'Glob';
+
+	/// en: 'Regex'
+	String get modeRegex => 'Regex';
+
+	/// en: 'Invalid glob pattern'
+	String get invalidGlob => 'Invalid glob pattern';
+
+	/// en: 'Invalid regex'
+	String get invalidRegex => 'Invalid regex';
 }
 
 // Path: statusBar
@@ -2307,6 +2322,11 @@ extension on Translations {
 			'search.noMatches' => 'No matches',
 			'search.starting' => 'Starting…',
 			'search.clear' => 'Clear search',
+			'search.modeSubstring' => 'Substring',
+			'search.modeGlob' => 'Glob',
+			'search.modeRegex' => 'Regex',
+			'search.invalidGlob' => 'Invalid glob pattern',
+			'search.invalidRegex' => 'Invalid regex',
 			'statusBar.items' => ({required Object count}) => '${count} items',
 			'statusBar.folders' => ({required Object count}) => '${count} folders',
 			'statusBar.files' => ({required Object count}) => '${count} files',

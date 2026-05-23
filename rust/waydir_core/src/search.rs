@@ -1,13 +1,60 @@
 use std::ffi::{c_char, CStr};
+use std::path::Path;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
 
+use globset::{Glob, GlobMatcher};
 use ignore::WalkState;
+use regex::Regex;
 
 use crate::codec::{assemble, finish_buffer, put_record, put_u32, MAGIC};
 use crate::util::os_bytes;
 use crate::walker::{apply_search_filter, base_builder, ChunkSink};
+
+#[derive(Clone)]
+enum Matcher {
+    Substring(String),
+    Glob { matcher: GlobMatcher, path_scope: bool },
+    Regex(Regex),
+}
+
+impl Matcher {
+    fn build(query: &str, mode: u8) -> Option<Self> {
+        match mode {
+            1 => {
+                let path_scope = query.contains('/') || query.contains("**");
+                Glob::new(query).ok().map(|g| Matcher::Glob {
+                    matcher: g.compile_matcher(),
+                    path_scope,
+                })
+            }
+            2 => Regex::new(query).ok().map(Matcher::Regex),
+            _ => Some(Matcher::Substring(query.to_lowercase())),
+        }
+    }
+
+    fn matches(&self, name: &str, rel_path: &Path) -> bool {
+        match self {
+            Matcher::Substring(q) => name.to_lowercase().contains(q),
+            Matcher::Glob { matcher, path_scope } => {
+                if *path_scope {
+                    matcher.is_match(rel_path)
+                } else {
+                    matcher.is_match(name)
+                }
+            }
+            Matcher::Regex(r) => r.is_match(name),
+        }
+    }
+}
+
+fn read_query(query: *const c_char) -> Option<String> {
+    if query.is_null() {
+        return None;
+    }
+    Some(unsafe { CStr::from_ptr(query) }.to_string_lossy().into_owned())
+}
 
 pub struct SearchSession {
     pending: Arc<Mutex<(Vec<u8>, usize)>>,
@@ -17,9 +64,8 @@ pub struct SearchSession {
     handle: Option<JoinHandle<()>>,
 }
 
-/// Recursive, case-insensitive substring name search. Returns a heap buffer
-/// (FileEntryCodec layout) whose length is written to `out_len`. The caller
-/// must release it via `waydir_free`. Returns null on argument errors.
+/// Recursive name search. `mode`: 0=substring (case-insensitive), 1=glob, 2=regex.
+/// Returns null on argument errors or invalid pattern.
 ///
 /// # Safety
 /// `root` and `query` must be valid NUL-terminated C strings. `out_len`
@@ -29,20 +75,29 @@ pub unsafe extern "C" fn waydir_search(
     root: *const c_char,
     query: *const c_char,
     include_hidden: bool,
+    mode: u8,
     out_len: *mut usize,
 ) -> *mut u8 {
     if root.is_null() || query.is_null() || out_len.is_null() {
         return std::ptr::null_mut();
     }
-    let root = match CStr::from_ptr(root).to_str() {
+    let root_str = match CStr::from_ptr(root).to_str() {
         Ok(s) => s.to_owned(),
         Err(_) => return std::ptr::null_mut(),
     };
-    let query = CStr::from_ptr(query).to_string_lossy().to_lowercase();
+    let query = match read_query(query) {
+        Some(q) => q,
+        None => return std::ptr::null_mut(),
+    };
+    let matcher = match Matcher::build(&query, mode) {
+        Some(m) => m,
+        None => return std::ptr::null_mut(),
+    };
+    let root_path = std::path::PathBuf::from(&root_str);
 
     let chunks: Mutex<Vec<(Vec<u8>, usize)>> = Mutex::new(Vec::new());
 
-    let mut builder = base_builder(&root);
+    let mut builder = base_builder(&root_str);
     apply_search_filter(&mut builder, include_hidden);
 
     let walker = builder.build_parallel();
@@ -52,7 +107,8 @@ pub unsafe extern "C" fn waydir_search(
             count: 0,
             chunks: &chunks,
         };
-        let query = &query;
+        let matcher = matcher.clone();
+        let root_path = root_path.clone();
         Box::new(move |result| {
             let dirent = match result {
                 Ok(d) => d,
@@ -62,8 +118,9 @@ pub unsafe extern "C" fn waydir_search(
                 return WalkState::Continue;
             }
             let os_name = dirent.file_name();
-            let name_lossy = os_name.to_string_lossy().to_lowercase();
-            if name_lossy.contains(query.as_str()) {
+            let name_lossy = os_name.to_string_lossy();
+            let rel = dirent.path().strip_prefix(&root_path).unwrap_or(dirent.path());
+            if matcher.matches(&name_lossy, rel) {
                 let is_dir = dirent.file_type().map(|t| t.is_dir()).unwrap_or(false);
                 put_record(
                     &mut sink.local,
@@ -92,15 +149,24 @@ pub unsafe extern "C" fn waydir_search_start(
     root: *const c_char,
     query: *const c_char,
     include_hidden: bool,
+    mode: u8,
 ) -> *mut SearchSession {
     if root.is_null() || query.is_null() {
         return std::ptr::null_mut();
     }
-    let root = match CStr::from_ptr(root).to_str() {
+    let root_str = match CStr::from_ptr(root).to_str() {
         Ok(s) => s.to_owned(),
         Err(_) => return std::ptr::null_mut(),
     };
-    let query = CStr::from_ptr(query).to_string_lossy().to_lowercase();
+    let query = match read_query(query) {
+        Some(q) => q,
+        None => return std::ptr::null_mut(),
+    };
+    let matcher = match Matcher::build(&query, mode) {
+        Some(m) => m,
+        None => return std::ptr::null_mut(),
+    };
+    let root_path = std::path::PathBuf::from(&root_str);
 
     let pending: Arc<Mutex<(Vec<u8>, usize)>> = Arc::new(Mutex::new((Vec::new(), 0)));
     let scanned = Arc::new(AtomicUsize::new(0));
@@ -113,7 +179,7 @@ pub unsafe extern "C" fn waydir_search_start(
     let t_finished = Arc::clone(&finished);
 
     let handle = std::thread::spawn(move || {
-        let mut builder = base_builder(&root);
+        let mut builder = base_builder(&root_str);
         apply_search_filter(&mut builder, include_hidden);
 
         let walker = builder.build_parallel();
@@ -121,7 +187,8 @@ pub unsafe extern "C" fn waydir_search_start(
             let pending = Arc::clone(&t_pending);
             let scanned = Arc::clone(&t_scanned);
             let cancelled = Arc::clone(&t_cancelled);
-            let query = query.clone();
+            let matcher = matcher.clone();
+            let root_path = root_path.clone();
             Box::new(move |result| {
                 if cancelled.load(Ordering::Relaxed) {
                     return WalkState::Quit;
@@ -135,8 +202,9 @@ pub unsafe extern "C" fn waydir_search_start(
                 }
                 scanned.fetch_add(1, Ordering::Relaxed);
                 let os_name = dirent.file_name();
-                let name_lossy = os_name.to_string_lossy().to_lowercase();
-                if name_lossy.contains(query.as_str()) {
+                let name_lossy = os_name.to_string_lossy();
+                let rel = dirent.path().strip_prefix(&root_path).unwrap_or(dirent.path());
+                if matcher.matches(&name_lossy, rel) {
                     let is_dir = dirent.file_type().map(|t| t.is_dir()).unwrap_or(false);
                     let mut g = pending.lock().unwrap();
                     put_record(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:waydir/ui/icons/waydir_icons.dart';
 import 'package:signals/signals_flutter.dart';
+import '../../core/settings/settings_store.dart';
 import '../../i18n/strings.g.dart';
 import '../../ui/theme/app_theme.dart';
 import '../../ui/theme/app_text_styles.dart';
@@ -132,6 +133,7 @@ class _AppSearchBarState extends State<AppSearchBar> {
               ),
             );
           }),
+          _ModeToggle(store: widget.store),
           _RecursiveToggle(store: widget.store),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6),
@@ -154,6 +156,13 @@ class _StatusText extends StatelessWidget {
   }
 
   Widget _buildText(BuildContext context) {
+    final err = store.searchPatternError.value;
+    if (err != null) {
+      return Text(
+        err,
+        style: context.txt.bodyMuted.copyWith(color: AppColors.danger),
+      );
+    }
     final recursive = store.searchRecursive.value;
     final searching = store.isSearching.value;
     final query = store.searchQuery.value.trim();
@@ -237,6 +246,109 @@ class _RecursiveToggleState extends State<_RecursiveToggle> {
         ),
       );
     });
+  }
+}
+
+class _ModeToggle extends StatelessWidget {
+  final NavigationStore store;
+
+  const _ModeToggle({required this.store});
+
+  @override
+  Widget build(BuildContext context) {
+    return Watch((context) {
+      final current = SettingsStore.instance.searchMode.value;
+      return Container(
+        height: 24,
+        margin: const EdgeInsets.only(right: 4),
+        decoration: BoxDecoration(
+          border: Border.all(color: AppColors.bgDivider),
+          borderRadius: BorderRadius.zero,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _ModeSegment(
+              mode: 'substring',
+              label: 'Aa',
+              tooltip: t.search.modeSubstring,
+              active: current == 'substring',
+              onTap: () => store.setSearchMode('substring'),
+            ),
+            Container(width: 1, height: 24, color: AppColors.bgDivider),
+            _ModeSegment(
+              mode: 'glob',
+              label: '*',
+              tooltip: t.search.modeGlob,
+              active: current == 'glob',
+              onTap: () => store.setSearchMode('glob'),
+            ),
+            Container(width: 1, height: 24, color: AppColors.bgDivider),
+            _ModeSegment(
+              mode: 'regex',
+              label: '.*',
+              tooltip: t.search.modeRegex,
+              active: current == 'regex',
+              onTap: () => store.setSearchMode('regex'),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+}
+
+class _ModeSegment extends StatefulWidget {
+  final String mode;
+  final String label;
+  final String tooltip;
+  final bool active;
+  final VoidCallback onTap;
+
+  const _ModeSegment({
+    required this.mode,
+    required this.label,
+    required this.tooltip,
+    required this.active,
+    required this.onTap,
+  });
+
+  @override
+  State<_ModeSegment> createState() => _ModeSegmentState();
+}
+
+class _ModeSegmentState extends State<_ModeSegment> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final active = widget.active;
+    return Tooltip(
+      message: widget.tooltip,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: Container(
+            height: 24,
+            constraints: const BoxConstraints(minWidth: 26),
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            alignment: Alignment.center,
+            color: active
+                ? AppColors.accent.withValues(alpha: 0.15)
+                : (_hovered ? AppColors.bgHover : Colors.transparent),
+            child: Text(
+              widget.label,
+              style: context.txt.row.copyWith(
+                color: active ? AppColors.accent : AppColors.fgMuted,
+                fontWeight: active ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

@@ -69,6 +69,7 @@ class NavigationStore {
   final searchScannedDirs = signal(0);
   final searchCurrentDir = signal<String?>(null);
   final searchFocusRequest = signal(0);
+  final searchPatternError = signal<String?>(null);
   final renameAttempt = signal(0);
 
   SearchHandle? _searchHandle;
@@ -92,9 +93,14 @@ class NavigationStore {
     var list = showHidden.value
         ? files.value
         : files.value.where((f) => !f.isHidden).toList();
-    final q = searchQuery.value.trim().toLowerCase();
+    final q = searchQuery.value.trim();
     if (searchActive.value && q.isNotEmpty) {
-      list = list.where((f) => f.name.toLowerCase().contains(q)).toList();
+      final matcher = _localMatcher(q, _currentSearchMode());
+      if (matcher != null) {
+        list = list.where((f) => matcher(f.name)).toList();
+      } else {
+        list = const [];
+      }
     }
     list = sortEntries(
       list,
@@ -260,6 +266,10 @@ class NavigationStore {
   void setSearchQuery(String q) {
     batch(() {
       searchQuery.value = q;
+      searchPatternError.value = validateSearchPattern(
+        q.trim(),
+        _currentSearchMode(),
+      );
       cursorIndex.value = -1;
       anchorIndex.value = -1;
     });
@@ -269,6 +279,108 @@ class NavigationStore {
   void toggleRecursive() {
     searchRecursive.value = !searchRecursive.value;
     _scheduleSearchRestart();
+  }
+
+  void cycleSearchMode() {
+    const order = ['substring', 'glob', 'regex'];
+    final s = SettingsStore.instance;
+    final idx = order.indexOf(s.searchMode.value);
+    setSearchMode(order[(idx + 1) % order.length]);
+  }
+
+  void setSearchMode(String mode) {
+    final s = SettingsStore.instance;
+    if (s.searchMode.value == mode) return;
+    s.searchMode.value = mode;
+    searchPatternError.value = validateSearchPattern(
+      searchQuery.value.trim(),
+      _currentSearchMode(),
+    );
+    _scheduleSearchRestart();
+  }
+
+  SearchMode _currentSearchMode() {
+    switch (SettingsStore.instance.searchMode.value) {
+      case 'glob':
+        return SearchMode.glob;
+      case 'regex':
+        return SearchMode.regex;
+      default:
+        return SearchMode.substring;
+    }
+  }
+
+  static bool Function(String)? _localMatcher(String query, SearchMode mode) {
+    switch (mode) {
+      case SearchMode.substring:
+        final q = query.toLowerCase();
+        return (name) => name.toLowerCase().contains(q);
+      case SearchMode.regex:
+        try {
+          final r = RegExp(query);
+          return r.hasMatch;
+        } catch (_) {
+          return null;
+        }
+      case SearchMode.glob:
+        final r = _globToRegExp(query);
+        return r?.hasMatch;
+    }
+  }
+
+  static String? validateSearchPattern(String query, SearchMode mode) {
+    if (query.isEmpty) return null;
+    switch (mode) {
+      case SearchMode.substring:
+        return null;
+      case SearchMode.regex:
+        try {
+          RegExp(query);
+          return null;
+        } catch (_) {
+          return t.search.invalidRegex;
+        }
+      case SearchMode.glob:
+        return _globToRegExp(query) == null ? t.search.invalidGlob : null;
+    }
+  }
+
+  static RegExp? _globToRegExp(String glob) {
+    final sb = StringBuffer('^');
+    var i = 0;
+    while (i < glob.length) {
+      final c = glob[i];
+      if (c == '*') {
+        if (i + 1 < glob.length && glob[i + 1] == '*') {
+          sb.write('.*');
+          i += 2;
+        } else {
+          sb.write('[^/]*');
+          i++;
+        }
+      } else if (c == '?') {
+        sb.write('[^/]');
+        i++;
+      } else if (c == '[') {
+        final end = glob.indexOf(']', i + 1);
+        if (end < 0) return null;
+        sb.write(glob.substring(i, end + 1));
+        i = end + 1;
+      } else if ('.+()|^\$\\/'.contains(c)) {
+        sb.write('\\');
+        sb.write(c);
+        i++;
+      } else {
+        sb.write(c);
+        i++;
+      }
+    }
+    sb.write('\$');
+    try {
+      return RegExp(sb.toString(), caseSensitive: false);
+    } catch (_) {
+      return null;
+    }
   }
 
   void _scheduleSearchRestart() {
@@ -302,10 +414,18 @@ class NavigationStore {
     if (q.isEmpty) return;
     isSearching.value = true;
     final acc = <FileEntry>[];
+    final mode = _currentSearchMode();
+    final err = validateSearchPattern(q, mode);
+    searchPatternError.value = err;
+    if (err != null) {
+      isSearching.value = false;
+      return;
+    }
     _searchHandle = RecursiveSearch.start(
       root: currentPath.value,
       query: q,
       includeHidden: showHidden.value,
+      mode: mode,
       onBatch: (b) {
         acc.addAll(b);
         _pendingSearchResults = acc;
@@ -1294,7 +1414,6 @@ class NavigationStore {
     });
   }
 }
-
 
 class _FolderState {
   final Set<String> selectedPaths;
