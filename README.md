@@ -26,6 +26,8 @@ Download the latest build from the [Releases](https://github.com/Waydir/Waydir/r
 
 Linux builds are available as `.deb`, `.rpm`, and `.tar.gz` packages. Windows builds are available as an `.exe` installer and a `.zip` archive. macOS builds are available as a `.dmg` package.
 
+> Linux and Windows are the primary development and testing targets. macOS builds are produced from the same codebase but are not regularly tested - expect rough edges and please report any issues.
+
 On Linux, the portable archive can be unpacked and launched directly:
 
 ```bash
