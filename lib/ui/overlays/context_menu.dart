@@ -16,6 +16,7 @@ class ContextMenuItem {
   final bool isToggle;
   final Signal<bool>? toggleSignal;
   final String? shortcut;
+  final bool enabled;
 
   /// When non-null this item opens a cascading submenu instead of firing an
   /// action on tap.
@@ -32,6 +33,7 @@ class ContextMenuItem {
     this.isToggle = false,
     this.toggleSignal,
     this.shortcut,
+    this.enabled = true,
     this.children,
     this.iconPath,
   });
@@ -46,6 +48,7 @@ class ContextMenuItem {
       isToggle = false,
       toggleSignal = null,
       shortcut = null,
+      enabled = true,
       children = null,
       iconPath = null;
 
@@ -245,6 +248,7 @@ class _ContextMenuItemTileState extends State<_ContextMenuItemTile> {
   }
 
   void _handleTap() {
+    if (!widget.item.enabled) return;
     if (widget.item.hasChildren) {
       _openSubmenu();
     } else {
@@ -254,6 +258,10 @@ class _ContextMenuItemTileState extends State<_ContextMenuItemTile> {
 
   void _handleEnter() {
     setState(() => _hovered = true);
+    if (!widget.item.enabled) {
+      widget.onCloseSubmenus();
+      return;
+    }
     if (widget.item.hasChildren) {
       _openSubmenu();
     } else {
@@ -275,11 +283,16 @@ class _ContextMenuItemTileState extends State<_ContextMenuItemTile> {
     final hoverBg = item.danger
         ? dangerColor.withValues(alpha: 0.12)
         : AppColors.bgHoverStrong;
-    final fg = _hovered
+    final fg = !item.enabled
+        ? AppColors.fgMuted.withValues(alpha: 0.45)
+        : _hovered
         ? (item.danger ? dangerColor : AppColors.fg)
         : AppColors.fgMuted;
 
     return MouseRegion(
+      cursor: item.enabled
+          ? SystemMouseCursors.click
+          : SystemMouseCursors.basic,
       onEnter: (_) => _handleEnter(),
       onExit: (_) => _handleExit(),
       child: GestureDetector(
@@ -289,7 +302,7 @@ class _ContextMenuItemTileState extends State<_ContextMenuItemTile> {
           height: 30,
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            color: _hovered ? hoverBg : Colors.transparent,
+            color: _hovered && item.enabled ? hoverBg : Colors.transparent,
             borderRadius: BorderRadius.zero,
           ),
           child: Row(
