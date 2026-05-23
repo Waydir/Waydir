@@ -14,6 +14,24 @@ String formatSpeed(double bytesPerSecond) {
   return '${formatBytes(bytesPerSecond.round())}/s';
 }
 
+String formatDurationShort(Duration duration) {
+  final seconds = duration.inSeconds;
+  if (seconds <= 0) return '<1s';
+  if (seconds < 60) return '${seconds}s';
+
+  final minutes = duration.inMinutes;
+  final remainingSeconds = seconds % 60;
+  if (minutes < 60) {
+    return remainingSeconds == 0
+        ? '${minutes}m'
+        : '${minutes}m ${remainingSeconds}s';
+  }
+
+  final hours = duration.inHours;
+  final remainingMinutes = minutes % 60;
+  return remainingMinutes == 0 ? '${hours}h' : '${hours}h ${remainingMinutes}m';
+}
+
 String formatTimeAgo(DateTime ts) {
   final diff = DateTime.now().difference(ts);
   if (diff.inSeconds < 10) return t.operations.justNow;

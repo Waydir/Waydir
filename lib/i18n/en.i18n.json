@@ -534,6 +534,7 @@
     "minutesAgo(other)": "${count}m ago",
     "hoursAgo(one)": "1h ago",
     "hoursAgo(other)": "${count}h ago",
+    "eta": "ETA $time",
     "conflictsDetected": "Conflicts Detected",
     "filesExist(one)": "1 file already exists at the destination.",
     "filesExist(other)": "$count files already exist at the destination.",
