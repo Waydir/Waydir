@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:isolate';
 import '../models/file_entry.dart';
 import 'waydir_core_loader.dart';
@@ -194,7 +195,7 @@ class RecursiveSearch {
         }
         final r = WaydirCoreLoader.searchPoll(session);
         if (r.batch != null) {
-          final entries = FileEntryCodec.decode(r.batch!);
+          final entries = _hydrateEntries(FileEntryCodec.decode(r.batch!));
           if (entries.isNotEmpty) mainPort.send(_BatchMsg(entries));
         }
         if (r.scanned != lastScanned) {
@@ -204,7 +205,7 @@ class RecursiveSearch {
         if (r.done || isCancelled()) {
           final f = WaydirCoreLoader.searchPoll(session);
           if (f.batch != null) {
-            final entries = FileEntryCodec.decode(f.batch!);
+            final entries = _hydrateEntries(FileEntryCodec.decode(f.batch!));
             if (entries.isNotEmpty) mainPort.send(_BatchMsg(entries));
           }
           break;
@@ -216,5 +217,25 @@ class RecursiveSearch {
     }
     mainPort.send(_ProgressMsg(lastScanned < 0 ? 0 : lastScanned, null));
     mainPort.send(const _DoneMsg());
+  }
+
+  static List<FileEntry> _hydrateEntries(List<FileEntry> entries) {
+    return [for (final e in entries) _tryStatEntry(e)];
+  }
+
+  static FileEntry _tryStatEntry(FileEntry entry) {
+    try {
+      final stat = FileStat.statSync(entry.realPath);
+      if (stat.type == FileSystemEntityType.notFound) return entry;
+      return FileEntry.raw(
+        name: entry.name,
+        path: entry.path,
+        type: entry.type,
+        size: stat.size,
+        modifiedMs: stat.modified.millisecondsSinceEpoch,
+      );
+    } catch (_) {
+      return entry;
+    }
   }
 }

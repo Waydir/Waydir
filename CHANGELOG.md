@@ -17,9 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - UI improvements.
 - Properties view no longer shows read-error messages; it always displays the available details.
+- Recursive search results now use the normal file list layout with size, modified date, and a shortened location column.
 
 ### Fixed
 - Pressing D no longer toggles dual pane.
+- Properties for recursive search results now show correct file size and modified date.
 
 ## [0.4.1] - 2026-05-21
 
