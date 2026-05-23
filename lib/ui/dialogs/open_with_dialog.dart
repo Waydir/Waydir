@@ -326,10 +326,7 @@ class _AppTileState extends State<_AppTile> {
         behavior: HitTestBehavior.opaque,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
-          decoration: BoxDecoration(
-            color: bg,
-            borderRadius: BorderRadius.zero,
-          ),
+          decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.zero),
           child: Row(
             children: [
               AppIcon(path: widget.app.iconPath, size: 18),

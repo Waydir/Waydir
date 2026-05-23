@@ -44,11 +44,7 @@ class SwapInstaller {
       exeName: exeName,
     );
     await Process.run('chmod', ['+x', script.path]);
-    await Process.start(
-      script.path,
-      const [],
-      mode: ProcessStartMode.detached,
-    );
+    await Process.start(script.path, const [], mode: ProcessStartMode.detached);
     return true;
   }
 
@@ -85,11 +81,13 @@ class SwapInstaller {
       staging: stagingRoot,
       exeName: exeName,
     );
-    await Process.start(
-      'cmd',
-      ['/c', 'start', '', '/min', script.path],
-      mode: ProcessStartMode.detached,
-    );
+    await Process.start('cmd', [
+      '/c',
+      'start',
+      '',
+      '/min',
+      script.path,
+    ], mode: ProcessStartMode.detached);
     return true;
   }
 

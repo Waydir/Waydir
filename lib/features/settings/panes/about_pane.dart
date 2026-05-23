@@ -70,8 +70,7 @@ class AboutPane extends StatelessWidget {
             children: [
               Watch((_) {
                 final status = UpdateStore.instance.status.value;
-                final available =
-                    UpdateStore.instance.updateAvailable.value;
+                final available = UpdateStore.instance.updateAvailable.value;
                 final latest =
                     UpdateStore.instance.latestRelease.value?.version;
                 final suffix = available && latest != null
@@ -151,10 +150,7 @@ class _InfoRow extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          if (trailing != null) ...[
-            const SizedBox(width: 6),
-            trailing!,
-          ],
+          if (trailing != null) ...[const SizedBox(width: 6), trailing!],
           if (onOpen != null)
             _SmallIcon(icon: WaydirIconsRegular.arrowSquareOut, onTap: onOpen!),
           if (onCopy != null) ...[

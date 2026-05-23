@@ -36,11 +36,9 @@ class PackageInstaller {
     if (await TerminalService.runScript(script.path)) return true;
 
     try {
-      await Process.start(
-        'xdg-open',
-        [pkg.path],
-        mode: ProcessStartMode.detached,
-      );
+      await Process.start('xdg-open', [
+        pkg.path,
+      ], mode: ProcessStartMode.detached);
       return true;
     } catch (_) {
       return false;
@@ -70,7 +68,8 @@ class PackageInstaller {
     } else if (await _has('dnf')) {
       inner = '${elevate}dnf install -y $path';
     } else if (await _has('zypper')) {
-      inner = '${elevate}zypper --non-interactive install '
+      inner =
+          '${elevate}zypper --non-interactive install '
           '--allow-unsigned-rpm $path';
     } else {
       inner = '${elevate}rpm -U --force $path';
