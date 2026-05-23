@@ -2,8 +2,6 @@
 
 Desktop file manager built with Flutter/Dart. Fast, minimal, dark theme, keyboard-driven navigation. Targets: Linux, macOS, Windows.
 
-Linux and Windows are the primary development and testing targets. macOS builds come from the same codebase but are not regularly tested - treat parity as best-effort and flag macOS-specific risks rather than assuming they work.
-
 ## Project structure
 
 Feature-driven structure:
