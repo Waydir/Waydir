@@ -429,50 +429,52 @@ class _Progress extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = store.progress.value;
-    final received = store.downloadedBytes.value;
-    final total = store.totalBytes.value;
-    final done = store.status.value == UpdateStatus.ready;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 4,
-            color: AppColors.bgInput,
-            child: FractionallySizedBox(
-              alignment: Alignment.centerLeft,
-              widthFactor: p.clamp(0.0, 1.0),
-              child: Container(
-                color: done ? AppColors.success : AppColors.warning,
-              ),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                done
-                    ? t.update.downloaded
-                    : total > 0
-                    ? '${formatBytes(received)} / ${formatBytes(total)}'
-                    : formatBytes(received),
-                style: context.txt.caption.copyWith(color: AppColors.fgMuted),
-              ),
-              Text(
-                '${(p * 100).toStringAsFixed(0)}%',
-                style: context.txt.caption.copyWith(
-                  color: done ? AppColors.success : AppColors.fgMuted,
-                  fontWeight: FontWeight.w600,
+    return Watch((_) {
+      final p = store.progress.value;
+      final received = store.downloadedBytes.value;
+      final total = store.totalBytes.value;
+      final done = store.status.value == UpdateStatus.ready;
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              height: 4,
+              color: AppColors.bgInput,
+              child: FractionallySizedBox(
+                alignment: Alignment.centerLeft,
+                widthFactor: p.clamp(0.0, 1.0),
+                child: Container(
+                  color: done ? AppColors.success : AppColors.warning,
                 ),
               ),
-            ],
-          ),
-        ],
-      ),
-    );
+            ),
+            const SizedBox(height: 6),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  done
+                      ? t.update.downloaded
+                      : total > 0
+                      ? '${formatBytes(received)} / ${formatBytes(total)}'
+                      : formatBytes(received),
+                  style: context.txt.caption.copyWith(color: AppColors.fgMuted),
+                ),
+                Text(
+                  '${(p * 100).toStringAsFixed(0)}%',
+                  style: context.txt.caption.copyWith(
+                    color: done ? AppColors.success : AppColors.fgMuted,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    });
   }
 }
 
