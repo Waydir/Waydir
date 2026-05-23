@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Trash restore and permanent delete operations now show titles and progress in the operations panel.
 - Jump to files by typing a letter. Press the same letter again to cycle through matches.
 - Selection and cursor position are now restored when going back/forward and preserved across file operations.
+- Search supports regex and glob patterns alongside substring matching. Switch between modes from the new segmented toggle in the search bar.
 
 ### Changed
 - UI improvements.
