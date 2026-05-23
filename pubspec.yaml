@@ -3,9 +3,9 @@ description: "Waydir - A fast, minimal desktop file manager built with Flutter. 
 publish_to: 'none'
 version: 0.4.1+6
 
-homepage: https://github.com/mikolajbadyl/waydir
-repository: https://github.com/mikolajbadyl/waydir
-issue_tracker: https://github.com/mikolajbadyl/waydir/issues
+homepage: https://github.com/Waydir/Waydir
+repository: https://github.com/Waydir/Waydir
+issue_tracker: https://github.com/Waydir/Waydir/issues
 
 environment:
   sdk: ^3.10.0

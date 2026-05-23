@@ -22,7 +22,7 @@ The interface is built with Flutter and runs natively on Linux, Windows and macO
 
 ## Install
 
-Download the latest build from the [Releases](https://github.com/mikolajbadyl/waydir/releases) page.
+Download the latest build from the [Releases](https://github.com/Waydir/Waydir/releases) page.
 
 Linux builds are available as `.deb`, `.rpm`, and `.tar.gz` packages. Windows builds are available as an `.exe` installer and a `.zip` archive. macOS builds are available as a `.dmg` package.
 
@@ -57,7 +57,7 @@ Requires Flutter 3.35+, Dart 3.10+, and Rust stable ([rustup](https://rustup.rs)
 Dart fallback.
 
 ```bash
-git clone https://github.com/mikolajbadyl/waydir.git
+git clone https://github.com/Waydir/Waydir.git
 cd waydir
 flutter pub get
 cargo build --release --manifest-path rust/waydir_core/Cargo.toml
