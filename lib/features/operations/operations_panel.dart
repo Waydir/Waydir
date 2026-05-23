@@ -153,6 +153,17 @@ class _TaskTile extends StatelessWidget {
         task.status == TaskStatus.running ||
         task.status == TaskStatus.preparing ||
         task.status == TaskStatus.cancelling;
+    final showTransferStats =
+        task.status == TaskStatus.running && task.bytesPerSecond > 0;
+    final remainingBytes = task.totalBytes == null
+        ? null
+        : task.totalBytes! - task.processedBytes;
+    final eta =
+        showTransferStats && remainingBytes != null && remainingBytes > 0
+        ? formatDurationShort(
+            Duration(seconds: (remainingBytes / task.bytesPerSecond).ceil()),
+          )
+        : null;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -213,26 +224,10 @@ class _TaskTile extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
-                  child: Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          TaskLabel.progressText(task),
-                          style: context.txt.muted,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (task.status == TaskStatus.running &&
-                          task.bytesPerSecond > 0) ...[
-                        const SizedBox(width: 8),
-                        Text(
-                          formatSpeed(task.bytesPerSecond),
-                          style: context.txt.muted.copyWith(
-                            color: AppColors.accent,
-                          ),
-                        ),
-                      ],
-                    ],
+                  child: Text(
+                    TaskLabel.progressText(task),
+                    style: context.txt.muted,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -246,6 +241,21 @@ class _TaskTile extends StatelessWidget {
                   ),
               ],
             ),
+            if (showTransferStats) ...[
+              const SizedBox(height: 2),
+              Row(
+                children: [
+                  Text(
+                    formatSpeed(task.bytesPerSecond),
+                    style: context.txt.muted.copyWith(color: AppColors.accent),
+                  ),
+                  if (eta != null) ...[
+                    const SizedBox(width: 10),
+                    Text(t.operations.eta(time: eta), style: context.txt.muted),
+                  ],
+                ],
+              ),
+            ],
           ],
           if (task.conflicts.isNotEmpty &&
               (task.status == TaskStatus.running ||

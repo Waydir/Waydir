@@ -1221,6 +1221,9 @@ class TranslationsOperationsEn {
 	/// en: '${count}h ago'
 	String hoursAgo({required Object count}) => '${count}h ago';
 
+	/// en: 'ETA $time'
+	String eta({required Object time}) => 'ETA ${time}';
+
 	/// en: 'Conflicts Detected'
 	String get conflictsDetected => 'Conflicts Detected';
 
@@ -2442,6 +2445,7 @@ extension on Translations {
 			'operations.secondsAgo' => ({required Object count}) => '${count}s ago',
 			'operations.minutesAgo' => ({required Object count}) => '${count}m ago',
 			'operations.hoursAgo' => ({required Object count}) => '${count}h ago',
+			'operations.eta' => ({required Object time}) => 'ETA ${time}',
 			'operations.conflictsDetected' => 'Conflicts Detected',
 			'operations.filesExist' => ({required Object count}) => '${count} files already exist at the destination.',
 			'operations.overwriteAll' => 'Overwrite All',
@@ -2520,9 +2524,9 @@ extension on Translations {
 			'openWith.recent' => 'Recent',
 			'openWith.recommended' => 'Recommended Applications',
 			'openWith.allApps' => 'All Applications',
-			'openWith.noApps' => 'No applications found for this file type.',
 			_ => null,
 		} ?? switch (path) {
+			'openWith.noApps' => 'No applications found for this file type.',
 			'openWith.setDefault' => 'Always use for this file type',
 			'openWith.setDefaultUnavailable' => 'Default cannot be changed on this platform',
 			'openWith.moreApps' => 'More applications…',
