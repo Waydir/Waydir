@@ -86,9 +86,13 @@ class NavigationStore {
   late final visibleFiles = computed(() {
     final pending = pendingCreate.value;
     if (searchActive.value && searchRecursive.value) {
-      return pending != null
-          ? [pending, ...searchResults.value]
-          : searchResults.value;
+      final sorted = sortEntries(
+        searchResults.value,
+        key: sortKey.value,
+        ascending: sortAscending.value,
+        foldersFirst: foldersFirst.value,
+      );
+      return pending != null ? [pending, ...sorted] : sorted;
     }
     var list = showHidden.value
         ? files.value

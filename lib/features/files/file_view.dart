@@ -37,6 +37,7 @@ const _kRowHeightComfortable = 26.0;
 const _kRowHeightCompact = 20.0;
 const _kRowGapComfortable = 6.0;
 const _kRowGapCompact = 2.0;
+const _kLocationWidth = 190.0;
 
 class FileList extends StatefulWidget {
   final List<FileEntry> files;
@@ -149,6 +150,14 @@ class _FileListState extends State<FileList> {
     return rel;
   }
 
+  String? _compactLocation(String entryPath, String currentPath) {
+    final rel = _relativeParent(entryPath, currentPath);
+    if (rel == null) return null;
+    final parts = p.split(rel).where((part) => part.isNotEmpty).toList();
+    if (parts.length <= 2) return rel;
+    return p.join('...', parts[parts.length - 2], parts.last);
+  }
+
   int _rowAt(Offset localPosition) {
     if (localPosition.dy < 0) return -1;
     final adjustedY = localPosition.dy + _scrollController.offset;
@@ -246,9 +255,7 @@ class _FileListState extends State<FileList> {
       );
     }
 
-    final columnWidths = widget.recursiveResults
-        ? (size: 0.0, date: 0.0)
-        : _computeColumnWidths(context);
+    final columnWidths = _computeColumnWidths(context);
 
     return Column(
       children: [
@@ -358,7 +365,7 @@ class _FileListState extends State<FileList> {
                             sizeWidth: columnWidths.size,
                             dateWidth: columnWidths.date,
                             location: widget.recursiveResults
-                                ? _relativeParent(
+                                ? _compactLocation(
                                     widget.files[i].path,
                                     widget.currentPath,
                                   )
@@ -470,11 +477,19 @@ class _ListHeader extends StatelessWidget {
             ),
           ),
           if (recursive) ...[
-            Expanded(
-              flex: 4,
-              child: Text(t.fileView.columns.location, style: headerStyle),
+            SizedBox(
+              width: _kLocationWidth,
+              child: Text(
+                t.fileView.columns.location,
+                maxLines: 1,
+                softWrap: false,
+                overflow: TextOverflow.clip,
+                style: headerStyle,
+              ),
             ),
-          ] else ...[
+            const SizedBox(width: 16),
+          ],
+          ...[
             SizedBox(
               width: sizeWidth,
               child: _sortable(
@@ -904,18 +919,23 @@ class _ListRowState extends State<_ListRow> {
                   ),
                 ),
                 if (widget.recursive) ...[
-                  Expanded(
-                    flex: 4,
+                  SizedBox(
+                    width: _kLocationWidth,
                     child: Padding(
                       padding: const EdgeInsets.only(left: 8),
                       child: Text(
                         widget.location ?? '',
+                        maxLines: 1,
+                        softWrap: false,
                         overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.right,
                         style: context.txt.muted,
                       ),
                     ),
                   ),
-                ] else ...[
+                  const SizedBox(width: 16),
+                ],
+                ...[
                   SizedBox(
                     width: widget.sizeWidth,
                     child: Text(
@@ -995,18 +1015,23 @@ class _ListRowState extends State<_ListRow> {
                   ),
                 ),
                 if (widget.recursive) ...[
-                  Expanded(
-                    flex: 4,
+                  SizedBox(
+                    width: _kLocationWidth,
                     child: Padding(
                       padding: const EdgeInsets.only(left: 8),
                       child: Text(
                         widget.location ?? '',
+                        maxLines: 1,
+                        softWrap: false,
                         overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.right,
                         style: context.txt.muted,
                       ),
                     ),
                   ),
-                ] else ...[
+                  const SizedBox(width: 16),
+                ],
+                ...[
                   SizedBox(
                     width: widget.sizeWidth,
                     child: Text(
