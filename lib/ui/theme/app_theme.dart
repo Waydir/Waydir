@@ -241,9 +241,7 @@ class AppTheme {
         overlayShape: RoundSliderOverlayShape(overlayRadius: 0),
         thumbShape: RoundSliderThumbShape(enabledThumbRadius: 6),
       ),
-      tabBarTheme: const TabBarThemeData(
-        indicator: BoxDecoration(),
-      ),
+      tabBarTheme: const TabBarThemeData(indicator: BoxDecoration()),
     );
   }
 }

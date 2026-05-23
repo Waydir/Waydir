@@ -250,10 +250,7 @@ class _PromptButtonState extends State<_PromptButton> {
         child: Container(
           height: 34,
           padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            color: bg,
-            borderRadius: BorderRadius.zero,
-          ),
+          decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.zero),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
