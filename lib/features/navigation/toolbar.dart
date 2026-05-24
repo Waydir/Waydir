@@ -369,14 +369,15 @@ class _PathBarState extends State<_PathBar> {
         }
 
         if (total <= maxW) {
+          final rootPath = isWindows
+              ? PlatformPaths.buildPartialPath(segments, 0)
+              : '/';
           return Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               _BreadcrumbSegment(
                 label: rootLabel,
-                onTap: () => widget.store.navigateTo(
-                  isWindows ? PlatformPaths.rootPath : '/',
-                ),
+                onTap: () => widget.store.navigateTo(rootPath),
               ),
               for (int i = 0; i < segments.length - offset; i++)
                 ..._segmentRow(
@@ -410,7 +411,7 @@ class _PathBarState extends State<_PathBar> {
             _BreadcrumbSegment(
               label: rootLabel,
               onTap: () => widget.store.navigateTo(
-                isWindows ? PlatformPaths.rootPath : '/',
+                isWindows ? PlatformPaths.buildPartialPath(segments, 0) : '/',
               ),
             ),
             _caretIcon(),
