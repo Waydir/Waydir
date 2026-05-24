@@ -16,6 +16,7 @@ import '../../core/platform/trash_location.dart';
 import '../../i18n/strings.g.dart';
 import '../../ui/overlays/notification_store.dart';
 import '../../ui/theme/app_theme.dart';
+import 'sftp_task_executor.dart';
 
 class _WorkerHandle {
   final Isolate isolate;
@@ -109,7 +110,9 @@ class OperationStore {
     } catch (_) {
       return;
     }
-    final sep = PlatformPaths.separator;
+    final sep = PlatformPaths.isSftpUri(destination)
+        ? '/'
+        : PlatformPaths.separator;
     final rejected = <String>[];
     final filtered = <String>[];
     for (final s in resolved) {
@@ -423,14 +426,28 @@ class OperationStore {
     _updateTask(task);
     _currentTaskId = task.id;
 
+    final useSftp = _shouldExecuteSftp(task);
+    if (useSftp) {
+      task.options = {
+        ...task.options,
+        sftpSessionsOptionKey: SftpTaskExecutor.encodeSessions(),
+      };
+    }
+
     void Function(List<dynamic>) entryPoint;
     switch (task.type) {
       case TaskType.copy:
-        entryPoint = FileSystemService.copyWorker;
+        entryPoint = useSftp
+            ? sftpCopyWorker
+            : FileSystemService.copyWorker;
       case TaskType.move:
-        entryPoint = FileSystemService.moveWorker;
+        entryPoint = useSftp
+            ? sftpMoveWorker
+            : FileSystemService.moveWorker;
       case TaskType.delete:
-        entryPoint = FileSystemService.deleteWorker;
+        entryPoint = useSftp
+            ? sftpDeleteWorker
+            : FileSystemService.deleteWorker;
       case TaskType.trash:
         entryPoint = FileSystemService.trashWorker;
       case TaskType.trashRestore:
@@ -602,6 +619,18 @@ class OperationStore {
       _showFinishNotification(task);
       _scheduleCleanup(task);
     }
+  }
+
+  bool _shouldExecuteSftp(FileTask task) {
+    return switch (task.type) {
+      TaskType.copy ||
+      TaskType.move ||
+      TaskType.delete => SftpTaskExecutor.involvesSftp(
+        sources: task.sources,
+        destination: task.destination,
+      ),
+      _ => false,
+    };
   }
 
   void _showStartNotification(FileTask task) {
@@ -853,6 +882,18 @@ class OperationStore {
   }
 
   static bool _wouldNestTransfer(String source, String destination) {
+    if (PlatformPaths.isSftpUri(source) ||
+        PlatformPaths.isSftpUri(destination)) {
+      if (!PlatformPaths.isSftpUri(source) ||
+          !PlatformPaths.isSftpUri(destination)) {
+        return false;
+      }
+      final src = _comparePath(source);
+      final dest = _comparePath(destination);
+      if (src == dest) return true;
+      final prefix = src.endsWith('/') ? src : '$src/';
+      return dest.startsWith(prefix);
+    }
     final type = FileSystemEntity.typeSync(source, followLinks: false);
     if (type != FileSystemEntityType.directory) return false;
     final srcCanonical = _canonicalPath(source);
@@ -881,6 +922,11 @@ class OperationStore {
   }
 
   static String _comparePath(String path) {
+    if (PlatformPaths.isSftpUri(path)) {
+      return path
+          .replaceAll(RegExp('/+'), '/')
+          .replaceFirst('sftp:/', 'sftp://');
+    }
     final normalized = p.normalize(path);
     return PlatformPaths.isWindows ? normalized.toLowerCase() : normalized;
   }
