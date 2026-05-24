@@ -6,7 +6,10 @@ import '../../ui/icons/waydir_icons.dart';
 import '../../ui/theme/app_text_styles.dart';
 import '../../ui/theme/app_theme.dart';
 
+enum ConnectProtocol { smb, sftp }
+
 class _FormSnapshot {
+  ConnectProtocol protocol = ConnectProtocol.smb;
   String username = '';
   String host = '';
   String port = '';
@@ -23,7 +26,7 @@ Future<String?> showConnectToServerDialog(BuildContext context) async {
     context: context,
     title: t.sidebar.connectDialog.title,
     icon: WaydirIconsRegular.treeStructure,
-    width: 380,
+    width: 400,
     body: _ConnectBody(snapshot: snapshot),
     actions: [
       DialogAction(label: cancelLabel, color: AppColors.fgMuted),
@@ -34,6 +37,7 @@ Future<String?> showConnectToServerDialog(BuildContext context) async {
   if (clicked != connectLabel) return null;
   if (snapshot.host.trim().isEmpty) return null;
   return _buildUri(
+    snapshot.protocol,
     snapshot.username,
     snapshot.host,
     snapshot.port,
@@ -47,6 +51,7 @@ Future<String?> openConnectToServer(BuildContext context) async {
 }
 
 String _buildUri(
+  ConnectProtocol protocol,
   String username,
   String host,
   String port,
@@ -58,7 +63,8 @@ String _buildUri(
   final pt = port.trim();
   final sh = share.trim();
   final sub = path.trim().replaceAll(RegExp(r'^/+'), '');
-  final buf = StringBuffer('smb://');
+  final scheme = protocol == ConnectProtocol.sftp ? 'sftp://' : 'smb://';
+  final buf = StringBuffer(scheme);
   if (user.isNotEmpty) {
     buf.write(Uri.encodeComponent(user));
     buf.write('@');
@@ -68,12 +74,19 @@ String _buildUri(
     buf.write(':');
     buf.write(pt);
   }
-  if (sh.isNotEmpty) {
-    buf.write('/');
-    buf.write(sh);
+  if (protocol == ConnectProtocol.sftp) {
     if (sub.isNotEmpty) {
       buf.write('/');
       buf.write(sub);
+    }
+  } else {
+    if (sh.isNotEmpty) {
+      buf.write('/');
+      buf.write(sh);
+      if (sub.isNotEmpty) {
+        buf.write('/');
+        buf.write(sub);
+      }
     }
   }
   return buf.toString();
@@ -118,6 +131,12 @@ class _ConnectBodyState extends State<_ConnectBody> {
     setState(() {});
   }
 
+  void _selectProtocol(ConnectProtocol p) {
+    setState(() {
+      widget.snapshot.protocol = p;
+    });
+  }
+
   @override
   void dispose() {
     _username.dispose();
@@ -131,16 +150,38 @@ class _ConnectBodyState extends State<_ConnectBody> {
   @override
   Widget build(BuildContext context) {
     final preview = _buildUri(
+      widget.snapshot.protocol,
       _username.text,
       _host.text,
       _port.text,
       _share.text,
       _path.text,
     );
+    final isSftp = widget.snapshot.protocol == ConnectProtocol.sftp;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        Row(
+          children: [
+            Expanded(
+              child: _ProtocolChip(
+                label: 'SMB',
+                selected: !isSftp,
+                onTap: () => _selectProtocol(ConnectProtocol.smb),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _ProtocolChip(
+                label: 'SFTP',
+                selected: isSftp,
+                onTap: () => _selectProtocol(ConnectProtocol.sftp),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -160,7 +201,10 @@ class _ConnectBodyState extends State<_ConnectBody> {
               flex: 1,
               child: _Labeled(
                 label: t.sidebar.connectDialog.port,
-                child: _Input(controller: _port, hint: '445'),
+                child: _Input(
+                  controller: _port,
+                  hint: isSftp ? '22' : '445',
+                ),
               ),
             ),
           ],
@@ -173,20 +217,22 @@ class _ConnectBodyState extends State<_ConnectBody> {
             hint: t.sidebar.connectDialog.usernameHint,
           ),
         ),
-        const SizedBox(height: 10),
-        _Labeled(
-          label: t.sidebar.connectDialog.share,
-          child: _Input(
-            controller: _share,
-            hint: t.sidebar.connectDialog.shareHint,
+        if (!isSftp) ...[
+          const SizedBox(height: 10),
+          _Labeled(
+            label: t.sidebar.connectDialog.share,
+            child: _Input(
+              controller: _share,
+              hint: t.sidebar.connectDialog.shareHint,
+            ),
           ),
-        ),
+        ],
         const SizedBox(height: 10),
         _Labeled(
           label: t.sidebar.connectDialog.pathLabel,
           child: _Input(
             controller: _path,
-            hint: t.sidebar.connectDialog.pathHint,
+            hint: isSftp ? '/home/user' : t.sidebar.connectDialog.pathHint,
           ),
         ),
         const SizedBox(height: 10),
@@ -197,6 +243,42 @@ class _ConnectBodyState extends State<_ConnectBody> {
           overflow: TextOverflow.ellipsis,
         ),
       ],
+    );
+  }
+}
+
+class _ProtocolChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  const _ProtocolChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        height: 32,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: selected ? AppColors.accent : AppColors.bgInput,
+          border: Border.all(
+            color: selected ? AppColors.accent : AppColors.borderColor,
+          ),
+        ),
+        child: Text(
+          label,
+          style: context.txt.body.copyWith(
+            color: selected ? AppColors.bg : AppColors.fg,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+          ),
+        ),
+      ),
     );
   }
 }

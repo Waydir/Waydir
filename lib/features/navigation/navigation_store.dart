@@ -11,6 +11,7 @@ import '../../core/fs/file_system_service.dart';
 import '../../core/fs/fs_worker_pool.dart';
 import '../../core/fs/directory_watcher_service.dart';
 import '../../core/fs/recursive_search.dart';
+import '../../core/fs/sftp_fs.dart';
 import '../../core/keyboard/keyboard_shortcuts.dart';
 import '../../core/platform/platform_paths.dart';
 import '../../core/platform/trash_location.dart';
@@ -40,6 +41,7 @@ class NavigationStore {
   final OperationStore operationStore;
   final gitStatus = GitStatusStore();
   Future<SmbCredentials?> Function(String logical)? requestSmbCredentials;
+  Future<SftpCredentials?> Function(String logical)? requestSftpCredentials;
   final loadError = signal<String?>(null);
   final trashAccessDenied = signal<bool>(false);
   final renamingPath = signal<String?>(null);
@@ -83,6 +85,22 @@ class NavigationStore {
   /// the unresolved URI is interpreted by `Directory(...)` as a relative
   /// path and pollutes the process CWD).
   Future<String?> _resolvePhysicalDestination(String logical) async {
+    if (PlatformPaths.isSftpUri(logical)) {
+      final result = await _resolveSftp(logical);
+      switch (result) {
+        case ResolveSuccess():
+          return result.physicalPath;
+        case ResolveError(:final message):
+          loadError.value = message;
+          return null;
+        case ResolveUnsupported():
+          loadError.value = 'SFTP not supported';
+          return null;
+        case ResolveAuthenticationRequired():
+          loadError.value = 'Authentication required';
+          return null;
+      }
+    }
     if (!PlatformPaths.isSmbUri(logical)) return logical;
     final existing = LocationResolver.logicalToPhysical(logical);
     if (existing != null) return existing;
@@ -112,6 +130,16 @@ class NavigationStore {
       return result;
     }
     return LocationResolver.resolveWithCredentials(logical, credentials);
+  }
+
+  Future<ResolveResult> _resolveSftp(String logical) async {
+    final result = await LocationResolver.resolve(logical);
+    if (result is! ResolveAuthenticationRequired) return result;
+    final credentials = await requestSftpCredentials?.call(logical);
+    if (credentials == null || credentials.username.trim().isEmpty) {
+      return result;
+    }
+    return LocationResolver.resolveSftpWithCredentials(logical, credentials);
   }
 
   final DirectoryWatcherService _watcher = DirectoryWatcherService();
@@ -212,7 +240,7 @@ class NavigationStore {
   void _setupGitStatusEffect() {
     _gitStatusDisposer = effect(() {
       final path = currentPath.value;
-      if (!PlatformPaths.isSmbUri(path)) gitStatus.watchPath(path);
+      if (!PlatformPaths.isRemoteUri(path)) gitStatus.watchPath(path);
     });
   }
 
@@ -492,6 +520,20 @@ class NavigationStore {
       isSearching.value = false;
       return;
     }
+    if (PlatformPaths.isSftpUri(root)) {
+      final matcher = _localMatcher(q, mode);
+      if (matcher == null) {
+        isSearching.value = false;
+        return;
+      }
+      _runSftpRecursiveSearch(
+        token: token,
+        root: root,
+        includeHidden: showHidden.value,
+        matcher: matcher,
+      );
+      return;
+    }
     _searchHandle = RecursiveSearch.start(
       root: root,
       query: q,
@@ -535,6 +577,61 @@ class NavigationStore {
     );
   }
 
+  Future<void> _runSftpRecursiveSearch({
+    required int token,
+    required String root,
+    required bool includeHidden,
+    required bool Function(String name) matcher,
+  }) async {
+    final acc = <FileEntry>[];
+    var scanned = 0;
+
+    Future<void> walk(String dir) async {
+      if (token != _searchToken) return;
+      batch(() {
+        searchScannedDirs.value = scanned;
+        searchCurrentDir.value = dir;
+      });
+      final entries = await FileSystemService.listDirectory(dir);
+      scanned++;
+      for (final entry in entries) {
+        if (token != _searchToken) return;
+        if (!includeHidden && entry.isHidden) continue;
+        if (matcher(entry.name)) {
+          acc.add(entry);
+          _pendingSearchResults = acc;
+          _scheduleSearchUiFlush();
+        }
+        if (entry.type == FileItemType.folder) {
+          await walk(entry.path);
+        }
+      }
+    }
+
+    try {
+      await walk(root);
+      if (token != _searchToken) return;
+      _searchUiFlush?.cancel();
+      _searchUiFlush = null;
+      _pendingSearchResults = null;
+      batch(() {
+        searchResults.value = List.of(acc);
+        searchScannedDirs.value = scanned;
+        searchCurrentDir.value = null;
+        isSearching.value = false;
+      });
+    } catch (_) {
+      if (token != _searchToken) return;
+      _searchUiFlush?.cancel();
+      _searchUiFlush = null;
+      _pendingSearchResults = null;
+      batch(() {
+        searchCurrentDir.value = null;
+        isSearching.value = false;
+      });
+    }
+  }
+
   FileEntry _logicalEntryFromPhysical(FileEntry entry) {
     final logical = LocationResolver.physicalToLogical(entry.path);
     if (logical == null) return entry;
@@ -562,6 +659,41 @@ class NavigationStore {
       _pendingSearchResults = null;
       searchResults.value = List.of(p);
     });
+  }
+
+  Future<void> _ensureSftpConnectedAndNavigate(
+    String logical, {
+    bool addToHistory = true,
+    bool restoreState = false,
+  }) async {
+    batch(() {
+      isLoading.value = true;
+      loadError.value = null;
+    });
+    final result = await _resolveSftp(logical);
+    switch (result) {
+      case ResolveSuccess():
+        _doNavigate(
+          result.physicalPath,
+          addToHistory: addToHistory,
+          restoreState: restoreState,
+        );
+      case ResolveError(:final message):
+        batch(() {
+          isLoading.value = false;
+          loadError.value = message;
+        });
+      case ResolveUnsupported():
+        batch(() {
+          isLoading.value = false;
+          loadError.value = 'SFTP not supported';
+        });
+      case ResolveAuthenticationRequired():
+        batch(() {
+          isLoading.value = false;
+          loadError.value = 'Authentication required';
+        });
+    }
   }
 
   Future<void> _ensureSmbMountedAndNavigate(
@@ -619,6 +751,9 @@ class NavigationStore {
           return unc;
         }
         return null;
+      case LocationScheme.sftp:
+        // Asynchronously resolved via _ensureSftpConnectedAndNavigate.
+        return null;
       case LocationScheme.other:
         loadError.value = t.errors.smbNotSupportedOnPlatform;
         return null;
@@ -635,6 +770,14 @@ class NavigationStore {
     bool restoreState = false,
   }) {
     final uri = LocationUri.parse(path);
+    if (uri.scheme == LocationScheme.sftp) {
+      _ensureSftpConnectedAndNavigate(
+        path,
+        addToHistory: addToHistory,
+        restoreState: restoreState,
+      );
+      return;
+    }
     if (uri.scheme == LocationScheme.smb && !PlatformPaths.isWindows) {
       _ensureSmbMountedAndNavigate(
         path,
@@ -721,6 +864,10 @@ class NavigationStore {
     final trimmed = path.trim();
     if (trimmed.isEmpty) return false;
     final uri = LocationUri.parse(trimmed);
+    if (uri.scheme == LocationScheme.sftp) {
+      navigateTo(trimmed);
+      return true;
+    }
     if (uri.scheme == LocationScheme.smb && !PlatformPaths.isWindows) {
       navigateTo(trimmed);
       return true;
@@ -840,7 +987,7 @@ class NavigationStore {
         isLoading.value = false;
       });
       _restoreFolderStateIfMatches(path);
-      if (isTrashPath(path) || PlatformPaths.isSmbUri(path)) {
+      if (isTrashPath(path) || PlatformPaths.isRemoteUri(path)) {
         _watcher.stop();
       } else {
         _watcher.watch(
@@ -1112,6 +1259,10 @@ class NavigationStore {
     }
 
     final isSmbRename = PlatformPaths.isSmbUri(oldPath);
+    if (PlatformPaths.isSftpUri(oldPath)) {
+      await _commitSftpRename(oldPath, trimmed);
+      return;
+    }
     final physicalOld = _physical(oldPath);
     final result = FileSystemService.rename(physicalOld, trimmed);
 
@@ -1171,6 +1322,49 @@ class NavigationStore {
     }
   }
 
+  Future<void> _commitSftpRename(String oldPath, String newName) async {
+    if (!PlatformPaths.isValidFileName(newName)) {
+      renameError.value = t.toast.renameInvalidName;
+      renameAttempt.value = renameAttempt.value + 1;
+      return;
+    }
+    if (PlatformPaths.fileName(oldPath) == newName) {
+      batch(() {
+        renamingPath.value = null;
+        renameError.value = null;
+      });
+      return;
+    }
+    final parent = PlatformPaths.parentOf(oldPath);
+    final newPath = '$parent/$newName';
+    final fs = const SftpFs();
+    if (await fs.exists(newPath)) {
+      renameError.value = t.toast.renameAlreadyExists(name: newName);
+      renameAttempt.value = renameAttempt.value + 1;
+      return;
+    }
+    try {
+      await fs.rename(oldPath, newPath);
+    } catch (e) {
+      renameError.value = t.toast.renameError(message: e.toString());
+      renameAttempt.value = renameAttempt.value + 1;
+      return;
+    }
+    batch(() {
+      renamingPath.value = null;
+      renameError.value = null;
+      selectedPaths.value = {newPath};
+    });
+    await refresh();
+    final idx = _vf.indexWhere((f) => f.path == newPath);
+    if (idx >= 0) {
+      batch(() {
+        cursorIndex.value = idx;
+        anchorIndex.value = idx;
+      });
+    }
+  }
+
   Future<void> _commitCreate(String name) async {
     final pending = pendingCreate.value;
     if (pending == null) return;
@@ -1185,8 +1379,11 @@ class NavigationStore {
     final logicalNewPath = PlatformPaths.isSmbUri(dir)
         ? '$dir/$name'
         : physicalNewPath;
-    if (FileSystemEntity.typeSync(physicalNewPath) !=
-        FileSystemEntityType.notFound) {
+    final exists = PlatformPaths.isSftpUri(physicalNewPath)
+        ? await FsWorkerPool.instance.stat(physicalNewPath) != null
+        : FileSystemEntity.typeSync(physicalNewPath) !=
+              FileSystemEntityType.notFound;
+    if (exists) {
       renameError.value = t.toast.renameAlreadyExists(name: name);
       renameAttempt.value = renameAttempt.value + 1;
       return;
@@ -1488,9 +1685,9 @@ class NavigationStore {
       );
       return;
     }
-    final hasSmb = entries.any((e) => PlatformPaths.isSmbUri(e.path));
+    final hasRemote = entries.any((e) => PlatformPaths.isRemoteUri(e.path));
     final useTrash =
-        !hasSmb &&
+        !hasRemote &&
         (toTrash ?? SettingsStore.instance.deleteKeyBehavior.value == 'trash');
     if (useTrash) {
       operationStore.enqueueTrash(paths);
@@ -1526,7 +1723,9 @@ class NavigationStore {
       clipboardPaths.value = Set<String>.from(logical);
       clipboardMode.value = ClipboardMode.copy;
     });
-    await FileClipboard.writeFiles(physical, isCut: false);
+    if (!physical.any(PlatformPaths.isSftpUri)) {
+      await FileClipboard.writeFiles(physical, isCut: false);
+    }
   }
 
   void cutSelected() async {
@@ -1539,7 +1738,9 @@ class NavigationStore {
       clipboardPaths.value = Set<String>.from(logical);
       clipboardMode.value = ClipboardMode.cut;
     });
-    await FileClipboard.writeFiles(physical, isCut: true);
+    if (!physical.any(PlatformPaths.isSftpUri)) {
+      await FileClipboard.writeFiles(physical, isCut: true);
+    }
   }
 
   Future<void> dropFiles(
@@ -1548,7 +1749,9 @@ class NavigationStore {
     bool move = false,
   }) async {
     if (isTrashPath(destination)) return;
-    final sep = PlatformPaths.separator;
+    final sep = PlatformPaths.isSftpUri(destination)
+        ? '/'
+        : PlatformPaths.separator;
     final filtered = sourcePaths.where((s) {
       final parent = PlatformPaths.parentOf(s);
       if (parent == destination) return false;
@@ -1582,7 +1785,10 @@ class NavigationStore {
     final internalPaths = Set<String>.from(clipboardPaths.value);
     final internalCut = clipboardMode.value == ClipboardMode.cut;
 
-    final paths = await FileClipboard.readFilePaths();
+    var paths = await FileClipboard.readFilePaths();
+    if (paths.isEmpty && internalPaths.isNotEmpty) {
+      paths = internalPaths.toList();
+    }
     if (paths.isEmpty) return;
 
     final samePaths =
@@ -1592,7 +1798,9 @@ class NavigationStore {
     bool isCut = samePaths && internalCut;
     if (!isCut) isCut = await FileClipboard.isCutOperation();
 
-    final sep = PlatformPaths.separator;
+    final sep = PlatformPaths.isSftpUri(currentPath.value)
+        ? '/'
+        : PlatformPaths.separator;
     final filteredPaths = paths.where((s) {
       final parent = PlatformPaths.parentOf(s);
       if (parent == currentPath.value) return false;

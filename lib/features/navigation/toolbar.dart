@@ -355,7 +355,8 @@ class _PathBarState extends State<_PathBar> {
     final segments = PlatformPaths.segments(path);
     final isWindows = PlatformPaths.isWindows;
     final isSmb = PlatformPaths.isSmbUri(path);
-    final hasUriRoot = isWindows || isSmb;
+    final isSftp = PlatformPaths.isSftpUri(path);
+    final hasUriRoot = isWindows || isSmb || isSftp;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -380,7 +381,7 @@ class _PathBarState extends State<_PathBar> {
 
         final maxW = constraints.maxWidth;
 
-        final rootLabel = isSmb
+        final rootLabel = isSmb || isSftp
             ? segments.first
             : (isWindows ? '${segments.first}\\' : '/');
         final rootW = segW(rootLabel);

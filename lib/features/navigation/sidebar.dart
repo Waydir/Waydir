@@ -13,6 +13,7 @@ import '../../ui/theme/app_theme.dart';
 import '../../ui/theme/app_text_styles.dart';
 import '../../ui/dialogs/dialog.dart';
 import '../../ui/dialogs/password_dialog.dart';
+import '../../ui/dialogs/sftp_credentials_dialog.dart';
 import '../../ui/overlays/context_menu.dart';
 import '../../core/platform/platform_paths.dart';
 import '../../core/platform/trash_location.dart';
@@ -58,12 +59,15 @@ class _SidebarState extends State<Sidebar> {
   late final List<_SidebarItem> _favorites;
   late final Future<SmbCredentials?> Function(String logical)
   _credentialsRequester;
+  late final Future<SftpCredentials?> Function(String logical)
+  _sftpCredentialsRequester;
   final _bookmarkStore = BookmarkStore.instance;
 
   @override
   void initState() {
     super.initState();
     _credentialsRequester = _requestSmbCredentials;
+    _sftpCredentialsRequester = _requestSftpCredentials;
     final h = PlatformPaths.homePath;
     _favorites = [
       _SidebarItem(t.sidebar.home, WaydirIconsRegular.house, h),
@@ -112,6 +116,7 @@ class _SidebarState extends State<Sidebar> {
     }
     _bookmarkStore.load();
     widget.store.requestSmbCredentials = _credentialsRequester;
+    widget.store.requestSftpCredentials = _sftpCredentialsRequester;
   }
 
   @override
@@ -122,6 +127,10 @@ class _SidebarState extends State<Sidebar> {
         oldWidget.store.requestSmbCredentials = null;
       }
       widget.store.requestSmbCredentials = _credentialsRequester;
+      if (oldWidget.store.requestSftpCredentials == _sftpCredentialsRequester) {
+        oldWidget.store.requestSftpCredentials = null;
+      }
+      widget.store.requestSftpCredentials = _sftpCredentialsRequester;
     }
   }
 
@@ -129,6 +138,9 @@ class _SidebarState extends State<Sidebar> {
   void dispose() {
     if (widget.store.requestSmbCredentials == _credentialsRequester) {
       widget.store.requestSmbCredentials = null;
+    }
+    if (widget.store.requestSftpCredentials == _sftpCredentialsRequester) {
+      widget.store.requestSftpCredentials = null;
     }
     super.dispose();
   }
@@ -142,6 +154,15 @@ class _SidebarState extends State<Sidebar> {
     );
     if (result == null) return null;
     return SmbCredentials(username: result.username, password: result.password);
+  }
+
+  Future<SftpCredentials?> _requestSftpCredentials(String logical) async {
+    final uri = LocationUri.parse(logical);
+    return showSftpCredentialsDialog(
+      context,
+      title: uri.displayLabel,
+      username: uri.username,
+    );
   }
 
   Future<void> _renameBookmark(Bookmark bookmark) async {
