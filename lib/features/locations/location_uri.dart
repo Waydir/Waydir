@@ -1,7 +1,7 @@
 import '../../core/platform/platform_paths.dart';
 import '../../core/platform/trash_location.dart';
 
-enum LocationScheme { local, windowsUnc, smb, trash, other }
+enum LocationScheme { local, windowsUnc, smb, sftp, trash, other }
 
 class LocationUri {
   final LocationScheme scheme;
@@ -23,7 +23,9 @@ class LocationUri {
   });
 
   bool get isNetwork =>
-      scheme == LocationScheme.smb || scheme == LocationScheme.windowsUnc;
+      scheme == LocationScheme.smb ||
+      scheme == LocationScheme.windowsUnc ||
+      scheme == LocationScheme.sftp;
 
   bool get isLocal => scheme == LocationScheme.local;
 
@@ -35,6 +37,11 @@ class LocationUri {
         final p = (path == null || path!.isEmpty) ? '' : '/$path';
         if (s.isEmpty) return h.isEmpty ? raw : h;
         return '$h/$s$p';
+      case LocationScheme.sftp:
+        final h = host ?? '';
+        final u = (username == null || username!.isEmpty) ? '' : '$username@';
+        final p = (path == null || path!.isEmpty) ? '' : '/$path';
+        return '$u$h$p';
       case LocationScheme.windowsUnc:
         return raw;
       case LocationScheme.trash:
@@ -95,6 +102,9 @@ class LocationUri {
     if (lower.startsWith('smb://')) {
       return _parseSmb(s);
     }
+    if (lower.startsWith('sftp://')) {
+      return _parseSftp(s);
+    }
     if (s.startsWith(r'\\') &&
         !s.startsWith(r'\\?\') &&
         !s.startsWith(r'\\.\')) {
@@ -138,6 +148,38 @@ class LocationUri {
       port: port,
       share: share,
       path: path,
+    );
+  }
+
+  static LocationUri _parseSftp(String s) {
+    final rest = s.substring('sftp://'.length);
+    final firstSlash = rest.indexOf('/');
+    final authority = firstSlash < 0 ? rest : rest.substring(0, firstSlash);
+    final path = firstSlash < 0 ? null : rest.substring(firstSlash + 1);
+    String? username;
+    var hostPart = authority;
+    final at = authority.lastIndexOf('@');
+    if (at >= 0) {
+      username = Uri.decodeComponent(authority.substring(0, at));
+      hostPart = authority.substring(at + 1);
+    }
+    String host = hostPart;
+    int? port;
+    final colon = hostPart.lastIndexOf(':');
+    if (colon > 0 && colon < hostPart.length - 1) {
+      final maybePort = int.tryParse(hostPart.substring(colon + 1));
+      if (maybePort != null) {
+        host = hostPart.substring(0, colon);
+        port = maybePort;
+      }
+    }
+    return LocationUri._(
+      scheme: LocationScheme.sftp,
+      raw: s,
+      username: username,
+      host: host,
+      port: port,
+      path: (path == null || path.isEmpty) ? null : path,
     );
   }
 

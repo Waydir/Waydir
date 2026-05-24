@@ -33,9 +33,14 @@ class PlatformPaths {
 
   static bool isSmbUri(String path) => path.startsWith('smb://');
 
+  static bool isSftpUri(String path) => path.startsWith('sftp://');
+
+  static bool isRemoteUri(String path) => isSmbUri(path) || isSftpUri(path);
+
   static bool isRoot(String path) {
-    if (isSmbUri(path)) {
-      final rest = path.substring('smb://'.length);
+    if (isSmbUri(path) || isSftpUri(path)) {
+      final scheme = isSftpUri(path) ? 'sftp://' : 'smb://';
+      final rest = path.substring(scheme.length);
       final slashes = '/'.allMatches(rest).length;
       return slashes <= 1;
     }
@@ -52,13 +57,14 @@ class PlatformPaths {
   }
 
   static String parentOf(String path) {
-    if (isSmbUri(path)) {
-      final rest = path.substring('smb://'.length);
+    if (isSmbUri(path) || isSftpUri(path)) {
+      final scheme = isSftpUri(path) ? 'sftp://' : 'smb://';
+      final rest = path.substring(scheme.length);
       final slash = rest.lastIndexOf('/');
       if (slash < 0) return path;
       final beforeShare = rest.indexOf('/');
       if (slash == beforeShare) return path;
-      return 'smb://${rest.substring(0, slash)}';
+      return '$scheme${rest.substring(0, slash)}';
     }
     if (isWindows) {
       final cleaned = _normalizeWindowsPath(path);
@@ -82,17 +88,33 @@ class PlatformPaths {
   }
 
   static String join(String part1, [String? part2, String? part3]) {
+    if (isSmbUri(part1) || isSftpUri(part1)) {
+      final parts = [part1, ?part2, ?part3];
+      return parts.where((part) => part.isNotEmpty).fold<String>('', (
+        acc,
+        part,
+      ) {
+        if (acc.isEmpty) return part.replaceAll(RegExp(r'/+$'), '');
+        return '${acc.replaceAll(RegExp(r'/+$'), '')}/${part.replaceAll(RegExp(r'^/+'), '')}';
+      });
+    }
     if (isWindows) return _windowsPath.join(part1, part2, part3);
     return p.join(part1, part2, part3);
   }
 
   static List<String> segments(String path) {
-    if (isSmbUri(path)) {
-      final rest = path.substring('smb://'.length);
+    if (isSmbUri(path) || isSftpUri(path)) {
+      final scheme = isSftpUri(path) ? 'sftp://' : 'smb://';
+      final rest = path.substring(scheme.length);
       final parts = rest.split('/').where((s) => s.isNotEmpty).toList();
-      if (parts.isEmpty) return ['smb://'];
-      if (parts.length == 1) return ['smb://${parts[0]}'];
-      final root = 'smb://${parts[0]}/${parts[1]}';
+      if (parts.isEmpty) return [scheme];
+      if (isSftpUri(path)) {
+        // dla sftp pierwszy segment to host/port/user, dalej "path"
+        final root = '$scheme${parts.first}';
+        return [root, ...parts.sublist(1)];
+      }
+      if (parts.length == 1) return ['$scheme${parts[0]}'];
+      final root = '$scheme${parts[0]}/${parts[1]}';
       return [root, ...parts.sublist(2)];
     }
     if (isWindows) {
@@ -112,7 +134,9 @@ class PlatformPaths {
   }
 
   static String buildPartialPath(List<String> segments, int upToIndex) {
-    if (segments.isNotEmpty && segments.first.startsWith('smb://')) {
+    if (segments.isNotEmpty &&
+        (segments.first.startsWith('smb://') ||
+            segments.first.startsWith('sftp://'))) {
       if (upToIndex == 0) return segments.first;
       return '${segments.first}/${segments.sublist(1, upToIndex + 1).join('/')}';
     }
@@ -203,8 +227,9 @@ class PlatformPaths {
   }
 
   static String fileName(String path) {
-    if (isSmbUri(path)) {
-      final rest = path.substring('smb://'.length);
+    if (isSmbUri(path) || isSftpUri(path)) {
+      final scheme = isSftpUri(path) ? 'sftp://' : 'smb://';
+      final rest = path.substring(scheme.length);
       final slash = rest.lastIndexOf('/');
       if (slash < 0) return rest;
       return rest.substring(slash + 1);
@@ -214,7 +239,7 @@ class PlatformPaths {
   }
 
   static String normalize(String path) {
-    if (isSmbUri(path)) return path;
+    if (isSmbUri(path) || isSftpUri(path)) return path;
     if (isWindows) {
       return _normalizeWindowsPath(path);
     }
