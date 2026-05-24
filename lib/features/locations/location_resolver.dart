@@ -146,19 +146,45 @@ class LocationResolver {
       SftpSessionManager.closeRoot(SftpSessionManager.rootOf(uri));
       return;
     }
-    if (uri.scheme != LocationScheme.smb || !PlatformPaths.isLinux) return;
-    final root = _logicalRoot(uri);
-    final physical =
-        _logicalToPhysical[root] ??
-        _findGvfsMountPoint(
-          host: uri.host ?? '',
-          share: uri.share ?? '',
-          port: uri.port,
-        );
-    final target = physical ?? root;
-    final result = await Process.run('gio', ['mount', '-u', target]);
-    if (result.exitCode == 0) {
-      _logicalToPhysical.remove(root);
+    if (uri.scheme != LocationScheme.smb) return;
+    if (PlatformPaths.isLinux) {
+      final root = _logicalRoot(uri);
+      final physical =
+          _logicalToPhysical[root] ??
+          _findGvfsMountPoint(
+            host: uri.host ?? '',
+            share: uri.share ?? '',
+            port: uri.port,
+          );
+      final target = physical ?? root;
+      final result = await Process.run('gio', ['mount', '-u', target]);
+      if (result.exitCode == 0) {
+        _logicalToPhysical.remove(root);
+      }
+      return;
+    }
+    if (PlatformPaths.isMacOS) {
+      final root = _logicalRoot(uri);
+      final physical =
+          _logicalToPhysical[root] ??
+          await _findMacSmbMountPoint(
+            host: uri.host ?? '',
+            share: uri.share ?? '',
+            port: uri.port,
+          );
+      if (physical == null) {
+        _logicalToPhysical.remove(root);
+        return;
+      }
+      final result = await Process.run('diskutil', ['unmount', physical]);
+      if (result.exitCode == 0) {
+        _logicalToPhysical.remove(root);
+        try {
+          final dir = Directory(physical);
+          if (dir.existsSync()) dir.deleteSync();
+        } catch (_) {}
+      }
+      return;
     }
   }
 
@@ -200,6 +226,9 @@ class LocationResolver {
         if (PlatformPaths.isLinux) {
           return _resolveSmbLinux(uri);
         }
+        if (PlatformPaths.isMacOS) {
+          return _resolveSmbMacOS(uri);
+        }
         return const ResolveUnsupported();
       case LocationScheme.sftp:
         return _resolveSftp(uri);
@@ -213,10 +242,14 @@ class LocationResolver {
     SmbCredentials credentials,
   ) async {
     final uri = LocationUri.parse(input);
-    if (uri.scheme != LocationScheme.smb || !PlatformPaths.isLinux) {
-      return resolve(input);
+    if (uri.scheme != LocationScheme.smb) return resolve(input);
+    if (PlatformPaths.isLinux) {
+      return _resolveSmbLinux(uri, credentials: credentials);
     }
-    return _resolveSmbLinux(uri, credentials: credentials);
+    if (PlatformPaths.isMacOS) {
+      return _resolveSmbMacOS(uri, credentials: credentials);
+    }
+    return resolve(input);
   }
 
   static Future<ResolveResult> resolveSftpWithCredentials(
@@ -380,6 +413,132 @@ class LocationResolver {
       stdoutBuffer.toString(),
       stderrBuffer.toString(),
     );
+  }
+
+  static Future<ResolveResult> _resolveSmbMacOS(
+    LocationUri uri, {
+    SmbCredentials? credentials,
+  }) async {
+    final host = uri.host;
+    final share = uri.share;
+    if (host == null || host.isEmpty) {
+      return const ResolveError('Missing server in smb:// URI');
+    }
+    if (share == null || share.isEmpty) {
+      return const ResolveError('Missing share in smb:// URI');
+    }
+
+    final existingMountPoint = await _findMacSmbMountPoint(
+      host: host,
+      share: share,
+      port: uri.port,
+    );
+    if (existingMountPoint != null) {
+      return _resolvedSmbPath(uri, existingMountPoint);
+    }
+
+    final username = credentials?.username.trim().isNotEmpty == true
+        ? credentials!.username.trim()
+        : uri.username;
+    final smbUrl = StringBuffer('//');
+    if (username != null && username.isNotEmpty) {
+      smbUrl.write(Uri.encodeComponent(username));
+      if (credentials != null) {
+        smbUrl.write(':');
+        smbUrl.write(Uri.encodeComponent(credentials.password));
+      }
+      smbUrl.write('@');
+    }
+    smbUrl.write(host);
+    if (uri.port != null) {
+      smbUrl.write(':');
+      smbUrl.write(uri.port);
+    }
+    smbUrl.write('/');
+    smbUrl.write(share);
+
+    final mountPoint = _allocateMacMountPoint(share);
+    try {
+      Directory(mountPoint).createSync(recursive: true);
+    } catch (e) {
+      return ResolveError('Failed to create $mountPoint: $e');
+    }
+
+    final args = <String>[];
+    if (credentials == null) args.add('-N');
+    args.addAll([smbUrl.toString(), mountPoint]);
+
+    final result = await Process.run('mount_smbfs', args);
+    if (result.exitCode != 0) {
+      try {
+        final dir = Directory(mountPoint);
+        if (dir.existsSync() && dir.listSync().isEmpty) dir.deleteSync();
+      } catch (_) {}
+      final err = (result.stderr as String? ?? '').trim();
+      final lower = err.toLowerCase();
+      final authLike =
+          lower.contains('authentication') ||
+          lower.contains('permission denied') ||
+          lower.contains('not permitted') ||
+          lower.contains('password') ||
+          lower.contains('credentials');
+      if (credentials == null && authLike) {
+        return const ResolveAuthenticationRequired();
+      }
+      return ResolveError(
+        err.isNotEmpty ? err : 'mount_smbfs failed (${result.exitCode})',
+      );
+    }
+    return _resolvedSmbPath(uri, mountPoint);
+  }
+
+  static String _allocateMacMountPoint(String share) {
+    final safeShare = share.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
+    var candidate = '/Volumes/$safeShare';
+    var n = 1;
+    while (Directory(candidate).existsSync()) {
+      candidate = '/Volumes/$safeShare-$n';
+      n++;
+    }
+    return candidate;
+  }
+
+  static Future<String?> _findMacSmbMountPoint({
+    required String host,
+    required String share,
+    int? port,
+  }) async {
+    final result = await Process.run('mount', const []);
+    if (result.exitCode != 0) return null;
+    final wantedHost = host.toLowerCase();
+    for (final line in (result.stdout as String).split('\n')) {
+      if (!line.contains('(smbfs')) continue;
+      final onIdx = line.indexOf(' on ');
+      if (onIdx < 0) continue;
+      final source = line.substring(0, onIdx);
+      if (!source.startsWith('//')) continue;
+      final rest = source.substring(2);
+      final at = rest.lastIndexOf('@');
+      final hostShare = at >= 0 ? rest.substring(at + 1) : rest;
+      final slash = hostShare.indexOf('/');
+      if (slash < 0) continue;
+      var hostPart = hostShare.substring(0, slash).toLowerCase();
+      final sharePart = hostShare.substring(slash + 1);
+      int? linePort;
+      final colon = hostPart.indexOf(':');
+      if (colon >= 0) {
+        linePort = int.tryParse(hostPart.substring(colon + 1));
+        hostPart = hostPart.substring(0, colon);
+      }
+      if (hostPart != wantedHost) continue;
+      if (sharePart != share) continue;
+      if (port != null && linePort != null && port != linePort) continue;
+      final tail = line.substring(onIdx + 4);
+      final parenIdx = tail.lastIndexOf(' (');
+      final mountPath = parenIdx < 0 ? tail : tail.substring(0, parenIdx);
+      return mountPath;
+    }
+    return null;
   }
 
   static bool _looksLikeAuthPrompt(String text) {
