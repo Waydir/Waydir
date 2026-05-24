@@ -915,6 +915,10 @@ class TranslationsSidebarEn {
 	/// en: 'Drop folder to bookmark'
 	String get dropBookmark => 'Drop folder to bookmark';
 
+	/// en: 'Connect to server'
+	String get connectToServer => 'Connect to server';
+
+	late final TranslationsSidebarConnectDialogEn connectDialog = TranslationsSidebarConnectDialogEn.internal(_root);
 	late final TranslationsSidebarDriveSpaceEn driveSpace = TranslationsSidebarDriveSpaceEn.internal(_root);
 	late final TranslationsSidebarDrivesEn drives = TranslationsSidebarDrivesEn.internal(_root);
 
@@ -1313,6 +1317,9 @@ class TranslationsErrorsEn {
 
 	/// en: 'Could not read archive'
 	String get archiveError => 'Could not read archive';
+
+	/// en: 'Network shares (smb://) are not supported on this platform yet.'
+	String get smbNotSupportedOnPlatform => 'Network shares (smb://) are not supported on this platform yet.';
 }
 
 // Path: tasks
@@ -1923,6 +1930,48 @@ class TranslationsFileViewColumnsEn {
 	String get location => 'Location';
 }
 
+// Path: sidebar.connectDialog
+class TranslationsSidebarConnectDialogEn {
+	TranslationsSidebarConnectDialogEn.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Connect to server'
+	String get title => 'Connect to server';
+
+	/// en: 'Server'
+	String get host => 'Server';
+
+	/// en: 'e.g. 192.168.1.10 or nas.local'
+	String get hostHint => 'e.g. 192.168.1.10 or nas.local';
+
+	/// en: 'Port'
+	String get port => 'Port';
+
+	/// en: 'Share'
+	String get share => 'Share';
+
+	/// en: 'optional'
+	String get shareHint => 'optional';
+
+	/// en: 'Path'
+	String get pathLabel => 'Path';
+
+	/// en: 'optional'
+	String get pathHint => 'optional';
+
+	/// en: 'Add bookmark'
+	String get addBookmark => 'Add bookmark';
+
+	/// en: 'Connect'
+	String get connect => 'Connect';
+
+	/// en: 'Enter a server address'
+	String get invalidHost => 'Enter a server address';
+}
+
 // Path: sidebar.driveSpace
 class TranslationsSidebarDriveSpaceEn {
 	TranslationsSidebarDriveSpaceEn.internal(this._root);
@@ -2362,6 +2411,18 @@ extension on Translations {
 			'sidebar.root' => 'Root',
 			'sidebar.bookmarks' => 'Bookmarks',
 			'sidebar.dropBookmark' => 'Drop folder to bookmark',
+			'sidebar.connectToServer' => 'Connect to server',
+			'sidebar.connectDialog.title' => 'Connect to server',
+			'sidebar.connectDialog.host' => 'Server',
+			'sidebar.connectDialog.hostHint' => 'e.g. 192.168.1.10 or nas.local',
+			'sidebar.connectDialog.port' => 'Port',
+			'sidebar.connectDialog.share' => 'Share',
+			'sidebar.connectDialog.shareHint' => 'optional',
+			'sidebar.connectDialog.pathLabel' => 'Path',
+			'sidebar.connectDialog.pathHint' => 'optional',
+			'sidebar.connectDialog.addBookmark' => 'Add bookmark',
+			'sidebar.connectDialog.connect' => 'Connect',
+			'sidebar.connectDialog.invalidHost' => 'Enter a server address',
 			'sidebar.driveSpace.used' => 'Used',
 			'sidebar.driveSpace.free' => 'Free',
 			'sidebar.driveSpace.total' => 'Total',
@@ -2473,6 +2534,7 @@ extension on Translations {
 			'errors.workerExitedUnexpectedly' => 'Worker exited unexpectedly',
 			'errors.appearedDuring' => 'File appeared at destination during operation',
 			'errors.archiveError' => 'Could not read archive',
+			'errors.smbNotSupportedOnPlatform' => 'Network shares (smb://) are not supported on this platform yet.',
 			'tasks.copyingSingle' => ({required Object name}) => 'Copying ${name}',
 			'tasks.copyingMultiple' => ({required Object count}) => 'Copying ${count} items',
 			'tasks.movingSingle' => ({required Object name}) => 'Moving ${name}',
@@ -2511,6 +2573,8 @@ extension on Translations {
 			'git.stashSwitch' => 'Stash & Switch',
 			'git.stashSwitchFailed' => ({required Object message}) => 'Stash & switch failed: ${message}',
 			'git.stashEntry' => ({required Object index, required Object message}) => 'stash@{${index}} · ${message}',
+			_ => null,
+		} ?? switch (path) {
 			'git.stashPop' => 'Pop (apply & remove)',
 			'git.stashApply' => 'Apply (keep stash)',
 			'git.stashDrop' => 'Drop',
@@ -2524,8 +2588,6 @@ extension on Translations {
 			'openWith.recent' => 'Recent',
 			'openWith.recommended' => 'Recommended Applications',
 			'openWith.allApps' => 'All Applications',
-			_ => null,
-		} ?? switch (path) {
 			'openWith.noApps' => 'No applications found for this file type.',
 			'openWith.setDefault' => 'Always use for this file type',
 			'openWith.setDefaultUnavailable' => 'Default cannot be changed on this platform',

@@ -331,6 +331,8 @@ class _PathBarState extends State<_PathBar> {
     }
     final segments = PlatformPaths.segments(path);
     final isWindows = PlatformPaths.isWindows;
+    final isSmb = PlatformPaths.isSmbUri(path);
+    final hasUriRoot = isWindows || isSmb;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -355,12 +357,14 @@ class _PathBarState extends State<_PathBar> {
 
         final maxW = constraints.maxWidth;
 
-        final rootLabel = isWindows ? '${segments.first}\\' : '/';
+        final rootLabel = isSmb
+            ? segments.first
+            : (isWindows ? '${segments.first}\\' : '/');
         final rootW = segW(rootLabel);
 
         final widths = <double>[];
         double total = rootW;
-        final offset = isWindows ? 1 : 0;
+        final offset = hasUriRoot ? 1 : 0;
         for (int i = offset; i < segments.length; i++) {
           final w =
               caretWidth + segW(segments[i], last: i == segments.length - 1);
@@ -369,7 +373,7 @@ class _PathBarState extends State<_PathBar> {
         }
 
         if (total <= maxW) {
-          final rootPath = isWindows
+          final rootPath = hasUriRoot
               ? PlatformPaths.buildPartialPath(segments, 0)
               : '/';
           return Row(
@@ -411,7 +415,7 @@ class _PathBarState extends State<_PathBar> {
             _BreadcrumbSegment(
               label: rootLabel,
               onTap: () => widget.store.navigateTo(
-                isWindows ? PlatformPaths.buildPartialPath(segments, 0) : '/',
+                hasUriRoot ? PlatformPaths.buildPartialPath(segments, 0) : '/',
               ),
             ),
             _caretIcon(),

@@ -5,6 +5,7 @@ import 'package:signals/signals.dart';
 import '../../core/database/app_database.dart';
 import '../../core/platform/platform_paths.dart';
 import '../../core/settings/settings_store.dart';
+import '../locations/location_uri.dart';
 
 class BookmarkStore {
   static final BookmarkStore instance = BookmarkStore._();
@@ -20,11 +21,29 @@ class BookmarkStore {
   }
 
   Future<void> addPath(String path) async {
-    final normalized = PlatformPaths.normalize(path);
-    if (!Directory(normalized).existsSync()) return;
-    final existing = await _db.getBookmarkByPath(normalized);
+    final uri = LocationUri.parse(path);
+    if (uri.isLocal) {
+      final normalized = PlatformPaths.normalize(path);
+      if (!Directory(normalized).existsSync()) return;
+      await _addUnique(PlatformPaths.fileName(normalized), normalized);
+      return;
+    }
+    await _addUnique(uri.displayLabel, uri.raw);
+  }
+
+  Future<void> addLocation(String location, {String? label}) async {
+    final uri = LocationUri.parse(location);
+    final stored = uri.isLocal ? PlatformPaths.normalize(uri.raw) : uri.raw;
+    final lbl = (label != null && label.trim().isNotEmpty)
+        ? label.trim()
+        : (uri.isLocal ? PlatformPaths.fileName(stored) : uri.displayLabel);
+    await _addUnique(lbl, stored);
+  }
+
+  Future<void> _addUnique(String label, String storedPath) async {
+    final existing = await _db.getBookmarkByPath(storedPath);
     if (existing != null) return;
-    await _db.addBookmark(PlatformPaths.fileName(normalized), normalized);
+    await _db.addBookmark(label, storedPath);
     await load();
   }
 

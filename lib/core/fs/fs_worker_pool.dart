@@ -265,6 +265,16 @@ class FsWorkerPool {
   }
 
   static dynamic _execute(_Op op, List<dynamic> args) {
+    if (args.isNotEmpty && args[0] is String) {
+      final firstArg = args[0] as String;
+      if (firstArg.startsWith('smb://')) {
+        throw FileSystemException(
+          'FS worker received an unresolved smb:// URI; callers must '
+          'translate to the physical mount path first.',
+          firstArg,
+        );
+      }
+    }
     switch (op) {
       case _Op.list:
         final path = args[0] as String;

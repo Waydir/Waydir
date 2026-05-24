@@ -31,7 +31,14 @@ class PlatformPaths {
   static bool get isMacOS => Platform.isMacOS;
   static bool get isLinux => Platform.isLinux;
 
+  static bool isSmbUri(String path) => path.startsWith('smb://');
+
   static bool isRoot(String path) {
+    if (isSmbUri(path)) {
+      final rest = path.substring('smb://'.length);
+      final slashes = '/'.allMatches(rest).length;
+      return slashes <= 1;
+    }
     if (isWindows) {
       final cleaned = _normalizeWindowsPath(path);
       final uncRoot = _windowsUncRoot(cleaned);
@@ -45,6 +52,14 @@ class PlatformPaths {
   }
 
   static String parentOf(String path) {
+    if (isSmbUri(path)) {
+      final rest = path.substring('smb://'.length);
+      final slash = rest.lastIndexOf('/');
+      if (slash < 0) return path;
+      final beforeShare = rest.indexOf('/');
+      if (slash == beforeShare) return path;
+      return 'smb://${rest.substring(0, slash)}';
+    }
     if (isWindows) {
       final cleaned = _normalizeWindowsPath(path);
       final root = _windowsRoot(cleaned);
@@ -72,6 +87,14 @@ class PlatformPaths {
   }
 
   static List<String> segments(String path) {
+    if (isSmbUri(path)) {
+      final rest = path.substring('smb://'.length);
+      final parts = rest.split('/').where((s) => s.isNotEmpty).toList();
+      if (parts.isEmpty) return ['smb://'];
+      if (parts.length == 1) return ['smb://${parts[0]}'];
+      final root = 'smb://${parts[0]}/${parts[1]}';
+      return [root, ...parts.sublist(2)];
+    }
     if (isWindows) {
       final cleaned = _normalizeWindowsPath(path);
       final root = _windowsRoot(cleaned);
@@ -89,6 +112,10 @@ class PlatformPaths {
   }
 
   static String buildPartialPath(List<String> segments, int upToIndex) {
+    if (segments.isNotEmpty && segments.first.startsWith('smb://')) {
+      if (upToIndex == 0) return segments.first;
+      return '${segments.first}/${segments.sublist(1, upToIndex + 1).join('/')}';
+    }
     if (isWindows) {
       final root = segments.first;
       if (upToIndex == 0) return _ensureTrailingWindowsSeparator(root);
@@ -176,11 +203,18 @@ class PlatformPaths {
   }
 
   static String fileName(String path) {
+    if (isSmbUri(path)) {
+      final rest = path.substring('smb://'.length);
+      final slash = rest.lastIndexOf('/');
+      if (slash < 0) return rest;
+      return rest.substring(slash + 1);
+    }
     if (isWindows) return _windowsPath.basename(path);
     return p.basename(path);
   }
 
   static String normalize(String path) {
+    if (isSmbUri(path)) return path;
     if (isWindows) {
       return _normalizeWindowsPath(path);
     }

@@ -97,6 +97,12 @@ class OperationStore {
     List<String> sources,
     String destination,
   ) async {
+    assert(
+      !destination.startsWith('smb://'),
+      'Unresolved smb:// URI reached operation store as destination — '
+      'callers must translate to a physical mount path before enqueueing.',
+    );
+    if (destination.startsWith('smb://')) return;
     final List<String> resolved;
     try {
       resolved = await FileSystemService.materializeArchiveSources(sources);
@@ -136,11 +142,13 @@ class OperationStore {
 
   void enqueueDelete(List<String> sources) {
     if (sources.isEmpty) return;
+    final safe = _rejectSmbUris(sources);
+    if (safe.isEmpty) return;
 
     final task = FileTask(
       id: '${_idCounter++}',
       type: TaskType.delete,
-      sources: sources,
+      sources: safe,
       startTime: DateTime.now(),
     );
     _enqueue(task);
@@ -148,14 +156,28 @@ class OperationStore {
 
   void enqueueTrash(List<String> sources) {
     if (sources.isEmpty) return;
+    final safe = _rejectSmbUris(sources);
+    if (safe.isEmpty) return;
 
     final task = FileTask(
       id: '${_idCounter++}',
       type: TaskType.trash,
-      sources: sources,
+      sources: safe,
       startTime: DateTime.now(),
     );
     _enqueue(task);
+  }
+
+  List<String> _rejectSmbUris(List<String> sources) {
+    final out = <String>[];
+    for (final s in sources) {
+      if (s.startsWith('smb://')) {
+        assert(false, 'Unresolved smb:// URI reached operation store: $s');
+        continue;
+      }
+      out.add(s);
+    }
+    return out;
   }
 
   void enqueueTrashRestore(List<TrashEntry> entries) {

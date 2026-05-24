@@ -18,6 +18,8 @@ import '../../core/platform/trash_location.dart';
 import '../../i18n/strings.g.dart';
 import '../../utils/drag_drop.dart';
 import '../../utils/format.dart';
+import '../locations/connect_to_server_dialog.dart';
+import '../locations/location_uri.dart';
 import '../operations/drag_hint.dart';
 import '../operations/operation_store.dart';
 import '../operations/operations_panel.dart';
@@ -361,6 +363,13 @@ class _SidebarState extends State<Sidebar> {
                         onContextMenu: _showBookmarkMenu,
                       ),
                     ),
+                    _ConnectToServerRow(
+                      collapsed: collapsed,
+                      onTap: () async {
+                        final uri = await openConnectToServer(context);
+                        if (uri != null) widget.store.navigateTo(uri);
+                      },
+                    ),
                   ],
                 );
               }),
@@ -371,6 +380,83 @@ class _SidebarState extends State<Sidebar> {
             collapsed: widget.collapsed,
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ConnectToServerRow extends StatefulWidget {
+  final bool collapsed;
+  final VoidCallback onTap;
+
+  const _ConnectToServerRow({required this.collapsed, required this.onTap});
+
+  @override
+  State<_ConnectToServerRow> createState() => _ConnectToServerRowState();
+}
+
+class _ConnectToServerRowState extends State<_ConnectToServerRow> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _hovered ? AppColors.fg : AppColors.fgMuted;
+    final icon = Icon(WaydirIconsRegular.treeStructure, size: 16, color: color);
+
+    if (widget.collapsed) {
+      return Tooltip(
+        message: t.sidebar.connectToServer,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          onEnter: (_) => setState(() => _hovered = true),
+          onExit: (_) => setState(() => _hovered = false),
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: widget.onTap,
+            child: Container(
+              height: 32,
+              margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+              decoration: BoxDecoration(
+                color: _hovered ? AppColors.bgHover : Colors.transparent,
+                borderRadius: BorderRadius.zero,
+              ),
+              alignment: Alignment.center,
+              child: icon,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onTap,
+        child: Container(
+          height: 28,
+          margin: const EdgeInsets.symmetric(horizontal: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          decoration: BoxDecoration(
+            color: _hovered ? AppColors.bgHover : Colors.transparent,
+            borderRadius: BorderRadius.zero,
+          ),
+          child: Row(
+            children: [
+              icon,
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  t.sidebar.connectToServer,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.txt.body.copyWith(color: color),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -469,15 +555,18 @@ class _BookmarksSection extends StatelessWidget {
                   ),
                 )
         else
-          ...bookmarks.map(
-            (bookmark) => _ItemRow(
-              item: _SidebarItem(
-                bookmark.label,
-                WaydirIconsRegular.bookmarkSimple,
-                bookmark.path,
-              ),
+          ...bookmarks.map((bookmark) {
+            final uri = LocationUri.parse(bookmark.path);
+            final icon = uri.isNetwork
+                ? WaydirIconsRegular.treeStructure
+                : WaydirIconsRegular.bookmarkSimple;
+            final mounted = uri.isLocal
+                ? Directory(bookmark.path).existsSync()
+                : true;
+            return _ItemRow(
+              item: _SidebarItem(bookmark.label, icon, bookmark.path),
               isSelected: currentPath == bookmark.path,
-              isMounted: Directory(bookmark.path).existsSync(),
+              isMounted: mounted,
               collapsed: collapsed,
               onTap: onNavigate,
               onMiddleTap: onOpenInNewTab != null
@@ -486,8 +575,8 @@ class _BookmarksSection extends StatelessWidget {
               onDropFiles: (paths, {bool move = false}) =>
                   onDropFiles(paths, bookmark.path, move: move),
               onContextMenu: (position) => onContextMenu(bookmark, position),
-            ),
-          ),
+            );
+          }),
         const SizedBox(height: 8),
       ],
     );
@@ -931,13 +1020,9 @@ class _ItemRowState extends State<_ItemRow> {
         onEnter: (_) => setState(() => _hovered = true),
         onExit: (_) => setState(() => _hovered = false),
         child: GestureDetector(
-          onTap: () {
-            if (!widget.isMounted || Directory(widget.item.path).existsSync()) {
-              widget.onTap(widget.item.path);
-            }
-          },
+          onTap: () => widget.onTap(widget.item.path),
           onTertiaryTapUp: (_) {
-            if (widget.isMounted && Directory(widget.item.path).existsSync()) {
+            if (widget.isMounted) {
               widget.onMiddleTap?.call();
             }
           },
