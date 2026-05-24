@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Selection can now be saved to a text file and loaded back by matching visible item names in the current view.
 - Search supports regex and glob patterns alongside substring matching. Switch between modes from the new segmented toggle in the search bar.
 - File operations now show current transfer speed and ETA in the operations panel.
-- Connect to network drives from the sidebar's Network section. Browse, open, copy, move, and delete remote files like local ones. SFTP works on all platforms; SMB is supported on Linux and Windows.
+- Connect to network drives over SMB and SFTP from the sidebar's Network section. Browse, open, copy, move, and delete remote files like local ones.
 
 ### Changed
 - UI improvements.
