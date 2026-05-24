@@ -1,7 +1,10 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
+import '../../core/fs/sftp_fs.dart';
+import '../../core/platform/platform_paths.dart';
 import '../../i18n/strings.g.dart';
 import '../../ui/theme/app_theme.dart';
 import 'quick_look_common.dart';
@@ -30,6 +33,15 @@ class _ImagePreviewState extends State<ImagePreview> {
     super.dispose();
   }
 
+  Future<Uint8List> _readRemoteImage() async {
+    final stream = await const SftpFs().openRead(widget.path);
+    final builder = BytesBuilder(copy: false);
+    await for (final chunk in stream) {
+      builder.add(chunk);
+    }
+    return builder.takeBytes();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -48,20 +60,7 @@ class _ImagePreviewState extends State<ImagePreview> {
                   maxScale: 8,
                   minScale: 1,
                   clipBehavior: Clip.hardEdge,
-                  child: SizedBox.expand(
-                    child: Image.file(
-                      File(widget.path),
-                      fit: BoxFit.contain,
-                      filterQuality: FilterQuality.medium,
-                      gaplessPlayback: true,
-                      frameBuilder: (context, child, frame, wasSyncLoaded) {
-                        if (wasSyncLoaded || frame != null) return child;
-                        return const QlCentered.spinner();
-                      },
-                      errorBuilder: (_, _, _) =>
-                          QlCentered(message: t.quickLook.noPreview),
-                    ),
-                  ),
+                  child: SizedBox.expand(child: _image()),
                 ),
               ),
               AnimatedBuilder(
@@ -104,6 +103,37 @@ class _ImagePreviewState extends State<ImagePreview> {
           );
         },
       ),
+    );
+  }
+
+  Widget _image() {
+    if (PlatformPaths.isSftpUri(widget.path)) {
+      return FutureBuilder<Uint8List>(
+        future: _readRemoteImage(),
+        builder: (context, snapshot) {
+          final data = snapshot.data;
+          if (data == null) return const QlCentered.spinner();
+          return Image.memory(
+            data,
+            fit: BoxFit.contain,
+            filterQuality: FilterQuality.medium,
+            gaplessPlayback: true,
+            errorBuilder: (_, _, _) =>
+                QlCentered(message: t.quickLook.noPreview),
+          );
+        },
+      );
+    }
+    return Image.file(
+      File(widget.path),
+      fit: BoxFit.contain,
+      filterQuality: FilterQuality.medium,
+      gaplessPlayback: true,
+      frameBuilder: (context, child, frame, wasSyncLoaded) {
+        if (wasSyncLoaded || frame != null) return child;
+        return const QlCentered.spinner();
+      },
+      errorBuilder: (_, _, _) => QlCentered(message: t.quickLook.noPreview),
     );
   }
 

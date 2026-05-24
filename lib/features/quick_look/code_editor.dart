@@ -1,9 +1,12 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:waydir/ui/icons/waydir_icons.dart';
 
+import '../../core/fs/sftp_fs.dart';
+import '../../core/platform/platform_paths.dart';
 import '../../i18n/strings.g.dart';
 import '../../ui/theme/app_theme.dart';
 import '../../ui/theme/app_text_styles.dart';
@@ -133,7 +136,14 @@ class _CodeEditorState extends State<CodeEditor> {
     final text = _ctrl.text;
     setState(() => _saving = true);
     try {
-      await File(widget.path).writeAsString(text, flush: true);
+      if (PlatformPaths.isSftpUri(widget.path)) {
+        await const SftpFs().writeBytes(
+          widget.path,
+          Uint8List.fromList(utf8.encode(text)),
+        );
+      } else {
+        await File(widget.path).writeAsString(text, flush: true);
+      }
       if (!mounted) return;
       setState(() {
         _saving = false;
