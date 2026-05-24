@@ -287,6 +287,15 @@ class OperationStore {
     final task = tasks.value.firstWhereOrNull((t) => t.id == id);
     if (task == null) return;
 
+    if (task.status == TaskStatus.waitingConflicts) {
+      resolveCurrentConflict(
+        id,
+        ConflictResolution.skip,
+        applyToAll: true,
+      );
+      return;
+    }
+
     if (task.status == TaskStatus.running ||
         task.status == TaskStatus.preparing) {
       task.status = TaskStatus.cancelling;
