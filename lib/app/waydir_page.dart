@@ -106,13 +106,14 @@ class _WaydirPageState extends State<WaydirPage> {
             );
             for (final store in _shell.allStores) {
               final cp = store.currentPath.value;
-              final destMatches =
-                  task.destination == cp || destLogical == cp;
-              final isTrashTask = task.type == TaskType.trashRestore ||
+              final destMatches = task.destination == cp || destLogical == cp;
+              final isTrashTask =
+                  task.type == TaskType.trashRestore ||
                   task.type == TaskType.trashDelete;
-              final isRemoval = task.type == TaskType.delete ||
-                  task.type == TaskType.trash;
-              final removalMatches = isRemoval &&
+              final isRemoval =
+                  task.type == TaskType.delete || task.type == TaskType.trash;
+              final removalMatches =
+                  isRemoval &&
                   task.sources.any((s) {
                     final d = p.dirname(s);
                     return d == cp ||
@@ -820,8 +821,8 @@ class _WaydirPageState extends State<WaydirPage> {
 
   List<String> _compressSources() {
     return _active.selectedEntries
-        .where((e) => !FileSystemService.isInsideArchive(e.path))
-        .map((e) => e.path)
+        .where((e) => !FileSystemService.isInsideArchive(e.realPath))
+        .map((e) => e.realPath)
         .toList();
   }
 
@@ -848,15 +849,14 @@ class _WaydirPageState extends State<WaydirPage> {
     return 'archive';
   }
 
-  void _quickCompress(ArchiveFormat format) {
+  void _quickCompress(ArchiveFormat format) async {
     final store = _active;
     final sources = _compressSources();
     if (sources.isEmpty) return;
+    final dir = await store.resolveForOperation(store.currentPath.value);
+    if (dir == null) return;
     final dest = FileSystemService.uniquePath(
-      p.join(
-        store.currentPath.value,
-        '${_compressBaseName()}.${format.extension}',
-      ),
+      p.join(dir, '${_compressBaseName()}.${format.extension}'),
     );
     store.operationStore.enqueueCompress(
       sources,
@@ -877,7 +877,11 @@ class _WaydirPageState extends State<WaydirPage> {
       destinationDir: dir,
     );
     if (req == null) return;
-    final dest = FileSystemService.uniquePath(p.join(dir, req.fileName));
+    final physicalDir = await store.resolveForOperation(dir);
+    if (physicalDir == null) return;
+    final dest = FileSystemService.uniquePath(
+      p.join(physicalDir, req.fileName),
+    );
     store.operationStore.enqueueCompress(
       sources,
       dest,
@@ -886,15 +890,16 @@ class _WaydirPageState extends State<WaydirPage> {
     );
   }
 
-  void _extractSelected({required bool toOwnFolder}) {
+  void _extractSelected({required bool toOwnFolder}) async {
     final store = _active;
-    final base = store.currentPath.value;
+    final base = await store.resolveForOperation(store.currentPath.value);
+    if (base == null) return;
     final archives = store.selectedEntries
         .where(
           (e) =>
               e.type == FileItemType.file &&
               ArchivePath.isArchiveName(e.name) &&
-              !FileSystemService.isInsideArchive(e.path),
+              !FileSystemService.isInsideArchive(e.realPath),
         )
         .toList();
     if (archives.isEmpty) return;
@@ -904,11 +909,11 @@ class _WaydirPageState extends State<WaydirPage> {
         final dest = FileSystemService.uniquePath(
           p.join(base, FileSystemService.archiveBaseName(entry.name)),
         );
-        store.operationStore.enqueueExtract([entry.path], dest);
+        store.operationStore.enqueueExtract([entry.realPath], dest);
       }
     } else {
       store.operationStore.enqueueExtract(
-        archives.map((e) => e.path).toList(),
+        archives.map((e) => e.realPath).toList(),
         base,
       );
     }
@@ -1373,7 +1378,8 @@ class _WaydirPageState extends State<WaydirPage> {
     required bool move,
   }) async {
     final activeIdx = _shell.activePaneIndex.value;
-    final otherStore = _shell.panes.value[1 - activeIdx].tabs.activeTab.value.store;
+    final otherStore =
+        _shell.panes.value[1 - activeIdx].tabs.activeTab.value.store;
     final sources = _dualPaneSources(store);
     if (sources.isEmpty) return;
     final dest = await otherStore.resolveForOperation(

@@ -62,11 +62,19 @@ class NavigationStore {
   /// Translate a logical smb:// path to its physical gvfs mountpoint when
   /// possible; pass non-smb paths through unchanged.
   String _physical(String p) => LocationResolver.logicalToPhysical(p) ?? p;
-  List<String> _physicalList(Iterable<String> ps) =>
-      ps.map(_physical).toList();
+  List<String> _physicalList(Iterable<String> ps) => ps.map(_physical).toList();
 
   Future<String?> resolveForOperation(String logical) =>
       _resolvePhysicalDestination(logical);
+
+  Future<ArchiveLocation?> _archiveLocationFor(String path) async {
+    if (PlatformPaths.isSmbUri(path)) {
+      final physical = await _resolvePhysicalDestination(path);
+      if (physical == null) return null;
+      return ArchivePath.resolve(physical);
+    }
+    return ArchivePath.resolve(path);
+  }
 
   /// Returns the physical path for [logical], mounting the share first when
   /// [logical] is smb://. Sets [loadError] and returns null if the share
@@ -80,7 +88,7 @@ class NavigationStore {
     final result = await LocationResolver.resolve(logical);
     switch (result) {
       case ResolveSuccess():
-        return LocationResolver.logicalToPhysical(logical);
+        return result.physicalPath;
       case ResolveError(:final message):
         loadError.value = message;
         return null;
@@ -89,6 +97,7 @@ class NavigationStore {
         return null;
     }
   }
+
   final DirectoryWatcherService _watcher = DirectoryWatcherService();
 
   final _folderStateCache = <String, _FolderState>{};
@@ -110,6 +119,7 @@ class NavigationStore {
   Timer? _searchUiFlush;
   void Function()? _showHiddenDisposer;
   List<FileEntry>? _pendingSearchResults;
+  int _searchToken = 0;
   static const _kSearchUiFlushMs = 100;
 
   late final canGoBack = computed(() => historyIndex.value > 0);
@@ -185,7 +195,8 @@ class NavigationStore {
 
   void _setupGitStatusEffect() {
     _gitStatusDisposer = effect(() {
-      gitStatus.watchPath(currentPath.value);
+      final path = currentPath.value;
+      if (!PlatformPaths.isSmbUri(path)) gitStatus.watchPath(path);
     });
   }
 
@@ -281,6 +292,7 @@ class NavigationStore {
   }
 
   void closeSearch() {
+    _searchToken++;
     _searchDebounce?.cancel();
     _searchUiFlush?.cancel();
     _searchUiFlush = null;
@@ -423,16 +435,16 @@ class NavigationStore {
   void _scheduleSearchRestart() {
     _searchDebounce?.cancel();
     if (searchRecursive.value) {
-      _searchDebounce = Timer(
-        const Duration(milliseconds: 250),
-        _restartRecursiveSearch,
-      );
+      _searchDebounce = Timer(const Duration(milliseconds: 250), () {
+        _restartRecursiveSearch();
+      });
       return;
     }
     _restartRecursiveSearch();
   }
 
-  void _restartRecursiveSearch() {
+  Future<void> _restartRecursiveSearch() async {
+    final token = ++_searchToken;
     _searchHandle?.cancel();
     _searchHandle = null;
     _searchUiFlush?.cancel();
@@ -458,13 +470,19 @@ class NavigationStore {
       isSearching.value = false;
       return;
     }
+    final root = await _resolvePhysicalDestination(currentPath.value);
+    if (token != _searchToken) return;
+    if (root == null) {
+      isSearching.value = false;
+      return;
+    }
     _searchHandle = RecursiveSearch.start(
-      root: currentPath.value,
+      root: root,
       query: q,
       includeHidden: showHidden.value,
       mode: mode,
       onBatch: (b) {
-        acc.addAll(b);
+        acc.addAll(b.map(_logicalEntryFromPhysical));
         _pendingSearchResults = acc;
         _scheduleSearchUiFlush();
       },
@@ -472,7 +490,8 @@ class NavigationStore {
         batch(() {
           searchScannedDirs.value = n;
           if (currentDir != null) {
-            searchCurrentDir.value = currentDir;
+            searchCurrentDir.value =
+                LocationResolver.physicalToLogical(currentDir) ?? currentDir;
           }
         });
       },
@@ -497,6 +516,19 @@ class NavigationStore {
           searchCurrentDir.value = null;
         });
       },
+    );
+  }
+
+  FileEntry _logicalEntryFromPhysical(FileEntry entry) {
+    final logical = LocationResolver.physicalToLogical(entry.path);
+    if (logical == null) return entry;
+    return FileEntry.raw(
+      name: entry.name,
+      path: logical,
+      realPath: entry.realPath,
+      type: entry.type,
+      size: entry.size,
+      modifiedMs: entry.modifiedMs,
     );
   }
 
@@ -554,7 +586,16 @@ class NavigationStore {
     switch (uri.scheme) {
       case LocationScheme.smb:
         if (PlatformPaths.isWindows) {
-          return uri.toWindowsUnc() ?? input;
+          if (uri.port != null) {
+            loadError.value = 'SMB ports are not supported on Windows';
+            return null;
+          }
+          final unc = uri.toWindowsUnc();
+          if (unc == null) {
+            loadError.value = 'Invalid smb:// URI';
+            return null;
+          }
+          return unc;
         }
         return null;
       case LocationScheme.other:
@@ -745,7 +786,7 @@ class NavigationStore {
         if (physical == null) {
           final r = await LocationResolver.resolve(path);
           if (r is ResolveSuccess) {
-            physical = LocationResolver.logicalToPhysical(path);
+            physical = r.physicalPath;
           } else if (r is ResolveError) {
             throw FileSystemException(r.message, path);
           }
@@ -1032,7 +1073,7 @@ class NavigationStore {
       return;
     }
 
-    final renameLoc = ArchivePath.resolve(oldPath);
+    final renameLoc = await _archiveLocationFor(oldPath);
     if (renameLoc != null && !renameLoc.isRoot) {
       operationStore.enqueueArchiveEdit(
         archivePath: renameLoc.archivePath,
@@ -1230,9 +1271,9 @@ class NavigationStore {
     selectedPaths.value = {path};
   }
 
-  void onOpen(FileEntry entry) => _openEntry(entry);
+  void onOpen(FileEntry entry) => unawaited(_openEntry(entry));
 
-  void _openEntry(FileEntry entry) {
+  Future<void> _openEntry(FileEntry entry) async {
     if (entry.type == FileItemType.folder) {
       if (PlatformPaths.isWindows &&
           currentPath.value == kTrashPath &&
@@ -1242,12 +1283,12 @@ class NavigationStore {
       navigateTo(entry.path);
       return;
     }
-    final loc = ArchivePath.resolve(entry.path);
+    final loc = await _archiveLocationFor(entry.path);
     if (loc != null) {
       if (loc.isRoot) {
         navigateTo(entry.path);
       } else {
-        FileSystemService.openArchiveEntry(loc);
+        await FileSystemService.openArchiveEntry(loc);
       }
       return;
     }
@@ -1267,7 +1308,7 @@ class NavigationStore {
       }
     }
     if (entry == null) return;
-    _openEntry(entry);
+    unawaited(_openEntry(entry));
   }
 
   void selectAll() {
@@ -1400,7 +1441,7 @@ class NavigationStore {
     return _vf.where((f) => paths.contains(f.path)).toList();
   }
 
-  void deleteSelected({bool? toTrash}) {
+  void deleteSelected({bool? toTrash}) async {
     if (isTrashView) return;
     final entries = selectedEntries;
     if (entries.isEmpty) return;
@@ -1410,11 +1451,11 @@ class NavigationStore {
       cursorIndex.value = -1;
       anchorIndex.value = -1;
     });
-    final archiveLoc = ArchivePath.resolve(currentPath.value);
+    final archiveLoc = await _archiveLocationFor(currentPath.value);
     if (archiveLoc != null) {
       final inner = <String>[];
       for (final e in entries) {
-        final loc = ArchivePath.resolve(e.path);
+        final loc = await _archiveLocationFor(e.path);
         if (loc != null && !loc.isRoot) inner.add(loc.innerPath);
       }
       operationStore.enqueueArchiveEdit(
@@ -1425,7 +1466,8 @@ class NavigationStore {
       return;
     }
     final hasSmb = entries.any((e) => PlatformPaths.isSmbUri(e.path));
-    final useTrash = !hasSmb &&
+    final useTrash =
+        !hasSmb &&
         (toTrash ?? SettingsStore.instance.deleteKeyBehavior.value == 'trash');
     if (useTrash) {
       operationStore.enqueueTrash(paths);
@@ -1492,7 +1534,7 @@ class NavigationStore {
       return true;
     }).toList();
     if (filtered.isEmpty) return;
-    final archiveLoc = ArchivePath.resolve(destination);
+    final archiveLoc = await _archiveLocationFor(destination);
     if (archiveLoc != null) {
       operationStore.enqueueArchiveEdit(
         archivePath: archiveLoc.archivePath,
@@ -1548,7 +1590,7 @@ class NavigationStore {
       return;
     }
 
-    final archiveLoc = ArchivePath.resolve(currentPath.value);
+    final archiveLoc = await _archiveLocationFor(currentPath.value);
     if (archiveLoc != null) {
       operationStore.enqueueArchiveEdit(
         archivePath: archiveLoc.archivePath,

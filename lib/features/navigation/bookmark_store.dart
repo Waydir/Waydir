@@ -5,6 +5,7 @@ import 'package:signals/signals.dart';
 import '../../core/database/app_database.dart';
 import '../../core/platform/platform_paths.dart';
 import '../../core/settings/settings_store.dart';
+import '../locations/location_resolver.dart';
 import '../locations/location_uri.dart';
 
 class BookmarkStore {
@@ -24,6 +25,12 @@ class BookmarkStore {
     final uri = LocationUri.parse(path);
     if (uri.isLocal) {
       final normalized = PlatformPaths.normalize(path);
+      final logical = LocationResolver.physicalToLogical(normalized);
+      if (logical != null) {
+        final logicalUri = LocationUri.parse(logical);
+        await _addUnique(logicalUri.displayLabel, logical);
+        return;
+      }
       if (!Directory(normalized).existsSync()) return;
       await _addUnique(PlatformPaths.fileName(normalized), normalized);
       return;

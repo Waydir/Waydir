@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:waydir/ui/icons/waydir_icons.dart';
@@ -19,6 +20,7 @@ import '../../i18n/strings.g.dart';
 import '../../utils/drag_drop.dart';
 import '../../utils/format.dart';
 import '../locations/connect_to_server_dialog.dart';
+import '../locations/location_resolver.dart';
 import '../locations/location_uri.dart';
 import '../operations/drag_hint.dart';
 import '../operations/operation_store.dart';
@@ -361,6 +363,14 @@ class _SidebarState extends State<Sidebar> {
                                 .store
                                 .dropFiles(paths, destination, move: move),
                         onContextMenu: _showBookmarkMenu,
+                        onUnmount: (path) async {
+                          final currentPath = widget.store.currentPath.value;
+                          await LocationResolver.unmount(path);
+                          if (currentPath == path ||
+                              currentPath.startsWith('$path/')) {
+                            widget.store.navigateTo(PlatformPaths.homePath);
+                          }
+                        },
                       ),
                     ),
                     _ConnectToServerRow(
@@ -520,6 +530,7 @@ class _BookmarksSection extends StatelessWidget {
   final void Function(List<String> paths, String destination, {bool move})
   onDropFiles;
   final void Function(Bookmark bookmark, Offset position) onContextMenu;
+  final Future<void> Function(String path) onUnmount;
 
   const _BookmarksSection({
     required this.bookmarks,
@@ -529,6 +540,7 @@ class _BookmarksSection extends StatelessWidget {
     required this.onOpenInNewTab,
     required this.onDropFiles,
     required this.onContextMenu,
+    required this.onUnmount,
   });
 
   @override
@@ -575,6 +587,9 @@ class _BookmarksSection extends StatelessWidget {
               onDropFiles: (paths, {bool move = false}) =>
                   onDropFiles(paths, bookmark.path, move: move),
               onContextMenu: (position) => onContextMenu(bookmark, position),
+              onUnmount: uri.scheme == LocationScheme.smb
+                  ? () => unawaited(onUnmount(bookmark.path))
+                  : null,
             );
           }),
         const SizedBox(height: 8),
