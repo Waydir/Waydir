@@ -5,7 +5,10 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'ui/window/window.dart';
 import 'app/app_info.dart';
 import 'app/waydir_app.dart';
+import 'core/fs/fs_backend.dart';
 import 'core/fs/fs_worker_pool.dart';
+import 'core/fs/local_fs.dart';
+import 'core/fs/sftp_fs.dart';
 import 'core/logging/app_logger.dart';
 import 'core/settings/settings_store.dart';
 import 'core/update/update_store.dart';
@@ -33,6 +36,8 @@ void main(List<String> args) async {
       try {
         await initializeDateFormatting();
       } catch (_) {}
+      FsBackendRegistry.registerLocal(const LocalFs());
+      FsBackendRegistry.register(const SftpFs());
       unawaited(FsWorkerPool.instance.ensureStarted());
       await AppThemeRegistry.instance.load();
       await SettingsStore.instance.load();

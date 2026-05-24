@@ -6,6 +6,8 @@ import '../archive/archive_reader.dart';
 import '../archive/archive_service.dart';
 import '../logging/app_logger.dart';
 import '../models/file_entry.dart';
+import '../platform/platform_paths.dart';
+import 'sftp_fs.dart';
 import 'waydir_core_loader.dart';
 
 enum _Op {
@@ -196,16 +198,34 @@ class FsWorkerPool {
   }
 
   Future<List<FileEntry>> listDirectory(String path) async {
+    if (PlatformPaths.isSftpUri(path)) {
+      return const SftpFs().listDirectory(path);
+    }
     final r = await _run<dynamic>(_Op.list, [path]);
     if (r is Uint8List) return FileEntryCodec.decode(r);
     return r as List<FileEntry>;
   }
 
-  Future<bool> directoryExists(String path) => _run<bool>(_Op.exists, [path]);
+  Future<bool> directoryExists(String path) async {
+    if (PlatformPaths.isSftpUri(path)) {
+      return const SftpFs().exists(path);
+    }
+    return _run<bool>(_Op.exists, [path]);
+  }
 
-  Future<void> createDirectory(String path) => _run<void>(_Op.mkdir, [path]);
+  Future<void> createDirectory(String path) async {
+    if (PlatformPaths.isSftpUri(path)) {
+      return const SftpFs().mkdir(path, recursive: true);
+    }
+    return _run<void>(_Op.mkdir, [path]);
+  }
 
-  Future<FileEntry?> stat(String path) => _run<FileEntry?>(_Op.stat, [path]);
+  Future<FileEntry?> stat(String path) async {
+    if (PlatformPaths.isSftpUri(path)) {
+      return const SftpFs().stat(path);
+    }
+    return _run<FileEntry?>(_Op.stat, [path]);
+  }
 
   Future<List<FileEntry>> listArchive(String archivePath, String innerPath) =>
       _run<List<FileEntry>>(_Op.archiveList, [archivePath, innerPath]);
