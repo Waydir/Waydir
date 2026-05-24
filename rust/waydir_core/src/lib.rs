@@ -10,6 +10,7 @@ mod enumerate;
 mod folder_scan;
 mod list;
 mod search;
+mod sftp;
 mod trash;
 mod util;
 mod walker;
@@ -23,6 +24,12 @@ pub use list::waydir_list;
 pub use search::{
     waydir_search, waydir_search_cancel, waydir_search_free, waydir_search_poll,
     waydir_search_start, SearchSession,
+};
+pub use sftp::{
+    waydir_sftp_free_cstr, waydir_sftp_list, waydir_sftp_mkdir, waydir_sftp_read,
+    waydir_sftp_realpath, waydir_sftp_remove, waydir_sftp_rename, waydir_sftp_session_close,
+    waydir_sftp_session_open, waydir_sftp_stat, waydir_sftp_write, waydir_sftp_write_chunk,
+    SftpStat,
 };
 pub use trash::{waydir_trash, waydir_trash_list, waydir_trash_purge, waydir_trash_restore};
 
@@ -40,7 +47,7 @@ pub unsafe extern "C" fn waydir_free(ptr: *mut u8, len: usize) {
 
 #[no_mangle]
 pub extern "C" fn waydir_core_abi() -> u32 {
-    7
+    10
 }
 
 #[no_mangle]
