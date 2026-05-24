@@ -6,11 +6,13 @@ class PlatformPaths {
   PlatformPaths._();
 
   static String? trashPathOverride;
+  static bool? isWindowsOverrideForTesting;
+  static final p.Context _windowsPath = p.Context(style: p.Style.windows);
 
   static String get separator => Platform.pathSeparator;
 
   static String get homePath {
-    if (Platform.isWindows) {
+    if (isWindows) {
       return Platform.environment['USERPROFILE'] ??
           '${Platform.environment['HOMEDRIVE'] ?? 'C:'}${Platform.environment['HOMEPATH'] ?? r'\Users\Default'}';
     }
@@ -18,33 +20,67 @@ class PlatformPaths {
   }
 
   static String get rootPath {
-    if (Platform.isWindows) {
+    if (isWindows) {
       return _windowsDriveRoot(homePath);
     }
     return '/';
   }
 
-  static bool get isWindows => Platform.isWindows;
+  static bool get isWindows =>
+      isWindowsOverrideForTesting ?? Platform.isWindows;
   static bool get isMacOS => Platform.isMacOS;
   static bool get isLinux => Platform.isLinux;
 
+  static bool isSmbUri(String path) => path.startsWith('smb://');
+
+  static bool isSftpUri(String path) => path.startsWith('sftp://');
+
+  static bool isRemoteUri(String path) => isSmbUri(path) || isSftpUri(path);
+
   static bool isRoot(String path) {
-    if (Platform.isWindows) {
+    if (isSmbUri(path) || isSftpUri(path)) {
+      final scheme = isSftpUri(path) ? 'sftp://' : 'smb://';
+      final rest = path.substring(scheme.length);
+      final slashes = '/'.allMatches(rest).length;
+      return slashes <= 1;
+    }
+    if (isWindows) {
       final cleaned = _normalizeWindowsPath(path);
+      final uncRoot = _windowsUncRoot(cleaned);
+      if (uncRoot != null) {
+        final trimmed = _stripTrailingWindowsSeparator(cleaned);
+        return trimmed == _stripTrailingWindowsSeparator(uncRoot);
+      }
       return RegExp(r'^[A-Za-z]:\\?$').hasMatch(cleaned);
     }
     return path == '/';
   }
 
   static String parentOf(String path) {
-    if (Platform.isWindows) {
+    if (isSmbUri(path) || isSftpUri(path)) {
+      final scheme = isSftpUri(path) ? 'sftp://' : 'smb://';
+      final rest = path.substring(scheme.length);
+      final slash = rest.lastIndexOf('/');
+      if (slash < 0) return path;
+      final beforeShare = rest.indexOf('/');
+      if (slash == beforeShare) return path;
+      return '$scheme${rest.substring(0, slash)}';
+    }
+    if (isWindows) {
       final cleaned = _normalizeWindowsPath(path);
-      final root = _windowsDriveRoot(cleaned);
-      if (cleaned == root || cleaned == root.replaceAll(r'\', '')) {
+      final root = _windowsRoot(cleaned);
+      final cleanedTrimmed = _stripTrailingWindowsSeparator(cleaned);
+      final rootTrimmed = _stripTrailingWindowsSeparator(root);
+      if (cleanedTrimmed == rootTrimmed) {
         return root;
       }
-      final parent = p.dirname(cleaned);
-      return parent.isEmpty ? root : parent;
+      final parent = _windowsPath.dirname(cleanedTrimmed);
+      if (parent.isEmpty ||
+          parent == '.' ||
+          parent.length < rootTrimmed.length) {
+        return root;
+      }
+      return parent;
     }
     if (path == '/') return '/';
     final parent = p.dirname(path);
@@ -52,29 +88,63 @@ class PlatformPaths {
   }
 
   static String join(String part1, [String? part2, String? part3]) {
+    if (isSmbUri(part1) || isSftpUri(part1)) {
+      final parts = [part1, ?part2, ?part3];
+      return parts.where((part) => part.isNotEmpty).fold<String>('', (
+        acc,
+        part,
+      ) {
+        if (acc.isEmpty) return part.replaceAll(RegExp(r'/+$'), '');
+        return '${acc.replaceAll(RegExp(r'/+$'), '')}/${part.replaceAll(RegExp(r'^/+'), '')}';
+      });
+    }
+    if (isWindows) return _windowsPath.join(part1, part2, part3);
     return p.join(part1, part2, part3);
   }
 
   static List<String> segments(String path) {
-    if (Platform.isWindows) {
+    if (isSmbUri(path) || isSftpUri(path)) {
+      final scheme = isSftpUri(path) ? 'sftp://' : 'smb://';
+      final rest = path.substring(scheme.length);
+      final parts = rest.split('/').where((s) => s.isNotEmpty).toList();
+      if (parts.isEmpty) return [scheme];
+      if (isSftpUri(path)) {
+        // dla sftp pierwszy segment to host/port/user, dalej "path"
+        final root = '$scheme${parts.first}';
+        return [root, ...parts.sublist(1)];
+      }
+      if (parts.length == 1) return ['$scheme${parts[0]}'];
+      final root = '$scheme${parts[0]}/${parts[1]}';
+      return [root, ...parts.sublist(2)];
+    }
+    if (isWindows) {
       final cleaned = _normalizeWindowsPath(path);
-      final root = _windowsDriveRoot(cleaned);
+      final root = _windowsRoot(cleaned);
       final rest = cleaned.length > root.length
           ? cleaned.substring(root.length)
           : '';
-      final parts = rest.split(separator).where((s) => s.isNotEmpty).toList();
-      return [root.replaceAll(r'\', '').replaceAll('/', ''), ...parts];
+      final parts = rest.split(r'\').where((s) => s.isNotEmpty).toList();
+      final rootLabel = _isWindowsUncPath(root)
+          ? _stripTrailingWindowsSeparator(root)
+          : root.replaceAll(r'\', '').replaceAll('/', '');
+      return [rootLabel, ...parts];
     }
     final parts = path.split('/').where((s) => s.isNotEmpty).toList();
     return parts;
   }
 
   static String buildPartialPath(List<String> segments, int upToIndex) {
-    if (Platform.isWindows) {
-      final driveLetter = segments.first;
-      if (upToIndex == 0) return '$driveLetter\\';
-      final rest = segments.sublist(1, upToIndex + 1).join(separator);
-      return '$driveLetter\\$rest';
+    if (segments.isNotEmpty &&
+        (segments.first.startsWith('smb://') ||
+            segments.first.startsWith('sftp://'))) {
+      if (upToIndex == 0) return segments.first;
+      return '${segments.first}/${segments.sublist(1, upToIndex + 1).join('/')}';
+    }
+    if (isWindows) {
+      final root = segments.first;
+      if (upToIndex == 0) return _ensureTrailingWindowsSeparator(root);
+      final rest = segments.sublist(1, upToIndex + 1).join(r'\');
+      return '${_ensureTrailingWindowsSeparator(root)}$rest';
     }
     return '/${segments.sublist(0, upToIndex + 1).join('/')}';
   }
@@ -157,18 +227,27 @@ class PlatformPaths {
   }
 
   static String fileName(String path) {
+    if (isSmbUri(path) || isSftpUri(path)) {
+      final scheme = isSftpUri(path) ? 'sftp://' : 'smb://';
+      final rest = path.substring(scheme.length);
+      final slash = rest.lastIndexOf('/');
+      if (slash < 0) return rest;
+      return rest.substring(slash + 1);
+    }
+    if (isWindows) return _windowsPath.basename(path);
     return p.basename(path);
   }
 
   static String normalize(String path) {
-    if (Platform.isWindows) {
+    if (isSmbUri(path) || isSftpUri(path)) return path;
+    if (isWindows) {
       return _normalizeWindowsPath(path);
     }
     return path;
   }
 
   static List<String> listDrives() {
-    if (!Platform.isWindows) return [];
+    if (!isWindows) return [];
     final drives = <String>[];
     for (var i = 65; i <= 90; i++) {
       final letter = String.fromCharCode(i);
@@ -189,11 +268,47 @@ class PlatformPaths {
     return 'C:\\';
   }
 
+  static String _windowsRoot(String path) {
+    return _windowsUncRoot(path) ?? _windowsDriveRoot(path);
+  }
+
+  static bool _isWindowsUncPath(String path) {
+    return path.startsWith(r'\\') &&
+        !path.startsWith(r'\\?\') &&
+        !path.startsWith(r'\\.\');
+  }
+
+  static String? _windowsUncRoot(String path) {
+    if (!_isWindowsUncPath(path)) return null;
+    final parts = path
+        .substring(2)
+        .split(r'\')
+        .where((part) => part.isNotEmpty)
+        .toList();
+    if (parts.length < 2) {
+      return _ensureTrailingWindowsSeparator(path);
+    }
+    return '\\\\${parts[0]}\\${parts[1]}\\';
+  }
+
   static String _normalizeWindowsPath(String path) {
     var p = path.replaceAll('/', r'\');
     if (p.length >= 2 && p[1] == ':' && (p.length == 2 || p[2] != r'\')) {
       p = '${p.substring(0, 2)}\\${p.substring(2)}';
     }
     return p;
+  }
+
+  static String _ensureTrailingWindowsSeparator(String path) {
+    return path.endsWith(r'\') ? path : '$path\\';
+  }
+
+  static String _stripTrailingWindowsSeparator(String path) {
+    var out = path;
+    while (out.length > 1 && out.endsWith(r'\')) {
+      if (RegExp(r'^[A-Za-z]:\\$').hasMatch(out)) break;
+      out = out.substring(0, out.length - 1);
+    }
+    return out;
   }
 }

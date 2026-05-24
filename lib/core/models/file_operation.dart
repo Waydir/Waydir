@@ -60,7 +60,7 @@ class FileTask {
   final TaskType type;
   final List<String> sources;
   final String? destination;
-  final Map<String, String> options;
+  Map<String, String> options;
 
   TaskStatus status;
   double progress;

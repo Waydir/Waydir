@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:waydir/ui/icons/waydir_icons.dart';
 import 'package:signals/signals_flutter.dart';
+import 'bookmark_store.dart';
 import 'navigation_store.dart';
 import '../../ui/theme/app_theme.dart';
 import '../../ui/theme/app_text_styles.dart';
@@ -58,6 +61,19 @@ class PaneLocationBar extends StatelessWidget {
           const SizedBox(width: 6),
           Expanded(child: _PathBar(store: store)),
           const SizedBox(width: 6),
+          Watch((context) {
+            final path = store.currentPath.value;
+            final bookmarked = BookmarkStore.instance.containsPath(path);
+            return _ToolBtn(
+              WaydirIconsRegular.bookmarkSimple,
+              () => unawaited(BookmarkStore.instance.togglePath(path)),
+              path.isNotEmpty,
+              bookmarked
+                  ? t.menu.removeBookmark
+                  : t.sidebar.connectDialog.addBookmark,
+              active: bookmarked,
+            );
+          }),
           Watch(
             (context) => _ToolBtn(
               WaydirIconsRegular.magnifyingGlass,
@@ -81,8 +97,15 @@ class _ToolBtn extends StatefulWidget {
   final VoidCallback onTap;
   final bool enabled;
   final String tooltip;
+  final bool active;
 
-  const _ToolBtn(this.icon, this.onTap, this.enabled, this.tooltip);
+  const _ToolBtn(
+    this.icon,
+    this.onTap,
+    this.enabled,
+    this.tooltip, {
+    this.active = false,
+  });
 
   @override
   State<_ToolBtn> createState() => _ToolBtnState();
@@ -110,17 +133,17 @@ class _ToolBtnState extends State<_ToolBtn> {
                   : Colors.transparent,
               borderRadius: BorderRadius.zero,
             ),
-            child: Icon(
-              widget.icon,
-              size: 16,
-              color: widget.enabled
-                  ? (_hovered ? AppColors.fg : AppColors.fgMuted)
-                  : AppColors.fgSubtle,
-            ),
+            child: Icon(widget.icon, size: 16, color: _iconColor),
           ),
         ),
       ),
     );
+  }
+
+  Color get _iconColor {
+    if (!widget.enabled) return AppColors.fgSubtle;
+    if (widget.active) return AppColors.warning;
+    return _hovered ? AppColors.fg : AppColors.fgMuted;
   }
 }
 
@@ -331,6 +354,9 @@ class _PathBarState extends State<_PathBar> {
     }
     final segments = PlatformPaths.segments(path);
     final isWindows = PlatformPaths.isWindows;
+    final isSmb = PlatformPaths.isSmbUri(path);
+    final isSftp = PlatformPaths.isSftpUri(path);
+    final hasUriRoot = isWindows || isSmb || isSftp;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -355,12 +381,14 @@ class _PathBarState extends State<_PathBar> {
 
         final maxW = constraints.maxWidth;
 
-        final rootLabel = isWindows ? '${segments.first}\\' : '/';
+        final rootLabel = isSmb || isSftp
+            ? segments.first
+            : (isWindows ? '${segments.first}\\' : '/');
         final rootW = segW(rootLabel);
 
         final widths = <double>[];
         double total = rootW;
-        final offset = isWindows ? 1 : 0;
+        final offset = hasUriRoot ? 1 : 0;
         for (int i = offset; i < segments.length; i++) {
           final w =
               caretWidth + segW(segments[i], last: i == segments.length - 1);
@@ -369,14 +397,15 @@ class _PathBarState extends State<_PathBar> {
         }
 
         if (total <= maxW) {
+          final rootPath = hasUriRoot
+              ? PlatformPaths.buildPartialPath(segments, 0)
+              : '/';
           return Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               _BreadcrumbSegment(
                 label: rootLabel,
-                onTap: () => widget.store.navigateTo(
-                  isWindows ? PlatformPaths.rootPath : '/',
-                ),
+                onTap: () => widget.store.navigateTo(rootPath),
               ),
               for (int i = 0; i < segments.length - offset; i++)
                 ..._segmentRow(
@@ -410,7 +439,7 @@ class _PathBarState extends State<_PathBar> {
             _BreadcrumbSegment(
               label: rootLabel,
               onTap: () => widget.store.navigateTo(
-                isWindows ? PlatformPaths.rootPath : '/',
+                hasUriRoot ? PlatformPaths.buildPartialPath(segments, 0) : '/',
               ),
             ),
             _caretIcon(),

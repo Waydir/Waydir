@@ -909,12 +909,19 @@ class TranslationsSidebarEn {
 	/// en: 'Root'
 	String get root => 'Root';
 
+	/// en: 'Network'
+	String get network => 'Network';
+
 	/// en: 'Bookmarks'
 	String get bookmarks => 'Bookmarks';
 
 	/// en: 'Drop folder to bookmark'
 	String get dropBookmark => 'Drop folder to bookmark';
 
+	/// en: 'Connect to server'
+	String get connectToServer => 'Connect to server';
+
+	late final TranslationsSidebarConnectDialogEn connectDialog = TranslationsSidebarConnectDialogEn.internal(_root);
 	late final TranslationsSidebarDriveSpaceEn driveSpace = TranslationsSidebarDriveSpaceEn.internal(_root);
 	late final TranslationsSidebarDrivesEn drives = TranslationsSidebarDrivesEn.internal(_root);
 
@@ -1161,6 +1168,15 @@ class TranslationsPasswordEn {
 	/// en: 'Enter your password to mount this drive.'
 	String get mountPrompt => 'Enter your password to mount this drive.';
 
+	/// en: 'Enter credentials for this network share.'
+	String get smbPrompt => 'Enter credentials for this network share.';
+
+	/// en: 'Username'
+	String get username => 'Username';
+
+	/// en: 'Password'
+	String get password => 'Password';
+
 	/// en: 'Unlock'
 	String get unlock => 'Unlock';
 }
@@ -1313,6 +1329,9 @@ class TranslationsErrorsEn {
 
 	/// en: 'Could not read archive'
 	String get archiveError => 'Could not read archive';
+
+	/// en: 'Network shares (smb://) are not supported on this platform yet.'
+	String get smbNotSupportedOnPlatform => 'Network shares (smb://) are not supported on this platform yet.';
 }
 
 // Path: tasks
@@ -1923,6 +1942,54 @@ class TranslationsFileViewColumnsEn {
 	String get location => 'Location';
 }
 
+// Path: sidebar.connectDialog
+class TranslationsSidebarConnectDialogEn {
+	TranslationsSidebarConnectDialogEn.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Connect to server'
+	String get title => 'Connect to server';
+
+	/// en: 'Server'
+	String get host => 'Server';
+
+	/// en: 'e.g. 192.168.1.10 or nas.local'
+	String get hostHint => 'e.g. 192.168.1.10 or nas.local';
+
+	/// en: 'Port'
+	String get port => 'Port';
+
+	/// en: 'Username'
+	String get username => 'Username';
+
+	/// en: 'optional'
+	String get usernameHint => 'optional';
+
+	/// en: 'Share'
+	String get share => 'Share';
+
+	/// en: 'optional'
+	String get shareHint => 'optional';
+
+	/// en: 'Path'
+	String get pathLabel => 'Path';
+
+	/// en: 'optional'
+	String get pathHint => 'optional';
+
+	/// en: 'Add bookmark'
+	String get addBookmark => 'Add bookmark';
+
+	/// en: 'Connect'
+	String get connect => 'Connect';
+
+	/// en: 'Enter a server address'
+	String get invalidHost => 'Enter a server address';
+}
+
 // Path: sidebar.driveSpace
 class TranslationsSidebarDriveSpaceEn {
 	TranslationsSidebarDriveSpaceEn.internal(this._root);
@@ -2360,8 +2427,23 @@ extension on Translations {
 			'sidebar.videos' => 'Videos',
 			'sidebar.trash' => 'Trash',
 			'sidebar.root' => 'Root',
+			'sidebar.network' => 'Network',
 			'sidebar.bookmarks' => 'Bookmarks',
 			'sidebar.dropBookmark' => 'Drop folder to bookmark',
+			'sidebar.connectToServer' => 'Connect to server',
+			'sidebar.connectDialog.title' => 'Connect to server',
+			'sidebar.connectDialog.host' => 'Server',
+			'sidebar.connectDialog.hostHint' => 'e.g. 192.168.1.10 or nas.local',
+			'sidebar.connectDialog.port' => 'Port',
+			'sidebar.connectDialog.username' => 'Username',
+			'sidebar.connectDialog.usernameHint' => 'optional',
+			'sidebar.connectDialog.share' => 'Share',
+			'sidebar.connectDialog.shareHint' => 'optional',
+			'sidebar.connectDialog.pathLabel' => 'Path',
+			'sidebar.connectDialog.pathHint' => 'optional',
+			'sidebar.connectDialog.addBookmark' => 'Add bookmark',
+			'sidebar.connectDialog.connect' => 'Connect',
+			'sidebar.connectDialog.invalidHost' => 'Enter a server address',
 			'sidebar.driveSpace.used' => 'Used',
 			'sidebar.driveSpace.free' => 'Free',
 			'sidebar.driveSpace.total' => 'Total',
@@ -2431,6 +2513,9 @@ extension on Translations {
 			'password.authenticationRequired' => 'Authentication Required',
 			'password.dismiss' => 'Dismiss',
 			'password.mountPrompt' => 'Enter your password to mount this drive.',
+			'password.smbPrompt' => 'Enter credentials for this network share.',
+			'password.username' => 'Username',
+			'password.password' => 'Password',
 			'password.unlock' => 'Unlock',
 			'selectPattern.title' => 'Select by pattern',
 			'selectPattern.hint' => '*.jpg, *.png',
@@ -2473,6 +2558,7 @@ extension on Translations {
 			'errors.workerExitedUnexpectedly' => 'Worker exited unexpectedly',
 			'errors.appearedDuring' => 'File appeared at destination during operation',
 			'errors.archiveError' => 'Could not read archive',
+			'errors.smbNotSupportedOnPlatform' => 'Network shares (smb://) are not supported on this platform yet.',
 			'tasks.copyingSingle' => ({required Object name}) => 'Copying ${name}',
 			'tasks.copyingMultiple' => ({required Object count}) => 'Copying ${count} items',
 			'tasks.movingSingle' => ({required Object name}) => 'Moving ${name}',
@@ -2505,6 +2591,8 @@ extension on Translations {
 			'git.cherryPicking' => 'CHERRY-PICK',
 			'git.reverting' => 'REVERTING',
 			'git.bisecting' => 'BISECTING',
+			_ => null,
+		} ?? switch (path) {
 			'git.checkoutFailed' => ({required Object message}) => 'Checkout failed: ${message}',
 			'git.uncommittedChanges' => 'Uncommitted changes',
 			'git.stashPrompt' => ({required Object branch}) => 'Your local changes would be overwritten by switching to \'${branch}\'.\n\nStash them now? They stay saved in a stash you can restore later on this branch.',
@@ -2524,8 +2612,6 @@ extension on Translations {
 			'openWith.recent' => 'Recent',
 			'openWith.recommended' => 'Recommended Applications',
 			'openWith.allApps' => 'All Applications',
-			_ => null,
-		} ?? switch (path) {
 			'openWith.noApps' => 'No applications found for this file type.',
 			'openWith.setDefault' => 'Always use for this file type',
 			'openWith.setDefaultUnavailable' => 'Default cannot be changed on this platform',

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:path/path.dart' as p;
 import 'package:signals/signals.dart';
 
 import '../../i18n/strings.g.dart';
@@ -275,6 +276,8 @@ class GitStatusStore {
   }
 
   bool _hasGitUpward(String path) {
+    if (path.isEmpty) return false;
+    if (!p.isAbsolute(path)) return false;
     var dir = Directory(path);
     for (var i = 0; i < 64; i++) {
       final marker = '${dir.path}${Platform.pathSeparator}.git';

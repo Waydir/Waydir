@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:flutter/material.dart';
 
+import '../../core/fs/sftp_session_manager.dart';
 import '../../core/fs/waydir_core_loader.dart';
 import '../../core/models/file_entry.dart';
 import '../../core/platform/platform_paths.dart';
@@ -22,10 +24,7 @@ class SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        text.toUpperCase(),
-        style: context.txt.sectionLabel.copyWith(fontSize: 11.5),
-      ),
+      child: Text(text.toUpperCase(), style: context.txt.sectionLabel),
     );
   }
 }
@@ -91,7 +90,9 @@ class _FolderSizeRows extends StatefulWidget {
 class _FolderSizeRowsState extends State<_FolderSizeRows> {
   Timer? _timer;
   int? _session;
+  _SftpFolderScan? _sftpScan;
   FolderStats? _stats;
+  bool _cancelled = false;
 
   @override
   void initState() {
@@ -118,6 +119,11 @@ class _FolderSizeRowsState extends State<_FolderSizeRows> {
   }
 
   void _start() {
+    _cancelled = false;
+    if (PlatformPaths.isSftpUri(widget.path)) {
+      _startSftpFolderScan();
+      return;
+    }
     try {
       _session = WaydirCoreLoader.folderScanStart(widget.path);
     } catch (_) {
@@ -126,6 +132,32 @@ class _FolderSizeRowsState extends State<_FolderSizeRows> {
     if (_session == null) return;
     _poll();
     _timer = Timer.periodic(const Duration(milliseconds: 120), (_) => _poll());
+  }
+
+  void _startSftpFolderScan() {
+    unawaited(
+      _SftpFolderScan.start(
+        logicalPath: widget.path,
+        onProgress: (stats) {
+          if (!mounted || _cancelled) return;
+          setState(() {
+            _stats = stats;
+          });
+        },
+      ).then((scan) {
+        if (!mounted || _cancelled) {
+          scan?.cancel();
+          return;
+        }
+        if (scan == null) {
+          setState(() {
+            _stats = const FolderStats(0, 0, done: true);
+          });
+          return;
+        }
+        _sftpScan = scan;
+      }),
+    );
   }
 
   void _poll() {
@@ -144,8 +176,11 @@ class _FolderSizeRowsState extends State<_FolderSizeRows> {
   }
 
   void _stop({required bool cancel}) {
+    _cancelled = true;
     _timer?.cancel();
     _timer = null;
+    _sftpScan?.cancel();
+    _sftpScan = null;
     final session = _session;
     if (session == null) return;
     _session = null;
@@ -179,6 +214,121 @@ class _FolderSizeRowsState extends State<_FolderSizeRows> {
   }
 }
 
+class _SftpFolderScan {
+  final Isolate _isolate;
+  final ReceivePort _port;
+  StreamSubscription<dynamic>? _subscription;
+  bool _closed = false;
+
+  _SftpFolderScan._(this._isolate, this._port);
+
+  static Future<_SftpFolderScan?> start({
+    required String logicalPath,
+    required void Function(FolderStats stats) onProgress,
+  }) async {
+    final record = SftpSessionManager.recordFor(logicalPath);
+    if (record == null) return null;
+    final port = ReceivePort();
+    final request = _SftpFolderScanRequest(
+      port.sendPort,
+      record.sessionId,
+      SftpSessionManager.remotePath(logicalPath),
+    );
+    final Isolate isolate;
+    try {
+      isolate = await Isolate.spawn(
+        _runSftpFolderScan,
+        request,
+        debugName: 'sftp-folder-scan',
+      );
+    } catch (_) {
+      port.close();
+      return null;
+    }
+    final scan = _SftpFolderScan._(isolate, port);
+    scan._subscription = port.listen((message) {
+      if (scan._closed || message is! _SftpFolderScanProgress) return;
+      onProgress(FolderStats(message.bytes, message.items, done: message.done));
+      if (message.done) {
+        scan._close(kill: false);
+      }
+    });
+    return scan;
+  }
+
+  void cancel() {
+    _close(kill: true);
+  }
+
+  void _close({required bool kill}) {
+    if (_closed) return;
+    _closed = true;
+    _subscription?.cancel();
+    _subscription = null;
+    _port.close();
+    if (kill) {
+      _isolate.kill(priority: Isolate.immediate);
+    }
+  }
+}
+
+class _SftpFolderScanRequest {
+  final SendPort port;
+  final int sessionId;
+  final String remotePath;
+
+  const _SftpFolderScanRequest(this.port, this.sessionId, this.remotePath);
+}
+
+class _SftpFolderScanProgress {
+  final int bytes;
+  final int items;
+  final bool done;
+
+  const _SftpFolderScanProgress(this.bytes, this.items, this.done);
+}
+
+void _runSftpFolderScan(_SftpFolderScanRequest request) {
+  var bytes = 0;
+  var items = 0;
+  var pending = 0;
+  var lastSend = DateTime.now().millisecondsSinceEpoch;
+
+  void send(bool done) {
+    request.port.send(_SftpFolderScanProgress(bytes, items, done));
+    pending = 0;
+    lastSend = DateTime.now().millisecondsSinceEpoch;
+  }
+
+  void maybeSend() {
+    pending++;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (pending >= 64 || now - lastSend >= 150) {
+      send(false);
+    }
+  }
+
+  void walk(String remotePath) {
+    final buf = WaydirCoreLoader.sftpList(request.sessionId, remotePath);
+    if (buf == null) return;
+    final entries = FileEntryCodec.decode(buf);
+    for (final entry in entries) {
+      items++;
+      if (entry.type == FileItemType.folder) {
+        walk(entry.path);
+      } else {
+        bytes += entry.size;
+      }
+      maybeSend();
+    }
+  }
+
+  try {
+    walk(request.remotePath);
+  } catch (_) {}
+  send(true);
+}
+
 class _StatRows extends StatelessWidget {
   final FileEntry entry;
 
@@ -186,6 +336,9 @@ class _StatRows extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (PlatformPaths.isRemoteUri(entry.realPath)) {
+      return const SizedBox.shrink();
+    }
     return AsyncRetain<FileStat?>(
       cacheKey: 'stat:${entry.realPath}|${entry.modifiedMs}',
       loader: () => FileStat.stat(entry.realPath),
@@ -286,18 +439,17 @@ class PropertiesOnly extends StatelessWidget {
 }
 
 class _FolderJob {
-  final int session;
+  final int? session;
+  _SftpFolderScan? sftpScan;
   int bytes = 0;
   int items = 0;
   bool done = false;
   bool freed = false;
 
-  _FolderJob(this.session);
+  _FolderJob.local(int this.session);
+  _FolderJob.sftp() : session = null;
 }
 
-/// Aggregate properties for a multi-selection: sums plain file sizes
-/// immediately and recursively scans every selected folder, summing bytes
-/// and contained items live.
 class MultiProperties extends StatefulWidget {
   final List<FileEntry> entries;
 
@@ -338,8 +490,40 @@ class _MultiPropertiesState extends State<MultiProperties> {
   }
 
   void _start() {
+    var hasLocalJobs = false;
     for (final e in widget.entries) {
       if (e.type != FileItemType.folder) continue;
+      if (PlatformPaths.isSftpUri(e.realPath)) {
+        final job = _FolderJob.sftp();
+        _jobs.add(job);
+        unawaited(
+          _SftpFolderScan.start(
+            logicalPath: e.realPath,
+            onProgress: (stats) {
+              if (!mounted || !_jobs.contains(job)) return;
+              job.bytes = stats.bytes;
+              job.items = stats.items;
+              job.done = stats.done;
+              if (stats.done) job.sftpScan = null;
+              setState(() {});
+              _stopTimerIfAllDone();
+            },
+          ).then((scan) {
+            if (!mounted || !_jobs.contains(job) || job.done) {
+              scan?.cancel();
+              return;
+            }
+            if (scan == null) {
+              job.done = true;
+              setState(() {});
+              _stopTimerIfAllDone();
+              return;
+            }
+            job.sftpScan = scan;
+          }),
+        );
+        continue;
+      }
       int? session;
       try {
         session = WaydirCoreLoader.folderScanStart(e.realPath);
@@ -347,9 +531,10 @@ class _MultiPropertiesState extends State<MultiProperties> {
         session = null;
       }
       if (session == null) continue;
-      _jobs.add(_FolderJob(session));
+      _jobs.add(_FolderJob.local(session));
+      hasLocalJobs = true;
     }
-    if (_jobs.isEmpty) return;
+    if (!hasLocalJobs) return;
     _poll();
     _timer = Timer.periodic(const Duration(milliseconds: 120), (_) => _poll());
   }
@@ -358,8 +543,13 @@ class _MultiPropertiesState extends State<MultiProperties> {
     var allDone = true;
     for (final j in _jobs) {
       if (j.done) continue;
+      final session = j.session;
+      if (session == null) {
+        allDone = false;
+        continue;
+      }
       try {
-        final r = WaydirCoreLoader.folderScanPoll(j.session);
+        final r = WaydirCoreLoader.folderScanPoll(session);
         j.bytes = r.bytes;
         j.items = r.items;
         j.done = r.done;
@@ -374,17 +564,22 @@ class _MultiPropertiesState extends State<MultiProperties> {
       }
     }
     if (mounted) setState(() {});
-    if (allDone) {
-      _timer?.cancel();
-      _timer = null;
-    }
+    if (allDone) _stopTimerIfAllDone();
+  }
+
+  void _stopTimerIfAllDone() {
+    if (!_jobs.every((j) => j.done)) return;
+    _timer?.cancel();
+    _timer = null;
   }
 
   void _free(_FolderJob j) {
+    final session = j.session;
+    if (session == null) return;
     if (j.freed) return;
     j.freed = true;
     try {
-      WaydirCoreLoader.folderScanFree(j.session);
+      WaydirCoreLoader.folderScanFree(session);
     } catch (_) {}
   }
 
@@ -392,10 +587,14 @@ class _MultiPropertiesState extends State<MultiProperties> {
     _timer?.cancel();
     _timer = null;
     for (final j in _jobs) {
+      j.sftpScan?.cancel();
+      j.sftpScan = null;
+      final session = j.session;
+      if (session == null) continue;
       if (j.freed) continue;
       if (!j.done) {
         try {
-          WaydirCoreLoader.folderScanCancel(j.session);
+          WaydirCoreLoader.folderScanCancel(session);
         } catch (_) {}
       }
       _free(j);

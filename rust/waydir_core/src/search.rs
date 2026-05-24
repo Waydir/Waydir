@@ -15,7 +15,10 @@ use crate::walker::{apply_search_filter, base_builder, ChunkSink};
 #[derive(Clone)]
 enum Matcher {
     Substring(String),
-    Glob { matcher: GlobMatcher, path_scope: bool },
+    Glob {
+        matcher: GlobMatcher,
+        path_scope: bool,
+    },
     Regex(Regex),
 }
 
@@ -37,7 +40,10 @@ impl Matcher {
     fn matches(&self, name: &str, rel_path: &Path) -> bool {
         match self {
             Matcher::Substring(q) => name.to_lowercase().contains(q),
-            Matcher::Glob { matcher, path_scope } => {
+            Matcher::Glob {
+                matcher,
+                path_scope,
+            } => {
                 if *path_scope {
                     matcher.is_match(rel_path)
                 } else {
@@ -53,7 +59,11 @@ fn read_query(query: *const c_char) -> Option<String> {
     if query.is_null() {
         return None;
     }
-    Some(unsafe { CStr::from_ptr(query) }.to_string_lossy().into_owned())
+    Some(
+        unsafe { CStr::from_ptr(query) }
+            .to_string_lossy()
+            .into_owned(),
+    )
 }
 
 pub struct SearchSession {
@@ -119,7 +129,10 @@ pub unsafe extern "C" fn waydir_search(
             }
             let os_name = dirent.file_name();
             let name_lossy = os_name.to_string_lossy();
-            let rel = dirent.path().strip_prefix(&root_path).unwrap_or(dirent.path());
+            let rel = dirent
+                .path()
+                .strip_prefix(&root_path)
+                .unwrap_or(dirent.path());
             if matcher.matches(&name_lossy, rel) {
                 let is_dir = dirent.file_type().map(|t| t.is_dir()).unwrap_or(false);
                 put_record(
@@ -203,7 +216,10 @@ pub unsafe extern "C" fn waydir_search_start(
                 scanned.fetch_add(1, Ordering::Relaxed);
                 let os_name = dirent.file_name();
                 let name_lossy = os_name.to_string_lossy();
-                let rel = dirent.path().strip_prefix(&root_path).unwrap_or(dirent.path());
+                let rel = dirent
+                    .path()
+                    .strip_prefix(&root_path)
+                    .unwrap_or(dirent.path());
                 if matcher.matches(&name_lossy, rel) {
                     let is_dir = dirent.file_type().map(|t| t.is_dir()).unwrap_or(false);
                     let mut g = pending.lock().unwrap();

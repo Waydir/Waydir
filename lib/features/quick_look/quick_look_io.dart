@@ -4,7 +4,9 @@ import 'dart:typed_data';
 
 import 'package:exif/exif.dart';
 
+import '../../core/fs/sftp_fs.dart';
 import '../../core/models/file_entry.dart';
+import '../../core/platform/platform_paths.dart';
 import '../../i18n/strings.g.dart';
 import 'quick_look_common.dart';
 
@@ -30,7 +32,10 @@ class Probe {
 
 Future<Uint8List> readHead(String path, int maxBytes) async {
   final builder = BytesBuilder(copy: false);
-  await for (final chunk in File(path).openRead(0, maxBytes)) {
+  final stream = PlatformPaths.isSftpUri(path)
+      ? await const SftpFs().openRead(path, start: 0, end: maxBytes)
+      : File(path).openRead(0, maxBytes);
+  await for (final chunk in stream) {
     builder.add(chunk);
   }
   return builder.takeBytes();
@@ -78,9 +83,15 @@ Future<QlSection?> imageInfo(FileEntry e) async {
 
 Future<Probe> probeFile(FileEntry entry) async {
   try {
-    final file = File(entry.realPath);
     final builder = BytesBuilder(copy: false);
-    await for (final chunk in file.openRead(0, maxTextBytes + 1)) {
+    final stream = PlatformPaths.isSftpUri(entry.realPath)
+        ? await const SftpFs().openRead(
+            entry.realPath,
+            start: 0,
+            end: maxTextBytes + 1,
+          )
+        : File(entry.realPath).openRead(0, maxTextBytes + 1);
+    await for (final chunk in stream) {
       builder.add(chunk);
       if (builder.length > maxTextBytes) break;
     }

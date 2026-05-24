@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:waydir/ui/icons/waydir_icons.dart';
@@ -12,12 +13,16 @@ import '../../ui/theme/app_theme.dart';
 import '../../ui/theme/app_text_styles.dart';
 import '../../ui/dialogs/dialog.dart';
 import '../../ui/dialogs/password_dialog.dart';
+import '../../ui/dialogs/sftp_credentials_dialog.dart';
 import '../../ui/overlays/context_menu.dart';
 import '../../core/platform/platform_paths.dart';
 import '../../core/platform/trash_location.dart';
 import '../../i18n/strings.g.dart';
 import '../../utils/drag_drop.dart';
 import '../../utils/format.dart';
+import '../locations/connect_to_server_dialog.dart';
+import '../locations/location_resolver.dart';
+import '../locations/location_uri.dart';
 import '../operations/drag_hint.dart';
 import '../operations/operation_store.dart';
 import '../operations/operations_panel.dart';
@@ -52,11 +57,17 @@ class Sidebar extends StatefulWidget {
 
 class _SidebarState extends State<Sidebar> {
   late final List<_SidebarItem> _favorites;
+  late final Future<SmbCredentials?> Function(String logical)
+  _credentialsRequester;
+  late final Future<SftpCredentials?> Function(String logical)
+  _sftpCredentialsRequester;
   final _bookmarkStore = BookmarkStore.instance;
 
   @override
   void initState() {
     super.initState();
+    _credentialsRequester = _requestSmbCredentials;
+    _sftpCredentialsRequester = _requestSftpCredentials;
     final h = PlatformPaths.homePath;
     _favorites = [
       _SidebarItem(t.sidebar.home, WaydirIconsRegular.house, h),
@@ -104,6 +115,54 @@ class _SidebarState extends State<Sidebar> {
       } catch (_) {}
     }
     _bookmarkStore.load();
+    widget.store.requestSmbCredentials = _credentialsRequester;
+    widget.store.requestSftpCredentials = _sftpCredentialsRequester;
+  }
+
+  @override
+  void didUpdateWidget(covariant Sidebar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.store != widget.store) {
+      if (oldWidget.store.requestSmbCredentials == _credentialsRequester) {
+        oldWidget.store.requestSmbCredentials = null;
+      }
+      widget.store.requestSmbCredentials = _credentialsRequester;
+      if (oldWidget.store.requestSftpCredentials == _sftpCredentialsRequester) {
+        oldWidget.store.requestSftpCredentials = null;
+      }
+      widget.store.requestSftpCredentials = _sftpCredentialsRequester;
+    }
+  }
+
+  @override
+  void dispose() {
+    if (widget.store.requestSmbCredentials == _credentialsRequester) {
+      widget.store.requestSmbCredentials = null;
+    }
+    if (widget.store.requestSftpCredentials == _sftpCredentialsRequester) {
+      widget.store.requestSftpCredentials = null;
+    }
+    super.dispose();
+  }
+
+  Future<SmbCredentials?> _requestSmbCredentials(String logical) async {
+    final uri = LocationUri.parse(logical);
+    final result = await showSmbCredentialsDialog(
+      context,
+      title: uri.displayLabel,
+      username: uri.username,
+    );
+    if (result == null) return null;
+    return SmbCredentials(username: result.username, password: result.password);
+  }
+
+  Future<SftpCredentials?> _requestSftpCredentials(String logical) async {
+    final uri = LocationUri.parse(logical);
+    return showSftpCredentialsDialog(
+      context,
+      title: uri.displayLabel,
+      username: uri.username,
+    );
   }
 
   Future<void> _renameBookmark(Bookmark bookmark) async {
@@ -212,6 +271,7 @@ class _SidebarState extends State<Sidebar> {
                 }
 
                 final collapsed = widget.collapsed;
+                final networkLocations = LocationResolver.mountedLocations();
                 return ListView(
                   padding: EdgeInsets.zero,
                   children: [
@@ -347,6 +407,29 @@ class _SidebarState extends State<Sidebar> {
                       );
                     }),
                     SizedBox(height: collapsed ? 12 : 8),
+                    if (networkLocations.isNotEmpty) ...[
+                      _NetworkSection(
+                        locations: networkLocations,
+                        currentPath: currentPath,
+                        collapsed: collapsed,
+                        onNavigate: widget.store.navigateTo,
+                        onOpenInNewTab: widget.onOpenInNewTab,
+                        onDropFiles:
+                            (paths, destination, {bool move = false}) => widget
+                                .store
+                                .dropFiles(paths, destination, move: move),
+                        onUnmount: (path) async {
+                          final currentPath = widget.store.currentPath.value;
+                          await LocationResolver.unmount(path);
+                          if (mounted) setState(() {});
+                          if (currentPath == path ||
+                              currentPath.startsWith('$path/')) {
+                            widget.store.navigateTo(PlatformPaths.homePath);
+                          }
+                        },
+                      ),
+                      SizedBox(height: collapsed ? 12 : 8),
+                    ],
                     Watch(
                       (context) => _BookmarksSection(
                         bookmarks: _bookmarkStore.bookmarks.value,
@@ -361,6 +444,13 @@ class _SidebarState extends State<Sidebar> {
                         onContextMenu: _showBookmarkMenu,
                       ),
                     ),
+                    _ConnectToServerRow(
+                      collapsed: collapsed,
+                      onTap: () async {
+                        final uri = await openConnectToServer(context);
+                        if (uri != null) widget.store.navigateTo(uri);
+                      },
+                    ),
                   ],
                 );
               }),
@@ -371,6 +461,83 @@ class _SidebarState extends State<Sidebar> {
             collapsed: widget.collapsed,
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ConnectToServerRow extends StatefulWidget {
+  final bool collapsed;
+  final VoidCallback onTap;
+
+  const _ConnectToServerRow({required this.collapsed, required this.onTap});
+
+  @override
+  State<_ConnectToServerRow> createState() => _ConnectToServerRowState();
+}
+
+class _ConnectToServerRowState extends State<_ConnectToServerRow> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _hovered ? AppColors.fg : AppColors.fgMuted;
+    final icon = Icon(WaydirIconsRegular.treeStructure, size: 16, color: color);
+
+    if (widget.collapsed) {
+      return Tooltip(
+        message: t.sidebar.connectToServer,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          onEnter: (_) => setState(() => _hovered = true),
+          onExit: (_) => setState(() => _hovered = false),
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: widget.onTap,
+            child: Container(
+              height: 32,
+              margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+              decoration: BoxDecoration(
+                color: _hovered ? AppColors.bgHover : Colors.transparent,
+                borderRadius: BorderRadius.zero,
+              ),
+              alignment: Alignment.center,
+              child: icon,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onTap,
+        child: Container(
+          height: 28,
+          margin: const EdgeInsets.symmetric(horizontal: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          decoration: BoxDecoration(
+            color: _hovered ? AppColors.bgHover : Colors.transparent,
+            borderRadius: BorderRadius.zero,
+          ),
+          child: Row(
+            children: [
+              icon,
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  t.sidebar.connectToServer,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.txt.body.copyWith(color: color),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -469,15 +636,18 @@ class _BookmarksSection extends StatelessWidget {
                   ),
                 )
         else
-          ...bookmarks.map(
-            (bookmark) => _ItemRow(
-              item: _SidebarItem(
-                bookmark.label,
-                WaydirIconsRegular.bookmarkSimple,
-                bookmark.path,
-              ),
+          ...bookmarks.map((bookmark) {
+            final uri = LocationUri.parse(bookmark.path);
+            final icon = uri.isNetwork
+                ? WaydirIconsRegular.treeStructure
+                : WaydirIconsRegular.bookmarkSimple;
+            final mounted = uri.isLocal
+                ? Directory(bookmark.path).existsSync()
+                : true;
+            return _ItemRow(
+              item: _SidebarItem(bookmark.label, icon, bookmark.path),
               isSelected: currentPath == bookmark.path,
-              isMounted: Directory(bookmark.path).existsSync(),
+              isMounted: mounted,
               collapsed: collapsed,
               onTap: onNavigate,
               onMiddleTap: onOpenInNewTab != null
@@ -486,9 +656,64 @@ class _BookmarksSection extends StatelessWidget {
               onDropFiles: (paths, {bool move = false}) =>
                   onDropFiles(paths, bookmark.path, move: move),
               onContextMenu: (position) => onContextMenu(bookmark, position),
-            ),
-          ),
+            );
+          }),
         const SizedBox(height: 8),
+      ],
+    );
+  }
+}
+
+class _NetworkSection extends StatelessWidget {
+  final List<String> locations;
+  final String currentPath;
+  final bool collapsed;
+  final ValueChanged<String> onNavigate;
+  final void Function(String path)? onOpenInNewTab;
+  final void Function(List<String> paths, String destination, {bool move})
+  onDropFiles;
+  final Future<void> Function(String path) onUnmount;
+
+  const _NetworkSection({
+    required this.locations,
+    required this.currentPath,
+    required this.collapsed,
+    required this.onNavigate,
+    required this.onOpenInNewTab,
+    required this.onDropFiles,
+    required this.onUnmount,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (!collapsed)
+          _SectionHeader(title: t.sidebar.network)
+        else
+          const _SectionRailDivider(),
+        ...locations.map((path) {
+          final uri = LocationUri.parse(path);
+          return _ItemRow(
+            item: _SidebarItem(
+              uri.displayLabel,
+              WaydirIconsRegular.treeStructure,
+              path,
+            ),
+            isSelected: currentPath == path || currentPath.startsWith('$path/'),
+            isMounted: true,
+            collapsed: collapsed,
+            onTap: onNavigate,
+            onMiddleTap: onOpenInNewTab != null
+                ? () => onOpenInNewTab!(path)
+                : null,
+            onDropFiles: (paths, {bool move = false}) =>
+                onDropFiles(paths, path, move: move),
+            onUnmount: () => unawaited(onUnmount(path)),
+          );
+        }),
       ],
     );
   }
@@ -931,13 +1156,9 @@ class _ItemRowState extends State<_ItemRow> {
         onEnter: (_) => setState(() => _hovered = true),
         onExit: (_) => setState(() => _hovered = false),
         child: GestureDetector(
-          onTap: () {
-            if (!widget.isMounted || Directory(widget.item.path).existsSync()) {
-              widget.onTap(widget.item.path);
-            }
-          },
+          onTap: () => widget.onTap(widget.item.path),
           onTertiaryTapUp: (_) {
-            if (widget.isMounted && Directory(widget.item.path).existsSync()) {
+            if (widget.isMounted) {
               widget.onMiddleTap?.call();
             }
           },

@@ -413,8 +413,25 @@
     "videos": "Videos",
     "trash": "Trash",
     "root": "Root",
+    "network": "Network",
     "bookmarks": "Bookmarks",
     "dropBookmark": "Drop folder to bookmark",
+    "connectToServer": "Connect to server",
+    "connectDialog": {
+      "title": "Connect to server",
+      "host": "Server",
+      "hostHint": "e.g. 192.168.1.10 or nas.local",
+      "port": "Port",
+      "username": "Username",
+      "usernameHint": "optional",
+      "share": "Share",
+      "shareHint": "optional",
+      "pathLabel": "Path",
+      "pathHint": "optional",
+      "addBookmark": "Add bookmark",
+      "connect": "Connect",
+      "invalidHost": "Enter a server address"
+    },
     "driveSpace": {
       "used": "Used",
       "free": "Free",
@@ -512,6 +529,9 @@
     "authenticationRequired": "Authentication Required",
     "dismiss": "Dismiss",
     "mountPrompt": "Enter your password to mount this drive.",
+    "smbPrompt": "Enter credentials for this network share.",
+    "username": "Username",
+    "password": "Password",
     "unlock": "Unlock"
   },
   "selectPattern": {
@@ -567,7 +587,8 @@
     "transferIntoSelf": "Cannot copy or move a folder into itself.",
     "workerExitedUnexpectedly": "Worker exited unexpectedly",
     "appearedDuring": "File appeared at destination during operation",
-    "archiveError": "Could not read archive"
+    "archiveError": "Could not read archive",
+    "smbNotSupportedOnPlatform": "Network shares (smb://) are not supported on this platform yet."
   },
   "tasks": {
     "copyingSingle": "Copying $name",
