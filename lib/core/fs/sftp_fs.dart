@@ -86,9 +86,10 @@ class SftpFs implements FsBackend {
 
   @override
   Future<Stream<List<int>>> openRead(
-    String path,
-    {int? start, int? end}
-  ) async {
+    String path, {
+    int? start,
+    int? end,
+  }) async {
     final sessionId = _sessionFor(path);
     final remote = _remote(path);
     final s = start ?? -1;

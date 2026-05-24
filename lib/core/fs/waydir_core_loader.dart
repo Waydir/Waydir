@@ -190,8 +190,7 @@ typedef _SftpOpenWriterNative =
 typedef _SftpOpenWriterDart =
     int Function(int, Pointer<Utf8>, int, Pointer<Uint64>);
 
-typedef _SftpWriterWriteNative =
-    Int32 Function(Uint64, Pointer<Uint8>, IntPtr);
+typedef _SftpWriterWriteNative = Int32 Function(Uint64, Pointer<Uint8>, IntPtr);
 typedef _SftpWriterWriteDart = int Function(int, Pointer<Uint8>, int);
 
 typedef _SftpWriterCloseNative = Int32 Function(Uint64);
@@ -901,7 +900,11 @@ class WaydirCoreLoader {
     }
   }
 
-  static int? sftpOpenWriter(int sessionId, String path, {bool append = false}) {
+  static int? sftpOpenWriter(
+    int sessionId,
+    String path, {
+    bool append = false,
+  }) {
     final lib = requireLib();
     final _SftpOpenWriterDart fn;
     try {
