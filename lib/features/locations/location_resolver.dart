@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:path/path.dart' as p;
 
@@ -19,8 +20,19 @@ class ResolveError extends ResolveResult {
   const ResolveError(this.message);
 }
 
+class ResolveAuthenticationRequired extends ResolveResult {
+  const ResolveAuthenticationRequired();
+}
+
 class ResolveUnsupported extends ResolveResult {
   const ResolveUnsupported();
+}
+
+class SmbCredentials {
+  final String username;
+  final String password;
+
+  const SmbCredentials({required this.username, required this.password});
 }
 
 class LocationResolver {
@@ -97,12 +109,28 @@ class LocationResolver {
     final uri = LocationUri.parse(logical);
     if (uri.scheme != LocationScheme.smb || !PlatformPaths.isLinux) return;
     final root = _logicalRoot(uri);
-    final result = await Process.run('gio', ['mount', '-u', root]);
-    if (result.exitCode == 0) _logicalToPhysical.remove(root);
+    final physical =
+        _logicalToPhysical[root] ??
+        _findGvfsMountPoint(
+          host: uri.host ?? '',
+          share: uri.share ?? '',
+          port: uri.port,
+        );
+    final target = physical ?? root;
+    final result = await Process.run('gio', ['mount', '-u', target]);
+    if (result.exitCode == 0) {
+      _logicalToPhysical.remove(root);
+    }
   }
 
   static String _logicalRoot(LocationUri uri) {
-    final buf = StringBuffer('smb://')..write(uri.host);
+    final buf = StringBuffer('smb://');
+    final username = uri.username;
+    if (username != null && username.isNotEmpty) {
+      buf.write(Uri.encodeComponent(username));
+      buf.write('@');
+    }
+    buf.write(uri.host);
     if (uri.port != null) {
       buf.write(':');
       buf.write(uri.port);
@@ -139,7 +167,21 @@ class LocationResolver {
     }
   }
 
-  static Future<ResolveResult> _resolveSmbLinux(LocationUri uri) async {
+  static Future<ResolveResult> resolveWithCredentials(
+    String input,
+    SmbCredentials credentials,
+  ) async {
+    final uri = LocationUri.parse(input);
+    if (uri.scheme != LocationScheme.smb || !PlatformPaths.isLinux) {
+      return resolve(input);
+    }
+    return _resolveSmbLinux(uri, credentials: credentials);
+  }
+
+  static Future<ResolveResult> _resolveSmbLinux(
+    LocationUri uri, {
+    SmbCredentials? credentials,
+  }) async {
     final host = uri.host;
     final share = uri.share;
     if (host == null || host.isEmpty) {
@@ -148,7 +190,15 @@ class LocationResolver {
     if (share == null || share.isEmpty) {
       return const ResolveError('Missing share in smb:// URI');
     }
-    final mountTarget = StringBuffer('smb://')..write(host);
+    final mountTarget = StringBuffer('smb://');
+    final username = credentials?.username.trim().isNotEmpty == true
+        ? credentials!.username.trim()
+        : uri.username;
+    if (username != null && username.isNotEmpty) {
+      mountTarget.write(Uri.encodeComponent(username));
+      mountTarget.write('@');
+    }
+    mountTarget.write(host);
     if (uri.port != null) {
       mountTarget.write(':');
       mountTarget.write(uri.port);
@@ -165,14 +215,21 @@ class LocationResolver {
       return _resolvedSmbPath(uri, existingMountPoint);
     }
 
-    final mountResult = await Process.run('gio', [
-      'mount',
-      '-a',
-      mountTarget.toString(),
-    ]);
+    final mountResult = credentials == null
+        ? await Process.run('gio', ['mount', '-a', mountTarget.toString()])
+        : await _runGioMountWithCredentials(
+            mountTarget.toString(),
+            credentials,
+            hasUsername: username != null && username.isNotEmpty,
+          );
+    final mountOut = (mountResult.stdout as String? ?? '').trim();
     final mountErr = (mountResult.stderr as String? ?? '').trim();
+    final mountText = '$mountOut\n$mountErr'.toLowerCase();
     final alreadyMounted = mountErr.toLowerCase().contains('already mounted');
     if (mountResult.exitCode != 0 && !alreadyMounted) {
+      if (credentials == null && _looksLikeAuthPrompt(mountText)) {
+        return const ResolveAuthenticationRequired();
+      }
       final msg = mountErr.isNotEmpty ? mountErr : 'gio mount failed';
       return ResolveError(msg);
     }
@@ -186,6 +243,46 @@ class LocationResolver {
       return const ResolveError('Mounted share could not be located in gvfs');
     }
     return _resolvedSmbPath(uri, mountPoint);
+  }
+
+  static Future<ProcessResult> _runGioMountWithCredentials(
+    String mountTarget,
+    SmbCredentials credentials, {
+    required bool hasUsername,
+  }) async {
+    final process = await Process.start('gio', ['mount', '-a', mountTarget]);
+    final stdoutBuffer = StringBuffer();
+    final stderrBuffer = StringBuffer();
+    final stdoutSub = process.stdout
+        .transform(utf8.decoder)
+        .listen(stdoutBuffer.write);
+    final stderrSub = process.stderr
+        .transform(utf8.decoder)
+        .listen(stderrBuffer.write);
+    final username = credentials.username.trim();
+    final password = credentials.password;
+    process.stdin.write(
+      hasUsername ? '\n$password\n' : '$username\n\n$password\n',
+    );
+    await process.stdin.close();
+    final exitCode = await process.exitCode;
+    await stdoutSub.cancel();
+    await stderrSub.cancel();
+    return ProcessResult(
+      process.pid,
+      exitCode,
+      stdoutBuffer.toString(),
+      stderrBuffer.toString(),
+    );
+  }
+
+  static bool _looksLikeAuthPrompt(String text) {
+    return text.contains('authentication required') ||
+        text.contains('password') ||
+        text.contains('user and password') ||
+        text.contains('access denied') ||
+        text.contains('permission denied') ||
+        text.contains('logon failure');
   }
 
   static ResolveSuccess _resolvedSmbPath(LocationUri uri, String mountPoint) {

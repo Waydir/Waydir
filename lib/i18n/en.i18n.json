@@ -422,6 +422,8 @@
       "host": "Server",
       "hostHint": "e.g. 192.168.1.10 or nas.local",
       "port": "Port",
+      "username": "Username",
+      "usernameHint": "optional",
       "share": "Share",
       "shareHint": "optional",
       "pathLabel": "Path",
@@ -527,6 +529,9 @@
     "authenticationRequired": "Authentication Required",
     "dismiss": "Dismiss",
     "mountPrompt": "Enter your password to mount this drive.",
+    "smbPrompt": "Enter credentials for this network share.",
+    "username": "Username",
+    "password": "Password",
     "unlock": "Unlock"
   },
   "selectPattern": {

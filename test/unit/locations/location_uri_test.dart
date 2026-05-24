@@ -4,9 +4,12 @@ import 'package:waydir/features/locations/location_uri.dart';
 void main() {
   group('LocationUri', () {
     test('parses smb uri with host, port, share, and path', () {
-      final uri = LocationUri.parse('smb://server.local:1445/share/dir/file');
+      final uri = LocationUri.parse(
+        'smb://admin@server.local:1445/share/dir/file',
+      );
 
       expect(uri.scheme, LocationScheme.smb);
+      expect(uri.username, 'admin');
       expect(uri.host, 'server.local');
       expect(uri.port, 1445);
       expect(uri.share, 'share');

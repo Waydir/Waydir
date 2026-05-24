@@ -6,6 +6,7 @@ enum LocationScheme { local, windowsUnc, smb, trash, other }
 class LocationUri {
   final LocationScheme scheme;
   final String raw;
+  final String? username;
   final String? host;
   final int? port;
   final String? share;
@@ -14,6 +15,7 @@ class LocationUri {
   const LocationUri._({
     required this.scheme,
     required this.raw,
+    this.username,
     this.host,
     this.port,
     this.share,
@@ -39,7 +41,9 @@ class LocationUri {
         return 'Trash';
       case LocationScheme.local:
       case LocationScheme.other:
-        return PlatformPaths.fileName(raw).isEmpty ? raw : PlatformPaths.fileName(raw);
+        return PlatformPaths.fileName(raw).isEmpty
+            ? raw
+            : PlatformPaths.fileName(raw);
     }
   }
 
@@ -107,7 +111,13 @@ class LocationUri {
   static LocationUri _parseSmb(String s) {
     final rest = s.substring('smb://'.length);
     final parts = rest.split('/');
-    final authority = parts.isNotEmpty ? parts[0] : '';
+    var authority = parts.isNotEmpty ? parts[0] : '';
+    String? username;
+    final at = authority.lastIndexOf('@');
+    if (at >= 0) {
+      username = Uri.decodeComponent(authority.substring(0, at));
+      authority = authority.substring(at + 1);
+    }
     String host = authority;
     int? port;
     final colon = authority.lastIndexOf(':');
@@ -123,6 +133,7 @@ class LocationUri {
     return LocationUri._(
       scheme: LocationScheme.smb,
       raw: s,
+      username: username,
       host: host,
       port: port,
       share: share,
@@ -132,7 +143,10 @@ class LocationUri {
 
   static LocationUri _parseUnc(String s) {
     final rest = s.substring(2);
-    final parts = rest.split(RegExp(r'[\\/]+')).where((p) => p.isNotEmpty).toList();
+    final parts = rest
+        .split(RegExp(r'[\\/]+'))
+        .where((p) => p.isNotEmpty)
+        .toList();
     final host = parts.isNotEmpty ? parts[0] : '';
     final share = parts.length > 1 ? parts[1] : null;
     final path = parts.length > 2 ? parts.sublist(2).join(r'\') : null;

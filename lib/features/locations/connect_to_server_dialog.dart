@@ -7,6 +7,7 @@ import '../../ui/theme/app_text_styles.dart';
 import '../../ui/theme/app_theme.dart';
 
 class _FormSnapshot {
+  String username = '';
   String host = '';
   String port = '';
   String share = '';
@@ -32,19 +33,37 @@ Future<String?> showConnectToServerDialog(BuildContext context) async {
 
   if (clicked != connectLabel) return null;
   if (snapshot.host.trim().isEmpty) return null;
-  return _buildUri(snapshot.host, snapshot.port, snapshot.share, snapshot.path);
+  return _buildUri(
+    snapshot.username,
+    snapshot.host,
+    snapshot.port,
+    snapshot.share,
+    snapshot.path,
+  );
 }
 
 Future<String?> openConnectToServer(BuildContext context) async {
   return showConnectToServerDialog(context);
 }
 
-String _buildUri(String host, String port, String share, String path) {
+String _buildUri(
+  String username,
+  String host,
+  String port,
+  String share,
+  String path,
+) {
+  final user = username.trim();
   final h = host.trim();
   final pt = port.trim();
   final sh = share.trim();
   final sub = path.trim().replaceAll(RegExp(r'^/+'), '');
-  final buf = StringBuffer('smb://')..write(h);
+  final buf = StringBuffer('smb://');
+  if (user.isNotEmpty) {
+    buf.write(Uri.encodeComponent(user));
+    buf.write('@');
+  }
+  buf.write(h);
   if (pt.isNotEmpty) {
     buf.write(':');
     buf.write(pt);
@@ -69,6 +88,7 @@ class _ConnectBody extends StatefulWidget {
 }
 
 class _ConnectBodyState extends State<_ConnectBody> {
+  late final TextEditingController _username;
   late final TextEditingController _host;
   late final TextEditingController _port;
   late final TextEditingController _share;
@@ -77,6 +97,8 @@ class _ConnectBodyState extends State<_ConnectBody> {
   @override
   void initState() {
     super.initState();
+    _username = TextEditingController(text: widget.snapshot.username)
+      ..addListener(_sync);
     _host = TextEditingController(text: widget.snapshot.host)
       ..addListener(_sync);
     _port = TextEditingController(text: widget.snapshot.port)
@@ -88,6 +110,7 @@ class _ConnectBodyState extends State<_ConnectBody> {
   }
 
   void _sync() {
+    widget.snapshot.username = _username.text;
     widget.snapshot.host = _host.text;
     widget.snapshot.port = _port.text;
     widget.snapshot.share = _share.text;
@@ -97,6 +120,7 @@ class _ConnectBodyState extends State<_ConnectBody> {
 
   @override
   void dispose() {
+    _username.dispose();
     _host.dispose();
     _port.dispose();
     _share.dispose();
@@ -106,7 +130,13 @@ class _ConnectBodyState extends State<_ConnectBody> {
 
   @override
   Widget build(BuildContext context) {
-    final preview = _buildUri(_host.text, _port.text, _share.text, _path.text);
+    final preview = _buildUri(
+      _username.text,
+      _host.text,
+      _port.text,
+      _share.text,
+      _path.text,
+    );
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -134,6 +164,14 @@ class _ConnectBodyState extends State<_ConnectBody> {
               ),
             ),
           ],
+        ),
+        const SizedBox(height: 10),
+        _Labeled(
+          label: t.sidebar.connectDialog.username,
+          child: _Input(
+            controller: _username,
+            hint: t.sidebar.connectDialog.usernameHint,
+          ),
         ),
         const SizedBox(height: 10),
         _Labeled(

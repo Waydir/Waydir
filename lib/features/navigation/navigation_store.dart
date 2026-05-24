@@ -39,6 +39,7 @@ class NavigationStore {
   final clipboardMode = signal<ClipboardMode?>(null);
   final OperationStore operationStore;
   final gitStatus = GitStatusStore();
+  Future<SmbCredentials?> Function(String logical)? requestSmbCredentials;
   final loadError = signal<String?>(null);
   final trashAccessDenied = signal<bool>(false);
   final renamingPath = signal<String?>(null);
@@ -85,7 +86,7 @@ class NavigationStore {
     if (!PlatformPaths.isSmbUri(logical)) return logical;
     final existing = LocationResolver.logicalToPhysical(logical);
     if (existing != null) return existing;
-    final result = await LocationResolver.resolve(logical);
+    final result = await _resolveSmb(logical);
     switch (result) {
       case ResolveSuccess():
         return result.physicalPath;
@@ -95,7 +96,22 @@ class NavigationStore {
       case ResolveUnsupported():
         loadError.value = t.errors.smbNotSupportedOnPlatform;
         return null;
+      case ResolveAuthenticationRequired():
+        loadError.value = 'Authentication required';
+        return null;
     }
+  }
+
+  Future<ResolveResult> _resolveSmb(String logical) async {
+    final result = await LocationResolver.resolve(logical);
+    if (result is! ResolveAuthenticationRequired) return result;
+    final credentials = await requestSmbCredentials?.call(logical);
+    if (credentials == null ||
+        credentials.username.trim().isEmpty ||
+        credentials.password.isEmpty) {
+      return result;
+    }
+    return LocationResolver.resolveWithCredentials(logical, credentials);
   }
 
   final DirectoryWatcherService _watcher = DirectoryWatcherService();
@@ -557,7 +573,7 @@ class NavigationStore {
       isLoading.value = true;
       loadError.value = null;
     });
-    final result = await LocationResolver.resolve(logical);
+    final result = await _resolveSmb(logical);
     switch (result) {
       case ResolveSuccess():
         _doNavigate(
@@ -574,6 +590,11 @@ class NavigationStore {
         batch(() {
           isLoading.value = false;
           loadError.value = t.errors.smbNotSupportedOnPlatform;
+        });
+      case ResolveAuthenticationRequired():
+        batch(() {
+          isLoading.value = false;
+          loadError.value = 'Authentication required';
         });
     }
   }
@@ -784,11 +805,13 @@ class NavigationStore {
       } else if (PlatformPaths.isSmbUri(path)) {
         var physical = LocationResolver.logicalToPhysical(path);
         if (physical == null) {
-          final r = await LocationResolver.resolve(path);
+          final r = await _resolveSmb(path);
           if (r is ResolveSuccess) {
             physical = r.physicalPath;
           } else if (r is ResolveError) {
             throw FileSystemException(r.message, path);
+          } else if (r is ResolveAuthenticationRequired) {
+            throw FileSystemException('Authentication required', path);
           }
           if (physical == null) {
             throw FileSystemException('SMB share not mounted', path);

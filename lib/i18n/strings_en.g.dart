@@ -1168,6 +1168,15 @@ class TranslationsPasswordEn {
 	/// en: 'Enter your password to mount this drive.'
 	String get mountPrompt => 'Enter your password to mount this drive.';
 
+	/// en: 'Enter credentials for this network share.'
+	String get smbPrompt => 'Enter credentials for this network share.';
+
+	/// en: 'Username'
+	String get username => 'Username';
+
+	/// en: 'Password'
+	String get password => 'Password';
+
 	/// en: 'Unlock'
 	String get unlock => 'Unlock';
 }
@@ -1953,6 +1962,12 @@ class TranslationsSidebarConnectDialogEn {
 	/// en: 'Port'
 	String get port => 'Port';
 
+	/// en: 'Username'
+	String get username => 'Username';
+
+	/// en: 'optional'
+	String get usernameHint => 'optional';
+
 	/// en: 'Share'
 	String get share => 'Share';
 
@@ -2420,6 +2435,8 @@ extension on Translations {
 			'sidebar.connectDialog.host' => 'Server',
 			'sidebar.connectDialog.hostHint' => 'e.g. 192.168.1.10 or nas.local',
 			'sidebar.connectDialog.port' => 'Port',
+			'sidebar.connectDialog.username' => 'Username',
+			'sidebar.connectDialog.usernameHint' => 'optional',
 			'sidebar.connectDialog.share' => 'Share',
 			'sidebar.connectDialog.shareHint' => 'optional',
 			'sidebar.connectDialog.pathLabel' => 'Path',
@@ -2496,6 +2513,9 @@ extension on Translations {
 			'password.authenticationRequired' => 'Authentication Required',
 			'password.dismiss' => 'Dismiss',
 			'password.mountPrompt' => 'Enter your password to mount this drive.',
+			'password.smbPrompt' => 'Enter credentials for this network share.',
+			'password.username' => 'Username',
+			'password.password' => 'Password',
 			'password.unlock' => 'Unlock',
 			'selectPattern.title' => 'Select by pattern',
 			'selectPattern.hint' => '*.jpg, *.png',
@@ -2571,13 +2591,13 @@ extension on Translations {
 			'git.cherryPicking' => 'CHERRY-PICK',
 			'git.reverting' => 'REVERTING',
 			'git.bisecting' => 'BISECTING',
+			_ => null,
+		} ?? switch (path) {
 			'git.checkoutFailed' => ({required Object message}) => 'Checkout failed: ${message}',
 			'git.uncommittedChanges' => 'Uncommitted changes',
 			'git.stashPrompt' => ({required Object branch}) => 'Your local changes would be overwritten by switching to \'${branch}\'.\n\nStash them now? They stay saved in a stash you can restore later on this branch.',
 			'git.stashSwitch' => 'Stash & Switch',
 			'git.stashSwitchFailed' => ({required Object message}) => 'Stash & switch failed: ${message}',
-			_ => null,
-		} ?? switch (path) {
 			'git.stashEntry' => ({required Object index, required Object message}) => 'stash@{${index}} · ${message}',
 			'git.stashPop' => 'Pop (apply & remove)',
 			'git.stashApply' => 'Apply (keep stash)',

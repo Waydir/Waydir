@@ -56,11 +56,14 @@ class Sidebar extends StatefulWidget {
 
 class _SidebarState extends State<Sidebar> {
   late final List<_SidebarItem> _favorites;
+  late final Future<SmbCredentials?> Function(String logical)
+  _credentialsRequester;
   final _bookmarkStore = BookmarkStore.instance;
 
   @override
   void initState() {
     super.initState();
+    _credentialsRequester = _requestSmbCredentials;
     final h = PlatformPaths.homePath;
     _favorites = [
       _SidebarItem(t.sidebar.home, WaydirIconsRegular.house, h),
@@ -108,6 +111,37 @@ class _SidebarState extends State<Sidebar> {
       } catch (_) {}
     }
     _bookmarkStore.load();
+    widget.store.requestSmbCredentials = _credentialsRequester;
+  }
+
+  @override
+  void didUpdateWidget(covariant Sidebar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.store != widget.store) {
+      if (oldWidget.store.requestSmbCredentials == _credentialsRequester) {
+        oldWidget.store.requestSmbCredentials = null;
+      }
+      widget.store.requestSmbCredentials = _credentialsRequester;
+    }
+  }
+
+  @override
+  void dispose() {
+    if (widget.store.requestSmbCredentials == _credentialsRequester) {
+      widget.store.requestSmbCredentials = null;
+    }
+    super.dispose();
+  }
+
+  Future<SmbCredentials?> _requestSmbCredentials(String logical) async {
+    final uri = LocationUri.parse(logical);
+    final result = await showSmbCredentialsDialog(
+      context,
+      title: uri.displayLabel,
+      username: uri.username,
+    );
+    if (result == null) return null;
+    return SmbCredentials(username: result.username, password: result.password);
   }
 
   Future<void> _renameBookmark(Bookmark bookmark) async {
