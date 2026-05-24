@@ -34,6 +34,12 @@ class LocationResolver {
   static Map<String, String> get debugMappings =>
       Map.unmodifiable(_logicalToPhysical);
 
+  static List<String> mountedLocations() {
+    _pruneStaleMappings();
+    final locations = _logicalToPhysical.keys.toList()..sort();
+    return locations;
+  }
+
   static void debugSetMappingForTests(String logicalRoot, String physicalRoot) {
     assert(() {
       _logicalToPhysical[logicalRoot] = physicalRoot;

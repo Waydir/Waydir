@@ -216,6 +216,7 @@ class _SidebarState extends State<Sidebar> {
                 }
 
                 final collapsed = widget.collapsed;
+                final networkLocations = LocationResolver.mountedLocations();
                 return ListView(
                   padding: EdgeInsets.zero,
                   children: [
@@ -351,6 +352,29 @@ class _SidebarState extends State<Sidebar> {
                       );
                     }),
                     SizedBox(height: collapsed ? 12 : 8),
+                    if (networkLocations.isNotEmpty) ...[
+                      _NetworkSection(
+                        locations: networkLocations,
+                        currentPath: currentPath,
+                        collapsed: collapsed,
+                        onNavigate: widget.store.navigateTo,
+                        onOpenInNewTab: widget.onOpenInNewTab,
+                        onDropFiles:
+                            (paths, destination, {bool move = false}) => widget
+                                .store
+                                .dropFiles(paths, destination, move: move),
+                        onUnmount: (path) async {
+                          final currentPath = widget.store.currentPath.value;
+                          await LocationResolver.unmount(path);
+                          if (mounted) setState(() {});
+                          if (currentPath == path ||
+                              currentPath.startsWith('$path/')) {
+                            widget.store.navigateTo(PlatformPaths.homePath);
+                          }
+                        },
+                      ),
+                      SizedBox(height: collapsed ? 12 : 8),
+                    ],
                     Watch(
                       (context) => _BookmarksSection(
                         bookmarks: _bookmarkStore.bookmarks.value,
@@ -363,14 +387,6 @@ class _SidebarState extends State<Sidebar> {
                                 .store
                                 .dropFiles(paths, destination, move: move),
                         onContextMenu: _showBookmarkMenu,
-                        onUnmount: (path) async {
-                          final currentPath = widget.store.currentPath.value;
-                          await LocationResolver.unmount(path);
-                          if (currentPath == path ||
-                              currentPath.startsWith('$path/')) {
-                            widget.store.navigateTo(PlatformPaths.homePath);
-                          }
-                        },
                       ),
                     ),
                     _ConnectToServerRow(
@@ -530,7 +546,6 @@ class _BookmarksSection extends StatelessWidget {
   final void Function(List<String> paths, String destination, {bool move})
   onDropFiles;
   final void Function(Bookmark bookmark, Offset position) onContextMenu;
-  final Future<void> Function(String path) onUnmount;
 
   const _BookmarksSection({
     required this.bookmarks,
@@ -540,7 +555,6 @@ class _BookmarksSection extends StatelessWidget {
     required this.onOpenInNewTab,
     required this.onDropFiles,
     required this.onContextMenu,
-    required this.onUnmount,
   });
 
   @override
@@ -587,12 +601,64 @@ class _BookmarksSection extends StatelessWidget {
               onDropFiles: (paths, {bool move = false}) =>
                   onDropFiles(paths, bookmark.path, move: move),
               onContextMenu: (position) => onContextMenu(bookmark, position),
-              onUnmount: uri.scheme == LocationScheme.smb
-                  ? () => unawaited(onUnmount(bookmark.path))
-                  : null,
             );
           }),
         const SizedBox(height: 8),
+      ],
+    );
+  }
+}
+
+class _NetworkSection extends StatelessWidget {
+  final List<String> locations;
+  final String currentPath;
+  final bool collapsed;
+  final ValueChanged<String> onNavigate;
+  final void Function(String path)? onOpenInNewTab;
+  final void Function(List<String> paths, String destination, {bool move})
+  onDropFiles;
+  final Future<void> Function(String path) onUnmount;
+
+  const _NetworkSection({
+    required this.locations,
+    required this.currentPath,
+    required this.collapsed,
+    required this.onNavigate,
+    required this.onOpenInNewTab,
+    required this.onDropFiles,
+    required this.onUnmount,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (!collapsed)
+          _SectionHeader(title: t.sidebar.network)
+        else
+          const _SectionRailDivider(),
+        ...locations.map((path) {
+          final uri = LocationUri.parse(path);
+          return _ItemRow(
+            item: _SidebarItem(
+              uri.displayLabel,
+              WaydirIconsRegular.treeStructure,
+              path,
+            ),
+            isSelected: currentPath == path || currentPath.startsWith('$path/'),
+            isMounted: true,
+            collapsed: collapsed,
+            onTap: onNavigate,
+            onMiddleTap: onOpenInNewTab != null
+                ? () => onOpenInNewTab!(path)
+                : null,
+            onDropFiles: (paths, {bool move = false}) =>
+                onDropFiles(paths, path, move: move),
+            onUnmount: () => unawaited(onUnmount(path)),
+          );
+        }),
       ],
     );
   }

@@ -909,6 +909,9 @@ class TranslationsSidebarEn {
 	/// en: 'Root'
 	String get root => 'Root';
 
+	/// en: 'Network'
+	String get network => 'Network';
+
 	/// en: 'Bookmarks'
 	String get bookmarks => 'Bookmarks';
 
@@ -2409,6 +2412,7 @@ extension on Translations {
 			'sidebar.videos' => 'Videos',
 			'sidebar.trash' => 'Trash',
 			'sidebar.root' => 'Root',
+			'sidebar.network' => 'Network',
 			'sidebar.bookmarks' => 'Bookmarks',
 			'sidebar.dropBookmark' => 'Drop folder to bookmark',
 			'sidebar.connectToServer' => 'Connect to server',
@@ -2572,9 +2576,9 @@ extension on Translations {
 			'git.stashPrompt' => ({required Object branch}) => 'Your local changes would be overwritten by switching to \'${branch}\'.\n\nStash them now? They stay saved in a stash you can restore later on this branch.',
 			'git.stashSwitch' => 'Stash & Switch',
 			'git.stashSwitchFailed' => ({required Object message}) => 'Stash & switch failed: ${message}',
-			'git.stashEntry' => ({required Object index, required Object message}) => 'stash@{${index}} · ${message}',
 			_ => null,
 		} ?? switch (path) {
+			'git.stashEntry' => ({required Object index, required Object message}) => 'stash@{${index}} · ${message}',
 			'git.stashPop' => 'Pop (apply & remove)',
 			'git.stashApply' => 'Apply (keep stash)',
 			'git.stashDrop' => 'Drop',

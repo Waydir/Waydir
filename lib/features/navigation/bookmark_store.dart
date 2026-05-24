@@ -22,20 +22,47 @@ class BookmarkStore {
   }
 
   Future<void> addPath(String path) async {
+    final storedPath = _storedPathFor(path);
+    if (storedPath == null) return;
+    final uri = LocationUri.parse(storedPath);
+    final label = uri.isLocal
+        ? PlatformPaths.fileName(storedPath)
+        : uri.displayLabel;
+    await _addUnique(label, storedPath);
+  }
+
+  bool containsPath(String path) {
+    final storedPath = _storedPathFor(path);
+    if (storedPath == null) return false;
+    return bookmarks.value.any((b) => b.path == storedPath);
+  }
+
+  Future<void> togglePath(String path) async {
+    final storedPath = _storedPathFor(path);
+    if (storedPath == null) return;
+    final existing = await _db.getBookmarkByPath(storedPath);
+    if (existing != null) {
+      await _db.deleteBookmark(existing.id);
+      await load();
+      return;
+    }
+    final uri = LocationUri.parse(storedPath);
+    final label = uri.isLocal
+        ? PlatformPaths.fileName(storedPath)
+        : uri.displayLabel;
+    await _addUnique(label, storedPath);
+  }
+
+  String? _storedPathFor(String path) {
     final uri = LocationUri.parse(path);
     if (uri.isLocal) {
       final normalized = PlatformPaths.normalize(path);
       final logical = LocationResolver.physicalToLogical(normalized);
-      if (logical != null) {
-        final logicalUri = LocationUri.parse(logical);
-        await _addUnique(logicalUri.displayLabel, logical);
-        return;
-      }
-      if (!Directory(normalized).existsSync()) return;
-      await _addUnique(PlatformPaths.fileName(normalized), normalized);
-      return;
+      if (logical != null) return logical;
+      if (!Directory(normalized).existsSync()) return null;
+      return normalized;
     }
-    await _addUnique(uri.displayLabel, uri.raw);
+    return uri.raw;
   }
 
   Future<void> addLocation(String location, {String? label}) async {
