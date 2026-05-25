@@ -2,10 +2,10 @@
 
 # Waydir
 
-> Open a 100k-file directory without the UI freezing.
-> Stay on the keyboard. Browse SMB/SFTP like it's local.
+> A cross-platform file manager with dual-pane navigation, tabs, and
+> network drives. Built on Flutter with a native Rust core.
 
-🦀 Native Rust core • ⌨️ Keyboard-first
+🦀 Native Rust core • 💙 Flutter UI • ⌨️ Keyboard-first
 
 [![Flutter](https://img.shields.io/badge/Flutter-3.35+-02569B?logo=flutter&logoColor=white&style=flat-square)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-3.10+-0175C2?logo=dart&logoColor=white&style=flat-square)](https://dart.dev)
@@ -13,54 +13,141 @@
 
 </div>
 
-![Waydir](docs/screenshots/waydir.png)
+<p align="center">
+  <img src="docs/screenshots/hero.png" alt="Waydir" width="820">
+</p>
 
-![Waydir dual pane](docs/screenshots/waydir-dual-pane.png)
+## See it in action
 
-## What is Waydir?
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <b>Keyboard-driven navigation</b><br>
+      <img src="docs/gifs/navigating.gif" alt="Navigating">
+    </td>
+    <td width="50%" align="center">
+      <b>Dual-pane copy</b><br>
+      <img src="docs/gifs/dual_pane_copy.gif" alt="Dual-pane copy">
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <b>Quick Look preview</b><br>
+      <img src="docs/gifs/quick_look_images.gif" alt="Quick Look">
+    </td>
+    <td width="50%" align="center">
+      <b>Live recursive search</b><br>
+      <img src="docs/gifs/search.gif" alt="Search">
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center">
+      <b>Browse remote files over SFTP</b><br>
+      <img src="docs/gifs/sftp.gif" alt="SFTP">
+    </td>
+  </tr>
+</table>
 
-Waydir is the file manager I wanted on my own machine: hands stay on the keyboard, the UI gets out of the way, and opening a 100k-file directory doesn't lock up the window.
+## ✨ Highlights
 
-The interface is built with Flutter and runs natively on Linux, Windows and macOS from one codebase. The path-heavy work - directory listing, search, and delete - runs in a native Rust core, off the UI thread.
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>⚡ Native Rust core</h3>
+      Listing, recursive search and trash run in a native Rust library,
+      off the UI thread. 100k-file directories open without freezing.
+    </td>
+    <td width="50%" valign="top">
+      <h3>⌨️ Keyboard-first</h3>
+      Every operation has a shortcut. Dual panes, tabs, navigation,
+      copy, move, search - all without leaving the keyboard.
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>🌐 Network-native</h3>
+      SMB and SFTP appear in the sidebar as drives. Browse, search,
+      copy and Quick Look remote files like they're local.
+    </td>
+    <td width="50%" valign="top">
+      <h3>🗂️ Dual panes, tabs, bookmarks</h3>
+      Side-by-side panes with independent tabs and pinned locations.
+      Built for moving files between places.
+    </td>
+  </tr>
+</table>
 
-## Install
+## 🦀 How it works
 
-Download the latest build from the [Releases](https://github.com/Waydir/Waydir/releases) page.
+Three layers, each doing what it's good at:
 
-Linux builds are available as `.deb`, `.rpm`, and `.tar.gz` packages. Windows builds are available as an `.exe` installer and a `.zip` archive. macOS builds are available as a `.dmg` package.
+- **Flutter UI** for rendering and input. Reactive state via the `signals` package.
+- **Dart isolates** for long-running operations: copy, move, delete, network transfers.
+- **Rust core** (`waydir_core`, loaded via FFI) for the heavy filesystem work: directory listing, recursive search, trash.
 
-> ⚠️ **macOS is not regularly tested.** Linux and Windows are the primary development and testing targets. macOS builds are produced from the same codebase but expect rough edges - please report any issues.
+Persistence sits on `drift` + `sqlite3`. The UI thread does no I/O.
 
-On Linux, the portable archive can be unpacked and launched directly:
+## 📦 Install
+
+Grab the latest build from the [Releases](https://github.com/Waydir/Waydir/releases) page.
+
+#### Linux
+
+Available as `.deb`, `.rpm`, and `.tar.gz`.
 
 ```bash
-tar -xzf waydir-*-linux-x64.tar.gz
-./waydir
+# Debian / Ubuntu
+sudo dpkg -i waydir-*.deb
+
+# Fedora / RHEL
+sudo rpm -i waydir-*.rpm
+
+# Portable
+tar -xzf waydir-*-linux-x64.tar.gz && ./waydir
 ```
 
-## Features
+#### Windows
 
-- Dual-pane navigation with tabs
-- Keyboard-driven navigation, selection, and file operations
-- Recursive search with substring, regex, and glob modes; results stream live with a scanned-entry counter
-- Network drives over SMB and SFTP from the sidebar - browse and operate on remote files like local ones
-- Copy / move / delete with conflict resolution and progress tracking
-- Clipboard integration
-- Archive support: browse, extract, compress, and edit ZIP, TAR, and more
-- Quick Look file preview with Space - images, text, and code
-- Open files with a chosen app and manage defaults per file type
+`.exe` installer or portable `.zip`. Run the installer, or unpack the archive and launch `waydir.exe`.
+
+#### macOS
+
+`.dmg` package - drag Waydir to your Applications folder.
+
+> ⚠️ **macOS is not regularly tested.** Linux and Windows are the primary development and testing targets. macOS builds come from the same codebase but expect rough edges - please report any issues.
+
+## 🎯 Features
+
+#### 📁 Navigation & layout
+- Dual-pane mode with independent tabs in each pane
+- Sidebar with favorites, devices, and pinned bookmarks
+- A keyboard shortcut for every action
+
+#### 📋 File operations
+- Copy, move and delete with conflict resolution and live progress
+- Trash-safe delete, cancellable mid-flight
+- Clipboard integration; ZIP and TAR archives browsable in place
+
+#### 🌐 Network drives
+- SMB and SFTP from the sidebar: mount, unmount, reconnect
+- Remote files act like local ones: search, copy, preview, "Open with"
+- Pooled connections, off-thread transfers, fine-grained progress
+
+#### 🔍 Search & preview
+- Recursive search that streams results as it scans (substring, regex, glob)
+- Quick Look on `Space` for images, text and code
+- Per-type default apps and "Open with" picker
+
+#### 🎨 Customization & integrations
+- Light, Dark and Nord themes; custom themes via JSON
+- Configurable density, sort, hidden files and date format
 - Git status bar with branch switching and stash management
-- Sidebar bookmarks and drive management (mount/unmount)
-- Light, Dark, and Nord built-in themes, plus custom themes via JSON
-- Preferences dialog for appearance, behavior, and terminal integration
-- Native Rust core, with background scanning that keeps the UI responsive
-- Native builds for Linux, Windows, and macOS from one codebase
+- Terminal integration
 
-## Development
+## 🔧 Build from source
 
-Requires Flutter 3.35+, Dart 3.10+, and Rust stable ([rustup](https://rustup.rs)).
-`waydir_core` (Rust) handles directory listing, search and delete - there is no
-Dart fallback.
+**Requirements:** Flutter 3.35+, Dart 3.10+, Rust stable ([rustup](https://rustup.rs)).
+`waydir_core` (Rust) handles directory listing, search and delete - there is no Dart fallback.
 
 ```bash
 git clone https://github.com/Waydir/Waydir.git
@@ -72,27 +159,15 @@ flutter run -d linux
 
 > The Rust build must be `--release` and commands run from the repo root.
 > Rebuild and restart the app after editing `rust/waydir_core` (no hot reload).
-> For packaged builds use `scripts/build_waydir_core.sh` (Windows:
-> `scripts/build_waydir_core_windows.ps1`).
+> For packaged builds use `scripts/build_waydir_core.sh` (Windows: `scripts/build_waydir_core_windows.ps1`).
 
-Run checks before opening a PR:
-
-```bash
-scripts/build_waydir_core.sh
-dart format .
-flutter analyze
-flutter test
-```
-
-Build a release binary locally:
+#### Release binary
 
 ```bash
-flutter build linux
-flutter build windows
-flutter build macos
+flutter build linux    # or: windows / macos
 ```
 
-## Contributing
+## 🤝 Contributing
 
 PRs are welcome. Before opening one:
 
@@ -104,6 +179,6 @@ CI runs the same three on every PR (see `.github/workflows/`). Keep commits focu
 
 If you're picking up something non-trivial, open an issue first so we can sync on the approach.
 
-## License
+## 📄 License
 
 [MIT](LICENSE)
