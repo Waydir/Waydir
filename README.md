@@ -5,7 +5,7 @@
 > A cross-platform file manager with dual-pane navigation, tabs, and
 > network drives. Built on Flutter with a native Rust core.
 
-🦀 Native Rust core • 💙 Flutter UI • ⌨️ Keyboard-first
+Native Rust core • Flutter UI • Keyboard-first
 
 [![Flutter](https://img.shields.io/badge/Flutter-3.35+-02569B?logo=flutter&logoColor=white&style=flat-square)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-3.10+-0175C2?logo=dart&logoColor=white&style=flat-square)](https://dart.dev)
@@ -22,22 +22,32 @@
 <table>
   <tr>
     <td width="50%" align="center">
-      <b>Dual-pane copy</b><br>
-      <img src="docs/gifs/dual_pane_copy.gif" alt="Dual-pane copy">
+      <b>Keyboard-driven navigation</b><br>
+      <img src="docs/gifs/navigating.gif" alt="Navigating">
     </td>
     <td width="50%" align="center">
-      <b>Quick Look preview</b><br>
-      <img src="docs/gifs/quick_look_images.gif" alt="Quick Look">
+      <b>Dual-pane copy</b><br>
+      <img src="docs/gifs/dual_pane_copy.gif" alt="Dual-pane copy">
     </td>
   </tr>
   <tr>
     <td width="50%" align="center">
+      <b>Quick Look preview</b><br>
+      <img src="docs/gifs/quick_look_images.gif" alt="Quick Look">
+    </td>
+    <td width="50%" align="center">
       <b>Live recursive search</b><br>
       <img src="docs/gifs/search.gif" alt="Search">
     </td>
+  </tr>
+  <tr>
     <td width="50%" align="center">
       <b>Browse remote files over SFTP</b><br>
       <img src="docs/gifs/sftp.gif" alt="SFTP">
+    </td>
+    <td width="50%" align="center">
+      <b>Archiving and browsing archives</b><br>
+      <img src="docs/gifs/archive_browsing.gif" alt="Archiving and browsing archives">
     </td>
   </tr>
 </table>
