@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use russh::keys::{decode_secret_key, key::KeyPair, load_secret_key};
+use russh::keys::{decode_secret_key, load_secret_key, PrivateKey};
 
 pub(super) enum AuthKind {
     Auto,
@@ -29,7 +29,7 @@ impl AuthKind {
     }
 }
 
-pub(super) fn discover_default_keys() -> Vec<KeyPair> {
+pub(super) fn discover_default_keys() -> Vec<PrivateKey> {
     let home = match std::env::var("HOME") {
         Ok(h) => h,
         Err(_) => return Vec::new(),
@@ -48,7 +48,7 @@ pub(super) fn discover_default_keys() -> Vec<KeyPair> {
     keys
 }
 
-pub(super) fn load_key(path: &str, passphrase: Option<&str>) -> Result<KeyPair, String> {
+pub(super) fn load_key(path: &str, passphrase: Option<&str>) -> Result<PrivateKey, String> {
     let content = std::fs::read_to_string(path).map_err(|e| format!("read key: {e}"))?;
     decode_secret_key(&content, passphrase).map_err(|e| format!("decode key: {e}"))
 }
