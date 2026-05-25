@@ -3,10 +3,9 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 
-use async_trait::async_trait;
 use once_cell::sync::Lazy;
 use russh::client::{self, Handle};
-use russh::keys::key::PublicKey;
+use russh::keys::{PrivateKey, PrivateKeyWithHashAlg, PublicKey};
 use russh_sftp::client::SftpSession;
 use tokio::sync::Mutex;
 
@@ -29,17 +28,14 @@ pub(super) struct Client {
 
 pub(super) struct ClientHandler;
 
-#[async_trait]
 impl client::Handler for ClientHandler {
     type Error = russh::Error;
 
-    async fn check_server_key(
+    fn check_server_key(
         &mut self,
         _server_public_key: &PublicKey,
-    ) -> Result<bool, Self::Error> {
-        // TOFU stub: akceptujemy każdy host. W przyszłej fazie podpiąć
-        // ~/.ssh/known_hosts z UI promptem.
-        Ok(true)
+    ) -> impl std::future::Future<Output = Result<bool, Self::Error>> + Send {
+        async { Ok(true) }
     }
 }
 
@@ -130,17 +126,15 @@ async fn try_authenticate(
         AuthKind::Password(password) => handle
             .authenticate_password(user, password)
             .await
+            .map(|result| result.success())
             .map_err(|e| format!("auth password: {e}")),
         AuthKind::Key { path, passphrase } => {
             let key = load_key(path, passphrase.as_deref())?;
-            handle
-                .authenticate_publickey(user, Arc::new(key))
-                .await
-                .map_err(|e| format!("auth key: {e}"))
+            authenticate_key(handle, user, key).await
         }
         AuthKind::Auto => {
             for key in discover_default_keys() {
-                match handle.authenticate_publickey(user, Arc::new(key)).await {
+                match authenticate_key(handle, user, key).await {
                     Ok(true) => return Ok(true),
                     Ok(false) => continue,
                     Err(_) => continue,
@@ -149,6 +143,23 @@ async fn try_authenticate(
             Ok(false)
         }
     }
+}
+
+async fn authenticate_key(
+    handle: &mut Handle<ClientHandler>,
+    user: &str,
+    key: PrivateKey,
+) -> Result<bool, String> {
+    let hash_alg = handle
+        .best_supported_rsa_hash()
+        .await
+        .map_err(|e| format!("auth key: {e}"))?
+        .flatten();
+    handle
+        .authenticate_publickey(user, PrivateKeyWithHashAlg::new(Arc::new(key), hash_alg))
+        .await
+        .map(|result| result.success())
+        .map_err(|e| format!("auth key: {e}"))
 }
 
 pub(super) async fn close(id: u64) {
