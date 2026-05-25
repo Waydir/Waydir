@@ -12,7 +12,7 @@ import '../../core/models/file_entry.dart';
 import '../../core/models/file_operation.dart';
 import '../../core/platform/platform_paths.dart';
 
-const _chunkBytes = 4 * 1024 * 1024;
+const _chunkBytes = 256 * 1024;
 const sftpSessionsOptionKey = '_sftpSessions';
 
 class SftpTaskExecutor {

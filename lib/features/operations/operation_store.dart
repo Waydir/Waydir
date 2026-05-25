@@ -119,7 +119,7 @@ class OperationStore {
       final name = PlatformPaths.fileName(s);
       final dst = '$destination$sep$name';
       if (_samePath(s, dst)) continue;
-      if (_wouldNestTransfer(s, destination)) {
+      if (await _wouldNestTransferAsync(s, destination)) {
         rejected.add(s);
         continue;
       }
@@ -900,6 +900,17 @@ class OperationStore {
     final srcCanonical = _canonicalPath(source);
     final destCanonical = _canonicalPath(destination);
     return testDirIsParent(srcCanonical, destCanonical);
+  }
+
+  static Future<bool> _wouldNestTransferAsync(
+    String source,
+    String destination,
+  ) {
+    if (PlatformPaths.isSftpUri(source) ||
+        PlatformPaths.isSftpUri(destination)) {
+      return Future.value(_wouldNestTransfer(source, destination));
+    }
+    return Isolate.run(() => _wouldNestTransfer(source, destination));
   }
 
   static bool testDirIsParent(String srcCanonical, String destCanonical) {
