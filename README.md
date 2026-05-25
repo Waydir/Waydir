@@ -2,7 +2,10 @@
 
 # Waydir
 
-A fast, keyboard-driven desktop file manager built with Flutter.
+> Open a 100k-file directory without the UI freezing.
+> Stay on the keyboard. Browse SMB/SFTP like it's local.
+
+🦀 Native Rust core • ⌨️ Keyboard-first
 
 [![Flutter](https://img.shields.io/badge/Flutter-3.35+-02569B?logo=flutter&logoColor=white&style=flat-square)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-3.10+-0175C2?logo=dart&logoColor=white&style=flat-square)](https://dart.dev)
@@ -39,7 +42,8 @@ tar -xzf waydir-*-linux-x64.tar.gz
 
 - Dual-pane navigation with tabs
 - Keyboard-driven navigation, selection, and file operations
-- Recursive search that streams results live with a scanned-entry counter
+- Recursive search with substring, regex, and glob modes; results stream live with a scanned-entry counter
+- Network drives over SMB and SFTP from the sidebar - browse and operate on remote files like local ones
 - Copy / move / delete with conflict resolution and progress tracking
 - Clipboard integration
 - Archive support: browse, extract, compress, and edit ZIP, TAR, and more
