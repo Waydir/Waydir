@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:archive/archive_io.dart';
 import 'package:path/path.dart' as p;
 
@@ -103,61 +104,291 @@ class ArchiveWriter {
 
   static int planCount(List<String> sources) => _plan(sources).length;
 
+  static int planSourceBytes(List<String> sources) =>
+      _plan(sources).fold(0, (sum, entry) => sum + entry.size);
+
+  static int planWorkBytes(List<String> sources, ArchiveFormat format) {
+    final planned = _plan(sources);
+    final sourceBytes = planned.fold(0, (sum, entry) => sum + entry.size);
+    return switch (format) {
+      ArchiveFormat.zip => sourceBytes * 2,
+      ArchiveFormat.tar => sourceBytes,
+      ArchiveFormat.tarGz ||
+      ArchiveFormat.tarBz2 ||
+      ArchiveFormat.tarXz => sourceBytes + _tarSize(planned),
+    };
+  }
+
+  static String _posix(String s) => p.posix.fromUri(p.toUri(s));
+
+  static int _zipLevel(CompressionLevel level) => switch (level) {
+    CompressionLevel.store => 0,
+    CompressionLevel.normal => 6,
+    CompressionLevel.maximum => 9,
+  };
+
+  static int _gzipLevel(CompressionLevel level) => switch (level) {
+    CompressionLevel.store => 1,
+    CompressionLevel.normal => 6,
+    CompressionLevel.maximum => 9,
+  };
+
+  static void _streamZip(
+    List<_PlannedEntry> planned,
+    String destPath,
+    CompressionLevel level,
+    void Function(String name)? onEntry,
+    void Function(String name, int bytes)? onBytes,
+    bool Function()? isCancelled,
+  ) {
+    final levelInt = _zipLevel(level);
+    final output = OutputFileStream(destPath);
+    final encoder = ZipEncoder();
+    encoder.startEncode(output, level: levelInt);
+    var ok = false;
+    try {
+      for (final entry in planned) {
+        if (isCancelled != null && isCancelled()) return;
+        if (entry.isDir) {
+          final name = _posix('${entry.archiveName}/');
+          final af = ArchiveFile.directory(name);
+          try {
+            final stat = Directory(entry.absPath).statSync();
+            af.mode = stat.mode;
+            af.lastModTime = stat.modified.millisecondsSinceEpoch ~/ 1000;
+          } catch (_) {}
+          encoder.add(af);
+        } else {
+          final name = _posix(entry.archiveName);
+          final inStream = _progressInput(
+            InputFileStream(entry.absPath),
+            (bytes) => onBytes?.call(entry.archiveName, bytes),
+          );
+          try {
+            final af = ArchiveFile.stream(name, inStream);
+            try {
+              final stat = File(entry.absPath).statSync();
+              af.mode = stat.mode;
+              af.lastModTime = stat.modified.millisecondsSinceEpoch ~/ 1000;
+            } catch (_) {}
+            encoder.add(af, level: levelInt);
+          } finally {
+            inStream.closeSync();
+          }
+        }
+        onEntry?.call(entry.archiveName);
+      }
+      ok = true;
+    } finally {
+      try {
+        encoder.endEncode();
+      } catch (_) {}
+      try {
+        output.closeSync();
+      } catch (_) {}
+      if (!ok) {
+        try {
+          final f = File(destPath);
+          if (f.existsSync()) f.deleteSync();
+        } catch (_) {}
+      }
+    }
+  }
+
+  static void _streamTar(
+    List<_PlannedEntry> planned,
+    OutputFileStream output,
+    void Function(String name)? onEntry,
+    void Function(String name, int bytes)? onBytes,
+    bool Function()? isCancelled,
+  ) {
+    final encoder = TarEncoder();
+    encoder.start(output);
+    for (final entry in planned) {
+      if (isCancelled != null && isCancelled()) return;
+      if (entry.isDir) {
+        final name = _posix('${entry.archiveName}/');
+        final af = ArchiveFile.directory(name);
+        try {
+          final stat = Directory(entry.absPath).statSync();
+          af.mode = stat.mode;
+          af.lastModTime = stat.modified.millisecondsSinceEpoch ~/ 1000;
+        } catch (_) {}
+        encoder.add(af);
+      } else {
+        final name = _posix(entry.archiveName);
+        final inStream = _progressInput(
+          InputFileStream(entry.absPath),
+          (bytes) => onBytes?.call(entry.archiveName, bytes),
+        );
+        try {
+          final af = ArchiveFile.stream(name, inStream);
+          try {
+            final stat = File(entry.absPath).statSync();
+            af.mode = stat.mode;
+            af.lastModTime = stat.modified.millisecondsSinceEpoch ~/ 1000;
+          } catch (_) {}
+          encoder.add(af);
+        } finally {
+          inStream.closeSync();
+        }
+      }
+      onEntry?.call(entry.archiveName);
+    }
+    encoder.finish();
+  }
+
   static void create(
     List<String> sources,
     String destPath,
     ArchiveFormat format,
     CompressionLevel level, {
     void Function(String name)? onEntry,
+    void Function(String label)? onPhase,
+    void Function(String name, int bytes)? onBytes,
     bool Function()? isCancelled,
   }) {
-    final archive = Archive();
     final planned = _plan(sources);
 
-    for (final entry in planned) {
-      if (isCancelled != null && isCancelled()) return;
-
-      final name = entry.isDir ? '${entry.archiveName}/' : entry.archiveName;
-      if (entry.isDir) {
-        final archiveFile = ArchiveFile.directory(name);
-        archive.add(archiveFile);
-      } else {
-        final bytes = File(entry.absPath).readAsBytesSync();
-        final archiveFile = ArchiveFile.bytes(name, bytes);
-        archive.add(archiveFile);
-      }
-      onEntry?.call(entry.archiveName);
-    }
-
-    if (isCancelled != null && isCancelled()) return;
-
-    List<int> encoded;
+    final tmpDir = Directory(
+      p.join(
+        p.dirname(destPath),
+        '.waydir-archive-pack-${DateTime.now().microsecondsSinceEpoch}',
+      ),
+    )..createSync(recursive: true);
+    final stagedPath = p.join(tmpDir.path, p.basename(destPath));
+    var ok = false;
     try {
       switch (format) {
         case ArchiveFormat.zip:
-          final levelInt = level == CompressionLevel.store
-              ? 0
-              : (level == CompressionLevel.maximum ? 9 : 6);
-          encoded = ZipEncoder().encode(archive, level: levelInt);
+          _streamZip(planned, stagedPath, level, onEntry, onBytes, isCancelled);
         case ArchiveFormat.tar:
-          encoded = TarEncoder().encode(archive);
+          final output = OutputFileStream(stagedPath);
+          try {
+            _streamTar(planned, output, onEntry, onBytes, isCancelled);
+          } finally {
+            try {
+              output.closeSync();
+            } catch (_) {}
+          }
         case ArchiveFormat.tarGz:
-          final tarBytes = TarEncoder().encode(archive);
-          encoded = GZipEncoder().encode(tarBytes);
         case ArchiveFormat.tarBz2:
-          final tarBytes = TarEncoder().encode(archive);
-          encoded = BZip2Encoder().encode(tarBytes);
         case ArchiveFormat.tarXz:
-          final tarBytes = TarEncoder().encode(archive);
-          encoded = XZEncoder().encode(tarBytes);
+          _packTarCompressed(
+            planned,
+            tmpDir.path,
+            stagedPath,
+            format,
+            level,
+            onEntry,
+            onPhase,
+            onBytes,
+            isCancelled,
+          );
       }
+
+      if (isCancelled != null && isCancelled()) return;
+      File(stagedPath).renameSync(destPath);
+      ok = true;
     } catch (e) {
       throw ArchiveReadException('Could not create archive: $e');
+    } finally {
+      if (!ok) {
+        try {
+          final f = File(destPath);
+          if (f.existsSync() && f.path == stagedPath) f.deleteSync();
+        } catch (_) {}
+      }
+      try {
+        tmpDir.deleteSync(recursive: true);
+      } catch (_) {}
     }
+  }
 
+  static void _packTarCompressed(
+    List<_PlannedEntry> planned,
+    String tmpDirPath,
+    String stagedPath,
+    ArchiveFormat format,
+    CompressionLevel level,
+    void Function(String name)? onEntry,
+    void Function(String label)? onPhase,
+    void Function(String name, int bytes)? onBytes,
+    bool Function()? isCancelled,
+  ) {
+    final tarPath = p.join(tmpDirPath, 'archive.tar');
+    final tarOut = OutputFileStream(tarPath);
+    try {
+      _streamTar(planned, tarOut, onEntry, onBytes, isCancelled);
+    } finally {
+      try {
+        tarOut.closeSync();
+      } catch (_) {}
+    }
     if (isCancelled != null && isCancelled()) return;
 
-    File(destPath).writeAsBytesSync(encoded);
+    final phaseLabel = switch (format) {
+      ArchiveFormat.tarGz => 'Compressing (gzip)…',
+      ArchiveFormat.tarBz2 => 'Compressing (bzip2)…',
+      ArchiveFormat.tarXz => 'Compressing (xz)…',
+      _ => 'Compressing…',
+    };
+    onPhase?.call(phaseLabel);
+
+    final input = _progressInput(
+      InputFileStream(tarPath),
+      (bytes) => onBytes?.call(phaseLabel, bytes),
+    );
+    final output = OutputFileStream(stagedPath);
+    try {
+      switch (format) {
+        case ArchiveFormat.tarGz:
+          GZipEncoder().encodeStream(input, output, level: _gzipLevel(level));
+        case ArchiveFormat.tarBz2:
+          BZip2Encoder().encodeStream(input, output);
+        case ArchiveFormat.tarXz:
+          XZEncoder().encodeStream(input, output);
+        default:
+          throw StateError('unreachable');
+      }
+    } finally {
+      try {
+        input.closeSync();
+      } catch (_) {}
+      try {
+        output.closeSync();
+      } catch (_) {}
+      try {
+        File(tarPath).deleteSync();
+      } catch (_) {}
+    }
+  }
+
+  static int _tarSize(List<_PlannedEntry> planned) {
+    var total = 1024;
+    for (final entry in planned) {
+      final name = _posix(
+        entry.isDir ? '${entry.archiveName}/' : entry.archiveName,
+      );
+      if (name.length > 100) {
+        total += _tarRecordSize(name.length);
+      }
+      total += entry.isDir ? 512 : _tarRecordSize(entry.size);
+    }
+    return total;
+  }
+
+  static int _tarRecordSize(int payloadSize) {
+    final blocks = (payloadSize + 511) ~/ 512;
+    return 512 + blocks * 512;
+  }
+
+  static InputStream _progressInput(
+    InputStream input,
+    void Function(int bytes)? onBytes,
+  ) {
+    if (onBytes == null) return input;
+    return _ProgressInputStream(input, onBytes);
   }
 
   static void _copyInto(String src, String destDir) {
@@ -191,6 +422,8 @@ class ArchiveWriter {
     String? renameFromInner,
     String? renameToName,
     void Function(String name)? onEntry,
+    void Function(String label)? onPhase,
+    void Function(String name, int bytes)? onBytes,
     bool Function()? isCancelled,
   }) {
     final format = archiveFormatFromName(archivePath);
@@ -199,9 +432,8 @@ class ArchiveWriter {
     }
     final work = Directory(
       p.join(
-        Directory.systemTemp.path,
-        'waydir-archive-edit',
-        DateTime.now().microsecondsSinceEpoch.toString(),
+        p.dirname(archivePath),
+        '.waydir-archive-edit-${DateTime.now().microsecondsSinceEpoch}',
       ),
     )..createSync(recursive: true);
     final tree = Directory(p.join(work.path, 'tree'))
@@ -252,14 +484,95 @@ class ArchiveWriter {
         format,
         CompressionLevel.normal,
         onEntry: onEntry,
+        onPhase: onPhase,
+        onBytes: onBytes,
         isCancelled: isCancelled,
       );
       if (isCancelled != null && isCancelled()) return;
-      File(tmpArchive).copySync(archivePath);
+      try {
+        File(tmpArchive).renameSync(archivePath);
+      } on FileSystemException {
+        File(tmpArchive).copySync(archivePath);
+      }
     } finally {
       try {
         work.deleteSync(recursive: true);
       } catch (_) {}
     }
+  }
+}
+
+class _ProgressInputStream extends InputStream {
+  final InputStream _inner;
+  final void Function(int bytes) _onBytes;
+
+  _ProgressInputStream(this._inner, this._onBytes)
+    : super(byteOrder: _inner.byteOrder);
+
+  @override
+  int get position => _inner.position;
+
+  @override
+  set position(int v) => _inner.position = v;
+
+  @override
+  int get length => _inner.length;
+
+  @override
+  bool get isEOS => _inner.isEOS;
+
+  @override
+  bool open() => _inner.open();
+
+  @override
+  Future<void> close() => _inner.close();
+
+  @override
+  void closeSync() => _inner.closeSync();
+
+  @override
+  void reset() => _inner.reset();
+
+  @override
+  void setPosition(int v) => _inner.setPosition(v);
+
+  @override
+  void rewind([int length = 1]) => _inner.rewind(length);
+
+  @override
+  void skip(int length) => _inner.skip(length);
+
+  @override
+  InputStream subset({int? position, int? length, int? bufferSize}) =>
+      _ProgressInputStream(
+        _inner.subset(
+          position: position,
+          length: length,
+          bufferSize: bufferSize,
+        ),
+        _onBytes,
+      );
+
+  @override
+  int readByte() {
+    final hadBytes = !_inner.isEOS;
+    final byte = _inner.readByte();
+    if (hadBytes) _onBytes(1);
+    return byte;
+  }
+
+  @override
+  InputStream readBytes(int count) {
+    final bytes = _inner.readBytes(count);
+    final read = bytes.length;
+    if (read > 0) _onBytes(read);
+    return bytes;
+  }
+
+  @override
+  Uint8List toUint8List([Uint8List? bytes]) {
+    final out = _inner.toUint8List();
+    if (out.isNotEmpty) _onBytes(out.length);
+    return out;
   }
 }

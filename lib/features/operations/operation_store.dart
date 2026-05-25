@@ -318,8 +318,7 @@ class OperationStore {
   void _hardCancelCurrent(FileTask task) {
     final worker = _currentWorker;
     if (worker == null) return;
-    worker.dispose();
-    _currentWorker = null;
+    worker.isolate.kill(priority: Isolate.immediate);
     if (task.type == TaskType.compress) {
       final dest = task.destination;
       if (dest != null && dest.isNotEmpty) {
@@ -327,8 +326,29 @@ class OperationStore {
           final f = File(dest);
           if (f.existsSync()) f.deleteSync();
         } catch (_) {}
+        _cleanupArchiveTempDirs(p.dirname(dest), '.waydir-archive-pack-');
+      }
+    } else if (task.type == TaskType.archiveEdit) {
+      final archive = task.sources.isNotEmpty ? task.sources.first : null;
+      if (archive != null && archive.isNotEmpty) {
+        _cleanupArchiveTempDirs(p.dirname(archive), '.waydir-archive-edit-');
+        _cleanupArchiveTempDirs(p.dirname(archive), '.waydir-archive-pack-');
       }
     }
+  }
+
+  void _cleanupArchiveTempDirs(String parent, String prefix) {
+    try {
+      final dir = Directory(parent);
+      if (!dir.existsSync()) return;
+      for (final e in dir.listSync(followLinks: false)) {
+        if (e is Directory && p.basename(e.path).startsWith(prefix)) {
+          try {
+            e.deleteSync(recursive: true);
+          } catch (_) {}
+        }
+      }
+    } catch (_) {}
   }
 
   void resolveCurrentConflict(

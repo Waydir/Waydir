@@ -31,6 +31,24 @@ void main() {
       expect(ArchiveWriter.planCount([dirPath]), 4);
     });
 
+    test('planWorkBytes accounts for compression passes', () {
+      final sourceBytes = ArchiveWriter.planSourceBytes([filePath, dirPath]);
+
+      expect(sourceBytes, 11);
+      expect(
+        ArchiveWriter.planWorkBytes([filePath, dirPath], ArchiveFormat.tar),
+        sourceBytes,
+      );
+      expect(
+        ArchiveWriter.planWorkBytes([filePath, dirPath], ArchiveFormat.zip),
+        sourceBytes * 2,
+      );
+      expect(
+        ArchiveWriter.planWorkBytes([filePath, dirPath], ArchiveFormat.tarGz),
+        greaterThan(sourceBytes),
+      );
+    });
+
     for (final format in [
       ArchiveFormat.zip,
       ArchiveFormat.tar,
@@ -58,6 +76,25 @@ void main() {
         expect(File(back).readAsStringSync(), 'bbb');
       });
     }
+
+    test('reports byte progress while creating an archive', () {
+      final dest = p.join(tmp.path, 'progress.zip');
+      var bytes = 0;
+
+      ArchiveWriter.create(
+        [filePath, dirPath],
+        dest,
+        ArchiveFormat.zip,
+        CompressionLevel.normal,
+        onBytes: (_, delta) => bytes += delta,
+      );
+
+      expect(
+        bytes,
+        ArchiveWriter.planWorkBytes([filePath, dirPath], ArchiveFormat.zip),
+      );
+    });
+
     test('mutate adds, deletes and renames inside an archive', () {
       final zip = p.join(tmp.path, 'edit.zip');
       ArchiveWriter.create(

@@ -181,5 +181,25 @@ void main() {
       expect(File(p.join(dest.path, 'a.txt')).readAsStringSync(), 'old');
       expect(File(p.join(dest.path, 'a (1).txt')).readAsStringSync(), 'fresh');
     });
+
+    test('compress task reports byte progress', () async {
+      final src = p.join(tmpDir.path, 'payload.bin');
+      File(src).writeAsBytesSync(List<int>.filled(128 * 1024, 7));
+      final dest = p.join(tmpDir.path, 'payload.zip');
+
+      store.enqueueCompress([src], dest, format: 'zip', level: 'normal');
+
+      final done = await waitForTask(
+        store,
+        (task) =>
+            task.type == TaskType.compress &&
+            task.status == TaskStatus.completed,
+      );
+
+      expect(done.errors, isEmpty);
+      expect(done.totalBytes, 128 * 1024 * 2);
+      expect(done.processedBytes, done.totalBytes);
+      expect(File(dest).existsSync(), isTrue);
+    });
   });
 }

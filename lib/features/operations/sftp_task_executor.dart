@@ -13,6 +13,7 @@ import '../../core/models/file_operation.dart';
 import '../../core/platform/platform_paths.dart';
 
 const _chunkBytes = 256 * 1024;
+const _progressReportIntervalMs = 1000;
 const sftpSessionsOptionKey = '_sftpSessions';
 
 class SftpTaskExecutor {
@@ -63,8 +64,8 @@ void sftpDeleteWorker(List<dynamic> args) {
   var lastReportMs = 0;
 
   void maybeReport(String currentFile) {
-    if (reportClock.elapsedMilliseconds - lastReportMs > 50 ||
-        processedFiles % 50 == 0) {
+    if (reportClock.elapsedMilliseconds - lastReportMs >=
+        _progressReportIntervalMs) {
       mainSendPort.send(
         ProgressMessage(
           processedFiles: processedFiles,
@@ -177,7 +178,9 @@ void _runTransferWorker(List<dynamic> args, {required bool move}) {
   }
 
   void maybeReport(String currentFile, {bool force = false}) {
-    if (force || reportClock.elapsedMilliseconds - lastReportMs > 50) {
+    if (force ||
+        reportClock.elapsedMilliseconds - lastReportMs >=
+            _progressReportIntervalMs) {
       mainSendPort.send(
         ProgressMessage(
           processedFiles: processedFiles,

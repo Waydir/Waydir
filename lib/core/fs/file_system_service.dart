@@ -46,6 +46,8 @@ class RenameError extends RenameResult {
 }
 
 class FileSystemService {
+  static const int _progressReportIntervalMs = 1000;
+
   /// Files at/above this size are copied on their own (exclusive disk
   /// access) — they are bandwidth-bound, so concurrency adds nothing and
   /// would only thrash spinning disks.
@@ -237,7 +239,8 @@ class FileSystemService {
     }
 
     void maybeReport(String currentFile) {
-      if (reportClock.elapsedMilliseconds - lastReportMs > 50) {
+      if (reportClock.elapsedMilliseconds - lastReportMs >=
+          _progressReportIntervalMs) {
         mainSendPort.send(
           ProgressMessage(
             processedFiles: processedFiles,
@@ -622,7 +625,8 @@ class FileSystemService {
     }
 
     void maybeReport(String currentFile) {
-      if (reportClock.elapsedMilliseconds - lastReportMs > 50) {
+      if (reportClock.elapsedMilliseconds - lastReportMs >=
+          _progressReportIntervalMs) {
         mainSendPort.send(
           ProgressMessage(
             processedFiles: processedFiles,
@@ -972,8 +976,8 @@ class FileSystemService {
     var lastReportMs = 0;
 
     void maybeReport(String currentFile) {
-      if (reportClock.elapsedMilliseconds - lastReportMs > 50 ||
-          processedFiles % 100 == 0) {
+      if (reportClock.elapsedMilliseconds - lastReportMs >=
+          _progressReportIntervalMs) {
         mainSendPort.send(
           ProgressMessage(
             processedFiles: processedFiles,
@@ -1112,8 +1116,8 @@ class FileSystemService {
     var lastReportMs = 0;
 
     void maybeReport(String currentFile) {
-      if (reportClock.elapsedMilliseconds - lastReportMs > 50 ||
-          processedFiles % 50 == 0) {
+      if (reportClock.elapsedMilliseconds - lastReportMs >=
+          _progressReportIntervalMs) {
         mainSendPort.send(
           ProgressMessage(
             processedFiles: processedFiles,
@@ -1210,8 +1214,8 @@ class FileSystemService {
     var lastReportMs = 0;
 
     void maybeReport(String currentFile) {
-      if (reportClock.elapsedMilliseconds - lastReportMs > 50 ||
-          processedFiles % 50 == 0) {
+      if (reportClock.elapsedMilliseconds - lastReportMs >=
+          _progressReportIntervalMs) {
         mainSendPort.send(
           ProgressMessage(
             processedFiles: processedFiles,
@@ -1347,8 +1351,8 @@ class FileSystemService {
     }
 
     void maybeReport(String currentFile) {
-      if (reportClock.elapsedMilliseconds - lastReportMs > 50 ||
-          processedFiles % 50 == 0) {
+      if (reportClock.elapsedMilliseconds - lastReportMs >=
+          _progressReportIntervalMs) {
         mainSendPort.send(
           ProgressMessage(
             processedFiles: processedFiles,
@@ -1512,18 +1516,20 @@ class FileSystemService {
     var format = ArchiveFormat.zip;
     var level = CompressionLevel.normal;
     int totalFiles = 0;
+    int totalBytes = 0;
     final errors = <TaskError>[];
     int processedFiles = 0;
+    int processedBytes = 0;
     final reportClock = Stopwatch()..start();
     var lastReportMs = 0;
 
     void maybeReport(String currentFile) {
-      if (reportClock.elapsedMilliseconds - lastReportMs > 50 ||
-          processedFiles % 50 == 0) {
+      if (reportClock.elapsedMilliseconds - lastReportMs >=
+          _progressReportIntervalMs) {
         mainSendPort.send(
           ProgressMessage(
             processedFiles: processedFiles,
-            processedBytes: 0,
+            processedBytes: processedBytes,
             currentFile: currentFile,
           ),
         );
@@ -1543,6 +1549,19 @@ class FileSystemService {
             processedFiles++;
             maybeReport(name.split('/').last);
           },
+          onPhase: (label) {
+            mainSendPort.send(
+              ProgressMessage(
+                processedFiles: processedFiles,
+                processedBytes: processedBytes,
+                currentFile: label,
+              ),
+            );
+          },
+          onBytes: (name, bytes) {
+            processedBytes += bytes;
+            maybeReport(name.split('/').last);
+          },
         );
       } catch (e) {
         errors.add(TaskError(path: destination ?? '', message: e.toString()));
@@ -1556,6 +1575,13 @@ class FileSystemService {
           if (f.existsSync()) f.deleteSync();
         } catch (_) {}
       }
+      mainSendPort.send(
+        ProgressMessage(
+          processedFiles: processedFiles,
+          processedBytes: processedBytes,
+          currentFile: '',
+        ),
+      );
       mainSendPort.send(TaskDoneMessage(cancelled: cancelled, errors: errors));
       workerReceivePort.close();
     }
@@ -1570,10 +1596,11 @@ class FileSystemService {
             msg.options['level'] ?? 'normal',
           );
           totalFiles = ArchiveWriter.planCount(sources);
+          totalBytes = ArchiveWriter.planWorkBytes(sources, format);
           mainSendPort.send(
             PreScanResultMessage(
               totalFiles: totalFiles,
-              totalBytes: null,
+              totalBytes: totalBytes,
               allPaths: sources,
               conflicts: const [],
             ),
@@ -1624,16 +1651,17 @@ class FileSystemService {
     int totalFiles = 0;
     final errors = <TaskError>[];
     int processedFiles = 0;
+    int processedBytes = 0;
     final reportClock = Stopwatch()..start();
     var lastReportMs = 0;
 
     void maybeReport(String currentFile) {
-      if (reportClock.elapsedMilliseconds - lastReportMs > 50 ||
-          processedFiles % 50 == 0) {
+      if (reportClock.elapsedMilliseconds - lastReportMs >=
+          _progressReportIntervalMs) {
         mainSendPort.send(
           ProgressMessage(
             processedFiles: processedFiles,
-            processedBytes: 0,
+            processedBytes: processedBytes,
             currentFile: currentFile,
           ),
         );
@@ -1655,6 +1683,19 @@ class FileSystemService {
             processedFiles++;
             maybeReport(name.split('/').last);
           },
+          onPhase: (label) {
+            mainSendPort.send(
+              ProgressMessage(
+                processedFiles: processedFiles,
+                processedBytes: processedBytes,
+                currentFile: label,
+              ),
+            );
+          },
+          onBytes: (name, bytes) {
+            processedBytes += bytes;
+            maybeReport(name.split('/').last);
+          },
         );
       } catch (e) {
         errors.add(TaskError(path: archivePath, message: e.toString()));
@@ -1662,6 +1703,13 @@ class FileSystemService {
           ErrorMessage(path: archivePath, message: e.toString()),
         );
       }
+      mainSendPort.send(
+        ProgressMessage(
+          processedFiles: processedFiles,
+          processedBytes: processedBytes,
+          currentFile: '',
+        ),
+      );
       mainSendPort.send(TaskDoneMessage(cancelled: cancelled, errors: errors));
       workerReceivePort.close();
     }
