@@ -113,7 +113,10 @@ void sftpDeleteWorker(List<dynamic> args) {
           mainSendPort.send(
             TaskDoneMessage(
               cancelled: cancelled,
-              errors: [...errors, TaskError(path: '', message: e.toString())],
+              errors: [
+                ...errors,
+                TaskError(path: '', message: e.toString()),
+              ],
             ),
           );
           workerReceivePort.close();
@@ -125,7 +128,10 @@ void sftpDeleteWorker(List<dynamic> args) {
       mainSendPort.send(
         TaskDoneMessage(
           cancelled: cancelled,
-          errors: [...errors, TaskError(path: '', message: e.toString())],
+          errors: [
+            ...errors,
+            TaskError(path: '', message: e.toString()),
+          ],
         ),
       );
       workerReceivePort.close();
@@ -198,9 +204,7 @@ void _runTransferWorker(List<dynamic> args, {required bool move}) {
       final srcStat = await _statAny(src, fs);
       if (srcStat == null) {
         errors.add(TaskError(path: src, message: 'Source not found'));
-        mainSendPort.send(
-          ErrorMessage(path: src, message: 'Source not found'),
-        );
+        mainSendPort.send(ErrorMessage(path: src, message: 'Source not found'));
         return;
       }
 
@@ -405,7 +409,10 @@ void _runTransferWorker(List<dynamic> args, {required bool move}) {
           mainSendPort.send(
             TaskDoneMessage(
               cancelled: cancelled,
-              errors: [...errors, TaskError(path: '', message: e.toString())],
+              errors: [
+                ...errors,
+                TaskError(path: '', message: e.toString()),
+              ],
             ),
           );
           workerReceivePort.close();
@@ -422,7 +429,10 @@ void _runTransferWorker(List<dynamic> args, {required bool move}) {
       mainSendPort.send(
         TaskDoneMessage(
           cancelled: cancelled,
-          errors: [...errors, TaskError(path: '', message: e.toString())],
+          errors: [
+            ...errors,
+            TaskError(path: '', message: e.toString()),
+          ],
         ),
       );
       workerReceivePort.close();
@@ -439,9 +449,7 @@ void _seedSessionsFromOptions(Map<String, String> options) {
   if (raw == null || raw.isEmpty) return;
   try {
     final list = (jsonDecode(raw) as List).cast<Map<String, dynamic>>();
-    SftpSessionManager.seedRecords(
-      list.map(SftpSessionRecord.fromJson),
-    );
+    SftpSessionManager.seedRecords(list.map(SftpSessionRecord.fromJson));
   } catch (_) {}
 }
 
@@ -492,10 +500,7 @@ Future<_AnyStat?> _statAny(String path, SftpFs fs) async {
   );
 }
 
-Future<({int files, int bytes})> _scanRecursive(
-  String path,
-  SftpFs fs,
-) async {
+Future<({int files, int bytes})> _scanRecursive(String path, SftpFs fs) async {
   if (PlatformPaths.isSftpUri(path)) {
     final stat = await fs.stat(path);
     if (stat == null) return (files: 0, bytes: 0);

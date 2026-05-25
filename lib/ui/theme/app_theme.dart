@@ -182,12 +182,12 @@ class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
       ),
       inputDecorationTheme: const InputDecorationTheme(
-        border: OutlineInputBorder(borderRadius: BorderRadius.zero),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.zero),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.zero),
-        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.zero),
-        focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.zero),
-        disabledBorder: OutlineInputBorder(borderRadius: BorderRadius.zero),
+        border: InputBorder.none,
+        enabledBorder: InputBorder.none,
+        focusedBorder: InputBorder.none,
+        errorBorder: InputBorder.none,
+        focusedErrorBorder: InputBorder.none,
+        disabledBorder: InputBorder.none,
       ),
       elevatedButtonTheme: const ElevatedButtonThemeData(
         style: ButtonStyle(

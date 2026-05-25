@@ -288,11 +288,7 @@ class OperationStore {
     if (task == null) return;
 
     if (task.status == TaskStatus.waitingConflicts) {
-      resolveCurrentConflict(
-        id,
-        ConflictResolution.skip,
-        applyToAll: true,
-      );
+      resolveCurrentConflict(id, ConflictResolution.skip, applyToAll: true);
       return;
     }
 
@@ -446,13 +442,9 @@ class OperationStore {
     void Function(List<dynamic>) entryPoint;
     switch (task.type) {
       case TaskType.copy:
-        entryPoint = useSftp
-            ? sftpCopyWorker
-            : FileSystemService.copyWorker;
+        entryPoint = useSftp ? sftpCopyWorker : FileSystemService.copyWorker;
       case TaskType.move:
-        entryPoint = useSftp
-            ? sftpMoveWorker
-            : FileSystemService.moveWorker;
+        entryPoint = useSftp ? sftpMoveWorker : FileSystemService.moveWorker;
       case TaskType.delete:
         entryPoint = useSftp
             ? sftpDeleteWorker

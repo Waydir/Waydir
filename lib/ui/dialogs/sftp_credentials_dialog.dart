@@ -83,8 +83,7 @@ class _SftpCredentialsDialogState extends State<_SftpCredentialsDialog> {
       creds = SftpCredentials.key(
         username: user,
         privateKeyPath: path,
-        passphrase:
-            _passphrase.text.isEmpty ? null : _passphrase.text,
+        passphrase: _passphrase.text.isEmpty ? null : _passphrase.text,
       );
     }
     Navigator.of(context).pop(creds);
@@ -175,10 +174,7 @@ class _SftpCredentialsDialogState extends State<_SftpCredentialsDialog> {
                   onSubmitted: _submit,
                 ),
                 const SizedBox(height: 10),
-                Text(
-                  'Passphrase (optional)',
-                  style: context.txt.fieldLabel,
-                ),
+                Text('Passphrase (optional)', style: context.txt.fieldLabel),
                 const SizedBox(height: 6),
                 _SmallInput(
                   controller: _passphrase,

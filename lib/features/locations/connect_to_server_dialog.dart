@@ -201,10 +201,7 @@ class _ConnectBodyState extends State<_ConnectBody> {
               flex: 1,
               child: _Labeled(
                 label: t.sidebar.connectDialog.port,
-                child: _Input(
-                  controller: _port,
-                  hint: isSftp ? '22' : '445',
-                ),
+                child: _Input(controller: _port, hint: isSftp ? '22' : '445'),
               ),
             ),
           ],

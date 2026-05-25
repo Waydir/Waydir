@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- UI fixes.
+
+## [0.5.0] - 2026-05-25
+
 ### Added
 - Devices tooltip now shows numeric disk usage details.
 - Trash restore and permanent delete operations now show titles and progress in the operations panel.
