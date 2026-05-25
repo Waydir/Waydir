@@ -53,24 +53,24 @@
 <table>
   <tr>
     <td width="50%" valign="top">
-      <h3>⚡ Native Rust core</h3>
+      <h3>Native Rust core</h3>
       Listing, recursive search and trash run in a native Rust library,
       off the UI thread. 100k-file directories open without freezing.
     </td>
     <td width="50%" valign="top">
-      <h3>⌨️ Keyboard-first</h3>
+      <h3>Keyboard-first</h3>
       Every operation has a shortcut. Dual panes, tabs, navigation,
       copy, move, search - all without leaving the keyboard.
     </td>
   </tr>
   <tr>
     <td width="50%" valign="top">
-      <h3>🌐 Network-native</h3>
+      <h3>Network-native</h3>
       SMB and SFTP appear in the sidebar as drives. Browse, search,
       copy and Quick Look remote files like they're local.
     </td>
     <td width="50%" valign="top">
-      <h3>🗂️ Dual panes, tabs, bookmarks</h3>
+      <h3>Dual panes, tabs, bookmarks</h3>
       Side-by-side panes with independent tabs and pinned locations.
       Built for moving files between places.
     </td>
@@ -118,27 +118,27 @@ tar -xzf waydir-*-linux-x64.tar.gz && ./waydir
 
 ## 🎯 Features
 
-#### 📁 Navigation & layout
+#### Navigation & layout
 - Dual-pane mode with independent tabs in each pane
 - Sidebar with favorites, devices, and pinned bookmarks
 - A keyboard shortcut for every action
 
-#### 📋 File operations
+#### File operations
 - Copy, move and delete with conflict resolution and live progress
 - Trash-safe delete, cancellable mid-flight
 - Clipboard integration; ZIP and TAR archives browsable in place
 
-#### 🌐 Network drives
+#### Network drives
 - SMB and SFTP from the sidebar: mount, unmount, reconnect
 - Remote files act like local ones: search, copy, preview, "Open with"
 - Pooled connections, off-thread transfers, fine-grained progress
 
-#### 🔍 Search & preview
+#### Search & preview
 - Recursive search that streams results as it scans (substring, regex, glob)
 - Quick Look on `Space` for images, text and code
 - Per-type default apps and "Open with" picker
 
-#### 🎨 Customization & integrations
+#### Customization & integrations
 - Light, Dark and Nord themes; custom themes via JSON
 - Configurable density, sort, hidden files and date format
 - Git status bar with branch switching and stash management
