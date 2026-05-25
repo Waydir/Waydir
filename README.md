@@ -22,26 +22,20 @@
 <table>
   <tr>
     <td width="50%" align="center">
-      <b>Keyboard-driven navigation</b><br>
-      <img src="docs/gifs/navigating.gif" alt="Navigating">
-    </td>
-    <td width="50%" align="center">
       <b>Dual-pane copy</b><br>
       <img src="docs/gifs/dual_pane_copy.gif" alt="Dual-pane copy">
     </td>
-  </tr>
-  <tr>
     <td width="50%" align="center">
       <b>Quick Look preview</b><br>
       <img src="docs/gifs/quick_look_images.gif" alt="Quick Look">
     </td>
+  </tr>
+  <tr>
     <td width="50%" align="center">
       <b>Live recursive search</b><br>
       <img src="docs/gifs/search.gif" alt="Search">
     </td>
-  </tr>
-  <tr>
-    <td colspan="2" align="center">
+    <td width="50%" align="center">
       <b>Browse remote files over SFTP</b><br>
       <img src="docs/gifs/sftp.gif" alt="SFTP">
     </td>
