@@ -444,21 +444,18 @@ class _SidebarState extends State<Sidebar> {
                         onContextMenu: _showBookmarkMenu,
                       ),
                     ),
-                    _ConnectToServerRow(
-                      collapsed: collapsed,
-                      onTap: () async {
-                        final uri = await openConnectToServer(context);
-                        if (uri != null) widget.store.navigateTo(uri);
-                      },
-                    ),
                   ],
                 );
               }),
             ),
           ),
-          _SidebarOperationsButton(
+          _SidebarFooter(
             operationStore: widget.operationStore,
             collapsed: widget.collapsed,
+            onConnect: () async {
+              final uri = await openConnectToServer(context);
+              if (uri != null) widget.store.navigateTo(uri);
+            },
           ),
         ],
       ),
@@ -466,25 +463,76 @@ class _SidebarState extends State<Sidebar> {
   }
 }
 
-class _ConnectToServerRow extends StatefulWidget {
+class _SidebarFooter extends StatelessWidget {
+  final OperationStore operationStore;
+  final bool collapsed;
+  final VoidCallback onConnect;
+
+  const _SidebarFooter({
+    required this.operationStore,
+    required this.collapsed,
+    required this.onConnect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final border = Border(top: BorderSide(color: AppColors.bgDivider));
+
+    if (collapsed) {
+      return DecoratedBox(
+        decoration: BoxDecoration(border: border),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _ConnectToServerButton(collapsed: true, onTap: onConnect),
+              const SizedBox(height: 2),
+              _SidebarOperationsButton(
+                operationStore: operationStore,
+                collapsed: true,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return DecoratedBox(
+      decoration: BoxDecoration(border: border),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(6, 5, 6, 5),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _ConnectToServerButton(collapsed: false, onTap: onConnect),
+            const SizedBox(height: 4),
+            _SidebarOperationsButton(operationStore: operationStore),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ConnectToServerButton extends StatefulWidget {
   final bool collapsed;
   final VoidCallback onTap;
 
-  const _ConnectToServerRow({required this.collapsed, required this.onTap});
+  const _ConnectToServerButton({required this.collapsed, required this.onTap});
 
   @override
-  State<_ConnectToServerRow> createState() => _ConnectToServerRowState();
+  State<_ConnectToServerButton> createState() => _ConnectToServerButtonState();
 }
 
-class _ConnectToServerRowState extends State<_ConnectToServerRow> {
+class _ConnectToServerButtonState extends State<_ConnectToServerButton> {
   bool _hovered = false;
 
   @override
   Widget build(BuildContext context) {
     final color = _hovered ? AppColors.fg : AppColors.fgMuted;
-    final icon = Icon(WaydirIconsRegular.treeStructure, size: 16, color: color);
 
-    if (widget.collapsed) {
+    if (!widget.collapsed) {
       return Tooltip(
         message: t.sidebar.connectToServer,
         child: MouseRegion(
@@ -495,47 +543,58 @@ class _ConnectToServerRowState extends State<_ConnectToServerRow> {
             behavior: HitTestBehavior.opaque,
             onTap: widget.onTap,
             child: Container(
-              height: 32,
-              margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+              height: 30,
+              padding: const EdgeInsets.symmetric(horizontal: 9),
               decoration: BoxDecoration(
                 color: _hovered ? AppColors.bgHover : Colors.transparent,
                 borderRadius: BorderRadius.zero,
               ),
-              alignment: Alignment.center,
-              child: icon,
+              child: Row(
+                children: [
+                  Icon(
+                    WaydirIconsRegular.treeStructure,
+                    size: 14,
+                    color: color,
+                  ),
+                  const SizedBox(width: 7),
+                  Expanded(
+                    child: Text(
+                      t.sidebar.connectToServer,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.txt.rowEmphasis.copyWith(color: color),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       );
     }
 
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: widget.onTap,
-        child: Container(
-          height: 28,
-          margin: const EdgeInsets.symmetric(horizontal: 6),
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: BoxDecoration(
-            color: _hovered ? AppColors.bgHover : Colors.transparent,
-            borderRadius: BorderRadius.zero,
-          ),
-          child: Row(
-            children: [
-              icon,
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  t.sidebar.connectToServer,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.txt.body.copyWith(color: color),
-                ),
-              ),
-            ],
+    return Tooltip(
+      message: t.sidebar.connectToServer,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: widget.onTap,
+          child: Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: _hovered ? AppColors.bgHover : Colors.transparent,
+              borderRadius: BorderRadius.zero,
+            ),
+            alignment: Alignment.center,
+            child: Icon(
+              WaydirIconsRegular.treeStructure,
+              size: 15,
+              color: color,
+            ),
           ),
         ),
       ),
@@ -825,67 +884,8 @@ class _SidebarOperationsButtonState extends State<_SidebarOperationsButton> {
       final progressText = '${(progress * 100).round()}%';
 
       if (widget.collapsed) {
-        return Container(
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          decoration: BoxDecoration(
-            border: Border(top: BorderSide(color: AppColors.bgDivider)),
-          ),
-          alignment: Alignment.center,
-          child: Tooltip(
-            message: '${t.toolbar.operations} · $progressText',
-            child: MouseRegion(
-              cursor: SystemMouseCursors.click,
-              onEnter: (_) => setState(() => _hovered = true),
-              onExit: (_) => setState(() => _hovered = false),
-              child: GestureDetector(
-                onTap: _openPanel,
-                behavior: HitTestBehavior.opaque,
-                child: Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: AppColors.accent.withValues(
-                      alpha: _hovered ? 0.22 : 0.14,
-                    ),
-                    borderRadius: BorderRadius.zero,
-                    border: Border.all(
-                      color: AppColors.accent.withValues(alpha: 0.42),
-                    ),
-                  ),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      SizedBox(
-                        width: 26,
-                        height: 26,
-                        child: CircularProgressIndicator(
-                          value: active.totalFiles > 0 ? progress : null,
-                          strokeWidth: 2,
-                          backgroundColor: AppColors.bgInput,
-                          valueColor: AlwaysStoppedAnimation(AppColors.accent),
-                        ),
-                      ),
-                      Icon(
-                        _operationIcon(active),
-                        size: 13,
-                        color: AppColors.fgAccent,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      }
-
-      return Container(
-        padding: const EdgeInsets.fromLTRB(6, 7, 6, 7),
-        decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: AppColors.bgDivider)),
-        ),
-        child: Tooltip(
-          message: t.toolbar.operations,
+        return Tooltip(
+          message: '${t.toolbar.operations} · $progressText',
           child: MouseRegion(
             cursor: SystemMouseCursors.click,
             onEnter: (_) => setState(() => _hovered = true),
@@ -894,64 +894,107 @@ class _SidebarOperationsButtonState extends State<_SidebarOperationsButton> {
               onTap: _openPanel,
               behavior: HitTestBehavior.opaque,
               child: Container(
-                constraints: const BoxConstraints(minHeight: 44),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 8,
-                ),
+                width: 30,
+                height: 30,
                 decoration: BoxDecoration(
                   color: AppColors.accent.withValues(
-                    alpha: _hovered ? 0.18 : 0.11,
+                    alpha: _hovered ? 0.22 : 0.14,
                   ),
                   borderRadius: BorderRadius.zero,
                   border: Border.all(
                     color: AppColors.accent.withValues(alpha: 0.42),
                   ),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                child: Stack(
+                  alignment: Alignment.center,
                   children: [
-                    Row(
-                      children: [
-                        Icon(
-                          _operationIcon(active),
-                          size: 15,
-                          color: AppColors.fgAccent,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            TaskLabel.title(active),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: context.txt.rowEmphasis.copyWith(
-                              color: AppColors.fg,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          activeCount > 1
-                              ? '$progressText · $activeCount'
-                              : progressText,
-                          style: context.txt.caption.copyWith(
-                            color: AppColors.fgAccent,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 7),
-                    ClipRRect(
-                      borderRadius: BorderRadius.zero,
-                      child: LinearProgressIndicator(
+                    SizedBox(
+                      width: 23,
+                      height: 23,
+                      child: CircularProgressIndicator(
                         value: active.totalFiles > 0 ? progress : null,
-                        minHeight: 3,
+                        strokeWidth: 2,
                         backgroundColor: AppColors.bgInput,
                         valueColor: AlwaysStoppedAnimation(AppColors.accent),
                       ),
                     ),
+                    Icon(
+                      _operationIcon(active),
+                      size: 12,
+                      color: AppColors.fgAccent,
+                    ),
                   ],
                 ),
+              ),
+            ),
+          ),
+        );
+      }
+
+      return Tooltip(
+        message: t.toolbar.operations,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          onEnter: (_) => setState(() => _hovered = true),
+          onExit: (_) => setState(() => _hovered = false),
+          child: GestureDetector(
+            onTap: _openPanel,
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              constraints: const BoxConstraints(minHeight: 38),
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
+              decoration: BoxDecoration(
+                color: AppColors.accent.withValues(
+                  alpha: _hovered ? 0.18 : 0.11,
+                ),
+                borderRadius: BorderRadius.zero,
+                border: Border.all(
+                  color: AppColors.accent.withValues(alpha: 0.42),
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        _operationIcon(active),
+                        size: 14,
+                        color: AppColors.fgAccent,
+                      ),
+                      const SizedBox(width: 7),
+                      Expanded(
+                        child: Text(
+                          TaskLabel.title(active),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: context.txt.rowEmphasis.copyWith(
+                            color: AppColors.fg,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        activeCount > 1
+                            ? '$progressText · $activeCount'
+                            : progressText,
+                        style: context.txt.caption.copyWith(
+                          color: AppColors.fgAccent,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  ClipRRect(
+                    borderRadius: BorderRadius.zero,
+                    child: LinearProgressIndicator(
+                      value: active.totalFiles > 0 ? progress : null,
+                      minHeight: 3,
+                      backgroundColor: AppColors.bgInput,
+                      valueColor: AlwaysStoppedAnimation(AppColors.accent),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -964,48 +1007,7 @@ class _SidebarOperationsButtonState extends State<_SidebarOperationsButton> {
     final color = _hovered ? AppColors.fg : AppColors.fgMuted;
 
     if (widget.collapsed) {
-      return Container(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: AppColors.bgDivider)),
-        ),
-        alignment: Alignment.center,
-        child: Tooltip(
-          message: t.toolbar.operations,
-          child: MouseRegion(
-            cursor: SystemMouseCursors.click,
-            onEnter: (_) => setState(() => _hovered = true),
-            onExit: (_) => setState(() => _hovered = false),
-            child: GestureDetector(
-              onTap: _openPanel,
-              behavior: HitTestBehavior.opaque,
-              child: Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: _hovered ? AppColors.bgHover : Colors.transparent,
-                  borderRadius: BorderRadius.zero,
-                ),
-                child: Center(
-                  child: Icon(
-                    WaydirIconsRegular.clockClockwise,
-                    size: 15,
-                    color: color,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(6, 7, 6, 7),
-      decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: AppColors.bgDivider)),
-      ),
-      child: Tooltip(
+      return Tooltip(
         message: t.toolbar.operations,
         child: MouseRegion(
           cursor: SystemMouseCursors.click,
@@ -1015,29 +1017,54 @@ class _SidebarOperationsButtonState extends State<_SidebarOperationsButton> {
             onTap: _openPanel,
             behavior: HitTestBehavior.opaque,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+              width: 30,
+              height: 30,
               decoration: BoxDecoration(
                 color: _hovered ? AppColors.bgHover : Colors.transparent,
                 borderRadius: BorderRadius.zero,
               ),
-              child: Row(
-                children: [
-                  Icon(
-                    WaydirIconsRegular.clockClockwise,
-                    size: 15,
-                    color: color,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      t.toolbar.operations,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: context.txt.rowEmphasis.copyWith(color: color),
-                    ),
-                  ),
-                ],
+              child: Center(
+                child: Icon(
+                  WaydirIconsRegular.clockClockwise,
+                  size: 14,
+                  color: color,
+                ),
               ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Tooltip(
+      message: t.toolbar.operations,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(
+          onTap: _openPanel,
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            height: 34,
+            padding: const EdgeInsets.symmetric(horizontal: 9),
+            decoration: BoxDecoration(
+              color: _hovered ? AppColors.bgHover : Colors.transparent,
+              borderRadius: BorderRadius.zero,
+            ),
+            child: Row(
+              children: [
+                Icon(WaydirIconsRegular.clockClockwise, size: 14, color: color),
+                const SizedBox(width: 7),
+                Expanded(
+                  child: Text(
+                    t.toolbar.operations,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.txt.rowEmphasis.copyWith(color: color),
+                  ),
+                ),
+              ],
             ),
           ),
         ),

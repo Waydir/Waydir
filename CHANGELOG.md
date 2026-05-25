@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
-- Removed unnecessary borders from text inputs.
+- UI fixes.
 
 ## [0.5.0] - 2026-05-25
 
