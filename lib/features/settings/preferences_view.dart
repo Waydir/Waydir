@@ -583,7 +583,7 @@ class _SettingsToggleState extends State<SettingsToggle> {
           padding: const EdgeInsets.all(2),
           decoration: BoxDecoration(
             color: on ? AppColors.accent : AppColors.bgInput,
-            borderRadius: BorderRadius.zero,
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(
               color: on ? AppColors.accent : AppColors.borderColor,
             ),
