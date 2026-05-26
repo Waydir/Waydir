@@ -23,7 +23,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   path_provider: ^2.1.5
-  signals: ^6.3.0
+  signals: ^7.0.0
   collection: ^1.19.1
   super_drag_and_drop: ^0.9.1
   slang: ^4.14.0
