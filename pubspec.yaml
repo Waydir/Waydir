@@ -50,7 +50,7 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   build_runner: ^2.4.9
   drift_dev: ^2.33.0
-  slang_build_runner: ^4.14.0
+  slang_build_runner: ^4.15.0
   sqlite3: ^3.3.1
 
 flutter:
