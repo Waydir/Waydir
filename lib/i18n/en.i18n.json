@@ -464,7 +464,8 @@
     "newFolder": "New Folder",
     "operations": "Operations",
     "notifications": "Notifications",
-    "search": "Search"
+    "search": "Search",
+    "more": "More"
   },
   "notifications": {
     "title": "Notifications",

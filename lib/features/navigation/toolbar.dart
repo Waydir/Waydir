@@ -11,6 +11,7 @@ import 'navigation_store.dart';
 import '../../ui/theme/app_theme.dart';
 import '../../ui/theme/app_text_styles.dart';
 import '../../i18n/strings.g.dart';
+import '../../ui/overlays/context_menu.dart';
 import '../../ui/overlays/toast.dart';
 
 class PaneLocationBar extends StatelessWidget {
@@ -26,7 +27,8 @@ class PaneLocationBar extends StatelessWidget {
         color: AppColors.bgToolbar,
         border: Border(bottom: BorderSide(color: AppColors.bgDivider)),
       ),
-      child: Row(
+      child: LayoutBuilder(
+        builder: (context, constraints) => Row(
         children: [
           Watch(
             (context) => _ToolBtn(
@@ -60,32 +62,146 @@ class PaneLocationBar extends StatelessWidget {
           const SizedBox(width: 6),
           Expanded(child: _PathBar(store: store)),
           const SizedBox(width: 6),
-          Watch((context) {
-            final path = store.currentPath.value;
-            final bookmarked = BookmarkStore.instance.containsPath(path);
-            return _ToolBtn(
-              WaydirIconsRegular.bookmarkSimple,
-              () => unawaited(BookmarkStore.instance.togglePath(path)),
-              path.isNotEmpty,
-              bookmarked
-                  ? t.menu.removeBookmark
-                  : t.sidebar.connectDialog.addBookmark,
-              active: bookmarked,
-            );
-          }),
-          Watch(
-            (context) => _ToolBtn(
-              WaydirIconsRegular.magnifyingGlass,
-              () => store.searchActive.value
-                  ? store.closeSearch()
-                  : store.openSearch(),
-              true,
-              t.toolbar.search,
-            ),
-          ),
-          _NewFolderButton(store: store),
+          _RightActions(store: store, toolbarWidth: constraints.maxWidth),
           const SizedBox(width: 4),
         ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RightActions extends StatelessWidget {
+  final NavigationStore store;
+  final double toolbarWidth;
+
+  const _RightActions({required this.store, required this.toolbarWidth});
+
+  static const double _collapseBelow = 480.0;
+
+  @override
+  Widget build(BuildContext context) {
+    if (toolbarWidth < _collapseBelow) {
+      return _OverflowMenuButton(store: store);
+    }
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Watch((context) {
+          final path = store.currentPath.value;
+          final bookmarked = BookmarkStore.instance.containsPath(path);
+          return _ToolBtn(
+            WaydirIconsRegular.bookmarkSimple,
+            () => unawaited(BookmarkStore.instance.togglePath(path)),
+            path.isNotEmpty,
+            bookmarked
+                ? t.menu.removeBookmark
+                : t.sidebar.connectDialog.addBookmark,
+            active: bookmarked,
+          );
+        }),
+        Watch(
+          (context) => _ToolBtn(
+            WaydirIconsRegular.magnifyingGlass,
+            () => store.searchActive.value
+                ? store.closeSearch()
+                : store.openSearch(),
+            true,
+            t.toolbar.search,
+          ),
+        ),
+        _NewFolderButton(store: store),
+      ],
+    );
+  }
+}
+
+class _OverflowMenuButton extends StatefulWidget {
+  final NavigationStore store;
+  const _OverflowMenuButton({required this.store});
+
+  @override
+  State<_OverflowMenuButton> createState() => _OverflowMenuButtonState();
+}
+
+class _OverflowMenuButtonState extends State<_OverflowMenuButton> {
+  bool _hovered = false;
+
+  static const String _actionBookmark = 'bookmark';
+  static const String _actionSearch = 'search';
+  static const String _actionNewFolder = 'newFolder';
+
+  void _open() {
+    final box = context.findRenderObject() as RenderBox;
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final position = box.localToGlobal(
+      Offset(0, box.size.height + 2),
+      ancestor: overlay,
+    );
+    final path = widget.store.currentPath.value;
+    final bookmarked = BookmarkStore.instance.containsPath(path);
+
+    showContextMenu(
+      context: context,
+      position: position,
+      items: [
+        ContextMenuItem(
+          icon: WaydirIconsRegular.bookmarkSimple,
+          label: bookmarked
+              ? t.menu.removeBookmark
+              : t.sidebar.connectDialog.addBookmark,
+          action: _actionBookmark,
+          enabled: path.isNotEmpty,
+        ),
+        ContextMenuItem(
+          icon: WaydirIconsRegular.magnifyingGlass,
+          label: t.toolbar.search,
+          action: _actionSearch,
+        ),
+        ContextMenuItem(
+          icon: WaydirIconsRegular.folderPlus,
+          label: t.toolbar.newFolder,
+          action: _actionNewFolder,
+        ),
+      ],
+      onSelect: (action) {
+        switch (action) {
+          case _actionBookmark:
+            unawaited(BookmarkStore.instance.togglePath(path));
+          case _actionSearch:
+            widget.store.searchActive.value
+                ? widget.store.closeSearch()
+                : widget.store.openSearch();
+          case _actionNewFolder:
+            widget.store.startCreate();
+        }
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: t.toolbar.more,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(
+          onTap: _open,
+          child: Container(
+            width: 30,
+            height: 30,
+            margin: const EdgeInsets.symmetric(horizontal: 1),
+            decoration: BoxDecoration(
+              color: _hovered ? AppColors.bgHover : Colors.transparent,
+            ),
+            child: Icon(
+              WaydirIconsRegular.dotsThreeOutline,
+              size: 16,
+              color: _hovered ? AppColors.fg : AppColors.fgMuted,
+            ),
+          ),
+        ),
       ),
     );
   }

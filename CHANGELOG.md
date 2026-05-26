@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - File list scrollbar is now always visible and reserves space at the right edge.
 - Breadcrumb bar rebuilt with better overflow handling for long folder names.
+- Toolbar buttons collapse into a menu when the pane is narrow.
 
 ### Fixed
 - Window resize hit area is now tighter on Linux and Windows.

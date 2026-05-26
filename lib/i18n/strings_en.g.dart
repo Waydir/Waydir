@@ -984,6 +984,9 @@ class TranslationsToolbarEn {
 
 	/// en: 'Search'
 	String get search => 'Search';
+
+	/// en: 'More'
+	String get more => 'More';
 }
 
 // Path: notifications
@@ -2475,6 +2478,7 @@ extension on Translations {
 			'toolbar.operations' => 'Operations',
 			'toolbar.notifications' => 'Notifications',
 			'toolbar.search' => 'Search',
+			'toolbar.more' => 'More',
 			'notifications.title' => 'Notifications',
 			'notifications.empty' => 'No notifications yet',
 			'notifications.clear' => 'Clear',
@@ -2596,9 +2600,9 @@ extension on Translations {
 			'git.detachedHead' => 'detached HEAD',
 			'git.merging' => 'MERGING',
 			'git.rebasing' => 'REBASING',
-			'git.cherryPicking' => 'CHERRY-PICK',
 			_ => null,
 		} ?? switch (path) {
+			'git.cherryPicking' => 'CHERRY-PICK',
 			'git.reverting' => 'REVERTING',
 			'git.bisecting' => 'BISECTING',
 			'git.checkoutFailed' => ({required Object message}) => 'Checkout failed: ${message}',

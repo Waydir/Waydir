@@ -14,20 +14,17 @@ void main() {
       final r = await SmbShareDiscovery.list(host: '127.0.0.1', port: 1445);
       expect(r, isA<SmbShareListOk>());
       final names = (r as SmbShareListOk).shares.map((s) => s.name).toList();
-      print('SHARES: $names');
       expect(names, containsAll(['public', 'media', 'backup']));
       expect(names, isNot(contains('IPC\$')));
     });
 
     test('bad host returns error not crash', () async {
       final r = await SmbShareDiscovery.list(host: 'nonexistent.invalid');
-      print('BAD HOST RESULT: ${r.runtimeType}');
       expect(r, isA<SmbShareListError>());
     });
 
     test('refused port returns error not crash', () async {
       final r = await SmbShareDiscovery.list(host: '127.0.0.1', port: 9);
-      print('REFUSED PORT RESULT: ${r.runtimeType}');
       expect(r, isA<SmbShareListError>());
     });
 
@@ -52,7 +49,6 @@ void main() {
           password: 'wrongpass',
         ),
       );
-      print('BOGUS CREDS RESULT: ${r.runtimeType}');
       expect(r, anyOf(isA<SmbShareListOk>(), isA<SmbShareListError>()));
     });
   });
