@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- File list horizontal and vertical spacing can now be adjusted in Preferences.
+
+### Changed
+- File list scrollbar is now always visible and reserves space at the right edge.
+
+### Fixed
+- Window resize hit area is now tighter on Linux and Windows.
+
 ## [0.5.1] - 2026-05-25
 
 ### Fixed
