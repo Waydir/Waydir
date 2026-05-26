@@ -154,6 +154,22 @@ class SettingsRegistry {
       searchTerms: const ['move', 'file operations'],
       signal: SettingsStore.instance.confirmMove,
     ),
+    ToggleSetting(
+      id: 'general.rememberFolderState',
+      category: SettingsCategory.general,
+      label: () => t.preferences.general.rememberFolderState,
+      hint: () => t.preferences.general.rememberFolderStateHint,
+      searchTerms: const ['selection', 'cursor', 'folder', 'remember'],
+      signal: SettingsStore.instance.rememberFolderState,
+    ),
+    ToggleSetting(
+      id: 'general.rememberFolderSort',
+      category: SettingsCategory.general,
+      label: () => t.preferences.general.rememberFolderSort,
+      hint: () => t.preferences.general.rememberFolderSortHint,
+      searchTerms: const ['sort', 'folder', 'remember'],
+      signal: SettingsStore.instance.rememberFolderSort,
+    ),
     ChoiceSetting<String>(
       id: 'general.deleteKeyBehavior',
       category: SettingsCategory.general,

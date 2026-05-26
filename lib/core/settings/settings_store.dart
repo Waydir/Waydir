@@ -33,6 +33,8 @@ class SettingsStore {
   final sortAscending = signal<bool>(true);
   final foldersFirst = signal<bool>(true);
   final searchMode = signal<String>('substring');
+  final rememberFolderState = signal<bool>(true);
+  final rememberFolderSort = signal<bool>(true);
 
   late final AppDatabase _db;
   bool _loaded = false;
@@ -74,6 +76,8 @@ class SettingsStore {
     sortAscending.value = row.sortAscending;
     foldersFirst.value = row.foldersFirst;
     searchMode.value = row.searchMode;
+    rememberFolderState.value = row.rememberFolderState;
+    rememberFolderSort.value = row.rememberFolderSort;
   }
 
   void _wireAutoSave() {
@@ -102,6 +106,8 @@ class SettingsStore {
         sortAscending.value;
         foldersFirst.value;
         searchMode.value;
+        rememberFolderState.value;
+        rememberFolderSort.value;
         if (!_loaded) return;
         _scheduleSave();
       }),
@@ -140,6 +146,8 @@ class SettingsStore {
           sortAscending: Value(sortAscending.value),
           foldersFirst: Value(foldersFirst.value),
           searchMode: Value(searchMode.value),
+          rememberFolderState: Value(rememberFolderState.value),
+          rememberFolderSort: Value(rememberFolderSort.value),
         ),
       );
     } catch (_) {}

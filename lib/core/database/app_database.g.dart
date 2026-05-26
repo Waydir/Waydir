@@ -326,6 +326,34 @@ class $AppSettingsTable extends AppSettings
     requiredDuringInsert: false,
     defaultValue: const Constant('substring'),
   );
+  static const VerificationMeta _rememberFolderStateMeta =
+      const VerificationMeta('rememberFolderState');
+  @override
+  late final GeneratedColumn<bool> rememberFolderState = GeneratedColumn<bool>(
+    'remember_folder_state',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("remember_folder_state" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _rememberFolderSortMeta =
+      const VerificationMeta('rememberFolderSort');
+  @override
+  late final GeneratedColumn<bool> rememberFolderSort = GeneratedColumn<bool>(
+    'remember_folder_sort',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("remember_folder_sort" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -352,6 +380,8 @@ class $AppSettingsTable extends AppSettings
     sortAscending,
     foldersFirst,
     searchMode,
+    rememberFolderState,
+    rememberFolderSort,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -551,6 +581,24 @@ class $AppSettingsTable extends AppSettings
         searchMode.isAcceptableOrUnknown(data['search_mode']!, _searchModeMeta),
       );
     }
+    if (data.containsKey('remember_folder_state')) {
+      context.handle(
+        _rememberFolderStateMeta,
+        rememberFolderState.isAcceptableOrUnknown(
+          data['remember_folder_state']!,
+          _rememberFolderStateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('remember_folder_sort')) {
+      context.handle(
+        _rememberFolderSortMeta,
+        rememberFolderSort.isAcceptableOrUnknown(
+          data['remember_folder_sort']!,
+          _rememberFolderSortMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -656,6 +704,14 @@ class $AppSettingsTable extends AppSettings
         DriftSqlType.string,
         data['${effectivePrefix}search_mode'],
       )!,
+      rememberFolderState: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}remember_folder_state'],
+      )!,
+      rememberFolderSort: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}remember_folder_sort'],
+      )!,
     );
   }
 
@@ -690,6 +746,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
   final bool sortAscending;
   final bool foldersFirst;
   final String searchMode;
+  final bool rememberFolderState;
+  final bool rememberFolderSort;
   const AppSetting({
     required this.id,
     required this.themeMode,
@@ -715,6 +773,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     required this.sortAscending,
     required this.foldersFirst,
     required this.searchMode,
+    required this.rememberFolderState,
+    required this.rememberFolderSort,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -745,6 +805,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     map['sort_ascending'] = Variable<bool>(sortAscending);
     map['folders_first'] = Variable<bool>(foldersFirst);
     map['search_mode'] = Variable<String>(searchMode);
+    map['remember_folder_state'] = Variable<bool>(rememberFolderState);
+    map['remember_folder_sort'] = Variable<bool>(rememberFolderSort);
     return map;
   }
 
@@ -774,6 +836,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       sortAscending: Value(sortAscending),
       foldersFirst: Value(foldersFirst),
       searchMode: Value(searchMode),
+      rememberFolderState: Value(rememberFolderState),
+      rememberFolderSort: Value(rememberFolderSort),
     );
   }
 
@@ -817,6 +881,10 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       sortAscending: serializer.fromJson<bool>(json['sortAscending']),
       foldersFirst: serializer.fromJson<bool>(json['foldersFirst']),
       searchMode: serializer.fromJson<String>(json['searchMode']),
+      rememberFolderState: serializer.fromJson<bool>(
+        json['rememberFolderState'],
+      ),
+      rememberFolderSort: serializer.fromJson<bool>(json['rememberFolderSort']),
     );
   }
   @override
@@ -851,6 +919,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       'sortAscending': serializer.toJson<bool>(sortAscending),
       'foldersFirst': serializer.toJson<bool>(foldersFirst),
       'searchMode': serializer.toJson<String>(searchMode),
+      'rememberFolderState': serializer.toJson<bool>(rememberFolderState),
+      'rememberFolderSort': serializer.toJson<bool>(rememberFolderSort),
     };
   }
 
@@ -879,6 +949,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     bool? sortAscending,
     bool? foldersFirst,
     String? searchMode,
+    bool? rememberFolderState,
+    bool? rememberFolderSort,
   }) => AppSetting(
     id: id ?? this.id,
     themeMode: themeMode ?? this.themeMode,
@@ -906,6 +978,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     sortAscending: sortAscending ?? this.sortAscending,
     foldersFirst: foldersFirst ?? this.foldersFirst,
     searchMode: searchMode ?? this.searchMode,
+    rememberFolderState: rememberFolderState ?? this.rememberFolderState,
+    rememberFolderSort: rememberFolderSort ?? this.rememberFolderSort,
   );
   AppSetting copyWithCompanion(AppSettingsCompanion data) {
     return AppSetting(
@@ -971,6 +1045,12 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       searchMode: data.searchMode.present
           ? data.searchMode.value
           : this.searchMode,
+      rememberFolderState: data.rememberFolderState.present
+          ? data.rememberFolderState.value
+          : this.rememberFolderState,
+      rememberFolderSort: data.rememberFolderSort.present
+          ? data.rememberFolderSort.value
+          : this.rememberFolderSort,
     );
   }
 
@@ -1000,7 +1080,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           ..write('sortKey: $sortKey, ')
           ..write('sortAscending: $sortAscending, ')
           ..write('foldersFirst: $foldersFirst, ')
-          ..write('searchMode: $searchMode')
+          ..write('searchMode: $searchMode, ')
+          ..write('rememberFolderState: $rememberFolderState, ')
+          ..write('rememberFolderSort: $rememberFolderSort')
           ..write(')'))
         .toString();
   }
@@ -1031,6 +1113,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     sortAscending,
     foldersFirst,
     searchMode,
+    rememberFolderState,
+    rememberFolderSort,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -1059,7 +1143,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           other.sortKey == this.sortKey &&
           other.sortAscending == this.sortAscending &&
           other.foldersFirst == this.foldersFirst &&
-          other.searchMode == this.searchMode);
+          other.searchMode == this.searchMode &&
+          other.rememberFolderState == this.rememberFolderState &&
+          other.rememberFolderSort == this.rememberFolderSort);
 }
 
 class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
@@ -1087,6 +1173,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
   final Value<bool> sortAscending;
   final Value<bool> foldersFirst;
   final Value<String> searchMode;
+  final Value<bool> rememberFolderState;
+  final Value<bool> rememberFolderSort;
   const AppSettingsCompanion({
     this.id = const Value.absent(),
     this.themeMode = const Value.absent(),
@@ -1112,6 +1200,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.sortAscending = const Value.absent(),
     this.foldersFirst = const Value.absent(),
     this.searchMode = const Value.absent(),
+    this.rememberFolderState = const Value.absent(),
+    this.rememberFolderSort = const Value.absent(),
   });
   AppSettingsCompanion.insert({
     this.id = const Value.absent(),
@@ -1138,6 +1228,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.sortAscending = const Value.absent(),
     this.foldersFirst = const Value.absent(),
     this.searchMode = const Value.absent(),
+    this.rememberFolderState = const Value.absent(),
+    this.rememberFolderSort = const Value.absent(),
   });
   static Insertable<AppSetting> custom({
     Expression<int>? id,
@@ -1164,6 +1256,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Expression<bool>? sortAscending,
     Expression<bool>? foldersFirst,
     Expression<String>? searchMode,
+    Expression<bool>? rememberFolderState,
+    Expression<bool>? rememberFolderSort,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1195,6 +1289,10 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       if (sortAscending != null) 'sort_ascending': sortAscending,
       if (foldersFirst != null) 'folders_first': foldersFirst,
       if (searchMode != null) 'search_mode': searchMode,
+      if (rememberFolderState != null)
+        'remember_folder_state': rememberFolderState,
+      if (rememberFolderSort != null)
+        'remember_folder_sort': rememberFolderSort,
     });
   }
 
@@ -1223,6 +1321,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Value<bool>? sortAscending,
     Value<bool>? foldersFirst,
     Value<String>? searchMode,
+    Value<bool>? rememberFolderState,
+    Value<bool>? rememberFolderSort,
   }) {
     return AppSettingsCompanion(
       id: id ?? this.id,
@@ -1252,6 +1352,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       sortAscending: sortAscending ?? this.sortAscending,
       foldersFirst: foldersFirst ?? this.foldersFirst,
       searchMode: searchMode ?? this.searchMode,
+      rememberFolderState: rememberFolderState ?? this.rememberFolderState,
+      rememberFolderSort: rememberFolderSort ?? this.rememberFolderSort,
     );
   }
 
@@ -1338,6 +1440,12 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     if (searchMode.present) {
       map['search_mode'] = Variable<String>(searchMode.value);
     }
+    if (rememberFolderState.present) {
+      map['remember_folder_state'] = Variable<bool>(rememberFolderState.value);
+    }
+    if (rememberFolderSort.present) {
+      map['remember_folder_sort'] = Variable<bool>(rememberFolderSort.value);
+    }
     return map;
   }
 
@@ -1367,7 +1475,9 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
           ..write('sortKey: $sortKey, ')
           ..write('sortAscending: $sortAscending, ')
           ..write('foldersFirst: $foldersFirst, ')
-          ..write('searchMode: $searchMode')
+          ..write('searchMode: $searchMode, ')
+          ..write('rememberFolderState: $rememberFolderState, ')
+          ..write('rememberFolderSort: $rememberFolderSort')
           ..write(')'))
         .toString();
   }
@@ -2076,6 +2186,28 @@ class $FolderPrefsTable extends FolderPrefs
     ),
     defaultValue: const Constant(true),
   );
+  static const VerificationMeta _cursorPathMeta = const VerificationMeta(
+    'cursorPath',
+  );
+  @override
+  late final GeneratedColumn<String> cursorPath = GeneratedColumn<String>(
+    'cursor_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _selectedPathsMeta = const VerificationMeta(
+    'selectedPaths',
+  );
+  @override
+  late final GeneratedColumn<String> selectedPaths = GeneratedColumn<String>(
+    'selected_paths',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _updatedAtMeta = const VerificationMeta(
     'updatedAt',
   );
@@ -2094,6 +2226,8 @@ class $FolderPrefsTable extends FolderPrefs
     sortKey,
     sortAscending,
     foldersFirst,
+    cursorPath,
+    selectedPaths,
     updatedAt,
   ];
   @override
@@ -2140,6 +2274,21 @@ class $FolderPrefsTable extends FolderPrefs
         ),
       );
     }
+    if (data.containsKey('cursor_path')) {
+      context.handle(
+        _cursorPathMeta,
+        cursorPath.isAcceptableOrUnknown(data['cursor_path']!, _cursorPathMeta),
+      );
+    }
+    if (data.containsKey('selected_paths')) {
+      context.handle(
+        _selectedPathsMeta,
+        selectedPaths.isAcceptableOrUnknown(
+          data['selected_paths']!,
+          _selectedPathsMeta,
+        ),
+      );
+    }
     if (data.containsKey('updated_at')) {
       context.handle(
         _updatedAtMeta,
@@ -2171,6 +2320,14 @@ class $FolderPrefsTable extends FolderPrefs
         DriftSqlType.bool,
         data['${effectivePrefix}folders_first'],
       )!,
+      cursorPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cursor_path'],
+      ),
+      selectedPaths: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}selected_paths'],
+      ),
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}updated_at'],
@@ -2189,12 +2346,16 @@ class FolderPref extends DataClass implements Insertable<FolderPref> {
   final String sortKey;
   final bool sortAscending;
   final bool foldersFirst;
+  final String? cursorPath;
+  final String? selectedPaths;
   final int updatedAt;
   const FolderPref({
     required this.path,
     required this.sortKey,
     required this.sortAscending,
     required this.foldersFirst,
+    this.cursorPath,
+    this.selectedPaths,
     required this.updatedAt,
   });
   @override
@@ -2204,6 +2365,12 @@ class FolderPref extends DataClass implements Insertable<FolderPref> {
     map['sort_key'] = Variable<String>(sortKey);
     map['sort_ascending'] = Variable<bool>(sortAscending);
     map['folders_first'] = Variable<bool>(foldersFirst);
+    if (!nullToAbsent || cursorPath != null) {
+      map['cursor_path'] = Variable<String>(cursorPath);
+    }
+    if (!nullToAbsent || selectedPaths != null) {
+      map['selected_paths'] = Variable<String>(selectedPaths);
+    }
     map['updated_at'] = Variable<int>(updatedAt);
     return map;
   }
@@ -2214,6 +2381,12 @@ class FolderPref extends DataClass implements Insertable<FolderPref> {
       sortKey: Value(sortKey),
       sortAscending: Value(sortAscending),
       foldersFirst: Value(foldersFirst),
+      cursorPath: cursorPath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cursorPath),
+      selectedPaths: selectedPaths == null && nullToAbsent
+          ? const Value.absent()
+          : Value(selectedPaths),
       updatedAt: Value(updatedAt),
     );
   }
@@ -2228,6 +2401,8 @@ class FolderPref extends DataClass implements Insertable<FolderPref> {
       sortKey: serializer.fromJson<String>(json['sortKey']),
       sortAscending: serializer.fromJson<bool>(json['sortAscending']),
       foldersFirst: serializer.fromJson<bool>(json['foldersFirst']),
+      cursorPath: serializer.fromJson<String?>(json['cursorPath']),
+      selectedPaths: serializer.fromJson<String?>(json['selectedPaths']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
     );
   }
@@ -2239,6 +2414,8 @@ class FolderPref extends DataClass implements Insertable<FolderPref> {
       'sortKey': serializer.toJson<String>(sortKey),
       'sortAscending': serializer.toJson<bool>(sortAscending),
       'foldersFirst': serializer.toJson<bool>(foldersFirst),
+      'cursorPath': serializer.toJson<String?>(cursorPath),
+      'selectedPaths': serializer.toJson<String?>(selectedPaths),
       'updatedAt': serializer.toJson<int>(updatedAt),
     };
   }
@@ -2248,12 +2425,18 @@ class FolderPref extends DataClass implements Insertable<FolderPref> {
     String? sortKey,
     bool? sortAscending,
     bool? foldersFirst,
+    Value<String?> cursorPath = const Value.absent(),
+    Value<String?> selectedPaths = const Value.absent(),
     int? updatedAt,
   }) => FolderPref(
     path: path ?? this.path,
     sortKey: sortKey ?? this.sortKey,
     sortAscending: sortAscending ?? this.sortAscending,
     foldersFirst: foldersFirst ?? this.foldersFirst,
+    cursorPath: cursorPath.present ? cursorPath.value : this.cursorPath,
+    selectedPaths: selectedPaths.present
+        ? selectedPaths.value
+        : this.selectedPaths,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   FolderPref copyWithCompanion(FolderPrefsCompanion data) {
@@ -2266,6 +2449,12 @@ class FolderPref extends DataClass implements Insertable<FolderPref> {
       foldersFirst: data.foldersFirst.present
           ? data.foldersFirst.value
           : this.foldersFirst,
+      cursorPath: data.cursorPath.present
+          ? data.cursorPath.value
+          : this.cursorPath,
+      selectedPaths: data.selectedPaths.present
+          ? data.selectedPaths.value
+          : this.selectedPaths,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -2277,14 +2466,23 @@ class FolderPref extends DataClass implements Insertable<FolderPref> {
           ..write('sortKey: $sortKey, ')
           ..write('sortAscending: $sortAscending, ')
           ..write('foldersFirst: $foldersFirst, ')
+          ..write('cursorPath: $cursorPath, ')
+          ..write('selectedPaths: $selectedPaths, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(path, sortKey, sortAscending, foldersFirst, updatedAt);
+  int get hashCode => Object.hash(
+    path,
+    sortKey,
+    sortAscending,
+    foldersFirst,
+    cursorPath,
+    selectedPaths,
+    updatedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2293,6 +2491,8 @@ class FolderPref extends DataClass implements Insertable<FolderPref> {
           other.sortKey == this.sortKey &&
           other.sortAscending == this.sortAscending &&
           other.foldersFirst == this.foldersFirst &&
+          other.cursorPath == this.cursorPath &&
+          other.selectedPaths == this.selectedPaths &&
           other.updatedAt == this.updatedAt);
 }
 
@@ -2301,6 +2501,8 @@ class FolderPrefsCompanion extends UpdateCompanion<FolderPref> {
   final Value<String> sortKey;
   final Value<bool> sortAscending;
   final Value<bool> foldersFirst;
+  final Value<String?> cursorPath;
+  final Value<String?> selectedPaths;
   final Value<int> updatedAt;
   final Value<int> rowid;
   const FolderPrefsCompanion({
@@ -2308,6 +2510,8 @@ class FolderPrefsCompanion extends UpdateCompanion<FolderPref> {
     this.sortKey = const Value.absent(),
     this.sortAscending = const Value.absent(),
     this.foldersFirst = const Value.absent(),
+    this.cursorPath = const Value.absent(),
+    this.selectedPaths = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -2316,6 +2520,8 @@ class FolderPrefsCompanion extends UpdateCompanion<FolderPref> {
     this.sortKey = const Value.absent(),
     this.sortAscending = const Value.absent(),
     this.foldersFirst = const Value.absent(),
+    this.cursorPath = const Value.absent(),
+    this.selectedPaths = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : path = Value(path);
@@ -2324,6 +2530,8 @@ class FolderPrefsCompanion extends UpdateCompanion<FolderPref> {
     Expression<String>? sortKey,
     Expression<bool>? sortAscending,
     Expression<bool>? foldersFirst,
+    Expression<String>? cursorPath,
+    Expression<String>? selectedPaths,
     Expression<int>? updatedAt,
     Expression<int>? rowid,
   }) {
@@ -2332,6 +2540,8 @@ class FolderPrefsCompanion extends UpdateCompanion<FolderPref> {
       if (sortKey != null) 'sort_key': sortKey,
       if (sortAscending != null) 'sort_ascending': sortAscending,
       if (foldersFirst != null) 'folders_first': foldersFirst,
+      if (cursorPath != null) 'cursor_path': cursorPath,
+      if (selectedPaths != null) 'selected_paths': selectedPaths,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -2342,6 +2552,8 @@ class FolderPrefsCompanion extends UpdateCompanion<FolderPref> {
     Value<String>? sortKey,
     Value<bool>? sortAscending,
     Value<bool>? foldersFirst,
+    Value<String?>? cursorPath,
+    Value<String?>? selectedPaths,
     Value<int>? updatedAt,
     Value<int>? rowid,
   }) {
@@ -2350,6 +2562,8 @@ class FolderPrefsCompanion extends UpdateCompanion<FolderPref> {
       sortKey: sortKey ?? this.sortKey,
       sortAscending: sortAscending ?? this.sortAscending,
       foldersFirst: foldersFirst ?? this.foldersFirst,
+      cursorPath: cursorPath ?? this.cursorPath,
+      selectedPaths: selectedPaths ?? this.selectedPaths,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -2370,6 +2584,12 @@ class FolderPrefsCompanion extends UpdateCompanion<FolderPref> {
     if (foldersFirst.present) {
       map['folders_first'] = Variable<bool>(foldersFirst.value);
     }
+    if (cursorPath.present) {
+      map['cursor_path'] = Variable<String>(cursorPath.value);
+    }
+    if (selectedPaths.present) {
+      map['selected_paths'] = Variable<String>(selectedPaths.value);
+    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<int>(updatedAt.value);
     }
@@ -2386,6 +2606,8 @@ class FolderPrefsCompanion extends UpdateCompanion<FolderPref> {
           ..write('sortKey: $sortKey, ')
           ..write('sortAscending: $sortAscending, ')
           ..write('foldersFirst: $foldersFirst, ')
+          ..write('cursorPath: $cursorPath, ')
+          ..write('selectedPaths: $selectedPaths, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -3216,6 +3438,8 @@ typedef $$AppSettingsTableCreateCompanionBuilder =
       Value<bool> sortAscending,
       Value<bool> foldersFirst,
       Value<String> searchMode,
+      Value<bool> rememberFolderState,
+      Value<bool> rememberFolderSort,
     });
 typedef $$AppSettingsTableUpdateCompanionBuilder =
     AppSettingsCompanion Function({
@@ -3243,6 +3467,8 @@ typedef $$AppSettingsTableUpdateCompanionBuilder =
       Value<bool> sortAscending,
       Value<bool> foldersFirst,
       Value<String> searchMode,
+      Value<bool> rememberFolderState,
+      Value<bool> rememberFolderSort,
     });
 
 class $$AppSettingsTableFilterComposer
@@ -3371,6 +3597,16 @@ class $$AppSettingsTableFilterComposer
 
   ColumnFilters<String> get searchMode => $composableBuilder(
     column: $table.searchMode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get rememberFolderState => $composableBuilder(
+    column: $table.rememberFolderState,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get rememberFolderSort => $composableBuilder(
+    column: $table.rememberFolderSort,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -3503,6 +3739,16 @@ class $$AppSettingsTableOrderingComposer
     column: $table.searchMode,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get rememberFolderState => $composableBuilder(
+    column: $table.rememberFolderState,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get rememberFolderSort => $composableBuilder(
+    column: $table.rememberFolderSort,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$AppSettingsTableAnnotationComposer
@@ -3623,6 +3869,16 @@ class $$AppSettingsTableAnnotationComposer
     column: $table.searchMode,
     builder: (column) => column,
   );
+
+  GeneratedColumn<bool> get rememberFolderState => $composableBuilder(
+    column: $table.rememberFolderState,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get rememberFolderSort => $composableBuilder(
+    column: $table.rememberFolderSort,
+    builder: (column) => column,
+  );
 }
 
 class $$AppSettingsTableTableManager
@@ -3680,6 +3936,8 @@ class $$AppSettingsTableTableManager
                 Value<bool> sortAscending = const Value.absent(),
                 Value<bool> foldersFirst = const Value.absent(),
                 Value<String> searchMode = const Value.absent(),
+                Value<bool> rememberFolderState = const Value.absent(),
+                Value<bool> rememberFolderSort = const Value.absent(),
               }) => AppSettingsCompanion(
                 id: id,
                 themeMode: themeMode,
@@ -3705,6 +3963,8 @@ class $$AppSettingsTableTableManager
                 sortAscending: sortAscending,
                 foldersFirst: foldersFirst,
                 searchMode: searchMode,
+                rememberFolderState: rememberFolderState,
+                rememberFolderSort: rememberFolderSort,
               ),
           createCompanionCallback:
               ({
@@ -3732,6 +3992,8 @@ class $$AppSettingsTableTableManager
                 Value<bool> sortAscending = const Value.absent(),
                 Value<bool> foldersFirst = const Value.absent(),
                 Value<String> searchMode = const Value.absent(),
+                Value<bool> rememberFolderState = const Value.absent(),
+                Value<bool> rememberFolderSort = const Value.absent(),
               }) => AppSettingsCompanion.insert(
                 id: id,
                 themeMode: themeMode,
@@ -3757,6 +4019,8 @@ class $$AppSettingsTableTableManager
                 sortAscending: sortAscending,
                 foldersFirst: foldersFirst,
                 searchMode: searchMode,
+                rememberFolderState: rememberFolderState,
+                rememberFolderSort: rememberFolderSort,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -4154,6 +4418,8 @@ typedef $$FolderPrefsTableCreateCompanionBuilder =
       Value<String> sortKey,
       Value<bool> sortAscending,
       Value<bool> foldersFirst,
+      Value<String?> cursorPath,
+      Value<String?> selectedPaths,
       Value<int> updatedAt,
       Value<int> rowid,
     });
@@ -4163,6 +4429,8 @@ typedef $$FolderPrefsTableUpdateCompanionBuilder =
       Value<String> sortKey,
       Value<bool> sortAscending,
       Value<bool> foldersFirst,
+      Value<String?> cursorPath,
+      Value<String?> selectedPaths,
       Value<int> updatedAt,
       Value<int> rowid,
     });
@@ -4193,6 +4461,16 @@ class $$FolderPrefsTableFilterComposer
 
   ColumnFilters<bool> get foldersFirst => $composableBuilder(
     column: $table.foldersFirst,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cursorPath => $composableBuilder(
+    column: $table.cursorPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get selectedPaths => $composableBuilder(
+    column: $table.selectedPaths,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4231,6 +4509,16 @@ class $$FolderPrefsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get cursorPath => $composableBuilder(
+    column: $table.cursorPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get selectedPaths => $composableBuilder(
+    column: $table.selectedPaths,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
@@ -4259,6 +4547,16 @@ class $$FolderPrefsTableAnnotationComposer
 
   GeneratedColumn<bool> get foldersFirst => $composableBuilder(
     column: $table.foldersFirst,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get cursorPath => $composableBuilder(
+    column: $table.cursorPath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get selectedPaths => $composableBuilder(
+    column: $table.selectedPaths,
     builder: (column) => column,
   );
 
@@ -4301,6 +4599,8 @@ class $$FolderPrefsTableTableManager
                 Value<String> sortKey = const Value.absent(),
                 Value<bool> sortAscending = const Value.absent(),
                 Value<bool> foldersFirst = const Value.absent(),
+                Value<String?> cursorPath = const Value.absent(),
+                Value<String?> selectedPaths = const Value.absent(),
                 Value<int> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => FolderPrefsCompanion(
@@ -4308,6 +4608,8 @@ class $$FolderPrefsTableTableManager
                 sortKey: sortKey,
                 sortAscending: sortAscending,
                 foldersFirst: foldersFirst,
+                cursorPath: cursorPath,
+                selectedPaths: selectedPaths,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -4317,6 +4619,8 @@ class $$FolderPrefsTableTableManager
                 Value<String> sortKey = const Value.absent(),
                 Value<bool> sortAscending = const Value.absent(),
                 Value<bool> foldersFirst = const Value.absent(),
+                Value<String?> cursorPath = const Value.absent(),
+                Value<String?> selectedPaths = const Value.absent(),
                 Value<int> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => FolderPrefsCompanion.insert(
@@ -4324,6 +4628,8 @@ class $$FolderPrefsTableTableManager
                 sortKey: sortKey,
                 sortAscending: sortAscending,
                 foldersFirst: foldersFirst,
+                cursorPath: cursorPath,
+                selectedPaths: selectedPaths,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),

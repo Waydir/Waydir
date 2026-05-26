@@ -1572,6 +1572,9 @@ class TranslationsPreferencesGeneralEn {
 	/// en: 'Browse…'
 	String get browse => 'Browse…';
 
+	/// en: 'Folders'
+	String get foldersSection => 'Folders';
+
 	/// en: 'File operations'
 	String get fileOpsSection => 'File operations';
 
@@ -1592,6 +1595,18 @@ class TranslationsPreferencesGeneralEn {
 
 	/// en: 'Show a dialog before moving files or folders.'
 	String get confirmMoveHint => 'Show a dialog before moving files or folders.';
+
+	/// en: 'Remember selection per folder'
+	String get rememberFolderState => 'Remember selection per folder';
+
+	/// en: 'Restore the cursor and selected files when you return to a folder.'
+	String get rememberFolderStateHint => 'Restore the cursor and selected files when you return to a folder.';
+
+	/// en: 'Remember sort per folder'
+	String get rememberFolderSort => 'Remember sort per folder';
+
+	/// en: 'Save and reuse the sort column and direction for each folder.'
+	String get rememberFolderSortHint => 'Save and reuse the sort column and direction for each folder.';
 
 	/// en: 'Delete key behavior'
 	String get deleteKeyBehavior => 'Delete key behavior';
@@ -2173,6 +2188,7 @@ extension on Translations {
 			'preferences.general.defaultPathHint' => 'Used when session restore is disabled or empty.',
 			'preferences.general.defaultPathPlaceholder' => '/home/user',
 			'preferences.general.browse' => 'Browse…',
+			'preferences.general.foldersSection' => 'Folders',
 			'preferences.general.fileOpsSection' => 'File operations',
 			'preferences.general.confirmDelete' => 'Confirm before delete',
 			'preferences.general.confirmDeleteHint' => 'Show a dialog before removing files or folders.',
@@ -2180,6 +2196,10 @@ extension on Translations {
 			'preferences.general.confirmCopyHint' => 'Show a dialog before copying files or folders.',
 			'preferences.general.confirmMove' => 'Confirm before move',
 			'preferences.general.confirmMoveHint' => 'Show a dialog before moving files or folders.',
+			'preferences.general.rememberFolderState' => 'Remember selection per folder',
+			'preferences.general.rememberFolderStateHint' => 'Restore the cursor and selected files when you return to a folder.',
+			'preferences.general.rememberFolderSort' => 'Remember sort per folder',
+			'preferences.general.rememberFolderSortHint' => 'Save and reuse the sort column and direction for each folder.',
 			'preferences.general.deleteKeyBehavior' => 'Delete key behavior',
 			'preferences.general.deleteKeyBehaviorHint' => 'What the Delete key does by default. Shift+Delete always deletes permanently.',
 			'preferences.general.deleteKeyTrash' => 'Move to Trash',
@@ -2595,13 +2615,13 @@ extension on Translations {
 			'tasks.status.completedWithErrors' => ({required Object count}) => 'Completed with ${count} errors',
 			'tasks.status.completed' => 'Completed',
 			'tasks.status.failed' => 'Failed',
+			_ => null,
+		} ?? switch (path) {
 			'tasks.status.cancelled' => 'Cancelled',
 			'git.clean' => 'clean',
 			'git.detachedHead' => 'detached HEAD',
 			'git.merging' => 'MERGING',
 			'git.rebasing' => 'REBASING',
-			_ => null,
-		} ?? switch (path) {
 			'git.cherryPicking' => 'CHERRY-PICK',
 			'git.reverting' => 'REVERTING',
 			'git.bisecting' => 'BISECTING',
