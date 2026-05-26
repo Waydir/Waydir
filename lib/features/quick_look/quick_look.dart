@@ -177,7 +177,11 @@ class _QuickLookState extends State<_QuickLook> {
                       onClose: () => Navigator.of(context).pop(),
                     ),
                     Container(height: 1, color: AppColors.bgDivider),
-                    Expanded(child: PropertiesOnly(entry: override)),
+                    Expanded(
+                      child: override.type == FileItemType.folder
+                          ? MultiProperties(entries: [override])
+                          : PropertiesOnly(entry: override),
+                    ),
                   ],
                 );
               }
@@ -198,6 +202,27 @@ class _QuickLookState extends State<_QuickLook> {
                     Expanded(child: MultiProperties(entries: entries)),
                   ],
                 );
+              }
+              if (selected.length == 1) {
+                final entries = widget.store.selectedEntries;
+                if (entries.length == 1 &&
+                    entries.first.type == FileItemType.folder) {
+                  final entry = entries.first;
+                  _syncPresentation(entry);
+                  return Column(
+                    children: [
+                      _Header(
+                        entry: entry,
+                        compact: true,
+                        showInfo: true,
+                        onToggleInfo: () {},
+                        onClose: () => Navigator.of(context).pop(),
+                      ),
+                      Container(height: 1, color: AppColors.bgDivider),
+                      Expanded(child: MultiProperties(entries: entries)),
+                    ],
+                  );
+                }
               }
               final entry = widget.store.cursorEntry.value;
               _syncPresentation(entry);

@@ -759,6 +759,18 @@ class TranslationsQuickLookEn {
 	/// en: 'General'
 	String get sectionGeneral => 'General';
 
+	/// en: 'Statistics'
+	String get sectionStatistics => 'Statistics';
+
+	/// en: 'Size breakdown'
+	String get sizeBreakdown => 'Size breakdown';
+
+	/// en: 'Type breakdown'
+	String get typeBreakdown => 'Type breakdown';
+
+	/// en: 'no extension'
+	String get noExtension => 'no extension';
+
 	/// en: 'Image'
 	String get sectionImage => 'Image';
 
@@ -2413,6 +2425,10 @@ extension on Translations {
 			'quickLook.lines' => 'Lines',
 			'quickLook.characters' => 'Characters',
 			'quickLook.sectionGeneral' => 'General',
+			'quickLook.sectionStatistics' => 'Statistics',
+			'quickLook.sizeBreakdown' => 'Size breakdown',
+			'quickLook.typeBreakdown' => 'Type breakdown',
+			'quickLook.noExtension' => 'no extension',
 			'quickLook.sectionImage' => 'Image',
 			'quickLook.sectionText' => 'Text',
 			'toast.copiedItems' => ({required Object count}) => 'Copied ${count} items',
@@ -2611,12 +2627,12 @@ extension on Translations {
 			'tasks.status.scanning' => 'Scanning files...',
 			'tasks.status.conflicts' => ({required Object count}) => '${count} conflicts',
 			'tasks.status.running' => ({required Object current, required Object processed, required Object total}) => '${current} (${processed}/${total})',
+			_ => null,
+		} ?? switch (path) {
 			'tasks.status.cancelling' => 'Cancelling...',
 			'tasks.status.completedWithErrors' => ({required Object count}) => 'Completed with ${count} errors',
 			'tasks.status.completed' => 'Completed',
 			'tasks.status.failed' => 'Failed',
-			_ => null,
-		} ?? switch (path) {
 			'tasks.status.cancelled' => 'Cancelled',
 			'git.clean' => 'clean',
 			'git.detachedHead' => 'detached HEAD',
