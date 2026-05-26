@@ -27,7 +27,7 @@ dependencies:
   collection: ^1.19.1
   super_drag_and_drop: ^0.9.1
   slang: ^4.14.0
-  slang_flutter: ^4.14.0
+  slang_flutter: ^4.15.0
   intl: ^0.20.2
   path: ^1.9.1
   ffi: ^2.2.0
