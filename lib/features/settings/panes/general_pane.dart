@@ -16,6 +16,8 @@ class GeneralPane extends StatelessWidget {
     final confirmDelete = registry.byId('general.confirmDelete');
     final confirmCopy = registry.byId('general.confirmCopy');
     final confirmMove = registry.byId('general.confirmMove');
+    final rememberFolderState = registry.byId('general.rememberFolderState');
+    final rememberFolderSort = registry.byId('general.rememberFolderSort');
     final deleteKeyBehavior = registry.byId('general.deleteKeyBehavior');
     final terminal = registry.byId('general.terminal');
     final terminalCustom = registry.byId('general.terminalCustomCommand');
@@ -27,6 +29,13 @@ class GeneralPane extends StatelessWidget {
           children: [
             RegistrySettingRow(setting: restoreSession),
             RegistrySettingRow(setting: defaultPath),
+          ],
+        ),
+        SettingsSection(
+          title: t.preferences.general.foldersSection,
+          children: [
+            RegistrySettingRow(setting: rememberFolderState),
+            RegistrySettingRow(setting: rememberFolderSort),
           ],
         ),
         SettingsSection(
