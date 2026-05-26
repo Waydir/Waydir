@@ -1719,6 +1719,12 @@ class TranslationsPreferencesAppearanceEn {
 	/// en: 'Compact'
 	String get rowDensityCompact => 'Compact';
 
+	/// en: 'Horizontal spacing'
+	String get fileListHorizontalSpacing => 'Horizontal spacing';
+
+	/// en: 'Vertical spacing'
+	String get fileListVerticalSpacing => 'Vertical spacing';
+
 	/// en: 'Date format'
 	String get dateFormat => 'Date format';
 
@@ -2211,6 +2217,8 @@ extension on Translations {
 			'preferences.appearance.rowDensity' => 'Row density',
 			'preferences.appearance.rowDensityComfortable' => 'Comfortable',
 			'preferences.appearance.rowDensityCompact' => 'Compact',
+			'preferences.appearance.fileListHorizontalSpacing' => 'Horizontal spacing',
+			'preferences.appearance.fileListVerticalSpacing' => 'Vertical spacing',
 			'preferences.appearance.dateFormat' => 'Date format',
 			'preferences.appearance.dateFormatIso' => 'ISO (2026-05-14 13:45)',
 			'preferences.appearance.dateFormatLocale' => 'System locale',
@@ -2589,10 +2597,10 @@ extension on Translations {
 			'git.merging' => 'MERGING',
 			'git.rebasing' => 'REBASING',
 			'git.cherryPicking' => 'CHERRY-PICK',
-			'git.reverting' => 'REVERTING',
-			'git.bisecting' => 'BISECTING',
 			_ => null,
 		} ?? switch (path) {
+			'git.reverting' => 'REVERTING',
+			'git.bisecting' => 'BISECTING',
 			'git.checkoutFailed' => ({required Object message}) => 'Checkout failed: ${message}',
 			'git.uncommittedChanges' => 'Uncommitted changes',
 			'git.stashPrompt' => ({required Object branch}) => 'Your local changes would be overwritten by switching to \'${branch}\'.\n\nStash them now? They stay saved in a stash you can restore later on this branch.',

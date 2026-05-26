@@ -190,6 +190,12 @@ class _AppearancePaneState extends State<AppearancePane> {
               setting: registry.byId('appearance.showHiddenDefault'),
             ),
             RegistrySettingRow(setting: registry.byId('appearance.rowDensity')),
+            RegistrySettingRow(
+              setting: registry.byId('appearance.fileListHorizontalSpacing'),
+            ),
+            RegistrySettingRow(
+              setting: registry.byId('appearance.fileListVerticalSpacing'),
+            ),
             RegistrySettingRow(setting: registry.byId('appearance.dateFormat')),
             RegistrySettingRow(
               setting: registry.byId('appearance.recentDatesRelative'),

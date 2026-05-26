@@ -6,14 +6,17 @@ import '../../ui/theme/app_theme.dart';
 
 typedef RubberBandSelectCallback =
     void Function(Set<String> paths, {bool additive});
+typedef RubberBandStartPredicate = bool Function(Offset localPosition);
 
 class RubberBandLayer extends StatefulWidget {
   final ScrollController scrollController;
   final int itemCount;
   final double itemExtent;
   final double rowHeight;
+  final double topPadding;
   final String Function(int index) pathAt;
   final int Function(Offset localPosition) rowAt;
+  final RubberBandStartPredicate? canStartSelectionAt;
   final RubberBandSelectCallback? onSelectionChanged;
   final VoidCallback? onBackgroundTap;
   final Widget child;
@@ -24,8 +27,10 @@ class RubberBandLayer extends StatefulWidget {
     required this.itemCount,
     required this.itemExtent,
     required this.rowHeight,
+    this.topPadding = 0,
     required this.pathAt,
     required this.rowAt,
+    this.canStartSelectionAt,
     required this.onSelectionChanged,
     this.onBackgroundTap,
     required this.child,
@@ -65,15 +70,18 @@ class _RubberBandLayerState extends State<RubberBandLayer> {
 
   Set<String> _pathsInRect(Rect rect) {
     if (widget.itemCount == 0) return const {};
-    final topRow = (rect.top / widget.itemExtent).floor();
-    final bottomRow = (rect.bottom / widget.itemExtent).floor();
+    final top = rect.top - widget.topPadding;
+    final bottom = rect.bottom - widget.topPadding;
+    if (bottom <= 0) return const {};
+    final topRow = (top / widget.itemExtent).floor();
+    final bottomRow = (bottom / widget.itemExtent).floor();
     final first = max(0, topRow);
     final last = min(widget.itemCount - 1, bottomRow);
     final paths = <String>{};
     for (int i = first; i <= last; i++) {
       final rowTop = i * widget.itemExtent;
       final rowBottom = rowTop + widget.rowHeight;
-      if (rect.bottom > rowTop && rect.top < rowBottom) {
+      if (bottom > rowTop && top < rowBottom) {
         paths.add(widget.pathAt(i));
       }
     }
@@ -130,6 +138,9 @@ class _RubberBandLayerState extends State<RubberBandLayer> {
 
   void _handlePointerDown(PointerDownEvent event) {
     if (event.buttons != 1) return;
+    if (widget.canStartSelectionAt?.call(event.localPosition) == false) {
+      return;
+    }
     final index = widget.rowAt(event.localPosition);
     if (index >= 0) return;
     final content = _toContent(event.localPosition);

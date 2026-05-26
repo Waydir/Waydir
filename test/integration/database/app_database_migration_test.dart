@@ -35,6 +35,8 @@ void main() {
     expect(settings.terminal, 'kitty');
     expect(settings.confirmCopy, isFalse);
     expect(settings.confirmMove, isTrue);
+    expect(settings.fileListHorizontalSpacing, 6);
+    expect(settings.fileListVerticalSpacing, 6);
     expect(bookmarks.single.path, '/tmp/project');
     expect(tabs.single.path, '/tmp/project');
 

@@ -36,8 +36,11 @@ const _kDoubleTapMs = 300;
 const _kRowHeightComfortable = 26.0;
 const _kRowHeightCompact = 20.0;
 const _kRowGapComfortable = 6.0;
-const _kRowGapCompact = 2.0;
 const _kLocationWidth = 190.0;
+const _kScrollbarThumbWidth = 6.0;
+const _kScrollbarGutterWidth = _kScrollbarThumbWidth;
+const _kRowPaddingLeft = 8.0;
+const _kRowPaddingRight = 10.0;
 
 class FileList extends StatefulWidget {
   final List<FileEntry> files;
@@ -102,9 +105,14 @@ class _FileListState extends State<FileList> {
   double _rowH = _kRowHeightComfortable;
   double _rowG = _kRowGapComfortable;
   double _itemExt = _kRowHeightComfortable + _kRowGapComfortable;
+  double _listHorizontalSpacing = _kRowGapComfortable;
+  double _viewportWidth = 0;
   String _dateFmt = 'locale';
   bool _recentDatesRelative = true;
   String? _lastRevealedKey;
+
+  double get _listTopPadding => _rowG;
+  double get _listHorizontalPadding => _listHorizontalSpacing;
 
   double _measureWidth(String text, TextStyle style) {
     if (text.isEmpty) return 0;
@@ -159,8 +167,16 @@ class _FileListState extends State<FileList> {
   }
 
   int _rowAt(Offset localPosition) {
-    if (localPosition.dy < 0) return -1;
-    final adjustedY = localPosition.dy + _scrollController.offset;
+    if (localPosition.dy < 0 || localPosition.dx < _listHorizontalPadding) {
+      return -1;
+    }
+    final rightEdge =
+        _viewportWidth - _kScrollbarGutterWidth - _listHorizontalPadding;
+    if (_viewportWidth > 0 && localPosition.dx >= rightEdge) return -1;
+
+    final adjustedY =
+        localPosition.dy + _scrollController.offset - _listTopPadding;
+    if (adjustedY < 0) return -1;
     final index = (adjustedY / _itemExt).floor();
     if (index < 0 || index >= widget.files.length) return -1;
 
@@ -168,6 +184,11 @@ class _FileListState extends State<FileList> {
     if (relativeY >= _rowH) return -1;
 
     return index;
+  }
+
+  bool _canStartRubberBandAt(Offset localPosition) {
+    if (_viewportWidth <= 0) return true;
+    return localPosition.dx < _viewportWidth - _kScrollbarGutterWidth;
   }
 
   void _updateHover(Offset localPosition) {
@@ -203,7 +224,7 @@ class _FileListState extends State<FileList> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_scrollController.hasClients) return;
       final viewport = _scrollController.position.viewportDimension;
-      final top = index * _itemExt;
+      final top = _listTopPadding + index * _itemExt;
       final bottom = top + _rowH;
       final current = _scrollController.offset;
       final target = top < current
@@ -232,12 +253,17 @@ class _FileListState extends State<FileList> {
   @override
   Widget build(BuildContext context) {
     final density = SettingsStore.instance.rowDensity.watch(context);
+    final horizontalSpacing = SettingsStore.instance.fileListHorizontalSpacing
+        .watch(context);
+    final verticalSpacing = SettingsStore.instance.fileListVerticalSpacing
+        .watch(context);
     _dateFmt = SettingsStore.instance.dateFormat.watch(context);
     _recentDatesRelative = SettingsStore.instance.recentDatesRelative.watch(
       context,
     );
     _rowH = density == 'compact' ? _kRowHeightCompact : _kRowHeightComfortable;
-    _rowG = density == 'compact' ? _kRowGapCompact : _kRowGapComfortable;
+    _rowG = verticalSpacing.toDouble();
+    _listHorizontalSpacing = horizontalSpacing.toDouble();
     _itemExt = _rowH + _rowG;
     _revealSelectedRow();
 
@@ -259,13 +285,24 @@ class _FileListState extends State<FileList> {
 
     return Column(
       children: [
-        _ListHeader(
-          recursive: widget.recursiveResults,
-          sizeWidth: columnWidths.size,
-          dateWidth: columnWidths.date,
-          sortColumn: widget.sortColumn,
-          sortAscending: widget.sortAscending,
-          onSortColumn: widget.onSortColumn,
+        Row(
+          children: [
+            Expanded(
+              child: _ListHeader(
+                recursive: widget.recursiveResults,
+                sizeWidth: columnWidths.size,
+                dateWidth: columnWidths.date,
+                sortColumn: widget.sortColumn,
+                sortAscending: widget.sortAscending,
+                onSortColumn: widget.onSortColumn,
+              ),
+            ),
+            SizedBox(
+              width: _kScrollbarGutterWidth,
+              height: 24,
+              child: ColoredBox(color: AppColors.bg),
+            ),
+          ],
         ),
         Divider(height: 1, thickness: 1, color: AppColors.bgDivider),
         Expanded(
@@ -274,8 +311,10 @@ class _FileListState extends State<FileList> {
             itemCount: widget.files.length,
             itemExtent: _itemExt,
             rowHeight: _rowH,
+            topPadding: _listTopPadding,
             pathAt: (i) => widget.files[i].path,
             rowAt: _rowAt,
+            canStartSelectionAt: _canStartRubberBandAt,
             onSelectionChanged: widget.onRectSelect,
             onBackgroundTap: widget.onBackgroundTap,
             child: DropRegion(
@@ -311,86 +350,114 @@ class _FileListState extends State<FileList> {
                 }
                 _clearDrag();
               },
-              child: Stack(
-                children: [
-                  GestureDetector(
-                    onSecondaryTapUp: (d) {
-                      final index = _rowAt(d.localPosition);
-                      if (index < 0) {
-                        widget.onBackgroundTap?.call();
-                        widget.onBackgroundContextMenu?.call(d.globalPosition);
-                      }
-                    },
-                    behavior: HitTestBehavior.translucent,
-                    child: ListView.builder(
-                      controller: _scrollController,
-                      padding: EdgeInsets.zero,
-                      itemCount: widget.files.length,
-                      itemExtent: _itemExt,
-                      // We supply our own RepaintBoundary per row; the keep
-                      // alive / semantics / repaint wrappers ListView adds by
-                      // default are pure overhead at 10k+ rows.
-                      addAutomaticKeepAlives: false,
-                      addRepaintBoundaries: false,
-                      addSemanticIndexes: false,
-                      itemBuilder: (context, i) => RepaintBoundary(
-                        child: Padding(
-                          padding: EdgeInsets.only(bottom: _rowG),
-                          child: _ListRow(
-                            rowHeight: _rowH,
-                            dateFmt: _dateFmt,
-                            recentDatesRelative: _recentDatesRelative,
-                            entry: widget.files[i],
-                            index: i,
-                            selected: widget.selectedPaths.contains(
-                              widget.files[i].path,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  _viewportWidth = constraints.maxWidth;
+                  return Stack(
+                    children: [
+                      ScrollConfiguration(
+                        behavior: ScrollConfiguration.of(
+                          context,
+                        ).copyWith(scrollbars: false),
+                        child: RawScrollbar(
+                          controller: _scrollController,
+                          thumbVisibility: true,
+                          thumbColor: AppColors.fgSubtle,
+                          thickness: _kScrollbarThumbWidth,
+                          crossAxisMargin: 0,
+                          radius: Radius.zero,
+                          child: GestureDetector(
+                            onSecondaryTapUp: (d) {
+                              final index = _rowAt(d.localPosition);
+                              if (index < 0) {
+                                widget.onBackgroundTap?.call();
+                                widget.onBackgroundContextMenu?.call(
+                                  d.globalPosition,
+                                );
+                              }
+                            },
+                            behavior: HitTestBehavior.translucent,
+                            child: ListView.builder(
+                              controller: _scrollController,
+                              padding: EdgeInsets.only(
+                                left: _listHorizontalPadding,
+                                top: _listTopPadding,
+                                right:
+                                    _listHorizontalPadding +
+                                    _kScrollbarGutterWidth,
+                              ),
+                              itemCount: widget.files.length,
+                              itemExtent: _itemExt,
+                              addAutomaticKeepAlives: false,
+                              addRepaintBoundaries: false,
+                              addSemanticIndexes: false,
+                              itemBuilder: (context, i) => RepaintBoundary(
+                                child: Padding(
+                                  padding: EdgeInsets.only(bottom: _rowG),
+                                  child: _ListRow(
+                                    rowHeight: _rowH,
+                                    dateFmt: _dateFmt,
+                                    recentDatesRelative: _recentDatesRelative,
+                                    entry: widget.files[i],
+                                    index: i,
+                                    selected: widget.selectedPaths.contains(
+                                      widget.files[i].path,
+                                    ),
+                                    selectedPaths: widget.selectedPaths,
+                                    isCut: widget.cutPaths.contains(
+                                      widget.files[i].path,
+                                    ),
+                                    isDraggingSelected:
+                                        widget.selectedPaths.isNotEmpty,
+                                    isFolderDragOver:
+                                        _hoveredFolderPath ==
+                                        widget.files[i].path,
+                                    isRenaming:
+                                        widget.renamingPath ==
+                                        widget.files[i].path,
+                                    renameAttempt: widget.renameAttempt,
+                                    onRenameSubmit: widget.onRenameSubmit,
+                                    onRenameCancel: widget.onRenameCancel,
+                                    onSelect: widget.onSelect,
+                                    onOpen: widget.onOpen,
+                                    onContextMenu: widget.onContextMenu,
+                                    onMenuAction: widget.onMenuAction,
+                                    recursive: widget.recursiveResults,
+                                    sizeWidth: columnWidths.size,
+                                    dateWidth: columnWidths.date,
+                                    location: widget.recursiveResults
+                                        ? _compactLocation(
+                                            widget.files[i].path,
+                                            widget.currentPath,
+                                          )
+                                        : null,
+                                    onOpenInNewTab: widget.onOpenInNewTab,
+                                  ),
+                                ),
+                              ),
                             ),
-                            selectedPaths: widget.selectedPaths,
-                            isCut: widget.cutPaths.contains(
-                              widget.files[i].path,
-                            ),
-                            isDraggingSelected: widget.selectedPaths.isNotEmpty,
-                            isFolderDragOver:
-                                _hoveredFolderPath == widget.files[i].path,
-                            isRenaming:
-                                widget.renamingPath == widget.files[i].path,
-                            renameAttempt: widget.renameAttempt,
-                            onRenameSubmit: widget.onRenameSubmit,
-                            onRenameCancel: widget.onRenameCancel,
-                            onSelect: widget.onSelect,
-                            onOpen: widget.onOpen,
-                            onContextMenu: widget.onContextMenu,
-                            onMenuAction: widget.onMenuAction,
-                            recursive: widget.recursiveResults,
-                            sizeWidth: columnWidths.size,
-                            dateWidth: columnWidths.date,
-                            location: widget.recursiveResults
-                                ? _compactLocation(
-                                    widget.files[i].path,
-                                    widget.currentPath,
-                                  )
-                                : null,
-                            onOpenInNewTab: widget.onOpenInNewTab,
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                  if (_isDragOver)
-                    Positioned.fill(
-                      child: IgnorePointer(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: AppColors.accent.withValues(alpha: 0.4),
-                              width: 1,
+                      if (_isDragOver)
+                        Positioned.fill(
+                          child: IgnorePointer(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: AppColors.accent.withValues(
+                                    alpha: 0.4,
+                                  ),
+                                  width: 1,
+                                ),
+                                borderRadius: BorderRadius.zero,
+                              ),
                             ),
-                            borderRadius: BorderRadius.zero,
                           ),
                         ),
-                      ),
-                    ),
-                ],
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -858,7 +925,10 @@ class _ListRowState extends State<_ListRow> {
         onExit: (_) => setState(() => _hovered = false),
         child: Container(
           height: widget.rowHeight,
-          padding: const EdgeInsets.only(left: 12, right: 16),
+          padding: const EdgeInsets.only(
+            left: _kRowPaddingLeft,
+            right: _kRowPaddingRight,
+          ),
           decoration: BoxDecoration(color: _bg, border: _border),
           child: Opacity(
             opacity: opacity,
@@ -982,7 +1052,10 @@ class _ListRowState extends State<_ListRow> {
         },
         child: Container(
           height: widget.rowHeight,
-          padding: const EdgeInsets.only(left: 12, right: 16),
+          padding: const EdgeInsets.only(
+            left: _kRowPaddingLeft,
+            right: _kRowPaddingRight,
+          ),
           decoration: BoxDecoration(
             color: _bg,
             borderRadius: widget.isFolderDragOver ? BorderRadius.zero : null,

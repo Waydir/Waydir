@@ -27,6 +27,10 @@ class AppSettings extends Table {
       boolean().withDefault(const Constant(false))();
   TextColumn get rowDensity =>
       text().withDefault(const Constant('comfortable'))();
+  IntColumn get fileListHorizontalSpacing =>
+      integer().withDefault(const Constant(6))();
+  IntColumn get fileListVerticalSpacing =>
+      integer().withDefault(const Constant(6))();
   TextColumn get dateFormat => text().withDefault(const Constant('locale'))();
   BoolColumn get recentDatesRelative =>
       boolean().withDefault(const Constant(true))();
@@ -105,7 +109,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 14;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -169,6 +173,10 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 14) {
         await addSettingColumn(appSettings.searchMode);
+      }
+      if (from < 15) {
+        await addSettingColumn(appSettings.fileListHorizontalSpacing);
+        await addSettingColumn(appSettings.fileListVerticalSpacing);
       }
     },
   );

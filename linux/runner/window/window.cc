@@ -26,7 +26,7 @@ struct State {
   int height = 0;
   int x = 0;
   int y = 0;
-  int grip_size = 6;
+  int grip_size = 1;
   int min_width = -1;
   int min_height = -1;
 };
@@ -56,7 +56,7 @@ bool DetectEdge(int width, int height, double x, double y,
     else                       *edge = GDK_WINDOW_EDGE_SOUTH_WEST;
     return true;
   }
-  if (x > width - margin) {
+  if (x >= width - margin) {
     if (y < margin)            *edge = GDK_WINDOW_EDGE_NORTH_EAST;
     else if (y < height - margin) *edge = GDK_WINDOW_EDGE_EAST;
     else                       *edge = GDK_WINDOW_EDGE_SOUTH_EAST;
