@@ -24,6 +24,8 @@ void main() {
       expect(settings.isDual, false);
       expect(settings.splitRatio, 0.5);
       expect(settings.activePaneIndex, 0);
+      expect(settings.fileListHorizontalSpacing, 6);
+      expect(settings.fileListVerticalSpacing, 6);
       expect(settings.dateFormat, 'locale');
       expect(settings.recentDatesRelative, true);
     });
@@ -41,6 +43,8 @@ void main() {
         const AppSettingsCompanion(
           terminal: Value('alacritty'),
           terminalCustomCommand: Value('alacritty -e'),
+          fileListHorizontalSpacing: Value(8),
+          fileListVerticalSpacing: Value(4),
           isDual: Value(true),
           splitRatio: Value(0.7),
           activePaneIndex: Value(1),
@@ -50,6 +54,8 @@ void main() {
       final settings = await db.getSettings();
       expect(settings.terminal, 'alacritty');
       expect(settings.terminalCustomCommand, 'alacritty -e');
+      expect(settings.fileListHorizontalSpacing, 8);
+      expect(settings.fileListVerticalSpacing, 4);
       expect(settings.isDual, true);
       expect(settings.splitRatio, 0.7);
       expect(settings.activePaneIndex, 1);

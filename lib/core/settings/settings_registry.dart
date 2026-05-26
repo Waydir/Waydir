@@ -246,6 +246,22 @@ class SettingsRegistry {
         ),
       ],
     ),
+    ChoiceSetting<int>(
+      id: 'appearance.fileListHorizontalSpacing',
+      category: SettingsCategory.appearance,
+      label: () => t.preferences.appearance.fileListHorizontalSpacing,
+      searchTerms: const ['files', 'spacing', 'horizontal', 'padding'],
+      signal: SettingsStore.instance.fileListHorizontalSpacing,
+      choices: _spacingChoices(WaydirIconsRegular.arrowsLeftRight),
+    ),
+    ChoiceSetting<int>(
+      id: 'appearance.fileListVerticalSpacing',
+      category: SettingsCategory.appearance,
+      label: () => t.preferences.appearance.fileListVerticalSpacing,
+      searchTerms: const ['files', 'spacing', 'vertical', 'rows', 'gap'],
+      signal: SettingsStore.instance.fileListVerticalSpacing,
+      choices: _spacingChoices(WaydirIconsRegular.rows),
+    ),
     ChoiceSetting<String>(
       id: 'appearance.dateFormat',
       category: SettingsCategory.appearance,
@@ -339,6 +355,13 @@ class SettingsRegistry {
         ),
     ];
   }
+}
+
+List<SettingChoice<int>> _spacingChoices(IconData icon) {
+  return [
+    for (final value in const [0, 2, 4, 6, 8, 10, 12, 16])
+      SettingChoice(value: value, label: () => '${value}px', icon: icon),
+  ];
 }
 
 String _themeLabel(AppThemeDefinition theme) => switch (theme.id) {

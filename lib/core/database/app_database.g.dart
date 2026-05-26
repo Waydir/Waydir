@@ -209,6 +209,30 @@ class $AppSettingsTable extends AppSettings
     requiredDuringInsert: false,
     defaultValue: const Constant('comfortable'),
   );
+  static const VerificationMeta _fileListHorizontalSpacingMeta =
+      const VerificationMeta('fileListHorizontalSpacing');
+  @override
+  late final GeneratedColumn<int> fileListHorizontalSpacing =
+      GeneratedColumn<int>(
+        'file_list_horizontal_spacing',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(6),
+      );
+  static const VerificationMeta _fileListVerticalSpacingMeta =
+      const VerificationMeta('fileListVerticalSpacing');
+  @override
+  late final GeneratedColumn<int> fileListVerticalSpacing =
+      GeneratedColumn<int>(
+        'file_list_vertical_spacing',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(6),
+      );
   static const VerificationMeta _dateFormatMeta = const VerificationMeta(
     'dateFormat',
   );
@@ -319,6 +343,8 @@ class $AppSettingsTable extends AppSettings
     confirmMove,
     showHiddenDefault,
     rowDensity,
+    fileListHorizontalSpacing,
+    fileListVerticalSpacing,
     dateFormat,
     recentDatesRelative,
     deleteKeyBehavior,
@@ -453,6 +479,24 @@ class $AppSettingsTable extends AppSettings
         rowDensity.isAcceptableOrUnknown(data['row_density']!, _rowDensityMeta),
       );
     }
+    if (data.containsKey('file_list_horizontal_spacing')) {
+      context.handle(
+        _fileListHorizontalSpacingMeta,
+        fileListHorizontalSpacing.isAcceptableOrUnknown(
+          data['file_list_horizontal_spacing']!,
+          _fileListHorizontalSpacingMeta,
+        ),
+      );
+    }
+    if (data.containsKey('file_list_vertical_spacing')) {
+      context.handle(
+        _fileListVerticalSpacingMeta,
+        fileListVerticalSpacing.isAcceptableOrUnknown(
+          data['file_list_vertical_spacing']!,
+          _fileListVerticalSpacingMeta,
+        ),
+      );
+    }
     if (data.containsKey('date_format')) {
       context.handle(
         _dateFormatMeta,
@@ -576,6 +620,14 @@ class $AppSettingsTable extends AppSettings
         DriftSqlType.string,
         data['${effectivePrefix}row_density'],
       )!,
+      fileListHorizontalSpacing: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}file_list_horizontal_spacing'],
+      )!,
+      fileListVerticalSpacing: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}file_list_vertical_spacing'],
+      )!,
       dateFormat: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}date_format'],
@@ -629,6 +681,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
   final bool confirmMove;
   final bool showHiddenDefault;
   final String rowDensity;
+  final int fileListHorizontalSpacing;
+  final int fileListVerticalSpacing;
   final String dateFormat;
   final bool recentDatesRelative;
   final String deleteKeyBehavior;
@@ -652,6 +706,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     required this.confirmMove,
     required this.showHiddenDefault,
     required this.rowDensity,
+    required this.fileListHorizontalSpacing,
+    required this.fileListVerticalSpacing,
     required this.dateFormat,
     required this.recentDatesRelative,
     required this.deleteKeyBehavior,
@@ -678,6 +734,10 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     map['confirm_move'] = Variable<bool>(confirmMove);
     map['show_hidden_default'] = Variable<bool>(showHiddenDefault);
     map['row_density'] = Variable<String>(rowDensity);
+    map['file_list_horizontal_spacing'] = Variable<int>(
+      fileListHorizontalSpacing,
+    );
+    map['file_list_vertical_spacing'] = Variable<int>(fileListVerticalSpacing);
     map['date_format'] = Variable<String>(dateFormat);
     map['recent_dates_relative'] = Variable<bool>(recentDatesRelative);
     map['delete_key_behavior'] = Variable<String>(deleteKeyBehavior);
@@ -705,6 +765,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       confirmMove: Value(confirmMove),
       showHiddenDefault: Value(showHiddenDefault),
       rowDensity: Value(rowDensity),
+      fileListHorizontalSpacing: Value(fileListHorizontalSpacing),
+      fileListVerticalSpacing: Value(fileListVerticalSpacing),
       dateFormat: Value(dateFormat),
       recentDatesRelative: Value(recentDatesRelative),
       deleteKeyBehavior: Value(deleteKeyBehavior),
@@ -740,6 +802,12 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       confirmMove: serializer.fromJson<bool>(json['confirmMove']),
       showHiddenDefault: serializer.fromJson<bool>(json['showHiddenDefault']),
       rowDensity: serializer.fromJson<String>(json['rowDensity']),
+      fileListHorizontalSpacing: serializer.fromJson<int>(
+        json['fileListHorizontalSpacing'],
+      ),
+      fileListVerticalSpacing: serializer.fromJson<int>(
+        json['fileListVerticalSpacing'],
+      ),
       dateFormat: serializer.fromJson<String>(json['dateFormat']),
       recentDatesRelative: serializer.fromJson<bool>(
         json['recentDatesRelative'],
@@ -770,6 +838,12 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       'confirmMove': serializer.toJson<bool>(confirmMove),
       'showHiddenDefault': serializer.toJson<bool>(showHiddenDefault),
       'rowDensity': serializer.toJson<String>(rowDensity),
+      'fileListHorizontalSpacing': serializer.toJson<int>(
+        fileListHorizontalSpacing,
+      ),
+      'fileListVerticalSpacing': serializer.toJson<int>(
+        fileListVerticalSpacing,
+      ),
       'dateFormat': serializer.toJson<String>(dateFormat),
       'recentDatesRelative': serializer.toJson<bool>(recentDatesRelative),
       'deleteKeyBehavior': serializer.toJson<String>(deleteKeyBehavior),
@@ -796,6 +870,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     bool? confirmMove,
     bool? showHiddenDefault,
     String? rowDensity,
+    int? fileListHorizontalSpacing,
+    int? fileListVerticalSpacing,
     String? dateFormat,
     bool? recentDatesRelative,
     String? deleteKeyBehavior,
@@ -819,6 +895,10 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     confirmMove: confirmMove ?? this.confirmMove,
     showHiddenDefault: showHiddenDefault ?? this.showHiddenDefault,
     rowDensity: rowDensity ?? this.rowDensity,
+    fileListHorizontalSpacing:
+        fileListHorizontalSpacing ?? this.fileListHorizontalSpacing,
+    fileListVerticalSpacing:
+        fileListVerticalSpacing ?? this.fileListVerticalSpacing,
     dateFormat: dateFormat ?? this.dateFormat,
     recentDatesRelative: recentDatesRelative ?? this.recentDatesRelative,
     deleteKeyBehavior: deleteKeyBehavior ?? this.deleteKeyBehavior,
@@ -866,6 +946,12 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       rowDensity: data.rowDensity.present
           ? data.rowDensity.value
           : this.rowDensity,
+      fileListHorizontalSpacing: data.fileListHorizontalSpacing.present
+          ? data.fileListHorizontalSpacing.value
+          : this.fileListHorizontalSpacing,
+      fileListVerticalSpacing: data.fileListVerticalSpacing.present
+          ? data.fileListVerticalSpacing.value
+          : this.fileListVerticalSpacing,
       dateFormat: data.dateFormat.present
           ? data.dateFormat.value
           : this.dateFormat,
@@ -906,6 +992,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           ..write('confirmMove: $confirmMove, ')
           ..write('showHiddenDefault: $showHiddenDefault, ')
           ..write('rowDensity: $rowDensity, ')
+          ..write('fileListHorizontalSpacing: $fileListHorizontalSpacing, ')
+          ..write('fileListVerticalSpacing: $fileListVerticalSpacing, ')
           ..write('dateFormat: $dateFormat, ')
           ..write('recentDatesRelative: $recentDatesRelative, ')
           ..write('deleteKeyBehavior: $deleteKeyBehavior, ')
@@ -934,6 +1022,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     confirmMove,
     showHiddenDefault,
     rowDensity,
+    fileListHorizontalSpacing,
+    fileListVerticalSpacing,
     dateFormat,
     recentDatesRelative,
     deleteKeyBehavior,
@@ -961,6 +1051,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           other.confirmMove == this.confirmMove &&
           other.showHiddenDefault == this.showHiddenDefault &&
           other.rowDensity == this.rowDensity &&
+          other.fileListHorizontalSpacing == this.fileListHorizontalSpacing &&
+          other.fileListVerticalSpacing == this.fileListVerticalSpacing &&
           other.dateFormat == this.dateFormat &&
           other.recentDatesRelative == this.recentDatesRelative &&
           other.deleteKeyBehavior == this.deleteKeyBehavior &&
@@ -986,6 +1078,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
   final Value<bool> confirmMove;
   final Value<bool> showHiddenDefault;
   final Value<String> rowDensity;
+  final Value<int> fileListHorizontalSpacing;
+  final Value<int> fileListVerticalSpacing;
   final Value<String> dateFormat;
   final Value<bool> recentDatesRelative;
   final Value<String> deleteKeyBehavior;
@@ -1009,6 +1103,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.confirmMove = const Value.absent(),
     this.showHiddenDefault = const Value.absent(),
     this.rowDensity = const Value.absent(),
+    this.fileListHorizontalSpacing = const Value.absent(),
+    this.fileListVerticalSpacing = const Value.absent(),
     this.dateFormat = const Value.absent(),
     this.recentDatesRelative = const Value.absent(),
     this.deleteKeyBehavior = const Value.absent(),
@@ -1033,6 +1129,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.confirmMove = const Value.absent(),
     this.showHiddenDefault = const Value.absent(),
     this.rowDensity = const Value.absent(),
+    this.fileListHorizontalSpacing = const Value.absent(),
+    this.fileListVerticalSpacing = const Value.absent(),
     this.dateFormat = const Value.absent(),
     this.recentDatesRelative = const Value.absent(),
     this.deleteKeyBehavior = const Value.absent(),
@@ -1057,6 +1155,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Expression<bool>? confirmMove,
     Expression<bool>? showHiddenDefault,
     Expression<String>? rowDensity,
+    Expression<int>? fileListHorizontalSpacing,
+    Expression<int>? fileListVerticalSpacing,
     Expression<String>? dateFormat,
     Expression<bool>? recentDatesRelative,
     Expression<String>? deleteKeyBehavior,
@@ -1083,6 +1183,10 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       if (confirmMove != null) 'confirm_move': confirmMove,
       if (showHiddenDefault != null) 'show_hidden_default': showHiddenDefault,
       if (rowDensity != null) 'row_density': rowDensity,
+      if (fileListHorizontalSpacing != null)
+        'file_list_horizontal_spacing': fileListHorizontalSpacing,
+      if (fileListVerticalSpacing != null)
+        'file_list_vertical_spacing': fileListVerticalSpacing,
       if (dateFormat != null) 'date_format': dateFormat,
       if (recentDatesRelative != null)
         'recent_dates_relative': recentDatesRelative,
@@ -1110,6 +1214,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Value<bool>? confirmMove,
     Value<bool>? showHiddenDefault,
     Value<String>? rowDensity,
+    Value<int>? fileListHorizontalSpacing,
+    Value<int>? fileListVerticalSpacing,
     Value<String>? dateFormat,
     Value<bool>? recentDatesRelative,
     Value<String>? deleteKeyBehavior,
@@ -1135,6 +1241,10 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       confirmMove: confirmMove ?? this.confirmMove,
       showHiddenDefault: showHiddenDefault ?? this.showHiddenDefault,
       rowDensity: rowDensity ?? this.rowDensity,
+      fileListHorizontalSpacing:
+          fileListHorizontalSpacing ?? this.fileListHorizontalSpacing,
+      fileListVerticalSpacing:
+          fileListVerticalSpacing ?? this.fileListVerticalSpacing,
       dateFormat: dateFormat ?? this.dateFormat,
       recentDatesRelative: recentDatesRelative ?? this.recentDatesRelative,
       deleteKeyBehavior: deleteKeyBehavior ?? this.deleteKeyBehavior,
@@ -1197,6 +1307,16 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     if (rowDensity.present) {
       map['row_density'] = Variable<String>(rowDensity.value);
     }
+    if (fileListHorizontalSpacing.present) {
+      map['file_list_horizontal_spacing'] = Variable<int>(
+        fileListHorizontalSpacing.value,
+      );
+    }
+    if (fileListVerticalSpacing.present) {
+      map['file_list_vertical_spacing'] = Variable<int>(
+        fileListVerticalSpacing.value,
+      );
+    }
     if (dateFormat.present) {
       map['date_format'] = Variable<String>(dateFormat.value);
     }
@@ -1239,6 +1359,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
           ..write('confirmMove: $confirmMove, ')
           ..write('showHiddenDefault: $showHiddenDefault, ')
           ..write('rowDensity: $rowDensity, ')
+          ..write('fileListHorizontalSpacing: $fileListHorizontalSpacing, ')
+          ..write('fileListVerticalSpacing: $fileListVerticalSpacing, ')
           ..write('dateFormat: $dateFormat, ')
           ..write('recentDatesRelative: $recentDatesRelative, ')
           ..write('deleteKeyBehavior: $deleteKeyBehavior, ')
@@ -3085,6 +3207,8 @@ typedef $$AppSettingsTableCreateCompanionBuilder =
       Value<bool> confirmMove,
       Value<bool> showHiddenDefault,
       Value<String> rowDensity,
+      Value<int> fileListHorizontalSpacing,
+      Value<int> fileListVerticalSpacing,
       Value<String> dateFormat,
       Value<bool> recentDatesRelative,
       Value<String> deleteKeyBehavior,
@@ -3110,6 +3234,8 @@ typedef $$AppSettingsTableUpdateCompanionBuilder =
       Value<bool> confirmMove,
       Value<bool> showHiddenDefault,
       Value<String> rowDensity,
+      Value<int> fileListHorizontalSpacing,
+      Value<int> fileListVerticalSpacing,
       Value<String> dateFormat,
       Value<bool> recentDatesRelative,
       Value<String> deleteKeyBehavior,
@@ -3200,6 +3326,16 @@ class $$AppSettingsTableFilterComposer
 
   ColumnFilters<String> get rowDensity => $composableBuilder(
     column: $table.rowDensity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get fileListHorizontalSpacing => $composableBuilder(
+    column: $table.fileListHorizontalSpacing,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get fileListVerticalSpacing => $composableBuilder(
+    column: $table.fileListVerticalSpacing,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3323,6 +3459,16 @@ class $$AppSettingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get fileListHorizontalSpacing => $composableBuilder(
+    column: $table.fileListHorizontalSpacing,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get fileListVerticalSpacing => $composableBuilder(
+    column: $table.fileListVerticalSpacing,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get dateFormat => $composableBuilder(
     column: $table.dateFormat,
     builder: (column) => ColumnOrderings(column),
@@ -3435,6 +3581,16 @@ class $$AppSettingsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<int> get fileListHorizontalSpacing => $composableBuilder(
+    column: $table.fileListHorizontalSpacing,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get fileListVerticalSpacing => $composableBuilder(
+    column: $table.fileListVerticalSpacing,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get dateFormat => $composableBuilder(
     column: $table.dateFormat,
     builder: (column) => column,
@@ -3515,6 +3671,8 @@ class $$AppSettingsTableTableManager
                 Value<bool> confirmMove = const Value.absent(),
                 Value<bool> showHiddenDefault = const Value.absent(),
                 Value<String> rowDensity = const Value.absent(),
+                Value<int> fileListHorizontalSpacing = const Value.absent(),
+                Value<int> fileListVerticalSpacing = const Value.absent(),
                 Value<String> dateFormat = const Value.absent(),
                 Value<bool> recentDatesRelative = const Value.absent(),
                 Value<String> deleteKeyBehavior = const Value.absent(),
@@ -3538,6 +3696,8 @@ class $$AppSettingsTableTableManager
                 confirmMove: confirmMove,
                 showHiddenDefault: showHiddenDefault,
                 rowDensity: rowDensity,
+                fileListHorizontalSpacing: fileListHorizontalSpacing,
+                fileListVerticalSpacing: fileListVerticalSpacing,
                 dateFormat: dateFormat,
                 recentDatesRelative: recentDatesRelative,
                 deleteKeyBehavior: deleteKeyBehavior,
@@ -3563,6 +3723,8 @@ class $$AppSettingsTableTableManager
                 Value<bool> confirmMove = const Value.absent(),
                 Value<bool> showHiddenDefault = const Value.absent(),
                 Value<String> rowDensity = const Value.absent(),
+                Value<int> fileListHorizontalSpacing = const Value.absent(),
+                Value<int> fileListVerticalSpacing = const Value.absent(),
                 Value<String> dateFormat = const Value.absent(),
                 Value<bool> recentDatesRelative = const Value.absent(),
                 Value<String> deleteKeyBehavior = const Value.absent(),
@@ -3586,6 +3748,8 @@ class $$AppSettingsTableTableManager
                 confirmMove: confirmMove,
                 showHiddenDefault: showHiddenDefault,
                 rowDensity: rowDensity,
+                fileListHorizontalSpacing: fileListHorizontalSpacing,
+                fileListVerticalSpacing: fileListVerticalSpacing,
                 dateFormat: dateFormat,
                 recentDatesRelative: recentDatesRelative,
                 deleteKeyBehavior: deleteKeyBehavior,

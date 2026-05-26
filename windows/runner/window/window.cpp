@@ -21,6 +21,7 @@ BOOL g_visible_on_startup = TRUE;
 BOOL g_window_can_be_shown = FALSE;
 BOOL g_during_minimize = FALSE;
 SIZE g_min_size = {0, 0};
+constexpr int kResizeMargin = 1;
 
 LRESULT CALLBACK MainWindowProc(HWND window, UINT message, WPARAM wparam,
                                 LPARAM lparam, UINT_PTR subclass_id,
@@ -70,10 +71,8 @@ void ForceChildRefresh() {
 
 int GetResizeMargin(HWND window) {
   UINT dpi = GetDpiForWindow(window);
-  int border = GetSystemMetricsForDpi(SM_CXSIZEFRAME, dpi);
-  int padding = GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi);
-  if (IsZoomed(window)) return padding;
-  return border + padding;
+  if (IsZoomed(window)) return 0;
+  return MulDiv(kResizeMargin, dpi, 96);
 }
 
 void ExtendIntoClientArea(HWND hwnd) {
@@ -90,16 +89,16 @@ LRESULT HandleHitTest(HWND window, LPARAM lparam) {
   int margin = GetResizeMargin(window);
   if (pt.y < margin) {
     if (pt.x < margin) return HTTOPLEFT;
-    if (pt.x > rc.right - margin) return HTTOPRIGHT;
+    if (pt.x >= rc.right - margin) return HTTOPRIGHT;
     return HTTOP;
   }
-  if (pt.y > rc.bottom - margin) {
+  if (pt.y >= rc.bottom - margin) {
     if (pt.x < margin) return HTBOTTOMLEFT;
-    if (pt.x > rc.right - margin) return HTBOTTOMRIGHT;
+    if (pt.x >= rc.right - margin) return HTBOTTOMRIGHT;
     return HTBOTTOM;
   }
   if (pt.x < margin) return HTLEFT;
-  if (pt.x > rc.right - margin) return HTRIGHT;
+  if (pt.x >= rc.right - margin) return HTRIGHT;
   return HTCLIENT;
 }
 

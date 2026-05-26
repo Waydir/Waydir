@@ -24,6 +24,8 @@ class SettingsStore {
   final confirmMove = signal<bool>(true);
   final showHiddenDefault = signal<bool>(false);
   final rowDensity = signal<String>('comfortable');
+  final fileListHorizontalSpacing = signal<int>(6);
+  final fileListVerticalSpacing = signal<int>(6);
   final dateFormat = signal<String>('locale');
   final recentDatesRelative = signal<bool>(true);
   final deleteKeyBehavior = signal<String>('trash');
@@ -63,6 +65,8 @@ class SettingsStore {
     confirmMove.value = row.confirmMove;
     showHiddenDefault.value = row.showHiddenDefault;
     rowDensity.value = row.rowDensity;
+    fileListHorizontalSpacing.value = row.fileListHorizontalSpacing;
+    fileListVerticalSpacing.value = row.fileListVerticalSpacing;
     dateFormat.value = row.dateFormat;
     recentDatesRelative.value = row.recentDatesRelative;
     deleteKeyBehavior.value = row.deleteKeyBehavior;
@@ -89,6 +93,8 @@ class SettingsStore {
         confirmMove.value;
         showHiddenDefault.value;
         rowDensity.value;
+        fileListHorizontalSpacing.value;
+        fileListVerticalSpacing.value;
         dateFormat.value;
         recentDatesRelative.value;
         deleteKeyBehavior.value;
@@ -125,6 +131,8 @@ class SettingsStore {
           confirmMove: Value(confirmMove.value),
           showHiddenDefault: Value(showHiddenDefault.value),
           rowDensity: Value(rowDensity.value),
+          fileListHorizontalSpacing: Value(fileListHorizontalSpacing.value),
+          fileListVerticalSpacing: Value(fileListVerticalSpacing.value),
           dateFormat: Value(dateFormat.value),
           recentDatesRelative: Value(recentDatesRelative.value),
           deleteKeyBehavior: Value(deleteKeyBehavior.value),
