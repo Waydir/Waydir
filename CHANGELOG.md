@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - File list horizontal and vertical spacing can now be adjusted in Preferences.
+- Leave the Share field empty when connecting to SMB to browse the server's shared folders.
 
 ### Changed
 - File list scrollbar is now always visible and reserves space at the right edge.

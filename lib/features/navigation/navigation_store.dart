@@ -12,6 +12,7 @@ import '../../core/fs/fs_worker_pool.dart';
 import '../../core/fs/directory_watcher_service.dart';
 import '../../core/fs/recursive_search.dart';
 import '../../core/fs/sftp_fs.dart';
+import '../../core/fs/smb_share_discovery.dart';
 import '../../core/keyboard/keyboard_shortcuts.dart';
 import '../../core/platform/platform_paths.dart';
 import '../../core/platform/trash_location.dart';
@@ -140,6 +141,58 @@ class NavigationStore {
       return result;
     }
     return LocationResolver.resolveSftpWithCredentials(logical, credentials);
+  }
+
+  Future<List<FileEntry>> _listSmbHostShares(
+    String logical,
+    LocationUri uri,
+  ) async {
+    final host = uri.host ?? '';
+    if (host.isEmpty) {
+      throw FileSystemException('Missing host in smb:// URI', logical);
+    }
+    SmbShareListResult result = await SmbShareDiscovery.list(
+      host: host,
+      port: uri.port,
+      credentials: uri.username != null && uri.username!.isNotEmpty
+          ? SmbCredentials(username: uri.username!, password: '')
+          : null,
+    );
+    if (result is SmbShareListAuthRequired) {
+      final creds = await requestSmbCredentials?.call(logical);
+      if (creds != null &&
+          creds.username.trim().isNotEmpty &&
+          creds.password.isNotEmpty) {
+        result = await SmbShareDiscovery.list(
+          host: host,
+          port: uri.port,
+          credentials: creds,
+        );
+      }
+    }
+    switch (result) {
+      case SmbShareListOk(:final shares):
+        final now = DateTime.now();
+        return [
+          for (final s in shares)
+            FileEntry(
+              name: s.name,
+              path: '$logical/${s.name}',
+              type: FileItemType.folder,
+              size: 0,
+              modified: now,
+            ),
+        ];
+      case SmbShareListAuthRequired():
+        throw FileSystemException('Authentication required', logical);
+      case SmbShareListError(:final message):
+        throw FileSystemException(message, logical);
+      case SmbShareListUnsupported():
+        throw FileSystemException(
+          t.errors.smbNotSupportedOnPlatform,
+          logical,
+        );
+    }
   }
 
   final DirectoryWatcherService _watcher = DirectoryWatcherService();
@@ -701,6 +754,15 @@ class NavigationStore {
     bool addToHistory = true,
     bool restoreState = false,
   }) async {
+    final uri = LocationUri.parse(logical);
+    if (uri.share == null || uri.share!.isEmpty) {
+      _doNavigate(
+        logical,
+        addToHistory: addToHistory,
+        restoreState: restoreState,
+      );
+      return;
+    }
     batch(() {
       isLoading.value = true;
       loadError.value = null;
@@ -950,6 +1012,20 @@ class NavigationStore {
       if (isTrashPath(path)) {
         entries = await _loadTrash(path);
       } else if (PlatformPaths.isSmbUri(path)) {
+        final uri = LocationUri.parse(path);
+        if (uri.share == null || uri.share!.isEmpty) {
+          entries = await _listSmbHostShares(path, uri);
+          if (token != _loadToken) return;
+          batch(() {
+            files.value = entries;
+            loadError.value = null;
+            trashAccessDenied.value = false;
+            isLoading.value = false;
+          });
+          _restoreFolderStateIfMatches(path);
+          _watcher.stop();
+          return;
+        }
         var physical = LocationResolver.logicalToPhysical(path);
         if (physical == null) {
           final r = await _resolveSmb(path);

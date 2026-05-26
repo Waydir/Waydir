@@ -62,8 +62,6 @@ class PlatformPaths {
       final rest = path.substring(scheme.length);
       final slash = rest.lastIndexOf('/');
       if (slash < 0) return path;
-      final beforeShare = rest.indexOf('/');
-      if (slash == beforeShare) return path;
       return '$scheme${rest.substring(0, slash)}';
     }
     if (isWindows) {
@@ -108,14 +106,8 @@ class PlatformPaths {
       final rest = path.substring(scheme.length);
       final parts = rest.split('/').where((s) => s.isNotEmpty).toList();
       if (parts.isEmpty) return [scheme];
-      if (isSftpUri(path)) {
-        // dla sftp pierwszy segment to host/port/user, dalej "path"
-        final root = '$scheme${parts.first}';
-        return [root, ...parts.sublist(1)];
-      }
-      if (parts.length == 1) return ['$scheme${parts[0]}'];
-      final root = '$scheme${parts[0]}/${parts[1]}';
-      return [root, ...parts.sublist(2)];
+      final root = '$scheme${parts.first}';
+      return [root, ...parts.sublist(1)];
     }
     if (isWindows) {
       final cleaned = _normalizeWindowsPath(path);
