@@ -42,6 +42,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	// Translations
 	late final Translations$app$en app = Translations$app$en.internal(_root);
 	late final Translations$menu$en menu = Translations$menu$en.internal(_root);
+	late final Translations$multiRename$en multiRename = Translations$multiRename$en.internal(_root);
 	late final Translations$compress$en compress = Translations$compress$en.internal(_root);
 	late final Translations$properties$en properties = Translations$properties$en.internal(_root);
 	late final Translations$preferences$en preferences = Translations$preferences$en.internal(_root);
@@ -209,6 +210,99 @@ class Translations$menu$en {
 
 	/// en: 'Add to Archive…'
 	String get compressOptions => 'Add to Archive…';
+
+	/// en: 'Multi Rename…'
+	String get multiRename => 'Multi Rename…';
+}
+
+// Path: multiRename
+class Translations$multiRename$en {
+	Translations$multiRename$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Multi Rename'
+	String get title => 'Multi Rename';
+
+	/// en: '$count items selected'
+	String subtitle({required Object count}) => '${count} items selected';
+
+	/// en: 'Template'
+	String get modeTemplate => 'Template';
+
+	/// en: 'Find & Replace'
+	String get modeFindReplace => 'Find & Replace';
+
+	/// en: 'Name pattern'
+	String get namePattern => 'Name pattern';
+
+	/// en: 'Tokens'
+	String get tokens => 'Tokens';
+
+	/// en: 'Original name without extension'
+	String get tokenFilename => 'Original name without extension';
+
+	/// en: 'Original extension (with dot)'
+	String get tokenExt => 'Original extension (with dot)';
+
+	/// en: 'Sequence number (starts at 1)'
+	String get tokenN => 'Sequence number (starts at 1)';
+
+	/// en: 'Sequence index (starts at 0)'
+	String get tokenIndex => 'Sequence index (starts at 0)';
+
+	/// en: 'Today's date (YYYY-MM-DD)'
+	String get tokenDate => 'Today\'s date (YYYY-MM-DD)';
+
+	/// en: 'Find'
+	String get find => 'Find';
+
+	/// en: 'Replace with'
+	String get replaceWith => 'Replace with';
+
+	/// en: 'Regular expression'
+	String get useRegex => 'Regular expression';
+
+	/// en: 'Case sensitive'
+	String get caseSensitive => 'Case sensitive';
+
+	/// en: 'Preview'
+	String get preview => 'Preview';
+
+	/// en: 'Before'
+	String get columnBefore => 'Before';
+
+	/// en: 'After'
+	String get columnAfter => 'After';
+
+	/// en: 'Show only changed'
+	String get showOnlyChanged => 'Show only changed';
+
+	/// en: '$changed of $total will change'
+	String changedOfTotal({required Object changed, required Object total}) => '${changed} of ${total} will change';
+
+	/// en: '$count conflicts'
+	String errorCount({required Object count}) => '${count} conflicts';
+
+	/// en: 'No files will be renamed'
+	String get noChanges => 'No files will be renamed';
+
+	/// en: 'Cancel'
+	String get cancel => 'Cancel';
+
+	/// en: 'Rename'
+	String get rename => 'Rename';
+
+	/// en: 'Rename $count files'
+	String renameCount({required Object count}) => 'Rename ${count} files';
+
+	/// en: 'invalid name'
+	String get errorInvalid => 'invalid name';
+
+	/// en: 'duplicate'
+	String get errorDuplicate => 'duplicate';
 }
 
 // Path: compress
@@ -821,6 +915,24 @@ class Translations$toast$en {
 
 	/// en: 'Could not rename: $message'
 	String renameError({required Object message}) => 'Could not rename: ${message}';
+
+	/// en: 'Renamed $count files'
+	String multiRenameSuccess({required Object count}) => 'Renamed ${count} files';
+
+	/// en: 'Renamed $succeeded of $total ($details)'
+	String multiRenamePartial({required Object succeeded, required Object total, required Object details}) => 'Renamed ${succeeded} of ${total} (${details})';
+
+	/// en: '$count already existed'
+	String multiRenameCollisions({required Object count}) => '${count} already existed';
+
+	/// en: '$count invalid names'
+	String multiRenameInvalid({required Object count}) => '${count} invalid names';
+
+	/// en: '$count errors'
+	String multiRenameOtherErrors({required Object count}) => '${count} errors';
+
+	/// en: 'Multi rename is not available in trash'
+	String get multiRenameTrashBlocked => 'Multi rename is not available in trash';
 }
 
 // Path: selectionFile
@@ -2372,6 +2484,34 @@ extension on Translations {
 			'menu.compress' => 'Compress',
 			'menu.compressTo' => ({required Object name}) => 'Compress to ${name}',
 			'menu.compressOptions' => 'Add to Archive…',
+			'menu.multiRename' => 'Multi Rename…',
+			'multiRename.title' => 'Multi Rename',
+			'multiRename.subtitle' => ({required Object count}) => '${count} items selected',
+			'multiRename.modeTemplate' => 'Template',
+			'multiRename.modeFindReplace' => 'Find & Replace',
+			'multiRename.namePattern' => 'Name pattern',
+			'multiRename.tokens' => 'Tokens',
+			'multiRename.tokenFilename' => 'Original name without extension',
+			'multiRename.tokenExt' => 'Original extension (with dot)',
+			'multiRename.tokenN' => 'Sequence number (starts at 1)',
+			'multiRename.tokenIndex' => 'Sequence index (starts at 0)',
+			'multiRename.tokenDate' => 'Today\'s date (YYYY-MM-DD)',
+			'multiRename.find' => 'Find',
+			'multiRename.replaceWith' => 'Replace with',
+			'multiRename.useRegex' => 'Regular expression',
+			'multiRename.caseSensitive' => 'Case sensitive',
+			'multiRename.preview' => 'Preview',
+			'multiRename.columnBefore' => 'Before',
+			'multiRename.columnAfter' => 'After',
+			'multiRename.showOnlyChanged' => 'Show only changed',
+			'multiRename.changedOfTotal' => ({required Object changed, required Object total}) => '${changed} of ${total} will change',
+			'multiRename.errorCount' => ({required Object count}) => '${count} conflicts',
+			'multiRename.noChanges' => 'No files will be renamed',
+			'multiRename.cancel' => 'Cancel',
+			'multiRename.rename' => 'Rename',
+			'multiRename.renameCount' => ({required Object count}) => 'Rename ${count} files',
+			'multiRename.errorInvalid' => 'invalid name',
+			'multiRename.errorDuplicate' => 'duplicate',
 			'compress.title' => 'Add to Archive',
 			'compress.archiveName' => 'Archive name',
 			'compress.format' => 'Format',
@@ -2671,6 +2811,12 @@ extension on Translations {
 			'toast.renameAlreadyExists' => ({required Object name}) => 'An item named \'${name}\' already exists',
 			'toast.renameInvalidName' => 'Invalid name',
 			'toast.renameError' => ({required Object message}) => 'Could not rename: ${message}',
+			'toast.multiRenameSuccess' => ({required Object count}) => 'Renamed ${count} files',
+			'toast.multiRenamePartial' => ({required Object succeeded, required Object total, required Object details}) => 'Renamed ${succeeded} of ${total} (${details})',
+			'toast.multiRenameCollisions' => ({required Object count}) => '${count} already existed',
+			'toast.multiRenameInvalid' => ({required Object count}) => '${count} invalid names',
+			'toast.multiRenameOtherErrors' => ({required Object count}) => '${count} errors',
+			'toast.multiRenameTrashBlocked' => 'Multi rename is not available in trash',
 			'selectionFile.saveTitle' => 'Save Selection',
 			'selectionFile.loadTitle' => 'Load Selection',
 			'selectionFile.pathLabel' => 'Text file',
@@ -2809,6 +2955,8 @@ extension on Translations {
 			'operations.clear' => 'Clear',
 			'operations.noActive' => 'No active operations',
 			'operations.resolveConflicts' => 'Resolve Conflicts',
+			_ => null,
+		} ?? switch (path) {
 			'operations.errorsCount' => ({required Object count}) => '${count} errors',
 			'operations.compressing' => 'Compressing…',
 			'operations.compressingGzip' => 'Compressing (gzip)…',
@@ -2843,8 +2991,6 @@ extension on Translations {
 			'errors.sourceNotFound' => 'Source not found',
 			'errors.pathNotFound' => 'Path not found',
 			'errors.missingSmbHost' => 'Missing host in smb:// URI',
-			_ => null,
-		} ?? switch (path) {
 			'errors.missingSmbServer' => 'Missing server in smb:// URI',
 			'errors.missingSmbShare' => 'Missing share in smb:// URI',
 			'errors.missingSftpHost' => 'Missing host in sftp:// URI',

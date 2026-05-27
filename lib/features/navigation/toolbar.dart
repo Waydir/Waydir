@@ -20,8 +20,9 @@ import '../../ui/overlays/toast.dart';
 
 class PaneLocationBar extends StatelessWidget {
   final NavigationStore store;
+  final VoidCallback? onMultiRename;
 
-  const PaneLocationBar({super.key, required this.store});
+  const PaneLocationBar({super.key, required this.store, this.onMultiRename});
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +72,11 @@ class PaneLocationBar extends StatelessWidget {
             const SizedBox(width: 6),
             Expanded(child: _PathBar(store: store)),
             const SizedBox(width: 6),
-            _RightActions(store: store, toolbarWidth: constraints.maxWidth),
+            _RightActions(
+              store: store,
+              toolbarWidth: constraints.maxWidth,
+              onMultiRename: onMultiRename,
+            ),
             const SizedBox(width: 4),
           ],
         ),
@@ -83,19 +88,36 @@ class PaneLocationBar extends StatelessWidget {
 class _RightActions extends StatelessWidget {
   final NavigationStore store;
   final double toolbarWidth;
+  final VoidCallback? onMultiRename;
 
-  const _RightActions({required this.store, required this.toolbarWidth});
+  const _RightActions({
+    required this.store,
+    required this.toolbarWidth,
+    this.onMultiRename,
+  });
 
   static const double _collapseBelow = 480.0;
 
   @override
   Widget build(BuildContext context) {
     if (toolbarWidth < _collapseBelow) {
-      return _OverflowMenuButton(store: store);
+      return _OverflowMenuButton(store: store, onMultiRename: onMultiRename);
     }
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        if (onMultiRename != null)
+          SignalBuilder(
+            builder: (context) {
+              if (store.selectedCount.value < 2) return const SizedBox.shrink();
+              return _ToolBtn(
+                WaydirIconsRegular.pencilSimple,
+                onMultiRename!,
+                true,
+                t.menu.multiRename,
+              );
+            },
+          ),
         SignalBuilder(
           builder: (context) {
             final path = store.currentPath.value;
@@ -129,7 +151,8 @@ class _RightActions extends StatelessWidget {
 
 class _OverflowMenuButton extends StatefulWidget {
   final NavigationStore store;
-  const _OverflowMenuButton({required this.store});
+  final VoidCallback? onMultiRename;
+  const _OverflowMenuButton({required this.store, this.onMultiRename});
 
   @override
   State<_OverflowMenuButton> createState() => _OverflowMenuButtonState();
@@ -141,6 +164,7 @@ class _OverflowMenuButtonState extends State<_OverflowMenuButton> {
   static const String _actionBookmark = 'bookmark';
   static const String _actionSearch = 'search';
   static const String _actionNewFolder = 'newFolder';
+  static const String _actionMultiRename = 'multiRename';
 
   void _open() {
     final box = context.findRenderObject() as RenderBox;
@@ -151,11 +175,19 @@ class _OverflowMenuButtonState extends State<_OverflowMenuButton> {
     );
     final path = widget.store.currentPath.value;
     final bookmarked = BookmarkStore.instance.containsPath(path);
+    final selCount = widget.store.selectedCount.value;
+    final showMultiRename = widget.onMultiRename != null && selCount >= 2;
 
     showContextMenu(
       context: context,
       position: position,
       items: [
+        if (showMultiRename)
+          ContextMenuItem(
+            icon: WaydirIconsRegular.pencilSimple,
+            label: t.menu.multiRename,
+            action: _actionMultiRename,
+          ),
         ContextMenuItem(
           icon: WaydirIconsRegular.bookmarkSimple,
           label: bookmarked
@@ -185,6 +217,8 @@ class _OverflowMenuButtonState extends State<_OverflowMenuButton> {
                 : widget.store.openSearch();
           case _actionNewFolder:
             widget.store.startCreate();
+          case _actionMultiRename:
+            widget.onMultiRename?.call();
         }
       },
     );

@@ -31,6 +31,7 @@ class PaneView extends StatelessWidget {
   final FileContextMenuCallback? onContextMenu;
   final FileMenuActionCallback? onMenuAction;
   final OpenInNewTabCallback? onOpenInNewTab;
+  final void Function(NavigationStore store)? onMultiRename;
 
   const PaneView({
     super.key,
@@ -41,6 +42,7 @@ class PaneView extends StatelessWidget {
     this.onContextMenu,
     this.onMenuAction,
     this.onOpenInNewTab,
+    this.onMultiRename,
   });
 
   @override
@@ -54,8 +56,15 @@ class PaneView extends StatelessWidget {
             children: [
               TabStrip(tabsStore: pane.tabs, isActive: isActive),
               SignalBuilder(
-                builder: (_) =>
-                    PaneLocationBar(store: pane.tabs.activeTab.value.store),
+                builder: (_) {
+                  final tabStore = pane.tabs.activeTab.value.store;
+                  return PaneLocationBar(
+                    store: tabStore,
+                    onMultiRename: onMultiRename == null
+                        ? null
+                        : () => onMultiRename!(tabStore),
+                  );
+                },
               ),
               SignalBuilder(
                 builder: (_) =>
