@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-05-27
+
 ### Added
 - Breadcrumb path entry now suggests folders and recent paths.
 - File checksums can now be calculated and verified with MD5 and SHA-256.
@@ -155,7 +157,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Custom dark theme and custom title bar.
 - Settings store with persistent user preferences.
 
-[Unreleased]: https://github.com/Waydir/Waydir/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/Waydir/Waydir/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/Waydir/Waydir/compare/v0.5.1...v0.6.0
 [0.2.0]: https://github.com/Waydir/Waydir/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/Waydir/Waydir/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/Waydir/Waydir/releases/tag/v0.1.0
