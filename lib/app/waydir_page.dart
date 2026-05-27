@@ -32,6 +32,7 @@ import '../i18n/strings.g.dart';
 import '../ui/chrome/title_bar.dart';
 import '../ui/dialogs/compress_dialog.dart';
 import '../ui/dialogs/dialog.dart';
+import '../ui/dialogs/multi_rename_dialog.dart';
 import '../ui/dialogs/open_with_dialog.dart';
 import '../ui/overlays/context_menu.dart';
 import '../ui/overlays/notification_overlay.dart';
@@ -645,6 +646,12 @@ class _WaydirPageState extends State<WaydirPage> {
           action: 'rename',
           shortcut: 'F2',
         ),
+      if (count >= 2)
+        ContextMenuItem(
+          icon: WaydirIconsRegular.pencilSimple,
+          label: t.menu.multiRename,
+          action: 'multi_rename',
+        ),
       ContextMenuItem(
         icon: WaydirIconsRegular.trashSimple,
         label: count == 1
@@ -791,6 +798,8 @@ class _WaydirPageState extends State<WaydirPage> {
         store.copySelectedPaths();
       case 'rename':
         store.startRename();
+      case 'multi_rename':
+        _multiRename(store);
       case 'trash':
         _confirmAndDelete();
       case 'delete_permanent':
@@ -887,6 +896,62 @@ class _WaydirPageState extends State<WaydirPage> {
       dest,
       format: req.format.name,
       level: req.level.name,
+    );
+  }
+
+  void _multiRename(NavigationStore store) async {
+    final entries = store.selectedEntries;
+    if (entries.length < 2) return;
+    if (store.isTrashView) {
+      showToast(context: context, message: t.toast.multiRenameTrashBlocked);
+      return;
+    }
+    final result = await showMultiRenameDialog(
+      context: context,
+      entries: entries,
+    );
+    if (result == null || result.renames.isEmpty) {
+      _restoreFocus();
+      return;
+    }
+    final outcome = await store.multiRename(
+      result.renames
+          .map((r) => (path: r.oldPath, newName: r.newName))
+          .toList(),
+    );
+    if (mounted) _showMultiRenameToast(outcome);
+    _restoreFocus();
+  }
+
+  void _showMultiRenameToast(MultiRenameOutcome outcome) {
+    if (outcome.blocked) {
+      showToast(context: context, message: t.toast.multiRenameTrashBlocked);
+      return;
+    }
+    if (outcome.failed == 0) {
+      showToast(
+        context: context,
+        message: t.toast.multiRenameSuccess(count: outcome.succeeded),
+      );
+      return;
+    }
+    final parts = <String>[];
+    if (outcome.collision > 0) {
+      parts.add(t.toast.multiRenameCollisions(count: outcome.collision));
+    }
+    if (outcome.invalid > 0) {
+      parts.add(t.toast.multiRenameInvalid(count: outcome.invalid));
+    }
+    if (outcome.other > 0) {
+      parts.add(t.toast.multiRenameOtherErrors(count: outcome.other));
+    }
+    showToast(
+      context: context,
+      message: t.toast.multiRenamePartial(
+        succeeded: outcome.succeeded,
+        total: outcome.total,
+        details: parts.join(', '),
+      ),
     );
   }
 
@@ -1668,6 +1733,7 @@ class _WaydirPageState extends State<WaydirPage> {
                                               onContextMenu: _handleContextMenu,
                                               onMenuAction: _handleMenuAction,
                                               onOpenInNewTab: _openInNewTab,
+                                              onMultiRename: _multiRename,
                                             );
                                           }
 
@@ -1692,6 +1758,7 @@ class _WaydirPageState extends State<WaydirPage> {
                                                   onMenuAction:
                                                       _handleMenuAction,
                                                   onOpenInNewTab: _openInNewTab,
+                                                  onMultiRename: _multiRename,
                                                 ),
                                               ),
                                               PaneDivider(
@@ -1712,6 +1779,7 @@ class _WaydirPageState extends State<WaydirPage> {
                                                   onMenuAction:
                                                       _handleMenuAction,
                                                   onOpenInNewTab: _openInNewTab,
+                                                  onMultiRename: _multiRename,
                                                 ),
                                               ),
                                             ],

@@ -1495,6 +1495,254 @@ class NavigationStore {
     }
   }
 
+  Future<MultiRenameOutcome> multiRename(
+    List<({String path, String newName})> renames,
+  ) async {
+    if (renames.isEmpty) return const MultiRenameOutcome.empty();
+    if (isTrashView) {
+      return MultiRenameOutcome(
+        succeeded: 0,
+        invalid: 0,
+        collision: 0,
+        other: renames.length,
+        blocked: true,
+      );
+    }
+
+    final localOrSmb = <({String path, String newName})>[];
+    final sftp = <({String path, String newName})>[];
+    final archive =
+        <({ArchiveLocation loc, String oldPath, String newName})>[];
+
+    for (final r in renames) {
+      final loc = await _archiveLocationFor(r.path);
+      if (loc != null && !loc.isRoot) {
+        archive.add((loc: loc, oldPath: r.path, newName: r.newName));
+      } else if (PlatformPaths.isSftpUri(r.path)) {
+        sftp.add(r);
+      } else {
+        localOrSmb.add(r);
+      }
+    }
+
+    final acc = _MutableOutcome();
+    _multiRenameLocal(localOrSmb, acc);
+    await _multiRenameSftp(sftp, acc);
+    _multiRenameArchive(archive, acc);
+
+    batch(() {
+      renamingPath.value = null;
+      renameError.value = null;
+    });
+    await refresh();
+    if (acc.succeeded > 0) {
+      final visiblePaths = _vf.map((f) => f.path).toSet();
+      final remaining = selectedPaths.value.intersection(visiblePaths);
+      batch(() {
+        selectedPaths.value = remaining;
+        if (remaining.isEmpty) {
+          cursorIndex.value = -1;
+          anchorIndex.value = -1;
+        }
+      });
+    }
+    return acc.freeze();
+  }
+
+  void _multiRenameLocal(
+    List<({String path, String newName})> renames,
+    _MutableOutcome acc,
+  ) {
+    if (renames.isEmpty) return;
+
+    final ops = <_LocalRenameOp>[];
+    for (final r in renames) {
+      final physicalOld = _physical(r.path);
+      final dir = PlatformPaths.parentOf(physicalOld);
+      final physicalNew = '$dir${PlatformPaths.separator}${r.newName}';
+      if (!PlatformPaths.isValidFileName(r.newName)) {
+        acc.invalid++;
+        continue;
+      }
+      if (physicalOld == physicalNew) continue;
+      ops.add(
+        _LocalRenameOp(
+          physicalOld: physicalOld,
+          physicalNew: physicalNew,
+          newName: r.newName,
+        ),
+      );
+    }
+
+    if (ops.isEmpty) return;
+
+    final sources = ops.map((o) => _norm(o.physicalOld)).toSet();
+    final filtered = <_LocalRenameOp>[];
+    for (final op in ops) {
+      final exists =
+          FileSystemEntity.typeSync(op.physicalNew) !=
+          FileSystemEntityType.notFound;
+      if (exists && !sources.contains(_norm(op.physicalNew))) {
+        acc.collision++;
+        continue;
+      }
+      filtered.add(op);
+    }
+
+    final needsTwoPhase = filtered.any(
+      (o) => sources.contains(_norm(o.physicalNew)),
+    );
+
+    if (needsTwoPhase) {
+      _applyTwoPhase(filtered, acc);
+    } else {
+      for (final op in filtered) {
+        _applyDirect(op, acc);
+      }
+    }
+  }
+
+  void _applyDirect(_LocalRenameOp op, _MutableOutcome acc) {
+    final r = FileSystemService.rename(op.physicalOld, op.newName);
+    switch (r) {
+      case RenameSuccess():
+        acc.succeeded++;
+      case RenameAlreadyExists():
+        acc.collision++;
+      case RenameInvalidName():
+        acc.invalid++;
+      case RenameError():
+        acc.other++;
+      case RenameNoChange():
+        break;
+    }
+  }
+
+  void _applyTwoPhase(List<_LocalRenameOp> ops, _MutableOutcome acc) {
+    final stamp = DateTime.now().millisecondsSinceEpoch;
+    final staged = <({String tempPath, String finalName})>[];
+    for (var i = 0; i < ops.length; i++) {
+      final op = ops[i];
+      final tempName = '.waydir-rename-$stamp-$i.tmp';
+      final dir = PlatformPaths.parentOf(op.physicalOld);
+      final tempPath = '$dir${PlatformPaths.separator}$tempName';
+      final r = FileSystemService.rename(op.physicalOld, tempName);
+      if (r is RenameSuccess) {
+        staged.add((tempPath: tempPath, finalName: op.newName));
+      } else {
+        switch (r) {
+          case RenameAlreadyExists():
+            acc.collision++;
+          case RenameInvalidName():
+            acc.invalid++;
+          case RenameError():
+            acc.other++;
+          default:
+            acc.other++;
+        }
+      }
+    }
+    for (final s in staged) {
+      final r = FileSystemService.rename(s.tempPath, s.finalName);
+      if (r is RenameSuccess) {
+        acc.succeeded++;
+      } else {
+        acc.other++;
+      }
+    }
+  }
+
+  Future<void> _multiRenameSftp(
+    List<({String path, String newName})> renames,
+    _MutableOutcome acc,
+  ) async {
+    if (renames.isEmpty) return;
+    final fs = const SftpFs();
+
+    final ops = <_SftpRenameOp>[];
+    for (final r in renames) {
+      if (!PlatformPaths.isValidFileName(r.newName)) {
+        acc.invalid++;
+        continue;
+      }
+      final parent = PlatformPaths.parentOf(r.path);
+      final newPath = '$parent/${r.newName}';
+      if (r.path == newPath) continue;
+      ops.add(_SftpRenameOp(oldPath: r.path, newPath: newPath));
+    }
+
+    final sources = ops.map((o) => o.oldPath).toSet();
+    final filtered = <_SftpRenameOp>[];
+    for (final op in ops) {
+      if (sources.contains(op.newPath)) {
+        filtered.add(op);
+        continue;
+      }
+      if (await fs.exists(op.newPath)) {
+        acc.collision++;
+        continue;
+      }
+      filtered.add(op);
+    }
+
+    final needsTwoPhase = filtered.any((o) => sources.contains(o.newPath));
+    if (!needsTwoPhase) {
+      for (final op in filtered) {
+        try {
+          await fs.rename(op.oldPath, op.newPath);
+          acc.succeeded++;
+        } catch (_) {
+          acc.other++;
+        }
+      }
+      return;
+    }
+
+    final stamp = DateTime.now().millisecondsSinceEpoch;
+    final staged = <({String tempPath, String finalPath})>[];
+    for (var i = 0; i < filtered.length; i++) {
+      final op = filtered[i];
+      final tempPath =
+          '${PlatformPaths.parentOf(op.oldPath)}/.waydir-rename-$stamp-$i.tmp';
+      try {
+        await fs.rename(op.oldPath, tempPath);
+        staged.add((tempPath: tempPath, finalPath: op.newPath));
+      } catch (_) {
+        acc.other++;
+      }
+    }
+    for (final s in staged) {
+      try {
+        await fs.rename(s.tempPath, s.finalPath);
+        acc.succeeded++;
+      } catch (_) {
+        acc.other++;
+      }
+    }
+  }
+
+  void _multiRenameArchive(
+    List<({ArchiveLocation loc, String oldPath, String newName})> renames,
+    _MutableOutcome acc,
+  ) {
+    for (final r in renames) {
+      if (!PlatformPaths.isValidFileName(r.newName)) {
+        acc.invalid++;
+        continue;
+      }
+      operationStore.enqueueArchiveEdit(
+        archivePath: r.loc.archivePath,
+        displayDir: currentPath.value,
+        renameFromInner: r.loc.innerPath,
+        renameToName: r.newName,
+      );
+      acc.succeeded++;
+    }
+  }
+
+  String _norm(String path) =>
+      PlatformPaths.isWindows ? path.toLowerCase() : path;
+
   Future<void> _commitCreate(String name) async {
     final pending = pendingCreate.value;
     if (pending == null) return;
@@ -2034,4 +2282,63 @@ class _FolderState {
   final String? cursorPath;
 
   _FolderState({required this.selectedPaths, required this.cursorPath});
+}
+
+class MultiRenameOutcome {
+  final int succeeded;
+  final int invalid;
+  final int collision;
+  final int other;
+  final bool blocked;
+
+  const MultiRenameOutcome({
+    required this.succeeded,
+    required this.invalid,
+    required this.collision,
+    required this.other,
+    this.blocked = false,
+  });
+
+  const MultiRenameOutcome.empty()
+    : succeeded = 0,
+      invalid = 0,
+      collision = 0,
+      other = 0,
+      blocked = false;
+
+  int get failed => invalid + collision + other;
+  int get total => succeeded + failed;
+}
+
+class _MutableOutcome {
+  int succeeded = 0;
+  int invalid = 0;
+  int collision = 0;
+  int other = 0;
+
+  MultiRenameOutcome freeze() => MultiRenameOutcome(
+    succeeded: succeeded,
+    invalid: invalid,
+    collision: collision,
+    other: other,
+  );
+}
+
+class _LocalRenameOp {
+  final String physicalOld;
+  final String physicalNew;
+  final String newName;
+
+  const _LocalRenameOp({
+    required this.physicalOld,
+    required this.physicalNew,
+    required this.newName,
+  });
+}
+
+class _SftpRenameOp {
+  final String oldPath;
+  final String newPath;
+
+  const _SftpRenameOp({required this.oldPath, required this.newPath});
 }
