@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
 
+import '../../i18n/strings.g.dart';
 import '../terminal/terminal.dart';
 import 'install_format.dart';
 
@@ -58,6 +59,10 @@ class PackageInstaller {
     final path = _shellQuote(pkg.path);
     final hasSudo = await _has('sudo');
     final elevate = hasSudo ? 'sudo ' : '';
+    final okMessage = _shellQuote(t.update.terminalInstallOk);
+    final failedMessage = _shellDoubleQuote(
+      t.update.terminalInstallFailed(status: r'$status'),
+    );
 
     String inner;
     if (fmt == InstallFormat.linuxDeb) {
@@ -82,9 +87,9 @@ status=\$?
 if [ -t 0 ]; then
   echo
   if [ \$status -eq 0 ]; then
-    echo "--- Install OK. Press Enter to close ---"
+    echo $okMessage
   else
-    echo "--- Install failed (exit \$status). Press Enter to close ---"
+    echo $failedMessage
   fi
   read -r _
 fi
@@ -95,6 +100,14 @@ exit \$status
   static String _shellQuote(String path) {
     final escaped = path.replaceAll("'", r"'\''");
     return "'$escaped'";
+  }
+
+  static String _shellDoubleQuote(String text) {
+    final escaped = text
+        .replaceAll(r'\', r'\\')
+        .replaceAll('"', r'\"')
+        .replaceAll('`', r'\`');
+    return '"$escaped"';
   }
 
   static final _whichCache = <String, bool>{};

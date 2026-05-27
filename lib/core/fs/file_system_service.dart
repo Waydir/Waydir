@@ -1005,7 +1005,7 @@ class FileSystemService {
               TaskError(
                 path: src,
                 message: _friendlyError(
-                  FileSystemException('Directory not readable', src),
+                  FileSystemException(t.errors.directoryNotReadable, src),
                 ),
               ),
             );

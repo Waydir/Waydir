@@ -11,6 +11,7 @@ import '../../core/fs/waydir_core_loader.dart';
 import '../../core/models/file_entry.dart';
 import '../../core/models/file_operation.dart';
 import '../../core/platform/platform_paths.dart';
+import '../../i18n/strings.g.dart';
 
 const _chunkBytes = 256 * 1024;
 const _progressReportIntervalMs = 1000;
@@ -206,8 +207,10 @@ void _runTransferWorker(List<dynamic> args, {required bool move}) {
 
       final srcStat = await _statAny(src, fs);
       if (srcStat == null) {
-        errors.add(TaskError(path: src, message: 'Source not found'));
-        mainSendPort.send(ErrorMessage(path: src, message: 'Source not found'));
+        errors.add(TaskError(path: src, message: t.errors.sourceNotFound));
+        mainSendPort.send(
+          ErrorMessage(path: src, message: t.errors.sourceNotFound),
+        );
         return;
       }
 
@@ -642,7 +645,7 @@ Future<void> _copyEntity(
 
   final srcStat = await _statAny(src, fs);
   if (srcStat == null) {
-    throw FileSystemException('Source not found', src);
+    throw FileSystemException(t.errors.sourceNotFound, src);
   }
 
   if (srcStat.type == FileItemType.folder) {
@@ -734,21 +737,21 @@ Future<void> _atomicSwap(
   if (existing != null) {
     if (!overwriteAllowed) {
       await _removeAnySafe(partial, fs);
-      throw FileSystemException('Target exists', dst);
+      throw FileSystemException(t.errors.targetExists, dst);
     }
     await _removeAny(dst, fs);
   }
   if (dstIsSftp) {
     final rec = SftpSessionManager.recordFor(dst);
     if (rec == null) {
-      throw FileSystemException('No active SFTP session', dst);
+      throw FileSystemException(t.errors.sftpNoActiveSession, dst);
     }
     final ok = WaydirCoreLoader.sftpRename(
       rec.sessionId,
       SftpSessionManager.remotePath(partial),
       SftpSessionManager.remotePath(dst),
     );
-    if (!ok) throw FileSystemException('SFTP rename failed', dst);
+    if (!ok) throw FileSystemException(t.errors.sftpRenameFailed, dst);
   } else {
     await File(partial).rename(dst);
   }
@@ -782,14 +785,14 @@ Future<void> _uploadLocalToSftp(
 }) async {
   final rec = SftpSessionManager.recordFor(dst);
   if (rec == null) {
-    throw FileSystemException('No active SFTP session', dst);
+    throw FileSystemException(t.errors.sftpNoActiveSession, dst);
   }
   final remote = SftpSessionManager.remotePath(dst);
 
   if (WaydirCoreLoader.supportsSftpStreaming()) {
     final writerId = WaydirCoreLoader.sftpOpenWriter(rec.sessionId, remote);
     if (writerId == null) {
-      throw FileSystemException('SFTP open writer failed', dst);
+      throw FileSystemException(t.errors.sftpOpenWriterFailed, dst);
     }
     try {
       await for (final raw in File(src).openRead()) {
@@ -801,7 +804,7 @@ Future<void> _uploadLocalToSftp(
           final end = math.min(data.length, offset + _chunkBytes);
           final part = Uint8List.sublistView(data, offset, end);
           if (!WaydirCoreLoader.sftpWriterWrite(writerId, part)) {
-            throw FileSystemException('SFTP write failed', dst);
+            throw FileSystemException(t.errors.sftpWriteFailed, dst);
           }
           offset = end;
           onBytes(part.length);
@@ -813,7 +816,7 @@ Future<void> _uploadLocalToSftp(
       rethrow;
     }
     final closed = WaydirCoreLoader.sftpWriterClose(writerId);
-    if (!closed) throw FileSystemException('SFTP close failed', dst);
+    if (!closed) throw FileSystemException(t.errors.sftpCloseFailed, dst);
     return;
   }
 
@@ -822,7 +825,7 @@ Future<void> _uploadLocalToSftp(
     final data = await File(src).readAsBytes();
     _checkCancelled(isCancelled);
     final ok = WaydirCoreLoader.sftpWrite(rec.sessionId, remote, data);
-    if (!ok) throw FileSystemException('SFTP write failed', dst);
+    if (!ok) throw FileSystemException(t.errors.sftpWriteFailed, dst);
     onBytes(data.length);
     return;
   }
@@ -841,7 +844,7 @@ Future<void> _uploadLocalToSftp(
         part,
         append: append,
       );
-      if (!ok) throw FileSystemException('SFTP write failed', dst);
+      if (!ok) throw FileSystemException(t.errors.sftpWriteFailed, dst);
       append = true;
       offset = end;
       onBytes(part.length);
@@ -855,7 +858,7 @@ Future<void> _uploadLocalToSftp(
       Uint8List(0),
       append: false,
     );
-    if (!ok) throw FileSystemException('SFTP write failed', dst);
+    if (!ok) throw FileSystemException(t.errors.sftpWriteFailed, dst);
   }
 }
 
@@ -868,14 +871,14 @@ Future<void> _downloadSftpToLocal(
 }) async {
   final rec = SftpSessionManager.recordFor(src);
   if (rec == null) {
-    throw FileSystemException('No active SFTP session', src);
+    throw FileSystemException(t.errors.sftpNoActiveSession, src);
   }
   final remote = SftpSessionManager.remotePath(src);
 
   if (WaydirCoreLoader.supportsSftpStreaming()) {
     final opened = WaydirCoreLoader.sftpOpenReader(rec.sessionId, remote);
     if (opened == null) {
-      throw FileSystemException('SFTP open reader failed', src);
+      throw FileSystemException(t.errors.sftpOpenReaderFailed, src);
     }
     final sink = File(dst).openWrite();
     try {
@@ -886,7 +889,7 @@ Future<void> _downloadSftpToLocal(
           _chunkBytes,
         );
         if (chunk == null) {
-          throw FileSystemException('SFTP read failed', src);
+          throw FileSystemException(t.errors.sftpReadFailed, src);
         }
         if (chunk.isEmpty) break;
         sink.add(chunk);
@@ -914,7 +917,7 @@ Future<void> _downloadSftpToLocal(
         length: length,
       );
       if (chunk == null) {
-        throw FileSystemException('SFTP read failed', src);
+        throw FileSystemException(t.errors.sftpReadFailed, src);
       }
       if (chunk.isEmpty) break;
       sink.add(chunk);
@@ -937,10 +940,10 @@ Future<void> _copySftpToSftp(
   final srcRec = SftpSessionManager.recordFor(src);
   final dstRec = SftpSessionManager.recordFor(dst);
   if (srcRec == null) {
-    throw FileSystemException('No active SFTP session', src);
+    throw FileSystemException(t.errors.sftpNoActiveSession, src);
   }
   if (dstRec == null) {
-    throw FileSystemException('No active SFTP session', dst);
+    throw FileSystemException(t.errors.sftpNoActiveSession, dst);
   }
   final srcRemote = SftpSessionManager.remotePath(src);
   final dstRemote = SftpSessionManager.remotePath(dst);
@@ -948,7 +951,7 @@ Future<void> _copySftpToSftp(
   if (WaydirCoreLoader.supportsSftpStreaming()) {
     final opened = WaydirCoreLoader.sftpOpenReader(srcRec.sessionId, srcRemote);
     if (opened == null) {
-      throw FileSystemException('SFTP open reader failed', src);
+      throw FileSystemException(t.errors.sftpOpenReaderFailed, src);
     }
     final writerId = WaydirCoreLoader.sftpOpenWriter(
       dstRec.sessionId,
@@ -956,7 +959,7 @@ Future<void> _copySftpToSftp(
     );
     if (writerId == null) {
       WaydirCoreLoader.sftpReaderClose(opened.readerId);
-      throw FileSystemException('SFTP open writer failed', dst);
+      throw FileSystemException(t.errors.sftpOpenWriterFailed, dst);
     }
     try {
       while (true) {
@@ -966,11 +969,11 @@ Future<void> _copySftpToSftp(
           _chunkBytes,
         );
         if (chunk == null) {
-          throw FileSystemException('SFTP read failed', src);
+          throw FileSystemException(t.errors.sftpReadFailed, src);
         }
         if (chunk.isEmpty) break;
         if (!WaydirCoreLoader.sftpWriterWrite(writerId, chunk)) {
-          throw FileSystemException('SFTP write failed', dst);
+          throw FileSystemException(t.errors.sftpWriteFailed, dst);
         }
         onBytes(chunk.length);
         await Future<void>.delayed(Duration.zero);
@@ -982,7 +985,7 @@ Future<void> _copySftpToSftp(
     }
     WaydirCoreLoader.sftpReaderClose(opened.readerId);
     if (!WaydirCoreLoader.sftpWriterClose(writerId)) {
-      throw FileSystemException('SFTP close failed', dst);
+      throw FileSystemException(t.errors.sftpCloseFailed, dst);
     }
     return;
   }
@@ -990,11 +993,11 @@ Future<void> _copySftpToSftp(
   if (!WaydirCoreLoader.supportsSftpWriteChunk()) {
     final data = WaydirCoreLoader.sftpRead(srcRec.sessionId, srcRemote);
     if (data == null) {
-      throw FileSystemException('SFTP read failed', src);
+      throw FileSystemException(t.errors.sftpReadFailed, src);
     }
     _checkCancelled(isCancelled);
     final ok = WaydirCoreLoader.sftpWrite(dstRec.sessionId, dstRemote, data);
-    if (!ok) throw FileSystemException('SFTP write failed', dst);
+    if (!ok) throw FileSystemException(t.errors.sftpWriteFailed, dst);
     onBytes(data.length);
     return;
   }
@@ -1011,7 +1014,7 @@ Future<void> _copySftpToSftp(
       length: length,
     );
     if (chunk == null) {
-      throw FileSystemException('SFTP read failed', src);
+      throw FileSystemException(t.errors.sftpReadFailed, src);
     }
     if (chunk.isEmpty) break;
     final ok = WaydirCoreLoader.sftpWriteChunk(
@@ -1020,7 +1023,7 @@ Future<void> _copySftpToSftp(
       chunk,
       append: append,
     );
-    if (!ok) throw FileSystemException('SFTP write failed', dst);
+    if (!ok) throw FileSystemException(t.errors.sftpWriteFailed, dst);
     append = true;
     offset += chunk.length;
     onBytes(chunk.length);
@@ -1033,7 +1036,7 @@ Future<void> _copySftpToSftp(
       Uint8List(0),
       append: false,
     );
-    if (!ok) throw FileSystemException('SFTP write failed', dst);
+    if (!ok) throw FileSystemException(t.errors.sftpWriteFailed, dst);
   }
 }
 

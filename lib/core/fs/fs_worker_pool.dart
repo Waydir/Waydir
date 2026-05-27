@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
 import 'dart:typed_data';
+import '../../i18n/strings.g.dart';
 import '../archive/archive_reader.dart';
 import '../archive/archive_service.dart';
 import '../logging/app_logger.dart';
@@ -301,7 +302,7 @@ class FsWorkerPool {
         // Directory listing is native-only (Rust). No Dart fallback.
         final native = WaydirCoreLoader.listDir(path);
         if (native == null) {
-          throw FileSystemException('Directory not readable', path);
+          throw FileSystemException(t.errors.directoryNotReadable, path);
         }
         if (FileEntryCodec.countOf(native) >= FileEntryCodec.threshold) {
           return native;

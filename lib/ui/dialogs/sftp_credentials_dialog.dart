@@ -115,7 +115,7 @@ class _SftpCredentialsDialogState extends State<_SftpCredentialsDialog> {
               Text(widget.title, style: context.txt.dialogTitle),
               const SizedBox(height: 8),
               Text(
-                'SSH/SFTP authentication',
+                t.password.sftpPrompt,
                 style: context.txt.body.copyWith(color: AppColors.fgMuted),
               ),
               const SizedBox(height: 16),
@@ -131,7 +131,7 @@ class _SftpCredentialsDialogState extends State<_SftpCredentialsDialog> {
                 children: [
                   Expanded(
                     child: _ToggleChip(
-                      label: 'Password',
+                      label: t.password.password,
                       selected: _method == _Method.password,
                       onTap: () => setState(() => _method = _Method.password),
                     ),
@@ -139,7 +139,7 @@ class _SftpCredentialsDialogState extends State<_SftpCredentialsDialog> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: _ToggleChip(
-                      label: 'Private key',
+                      label: t.password.privateKey,
                       selected: _method == _Method.key,
                       onTap: () => setState(() => _method = _Method.key),
                     ),
@@ -166,7 +166,7 @@ class _SftpCredentialsDialogState extends State<_SftpCredentialsDialog> {
                   autofocus: _username.text.isNotEmpty,
                 ),
               ] else ...[
-                Text('Private key path', style: context.txt.fieldLabel),
+                Text(t.password.privateKeyPath, style: context.txt.fieldLabel),
                 const SizedBox(height: 6),
                 _SmallInput(
                   controller: _keyPath,
@@ -174,7 +174,10 @@ class _SftpCredentialsDialogState extends State<_SftpCredentialsDialog> {
                   onSubmitted: _submit,
                 ),
                 const SizedBox(height: 10),
-                Text('Passphrase (optional)', style: context.txt.fieldLabel),
+                Text(
+                  t.password.passphraseOptional,
+                  style: context.txt.fieldLabel,
+                ),
                 const SizedBox(height: 6),
                 _SmallInput(
                   controller: _passphrase,

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import '../../i18n/strings.g.dart';
 import '../models/file_entry.dart';
 import '../platform/platform_paths.dart';
 import 'fs_backend.dart';
@@ -22,7 +23,7 @@ class LocalFs implements FsBackend {
   Future<List<FileEntry>> listDirectory(String path) async {
     final native = WaydirCoreLoader.listDir(path);
     if (native == null) {
-      throw FileSystemException('Directory not readable', path);
+      throw FileSystemException(t.errors.directoryNotReadable, path);
     }
     return FileEntryCodec.decode(native);
   }

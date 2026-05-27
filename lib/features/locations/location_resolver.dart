@@ -5,6 +5,7 @@ import 'package:path/path.dart' as p;
 
 import '../../core/fs/sftp_session_manager.dart';
 import '../../core/platform/platform_paths.dart';
+import '../../i18n/strings.g.dart';
 import 'location_uri.dart';
 
 sealed class ResolveResult {
@@ -215,11 +216,11 @@ class LocationResolver {
       case LocationScheme.smb:
         if (PlatformPaths.isWindows) {
           if (uri.port != null) {
-            return const ResolveError('SMB ports are not supported on Windows');
+            return ResolveError(t.errors.smbPortsNotSupportedOnWindows);
           }
           final unc = uri.toWindowsUnc();
           if (unc == null) {
-            return const ResolveError('Invalid smb:// URI');
+            return ResolveError(t.errors.invalidSmbUri);
           }
           return ResolveSuccess(unc);
         }
@@ -267,7 +268,7 @@ class LocationResolver {
   }) async {
     final host = uri.host;
     if (host == null || host.isEmpty) {
-      return const ResolveError('Missing host in sftp:// URI');
+      return ResolveError(t.errors.missingSftpHost);
     }
     try {
       final port = uri.port ?? 22;
@@ -284,7 +285,7 @@ class LocationResolver {
         case SftpOpenStatus.authRequired:
           return const ResolveAuthenticationRequired();
         case SftpOpenStatus.error:
-          return ResolveError(outcome.message ?? 'sftp connect failed');
+          return ResolveError(outcome.message ?? t.errors.sftpConnectFailed);
         case SftpOpenStatus.ok:
           final sessionId = outcome.sessionId;
           final hasExplicitPath = _sftpHasExplicitPath(uri.raw);
@@ -307,7 +308,7 @@ class LocationResolver {
           );
       }
     } catch (e) {
-      return ResolveError('sftp: $e');
+      return ResolveError(t.errors.sftpError(error: e));
     }
   }
 
@@ -324,10 +325,10 @@ class LocationResolver {
     final host = uri.host;
     final share = uri.share;
     if (host == null || host.isEmpty) {
-      return const ResolveError('Missing server in smb:// URI');
+      return ResolveError(t.errors.missingSmbServer);
     }
     if (share == null || share.isEmpty) {
-      return const ResolveError('Missing share in smb:// URI');
+      return ResolveError(t.errors.missingSmbShare);
     }
     final mountTarget = StringBuffer('smb://');
     final username = credentials?.username.trim().isNotEmpty == true
@@ -369,7 +370,7 @@ class LocationResolver {
       if (credentials == null && _looksLikeAuthPrompt(mountText)) {
         return const ResolveAuthenticationRequired();
       }
-      final msg = mountErr.isNotEmpty ? mountErr : 'gio mount failed';
+      final msg = mountErr.isNotEmpty ? mountErr : t.errors.gioMountFailed;
       return ResolveError(msg);
     }
 
@@ -379,7 +380,7 @@ class LocationResolver {
       port: uri.port,
     );
     if (mountPoint == null) {
-      return const ResolveError('Mounted share could not be located in gvfs');
+      return ResolveError(t.errors.smbMountedShareNotFound);
     }
     return _resolvedSmbPath(uri, mountPoint);
   }
@@ -422,10 +423,10 @@ class LocationResolver {
     final host = uri.host;
     final share = uri.share;
     if (host == null || host.isEmpty) {
-      return const ResolveError('Missing server in smb:// URI');
+      return ResolveError(t.errors.missingSmbServer);
     }
     if (share == null || share.isEmpty) {
-      return const ResolveError('Missing share in smb:// URI');
+      return ResolveError(t.errors.missingSmbShare);
     }
 
     final existingMountPoint = await _findMacSmbMountPoint(
@@ -461,7 +462,9 @@ class LocationResolver {
     try {
       Directory(mountPoint).createSync(recursive: true);
     } catch (e) {
-      return ResolveError('Failed to create $mountPoint: $e');
+      return ResolveError(
+        t.errors.failedToCreatePath(path: mountPoint, error: e),
+      );
     }
 
     final args = <String>[];
@@ -486,7 +489,7 @@ class LocationResolver {
         return const ResolveAuthenticationRequired();
       }
       return ResolveError(
-        err.isNotEmpty ? err : 'mount_smbfs failed (${result.exitCode})',
+        err.isNotEmpty ? err : t.errors.mountSmbfsFailed(code: result.exitCode),
       );
     }
     return _resolvedSmbPath(uri, mountPoint);

@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:archive/archive_io.dart';
 
+import '../../i18n/strings.g.dart';
+
 class ArchiveReadException implements Exception {
   final String message;
   const ArchiveReadException(this.message);
@@ -72,9 +74,9 @@ class ArchiveReader {
         final decoded = XZDecoder().decodeBytes(bytes);
         return TarDecoder().decodeBytes(decoded);
       }
-      throw const ArchiveReadException('Unsupported archive format');
+      throw ArchiveReadException(t.errors.unsupportedArchiveFormat);
     } catch (e) {
-      throw ArchiveReadException('archive error: $e');
+      throw ArchiveReadException(t.errors.archiveReadFailed(error: e));
     }
   }
 
@@ -122,7 +124,9 @@ class ArchiveReader {
       }
     }
     if (!found) {
-      throw ArchiveReadException('entry not found: $innerPath');
+      throw ArchiveReadException(
+        t.errors.archiveEntryNotFound(path: innerPath),
+      );
     }
   }
 
@@ -166,7 +170,9 @@ class ArchiveReader {
     }
 
     if (!found) {
-      throw ArchiveReadException('entry not found: $innerPath');
+      throw ArchiveReadException(
+        t.errors.archiveEntryNotFound(path: innerPath),
+      );
     }
     return stagedRoot;
   }

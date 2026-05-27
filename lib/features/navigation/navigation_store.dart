@@ -96,10 +96,10 @@ class NavigationStore {
           loadError.value = message;
           return null;
         case ResolveUnsupported():
-          loadError.value = 'SFTP not supported';
+          loadError.value = t.errors.sftpNotSupported;
           return null;
         case ResolveAuthenticationRequired():
-          loadError.value = 'Authentication required';
+          loadError.value = t.errors.authenticationRequired;
           return null;
       }
     }
@@ -117,7 +117,7 @@ class NavigationStore {
         loadError.value = t.errors.smbNotSupportedOnPlatform;
         return null;
       case ResolveAuthenticationRequired():
-        loadError.value = 'Authentication required';
+        loadError.value = t.errors.authenticationRequired;
         return null;
     }
   }
@@ -150,7 +150,7 @@ class NavigationStore {
   ) async {
     final host = uri.host ?? '';
     if (host.isEmpty) {
-      throw FileSystemException('Missing host in smb:// URI', logical);
+      throw FileSystemException(t.errors.missingSmbHost, logical);
     }
     SmbShareListResult result = await SmbShareDiscovery.list(
       host: host,
@@ -185,7 +185,7 @@ class NavigationStore {
             ),
         ];
       case SmbShareListAuthRequired():
-        throw FileSystemException('Authentication required', logical);
+        throw FileSystemException(t.errors.authenticationRequired, logical);
       case SmbShareListError(:final message):
         throw FileSystemException(message, logical);
       case SmbShareListUnsupported():
@@ -743,12 +743,12 @@ class NavigationStore {
       case ResolveUnsupported():
         batch(() {
           isLoading.value = false;
-          loadError.value = 'SFTP not supported';
+          loadError.value = t.errors.sftpNotSupported;
         });
       case ResolveAuthenticationRequired():
         batch(() {
           isLoading.value = false;
-          loadError.value = 'Authentication required';
+          loadError.value = t.errors.authenticationRequired;
         });
     }
   }
@@ -795,7 +795,7 @@ class NavigationStore {
       case ResolveAuthenticationRequired():
         batch(() {
           isLoading.value = false;
-          loadError.value = 'Authentication required';
+          loadError.value = t.errors.authenticationRequired;
         });
     }
   }
@@ -809,12 +809,12 @@ class NavigationStore {
       case LocationScheme.smb:
         if (PlatformPaths.isWindows) {
           if (uri.port != null) {
-            loadError.value = 'SMB ports are not supported on Windows';
+            loadError.value = t.errors.smbPortsNotSupportedOnWindows;
             return null;
           }
           final unc = uri.toWindowsUnc();
           if (unc == null) {
-            loadError.value = 'Invalid smb:// URI';
+            loadError.value = t.errors.invalidSmbUri;
             return null;
           }
           return unc;
@@ -1088,10 +1088,10 @@ class NavigationStore {
           } else if (r is ResolveError) {
             throw FileSystemException(r.message, path);
           } else if (r is ResolveAuthenticationRequired) {
-            throw FileSystemException('Authentication required', path);
+            throw FileSystemException(t.errors.authenticationRequired, path);
           }
           if (physical == null) {
-            throw FileSystemException('SMB share not mounted', path);
+            throw FileSystemException(t.errors.smbShareNotMounted, path);
           }
         }
         final raw = await FileSystemService.listDirectory(physical);

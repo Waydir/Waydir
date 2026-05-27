@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:path/path.dart' as p;
 
+import '../../i18n/strings.g.dart';
 import '../platform/win32_attributes.dart';
 import 'app_entry.dart';
 import 'desktop_entry.dart';
@@ -60,7 +61,7 @@ class _NullAppResolver implements AppResolver {
   Future<void> launch(AppEntry app, List<String> paths) async {}
   @override
   Future<void> setDefault(AppEntry app, MimeType mime) async =>
-      throw const SetDefaultUnsupported('Unsupported platform');
+      throw SetDefaultUnsupported(t.openWith.unsupportedPlatform);
   @override
   Future<bool> canSetDefault() async => false;
 }
@@ -177,7 +178,7 @@ class LinuxAppResolver implements AppResolver {
     if (r.exitCode != 0) {
       throw SetDefaultUnsupported(
         (r.stderr as String).trim().isEmpty
-            ? 'xdg-mime failed'
+            ? t.openWith.xdgMimeFailed
             : (r.stderr as String).trim(),
       );
     }
@@ -283,13 +284,11 @@ class MacAppResolver implements AppResolver {
   @override
   Future<void> setDefault(AppEntry app, MimeType mime) async {
     if (!await _hasDuti()) {
-      throw const SetDefaultUnsupported(
-        'Setting the default app on macOS requires the "duti" tool',
-      );
+      throw SetDefaultUnsupported(t.openWith.dutiRequired);
     }
     final bundleId = await _bundleId(app.exec);
     if (bundleId == null) {
-      throw const SetDefaultUnsupported('Could not read app bundle id');
+      throw SetDefaultUnsupported(t.openWith.bundleIdReadFailed);
     }
     final r = await Process.run('duti', ['-s', bundleId, mime.value, 'all']);
     if (r.exitCode != 0) {
@@ -532,8 +531,6 @@ class WindowsAppResolver implements AppResolver {
   Future<void> setDefault(AppEntry app, MimeType mime) async {
     // Windows protects the per-user default (UserChoice hash); programmatic
     // changes are blocked by design. The system dialog is the supported path.
-    throw const SetDefaultUnsupported(
-      'Use the system "Open with" dialog to change the default on Windows',
-    );
+    throw SetDefaultUnsupported(t.openWith.windowsDefaultDialogRequired);
   }
 }

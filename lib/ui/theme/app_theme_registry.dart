@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 
 import '../../core/logging/app_logger.dart';
 import '../../core/platform/app_dirs.dart';
+import '../../i18n/strings.g.dart';
 import 'app_theme_definition.dart';
 
 class AppThemeRegistry {
@@ -48,7 +49,13 @@ class AppThemeRegistry {
       if (theme.id == id) return theme;
     }
     if (id.isNotEmpty && id != defaultThemeId && _warnedUnknownIds.add(id)) {
-      log.warn('theme', 'Unknown theme "$id", using Dark');
+      log.warn(
+        'theme',
+        t.preferences.appearance.unknownThemeUsingDefault(
+          id: id,
+          theme: t.preferences.appearance.themeDark,
+        ),
+      );
     }
     return defaultTheme;
   }
@@ -70,7 +77,7 @@ class AppThemeRegistry {
     } catch (error, stack) {
       log.warn(
         'theme',
-        'Could not load custom themes',
+        t.preferences.appearance.couldNotLoadCustomThemes,
         error: error,
         stack: stack,
       );
@@ -91,7 +98,7 @@ class AppThemeRegistry {
     } catch (error, stack) {
       log.warn(
         'theme',
-        'Could not load custom themes',
+        t.preferences.appearance.couldNotLoadCustomThemes,
         error: error,
         stack: stack,
       );
@@ -102,13 +109,18 @@ class AppThemeRegistry {
     try {
       final decoded = jsonDecode(await file.readAsString());
       if (decoded is! Map<String, dynamic>) {
-        throw const FormatException('Theme file must contain a JSON object');
+        throw FormatException(
+          t.preferences.appearance.themeFileMustContainJsonObject,
+        );
       }
       final theme = AppThemeDefinition.fromJson(decoded);
       if (_themes.any((existing) => existing.id == theme.id)) {
         log.warn(
           'theme',
-          'Skipping theme "${theme.id}" from ${file.path}: duplicate id',
+          t.preferences.appearance.skippingDuplicateTheme(
+            id: theme.id,
+            path: file.path,
+          ),
         );
         return;
       }
@@ -116,7 +128,7 @@ class AppThemeRegistry {
     } catch (error, stack) {
       log.warn(
         'theme',
-        'Skipping theme file ${file.path}',
+        t.preferences.appearance.skippingThemeFile(path: file.path),
         error: error,
         stack: stack,
       );
@@ -127,7 +139,9 @@ class AppThemeRegistry {
     try {
       final decoded = jsonDecode(file.readAsStringSync());
       if (decoded is! Map<String, dynamic>) {
-        throw const FormatException('Theme file must contain a JSON object');
+        throw FormatException(
+          t.preferences.appearance.themeFileMustContainJsonObject,
+        );
       }
       final theme = AppThemeDefinition.fromJson(decoded);
       if (_themes.any((existing) => existing.id == theme.id)) {

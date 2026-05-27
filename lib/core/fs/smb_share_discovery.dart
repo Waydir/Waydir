@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import '../../features/locations/location_resolver.dart';
+import '../../i18n/strings.g.dart';
 import '../platform/platform_paths.dart';
 
 class SmbShare {
@@ -110,7 +111,9 @@ class SmbShareDiscovery {
     try {
       result = await Process.run('smbclient', args);
     } on ProcessException catch (e) {
-      return SmbShareListError('smbclient unavailable: ${e.message}');
+      return SmbShareListError(
+        t.errors.smbClientUnavailable(message: e.message),
+      );
     }
     final out = (result.stdout as String? ?? '');
     final err = (result.stderr as String? ?? '');
@@ -120,7 +123,7 @@ class SmbShareDiscovery {
       }
       final msg = err.trim().isNotEmpty ? err.trim() : out.trim();
       return SmbShareListError(
-        msg.isEmpty ? 'smbclient failed (${result.exitCode})' : msg,
+        msg.isEmpty ? t.errors.smbClientFailed(code: result.exitCode) : msg,
       );
     }
     return SmbShareListOk(parseSmbclientGrepable(out));
@@ -165,7 +168,7 @@ class SmbShareDiscovery {
     try {
       result = await Process.run('smbutil', ['view', '-N', url.toString()]);
     } on ProcessException catch (e) {
-      return SmbShareListError('smbutil unavailable: ${e.message}');
+      return SmbShareListError(t.errors.smbutilUnavailable(message: e.message));
     }
     final out = (result.stdout as String? ?? '');
     final err = (result.stderr as String? ?? '');
@@ -175,7 +178,7 @@ class SmbShareDiscovery {
       }
       final msg = err.trim().isNotEmpty ? err.trim() : out.trim();
       return SmbShareListError(
-        msg.isEmpty ? 'smbutil failed (${result.exitCode})' : msg,
+        msg.isEmpty ? t.errors.smbutilFailed(code: result.exitCode) : msg,
       );
     }
     return SmbShareListOk(parseSmbutil(out));
@@ -210,7 +213,7 @@ class SmbShareDiscovery {
     try {
       result = await Process.run('net', ['view', '\\\\$host', '/all']);
     } on ProcessException catch (e) {
-      return SmbShareListError('net unavailable: ${e.message}');
+      return SmbShareListError(t.errors.netUnavailable(message: e.message));
     }
     final out = (result.stdout as String? ?? '');
     final err = (result.stderr as String? ?? '');
@@ -220,7 +223,7 @@ class SmbShareDiscovery {
       }
       final msg = err.trim().isNotEmpty ? err.trim() : out.trim();
       return SmbShareListError(
-        msg.isEmpty ? 'net view failed (${result.exitCode})' : msg,
+        msg.isEmpty ? t.errors.netViewFailed(code: result.exitCode) : msg,
       );
     }
     return SmbShareListOk(parseNetView(out));

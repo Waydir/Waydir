@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import '../../i18n/strings.g.dart';
 import '../models/file_entry.dart';
 import '../platform/platform_paths.dart';
 import 'fs_backend.dart';
@@ -20,7 +21,7 @@ class SftpFs implements FsBackend {
   int _sessionFor(String path) {
     final rec = SftpSessionManager.recordFor(path);
     if (rec == null) {
-      throw FileSystemException('No active SFTP session for $path');
+      throw FileSystemException(t.errors.sftpNoActiveSessionFor(path: path));
     }
     return rec.sessionId;
   }
@@ -46,7 +47,7 @@ class SftpFs implements FsBackend {
     final remote = _remote(path);
     final buf = WaydirCoreLoader.sftpList(sessionId, remote);
     if (buf == null) {
-      throw FileSystemException('SFTP listing failed', path);
+      throw FileSystemException(t.errors.sftpListingFailed, path);
     }
     final decoded = FileEntryCodec.decode(buf);
     return decoded
@@ -101,7 +102,7 @@ class SftpFs implements FsBackend {
       length: length,
     );
     if (bytes == null) {
-      throw FileSystemException('SFTP read failed', path);
+      throw FileSystemException(t.errors.sftpReadFailed, path);
     }
     final controller = StreamController<List<int>>();
     controller.add(bytes);
@@ -114,7 +115,7 @@ class SftpFs implements FsBackend {
     final sessionId = _sessionFor(path);
     final remote = _remote(path);
     final ok = WaydirCoreLoader.sftpWrite(sessionId, remote, bytes);
-    if (!ok) throw FileSystemException('SFTP write failed', path);
+    if (!ok) throw FileSystemException(t.errors.sftpWriteFailed, path);
   }
 
   @override
@@ -126,7 +127,7 @@ class SftpFs implements FsBackend {
       remote,
       recursive: recursive,
     );
-    if (!ok) throw FileSystemException('SFTP mkdir failed', path);
+    if (!ok) throw FileSystemException(t.errors.sftpMkdirFailed, path);
   }
 
   @override
@@ -138,7 +139,7 @@ class SftpFs implements FsBackend {
       remote,
       recursive: recursive,
     );
-    if (!ok) throw FileSystemException('SFTP remove failed', path);
+    if (!ok) throw FileSystemException(t.errors.sftpRemoveFailed, path);
   }
 
   @override
@@ -149,7 +150,7 @@ class SftpFs implements FsBackend {
       _remote(from),
       _remote(to),
     );
-    if (!ok) throw FileSystemException('SFTP rename failed', from);
+    if (!ok) throw FileSystemException(t.errors.sftpRenameFailed, from);
   }
 
   @override

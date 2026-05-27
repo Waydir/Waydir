@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../i18n/strings.g.dart';
+
 @immutable
 class AppThemePalette {
   final Color bg;
@@ -74,7 +76,7 @@ class AppThemePalette {
     Color read(String key) {
       final value = json[key];
       if (value is! String) {
-        throw FormatException('Missing color "$key"');
+        throw FormatException(t.preferences.appearance.missingColor(key: key));
       }
       return parseThemeColor(value, key);
     }
@@ -173,16 +175,16 @@ class AppThemeDefinition {
     final brightness = json['brightness'];
     final palette = json['palette'];
     if (id is! String || id.trim().isEmpty) {
-      throw const FormatException('Missing theme id');
+      throw FormatException(t.preferences.appearance.missingThemeId);
     }
     if (name is! String || name.trim().isEmpty) {
-      throw const FormatException('Missing theme name');
+      throw FormatException(t.preferences.appearance.missingThemeName);
     }
     if (brightness is! String) {
-      throw const FormatException('Missing theme brightness');
+      throw FormatException(t.preferences.appearance.missingThemeBrightness);
     }
     if (palette is! Map<String, dynamic>) {
-      throw const FormatException('Missing theme palette');
+      throw FormatException(t.preferences.appearance.missingThemePalette);
     }
     return AppThemeDefinition(
       id: id.trim(),
@@ -211,7 +213,7 @@ Color parseThemeColor(String value, String key) {
     hex = 'FF$hex';
   }
   if (hex.length != 8 || !RegExp(r'^[0-9a-fA-F]{8}$').hasMatch(hex)) {
-    throw FormatException('Invalid color "$key"');
+    throw FormatException(t.preferences.appearance.invalidColor(key: key));
   }
   return Color(int.parse(hex, radix: 16));
 }
@@ -220,7 +222,7 @@ Brightness _parseBrightness(String value) {
   return switch (value.trim().toLowerCase()) {
     'dark' => Brightness.dark,
     'light' => Brightness.light,
-    _ => throw const FormatException('Invalid theme brightness'),
+    _ => throw FormatException(t.preferences.appearance.invalidThemeBrightness),
   };
 }
 

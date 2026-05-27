@@ -1,5 +1,6 @@
 import '../../core/platform/platform_paths.dart';
 import '../../core/platform/trash_location.dart';
+import '../../i18n/strings.g.dart';
 
 enum LocationScheme { local, windowsUnc, smb, sftp, trash, other }
 
@@ -45,7 +46,7 @@ class LocationUri {
       case LocationScheme.windowsUnc:
         return raw;
       case LocationScheme.trash:
-        return 'Trash';
+        return t.sidebar.trash;
       case LocationScheme.local:
       case LocationScheme.other:
         return PlatformPaths.fileName(raw).isEmpty

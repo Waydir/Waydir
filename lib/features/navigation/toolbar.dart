@@ -828,7 +828,7 @@ class _PathSuggestionPopup extends StatelessWidget {
                 ),
                 const SizedBox(width: 5),
                 Text(
-                  'complete',
+                  t.search.complete,
                   style: context.txt.caption.copyWith(color: AppColors.fgMuted),
                 ),
                 const SizedBox(width: 14),
@@ -839,7 +839,7 @@ class _PathSuggestionPopup extends StatelessWidget {
                 const SizedBox(width: 5),
                 Expanded(
                   child: Text(
-                    'go',
+                    t.search.go,
                     maxLines: 1,
                     softWrap: false,
                     overflow: TextOverflow.ellipsis,

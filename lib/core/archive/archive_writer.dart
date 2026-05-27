@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:archive/archive_io.dart';
 import 'package:path/path.dart' as p;
 
+import '../../i18n/strings.g.dart';
 import 'archive_reader.dart' show ArchiveReadException, ArchiveReader;
 
 enum ArchiveFormat { zip, tar, tarGz, tarBz2, tarXz }
@@ -291,7 +292,7 @@ class ArchiveWriter {
       File(stagedPath).renameSync(destPath);
       ok = true;
     } catch (e) {
-      throw ArchiveReadException('Could not create archive: $e');
+      throw ArchiveReadException(t.errors.archiveCreateFailed(error: e));
     } finally {
       if (!ok) {
         try {
@@ -328,10 +329,10 @@ class ArchiveWriter {
     if (isCancelled != null && isCancelled()) return;
 
     final phaseLabel = switch (format) {
-      ArchiveFormat.tarGz => 'Compressing (gzip)…',
-      ArchiveFormat.tarBz2 => 'Compressing (bzip2)…',
-      ArchiveFormat.tarXz => 'Compressing (xz)…',
-      _ => 'Compressing…',
+      ArchiveFormat.tarGz => t.operations.compressingGzip,
+      ArchiveFormat.tarBz2 => t.operations.compressingBzip2,
+      ArchiveFormat.tarXz => t.operations.compressingXz,
+      _ => t.operations.compressing,
     };
     onPhase?.call(phaseLabel);
 
@@ -428,7 +429,7 @@ class ArchiveWriter {
   }) {
     final format = archiveFormatFromName(archivePath);
     if (format == null) {
-      throw const ArchiveReadException('unsupported archive format');
+      throw ArchiveReadException(t.errors.unsupportedArchiveFormat);
     }
     final work = Directory(
       p.join(

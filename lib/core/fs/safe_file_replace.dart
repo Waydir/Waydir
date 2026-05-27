@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:ffi/ffi.dart';
 import 'package:win32/win32.dart';
 
+import '../../i18n/strings.g.dart';
 import 'native_copy.dart';
 
 typedef _ChmodNative = Int32 Function(Pointer<Utf8>, Uint32);
@@ -251,7 +252,7 @@ class SafeFileReplace {
       );
       if (result == 0) {
         throw FileSystemException(
-          'MoveFileEx failed with Windows error ${GetLastError()}',
+          t.errors.moveFileExFailed(error: GetLastError()),
           destinationPath,
         );
       }

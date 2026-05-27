@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:ffi/ffi.dart';
 import 'package:path/path.dart' as p;
 
+import '../../i18n/strings.g.dart';
 import '../logging/app_logger.dart';
 
 typedef _SearchNative =
@@ -301,8 +302,7 @@ class WaydirCoreLoader {
     }
     log.error(
       'ffi.waydir_core',
-      'native waydir_core not found; searched: '
-          '${_candidatePaths().join(", ")}',
+      t.errors.nativeCoreNotFound(paths: _candidatePaths().join(', ')),
     );
     return null;
   }
@@ -311,8 +311,7 @@ class WaydirCoreLoader {
     final lib = load();
     if (lib == null) {
       throw WaydirCoreException(
-        'native waydir_core not found; searched: '
-        '${_candidatePaths().join(", ")}',
+        t.errors.nativeCoreNotFound(paths: _candidatePaths().join(', ')),
       );
     }
     return lib;
@@ -1128,9 +1127,11 @@ class WaydirCoreLoader {
     }
 
     if (count == 0xFFFFFFFF) {
-      final message = readString() ?? 'native trash list failed';
+      final message = readString() ?? t.errors.nativeTrashListFailed;
       log.error('ffi.trash', message);
-      throw WaydirCoreException('native trash list failed: $message');
+      throw WaydirCoreException(
+        t.errors.nativeTrashListFailedWithMessage(message: message),
+      );
     }
 
     for (var i = 0; i < count; i++) {

@@ -53,7 +53,9 @@ class _AppearancePaneState extends State<AppearancePane> {
     try {
       final decoded = jsonDecode(await file.readAsString());
       if (decoded is! Map<String, dynamic>) {
-        throw const FormatException('Theme file must contain a JSON object');
+        throw FormatException(
+          t.preferences.appearance.themeFileMustContainJsonObject,
+        );
       }
       final theme = AppThemeDefinition.fromJson(decoded);
       return _CustomThemeFile(path: file.path, theme: theme);

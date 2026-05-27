@@ -40,39 +40,39 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	Translations $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => Translations(meta: meta ?? this.$meta);
 
 	// Translations
-	late final TranslationsAppEn app = TranslationsAppEn.internal(_root);
-	late final TranslationsMenuEn menu = TranslationsMenuEn.internal(_root);
-	late final TranslationsCompressEn compress = TranslationsCompressEn.internal(_root);
-	late final TranslationsPropertiesEn properties = TranslationsPropertiesEn.internal(_root);
-	late final TranslationsPreferencesEn preferences = TranslationsPreferencesEn.internal(_root);
-	late final TranslationsUpdateEn update = TranslationsUpdateEn.internal(_root);
-	late final TranslationsAppMenuEn appMenu = TranslationsAppMenuEn.internal(_root);
-	late final TranslationsKeybindingsEn keybindings = TranslationsKeybindingsEn.internal(_root);
-	late final TranslationsCommandPaletteEn commandPalette = TranslationsCommandPaletteEn.internal(_root);
-	late final TranslationsQuickLookEn quickLook = TranslationsQuickLookEn.internal(_root);
-	late final TranslationsToastEn toast = TranslationsToastEn.internal(_root);
-	late final TranslationsSelectionFileEn selectionFile = TranslationsSelectionFileEn.internal(_root);
-	late final TranslationsDragHintEn dragHint = TranslationsDragHintEn.internal(_root);
-	late final TranslationsFileViewEn fileView = TranslationsFileViewEn.internal(_root);
-	late final TranslationsSidebarEn sidebar = TranslationsSidebarEn.internal(_root);
-	late final TranslationsTrashEn trash = TranslationsTrashEn.internal(_root);
-	late final TranslationsToolbarEn toolbar = TranslationsToolbarEn.internal(_root);
-	late final TranslationsNotificationsEn notifications = TranslationsNotificationsEn.internal(_root);
-	late final TranslationsSearchEn search = TranslationsSearchEn.internal(_root);
-	late final TranslationsStatusBarEn statusBar = TranslationsStatusBarEn.internal(_root);
-	late final TranslationsDialogEn dialog = TranslationsDialogEn.internal(_root);
-	late final TranslationsPasswordEn password = TranslationsPasswordEn.internal(_root);
-	late final TranslationsSelectPatternEn selectPattern = TranslationsSelectPatternEn.internal(_root);
-	late final TranslationsOperationsEn operations = TranslationsOperationsEn.internal(_root);
-	late final TranslationsErrorsEn errors = TranslationsErrorsEn.internal(_root);
-	late final TranslationsTasksEn tasks = TranslationsTasksEn.internal(_root);
-	late final TranslationsGitEn git = TranslationsGitEn.internal(_root);
-	late final TranslationsOpenWithEn openWith = TranslationsOpenWithEn.internal(_root);
+	late final Translations$app$en app = Translations$app$en.internal(_root);
+	late final Translations$menu$en menu = Translations$menu$en.internal(_root);
+	late final Translations$compress$en compress = Translations$compress$en.internal(_root);
+	late final Translations$properties$en properties = Translations$properties$en.internal(_root);
+	late final Translations$preferences$en preferences = Translations$preferences$en.internal(_root);
+	late final Translations$update$en update = Translations$update$en.internal(_root);
+	late final Translations$appMenu$en appMenu = Translations$appMenu$en.internal(_root);
+	late final Translations$keybindings$en keybindings = Translations$keybindings$en.internal(_root);
+	late final Translations$commandPalette$en commandPalette = Translations$commandPalette$en.internal(_root);
+	late final Translations$quickLook$en quickLook = Translations$quickLook$en.internal(_root);
+	late final Translations$toast$en toast = Translations$toast$en.internal(_root);
+	late final Translations$selectionFile$en selectionFile = Translations$selectionFile$en.internal(_root);
+	late final Translations$dragHint$en dragHint = Translations$dragHint$en.internal(_root);
+	late final Translations$fileView$en fileView = Translations$fileView$en.internal(_root);
+	late final Translations$sidebar$en sidebar = Translations$sidebar$en.internal(_root);
+	late final Translations$trash$en trash = Translations$trash$en.internal(_root);
+	late final Translations$toolbar$en toolbar = Translations$toolbar$en.internal(_root);
+	late final Translations$notifications$en notifications = Translations$notifications$en.internal(_root);
+	late final Translations$search$en search = Translations$search$en.internal(_root);
+	late final Translations$statusBar$en statusBar = Translations$statusBar$en.internal(_root);
+	late final Translations$dialog$en dialog = Translations$dialog$en.internal(_root);
+	late final Translations$password$en password = Translations$password$en.internal(_root);
+	late final Translations$selectPattern$en selectPattern = Translations$selectPattern$en.internal(_root);
+	late final Translations$operations$en operations = Translations$operations$en.internal(_root);
+	late final Translations$errors$en errors = Translations$errors$en.internal(_root);
+	late final Translations$tasks$en tasks = Translations$tasks$en.internal(_root);
+	late final Translations$git$en git = Translations$git$en.internal(_root);
+	late final Translations$openWith$en openWith = Translations$openWith$en.internal(_root);
 }
 
 // Path: app
-class TranslationsAppEn {
-	TranslationsAppEn.internal(this._root);
+class Translations$app$en {
+	Translations$app$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -89,8 +89,8 @@ class TranslationsAppEn {
 }
 
 // Path: menu
-class TranslationsMenuEn {
-	TranslationsMenuEn.internal(this._root);
+class Translations$menu$en {
+	Translations$menu$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -212,8 +212,8 @@ class TranslationsMenuEn {
 }
 
 // Path: compress
-class TranslationsCompressEn {
-	TranslationsCompressEn.internal(this._root);
+class Translations$compress$en {
+	Translations$compress$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -251,8 +251,8 @@ class TranslationsCompressEn {
 }
 
 // Path: properties
-class TranslationsPropertiesEn {
-	TranslationsPropertiesEn.internal(this._root);
+class Translations$properties$en {
+	Translations$properties$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -308,8 +308,8 @@ class TranslationsPropertiesEn {
 }
 
 // Path: preferences
-class TranslationsPreferencesEn {
-	TranslationsPreferencesEn.internal(this._root);
+class Translations$preferences$en {
+	Translations$preferences$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -327,17 +327,17 @@ class TranslationsPreferencesEn {
 	/// en: 'Coming soon'
 	String get comingSoon => 'Coming soon';
 
-	late final TranslationsPreferencesCategoriesEn categories = TranslationsPreferencesCategoriesEn.internal(_root);
-	late final TranslationsPreferencesGeneralEn general = TranslationsPreferencesGeneralEn.internal(_root);
-	late final TranslationsPreferencesAppearanceEn appearance = TranslationsPreferencesAppearanceEn.internal(_root);
-	late final TranslationsPreferencesBookmarksEn bookmarks = TranslationsPreferencesBookmarksEn.internal(_root);
-	late final TranslationsPreferencesDiagnosticsEn diagnostics = TranslationsPreferencesDiagnosticsEn.internal(_root);
-	late final TranslationsPreferencesAboutEn about = TranslationsPreferencesAboutEn.internal(_root);
+	late final Translations$preferences$categories$en categories = Translations$preferences$categories$en.internal(_root);
+	late final Translations$preferences$general$en general = Translations$preferences$general$en.internal(_root);
+	late final Translations$preferences$appearance$en appearance = Translations$preferences$appearance$en.internal(_root);
+	late final Translations$preferences$bookmarks$en bookmarks = Translations$preferences$bookmarks$en.internal(_root);
+	late final Translations$preferences$diagnostics$en diagnostics = Translations$preferences$diagnostics$en.internal(_root);
+	late final Translations$preferences$about$en about = Translations$preferences$about$en.internal(_root);
 }
 
 // Path: update
-class TranslationsUpdateEn {
-	TranslationsUpdateEn.internal(this._root);
+class Translations$update$en {
+	Translations$update$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -462,11 +462,17 @@ class TranslationsUpdateEn {
 
 	/// en: 'Failed to relaunch: $error'
 	String relaunchFailed({required Object error}) => 'Failed to relaunch: ${error}';
+
+	/// en: '--- Install OK. Press Enter to close ---'
+	String get terminalInstallOk => '--- Install OK. Press Enter to close ---';
+
+	/// en: '--- Install failed (exit $status). Press Enter to close ---'
+	String terminalInstallFailed({required Object status}) => '--- Install failed (exit ${status}). Press Enter to close ---';
 }
 
 // Path: appMenu
-class TranslationsAppMenuEn {
-	TranslationsAppMenuEn.internal(this._root);
+class Translations$appMenu$en {
+	Translations$appMenu$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -477,8 +483,8 @@ class TranslationsAppMenuEn {
 }
 
 // Path: keybindings
-class TranslationsKeybindingsEn {
-	TranslationsKeybindingsEn.internal(this._root);
+class Translations$keybindings$en {
+	Translations$keybindings$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -490,7 +496,7 @@ class TranslationsKeybindingsEn {
 	/// en: 'Shortcuts'
 	String get menuLabel => 'Shortcuts';
 
-	late final TranslationsKeybindingsCategoriesEn categories = TranslationsKeybindingsCategoriesEn.internal(_root);
+	late final Translations$keybindings$categories$en categories = Translations$keybindings$categories$en.internal(_root);
 
 	/// en: 'or'
 	String get or => 'or';
@@ -605,8 +611,8 @@ class TranslationsKeybindingsEn {
 }
 
 // Path: commandPalette
-class TranslationsCommandPaletteEn {
-	TranslationsCommandPaletteEn.internal(this._root);
+class Translations$commandPalette$en {
+	Translations$commandPalette$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -635,8 +641,8 @@ class TranslationsCommandPaletteEn {
 }
 
 // Path: quickLook
-class TranslationsQuickLookEn {
-	TranslationsQuickLookEn.internal(this._root);
+class Translations$quickLook$en {
+	Translations$quickLook$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -779,8 +785,8 @@ class TranslationsQuickLookEn {
 }
 
 // Path: toast
-class TranslationsToastEn {
-	TranslationsToastEn.internal(this._root);
+class Translations$toast$en {
+	Translations$toast$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -818,8 +824,8 @@ class TranslationsToastEn {
 }
 
 // Path: selectionFile
-class TranslationsSelectionFileEn {
-	TranslationsSelectionFileEn.internal(this._root);
+class Translations$selectionFile$en {
+	Translations$selectionFile$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -845,8 +851,8 @@ class TranslationsSelectionFileEn {
 }
 
 // Path: dragHint
-class TranslationsDragHintEn {
-	TranslationsDragHintEn.internal(this._root);
+class Translations$dragHint$en {
+	Translations$dragHint$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -863,8 +869,8 @@ class TranslationsDragHintEn {
 }
 
 // Path: fileView
-class TranslationsFileViewEn {
-	TranslationsFileViewEn.internal(this._root);
+class Translations$fileView$en {
+	Translations$fileView$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -876,13 +882,13 @@ class TranslationsFileViewEn {
 	/// en: 'Folder is empty'
 	String get empty => 'Folder is empty';
 
-	late final TranslationsFileViewDateEn date = TranslationsFileViewDateEn.internal(_root);
-	late final TranslationsFileViewColumnsEn columns = TranslationsFileViewColumnsEn.internal(_root);
+	late final Translations$fileView$date$en date = Translations$fileView$date$en.internal(_root);
+	late final Translations$fileView$columns$en columns = Translations$fileView$columns$en.internal(_root);
 }
 
 // Path: sidebar
-class TranslationsSidebarEn {
-	TranslationsSidebarEn.internal(this._root);
+class Translations$sidebar$en {
+	Translations$sidebar$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -933,9 +939,9 @@ class TranslationsSidebarEn {
 	/// en: 'Connect to server'
 	String get connectToServer => 'Connect to server';
 
-	late final TranslationsSidebarConnectDialogEn connectDialog = TranslationsSidebarConnectDialogEn.internal(_root);
-	late final TranslationsSidebarDriveSpaceEn driveSpace = TranslationsSidebarDriveSpaceEn.internal(_root);
-	late final TranslationsSidebarDrivesEn drives = TranslationsSidebarDrivesEn.internal(_root);
+	late final Translations$sidebar$connectDialog$en connectDialog = Translations$sidebar$connectDialog$en.internal(_root);
+	late final Translations$sidebar$driveSpace$en driveSpace = Translations$sidebar$driveSpace$en.internal(_root);
+	late final Translations$sidebar$drives$en drives = Translations$sidebar$drives$en.internal(_root);
 
 	/// en: 'Collapse sidebar'
 	String get collapse => 'Collapse sidebar';
@@ -945,8 +951,8 @@ class TranslationsSidebarEn {
 }
 
 // Path: trash
-class TranslationsTrashEn {
-	TranslationsTrashEn.internal(this._root);
+class Translations$trash$en {
+	Translations$trash$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -963,8 +969,8 @@ class TranslationsTrashEn {
 }
 
 // Path: toolbar
-class TranslationsToolbarEn {
-	TranslationsToolbarEn.internal(this._root);
+class Translations$toolbar$en {
+	Translations$toolbar$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -1002,8 +1008,8 @@ class TranslationsToolbarEn {
 }
 
 // Path: notifications
-class TranslationsNotificationsEn {
-	TranslationsNotificationsEn.internal(this._root);
+class Translations$notifications$en {
+	Translations$notifications$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -1020,8 +1026,8 @@ class TranslationsNotificationsEn {
 }
 
 // Path: search
-class TranslationsSearchEn {
-	TranslationsSearchEn.internal(this._root);
+class Translations$search$en {
+	Translations$search$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -1074,11 +1080,17 @@ class TranslationsSearchEn {
 
 	/// en: 'Invalid regex'
 	String get invalidRegex => 'Invalid regex';
+
+	/// en: 'complete'
+	String get complete => 'complete';
+
+	/// en: 'go'
+	String get go => 'go';
 }
 
 // Path: statusBar
-class TranslationsStatusBarEn {
-	TranslationsStatusBarEn.internal(this._root);
+class Translations$statusBar$en {
+	Translations$statusBar$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -1098,8 +1110,8 @@ class TranslationsStatusBarEn {
 }
 
 // Path: dialog
-class TranslationsDialogEn {
-	TranslationsDialogEn.internal(this._root);
+class Translations$dialog$en {
+	Translations$dialog$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -1167,8 +1179,8 @@ class TranslationsDialogEn {
 }
 
 // Path: password
-class TranslationsPasswordEn {
-	TranslationsPasswordEn.internal(this._root);
+class Translations$password$en {
+	Translations$password$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -1186,19 +1198,31 @@ class TranslationsPasswordEn {
 	/// en: 'Enter credentials for this network share.'
 	String get smbPrompt => 'Enter credentials for this network share.';
 
+	/// en: 'SSH/SFTP authentication'
+	String get sftpPrompt => 'SSH/SFTP authentication';
+
 	/// en: 'Username'
 	String get username => 'Username';
 
 	/// en: 'Password'
 	String get password => 'Password';
 
+	/// en: 'Private key'
+	String get privateKey => 'Private key';
+
+	/// en: 'Private key path'
+	String get privateKeyPath => 'Private key path';
+
+	/// en: 'Passphrase (optional)'
+	String get passphraseOptional => 'Passphrase (optional)';
+
 	/// en: 'Unlock'
 	String get unlock => 'Unlock';
 }
 
 // Path: selectPattern
-class TranslationsSelectPatternEn {
-	TranslationsSelectPatternEn.internal(this._root);
+class Translations$selectPattern$en {
+	Translations$selectPattern$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -1218,8 +1242,8 @@ class TranslationsSelectPatternEn {
 }
 
 // Path: operations
-class TranslationsOperationsEn {
-	TranslationsOperationsEn.internal(this._root);
+class Translations$operations$en {
+	Translations$operations$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -1239,6 +1263,18 @@ class TranslationsOperationsEn {
 
 	/// en: '$count errors'
 	String errorsCount({required Object count}) => '${count} errors';
+
+	/// en: 'Compressing…'
+	String get compressing => 'Compressing…';
+
+	/// en: 'Compressing (gzip)…'
+	String get compressingGzip => 'Compressing (gzip)…';
+
+	/// en: 'Compressing (bzip2)…'
+	String get compressingBzip2 => 'Compressing (bzip2)…';
+
+	/// en: 'Compressing (xz)…'
+	String get compressingXz => 'Compressing (xz)…';
 
 	/// en: 'just now'
 	String get justNow => 'just now';
@@ -1305,8 +1341,8 @@ class TranslationsOperationsEn {
 }
 
 // Path: errors
-class TranslationsErrorsEn {
-	TranslationsErrorsEn.internal(this._root);
+class Translations$errors$en {
+	Translations$errors$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -1314,6 +1350,9 @@ class TranslationsErrorsEn {
 
 	/// en: 'Permission denied'
 	String get permissionDenied => 'Permission denied';
+
+	/// en: 'Authentication required'
+	String get authenticationRequired => 'Authentication required';
 
 	/// en: 'No space left on device'
 	String get noSpace => 'No space left on device';
@@ -1324,14 +1363,116 @@ class TranslationsErrorsEn {
 	/// en: 'File not found'
 	String get notFound => 'File not found';
 
+	/// en: 'Source not found'
+	String get sourceNotFound => 'Source not found';
+
 	/// en: 'Path not found'
 	String get pathNotFound => 'Path not found';
+
+	/// en: 'Missing host in smb:// URI'
+	String get missingSmbHost => 'Missing host in smb:// URI';
+
+	/// en: 'Missing server in smb:// URI'
+	String get missingSmbServer => 'Missing server in smb:// URI';
+
+	/// en: 'Missing share in smb:// URI'
+	String get missingSmbShare => 'Missing share in smb:// URI';
+
+	/// en: 'Missing host in sftp:// URI'
+	String get missingSftpHost => 'Missing host in sftp:// URI';
+
+	/// en: 'Invalid smb:// URI'
+	String get invalidSmbUri => 'Invalid smb:// URI';
+
+	/// en: 'SMB ports are not supported on Windows'
+	String get smbPortsNotSupportedOnWindows => 'SMB ports are not supported on Windows';
+
+	/// en: 'SMB share not mounted'
+	String get smbShareNotMounted => 'SMB share not mounted';
+
+	/// en: 'smbclient unavailable: $message'
+	String smbClientUnavailable({required Object message}) => 'smbclient unavailable: ${message}';
+
+	/// en: 'smbclient failed ($code)'
+	String smbClientFailed({required Object code}) => 'smbclient failed (${code})';
+
+	/// en: 'smbutil unavailable: $message'
+	String smbutilUnavailable({required Object message}) => 'smbutil unavailable: ${message}';
+
+	/// en: 'smbutil failed ($code)'
+	String smbutilFailed({required Object code}) => 'smbutil failed (${code})';
+
+	/// en: 'net unavailable: $message'
+	String netUnavailable({required Object message}) => 'net unavailable: ${message}';
+
+	/// en: 'net view failed ($code)'
+	String netViewFailed({required Object code}) => 'net view failed (${code})';
+
+	/// en: 'Mounted share could not be located in gvfs'
+	String get smbMountedShareNotFound => 'Mounted share could not be located in gvfs';
+
+	/// en: 'Failed to create $path: $error'
+	String failedToCreatePath({required Object path, required Object error}) => 'Failed to create ${path}: ${error}';
+
+	/// en: 'gio mount failed'
+	String get gioMountFailed => 'gio mount failed';
+
+	/// en: 'mount_smbfs failed ($code)'
+	String mountSmbfsFailed({required Object code}) => 'mount_smbfs failed (${code})';
 
 	/// en: 'Directory not empty'
 	String get notEmpty => 'Directory not empty';
 
 	/// en: 'Cannot move across devices'
 	String get crossDevice => 'Cannot move across devices';
+
+	/// en: 'Target exists'
+	String get targetExists => 'Target exists';
+
+	/// en: 'SFTP not supported'
+	String get sftpNotSupported => 'SFTP not supported';
+
+	/// en: 'SFTP connect failed'
+	String get sftpConnectFailed => 'SFTP connect failed';
+
+	/// en: 'SFTP: $error'
+	String sftpError({required Object error}) => 'SFTP: ${error}';
+
+	/// en: 'No active SFTP session'
+	String get sftpNoActiveSession => 'No active SFTP session';
+
+	/// en: 'No active SFTP session for $path'
+	String sftpNoActiveSessionFor({required Object path}) => 'No active SFTP session for ${path}';
+
+	/// en: 'SFTP listing failed'
+	String get sftpListingFailed => 'SFTP listing failed';
+
+	/// en: 'SFTP read failed'
+	String get sftpReadFailed => 'SFTP read failed';
+
+	/// en: 'SFTP write failed'
+	String get sftpWriteFailed => 'SFTP write failed';
+
+	/// en: 'SFTP mkdir failed'
+	String get sftpMkdirFailed => 'SFTP mkdir failed';
+
+	/// en: 'SFTP remove failed'
+	String get sftpRemoveFailed => 'SFTP remove failed';
+
+	/// en: 'SFTP rename failed'
+	String get sftpRenameFailed => 'SFTP rename failed';
+
+	/// en: 'SFTP open reader failed'
+	String get sftpOpenReaderFailed => 'SFTP open reader failed';
+
+	/// en: 'SFTP open writer failed'
+	String get sftpOpenWriterFailed => 'SFTP open writer failed';
+
+	/// en: 'SFTP close failed'
+	String get sftpCloseFailed => 'SFTP close failed';
+
+	/// en: 'Directory not readable'
+	String get directoryNotReadable => 'Directory not readable';
 
 	/// en: 'Cannot copy or move a folder into itself.'
 	String get transferIntoSelf => 'Cannot copy or move a folder into itself.';
@@ -1345,13 +1486,37 @@ class TranslationsErrorsEn {
 	/// en: 'Could not read archive'
 	String get archiveError => 'Could not read archive';
 
+	/// en: 'Could not create archive: $error'
+	String archiveCreateFailed({required Object error}) => 'Could not create archive: ${error}';
+
+	/// en: 'Archive error: $error'
+	String archiveReadFailed({required Object error}) => 'Archive error: ${error}';
+
+	/// en: 'Archive entry not found: $path'
+	String archiveEntryNotFound({required Object path}) => 'Archive entry not found: ${path}';
+
+	/// en: 'Unsupported archive format'
+	String get unsupportedArchiveFormat => 'Unsupported archive format';
+
+	/// en: 'Native waydir_core not found; searched: $paths'
+	String nativeCoreNotFound({required Object paths}) => 'Native waydir_core not found; searched: ${paths}';
+
+	/// en: 'MoveFileEx failed with Windows error $error'
+	String moveFileExFailed({required Object error}) => 'MoveFileEx failed with Windows error ${error}';
+
+	/// en: 'Native trash list failed'
+	String get nativeTrashListFailed => 'Native trash list failed';
+
+	/// en: 'Native trash list failed: $message'
+	String nativeTrashListFailedWithMessage({required Object message}) => 'Native trash list failed: ${message}';
+
 	/// en: 'Network shares (smb://) are not supported on this platform yet.'
 	String get smbNotSupportedOnPlatform => 'Network shares (smb://) are not supported on this platform yet.';
 }
 
 // Path: tasks
-class TranslationsTasksEn {
-	TranslationsTasksEn.internal(this._root);
+class Translations$tasks$en {
+	Translations$tasks$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -1405,12 +1570,12 @@ class TranslationsTasksEn {
 	/// en: 'Updating archive'
 	String get updatingArchive => 'Updating archive';
 
-	late final TranslationsTasksStatusEn status = TranslationsTasksStatusEn.internal(_root);
+	late final Translations$tasks$status$en status = Translations$tasks$status$en.internal(_root);
 }
 
 // Path: git
-class TranslationsGitEn {
-	TranslationsGitEn.internal(this._root);
+class Translations$git$en {
+	Translations$git$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -1481,8 +1646,8 @@ class TranslationsGitEn {
 }
 
 // Path: openWith
-class TranslationsOpenWithEn {
-	TranslationsOpenWithEn.internal(this._root);
+class Translations$openWith$en {
+	Translations$openWith$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -1523,11 +1688,26 @@ class TranslationsOpenWithEn {
 
 	/// en: 'Could not set the default application'
 	String get setDefaultFailed => 'Could not set the default application';
+
+	/// en: 'Unsupported platform'
+	String get unsupportedPlatform => 'Unsupported platform';
+
+	/// en: 'xdg-mime failed'
+	String get xdgMimeFailed => 'xdg-mime failed';
+
+	/// en: 'Setting the default app on macOS requires the "duti" tool'
+	String get dutiRequired => 'Setting the default app on macOS requires the "duti" tool';
+
+	/// en: 'Could not read app bundle id'
+	String get bundleIdReadFailed => 'Could not read app bundle id';
+
+	/// en: 'Use the system "Open with" dialog to change the default on Windows'
+	String get windowsDefaultDialogRequired => 'Use the system "Open with" dialog to change the default on Windows';
 }
 
 // Path: preferences.categories
-class TranslationsPreferencesCategoriesEn {
-	TranslationsPreferencesCategoriesEn.internal(this._root);
+class Translations$preferences$categories$en {
+	Translations$preferences$categories$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -1550,8 +1730,8 @@ class TranslationsPreferencesCategoriesEn {
 }
 
 // Path: preferences.general
-class TranslationsPreferencesGeneralEn {
-	TranslationsPreferencesGeneralEn.internal(this._root);
+class Translations$preferences$general$en {
+	Translations$preferences$general$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -1658,8 +1838,8 @@ class TranslationsPreferencesGeneralEn {
 }
 
 // Path: preferences.appearance
-class TranslationsPreferencesAppearanceEn {
-	TranslationsPreferencesAppearanceEn.internal(this._root);
+class Translations$preferences$appearance$en {
+	Translations$preferences$appearance$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -1730,6 +1910,42 @@ class TranslationsPreferencesAppearanceEn {
 
 	/// en: 'Invalid theme JSON'
 	String get invalidTheme => 'Invalid theme JSON';
+
+	/// en: 'Theme file must contain a JSON object'
+	String get themeFileMustContainJsonObject => 'Theme file must contain a JSON object';
+
+	/// en: 'Missing theme id'
+	String get missingThemeId => 'Missing theme id';
+
+	/// en: 'Missing theme name'
+	String get missingThemeName => 'Missing theme name';
+
+	/// en: 'Missing theme brightness'
+	String get missingThemeBrightness => 'Missing theme brightness';
+
+	/// en: 'Missing theme palette'
+	String get missingThemePalette => 'Missing theme palette';
+
+	/// en: 'Invalid theme brightness'
+	String get invalidThemeBrightness => 'Invalid theme brightness';
+
+	/// en: 'Missing color "$key"'
+	String missingColor({required Object key}) => 'Missing color "${key}"';
+
+	/// en: 'Invalid color "$key"'
+	String invalidColor({required Object key}) => 'Invalid color "${key}"';
+
+	/// en: 'Could not load custom themes'
+	String get couldNotLoadCustomThemes => 'Could not load custom themes';
+
+	/// en: 'Unknown theme "$id", using $theme'
+	String unknownThemeUsingDefault({required Object id, required Object theme}) => 'Unknown theme "${id}", using ${theme}';
+
+	/// en: 'Skipping theme "$id" from $path: duplicate id'
+	String skippingDuplicateTheme({required Object id, required Object path}) => 'Skipping theme "${id}" from ${path}: duplicate id';
+
+	/// en: 'Skipping theme file $path'
+	String skippingThemeFile({required Object path}) => 'Skipping theme file ${path}';
 
 	/// en: 'Files'
 	String get filesSection => 'Files';
@@ -1808,8 +2024,8 @@ class TranslationsPreferencesAppearanceEn {
 }
 
 // Path: preferences.bookmarks
-class TranslationsPreferencesBookmarksEn {
-	TranslationsPreferencesBookmarksEn.internal(this._root);
+class Translations$preferences$bookmarks$en {
+	Translations$preferences$bookmarks$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -1832,8 +2048,8 @@ class TranslationsPreferencesBookmarksEn {
 }
 
 // Path: preferences.diagnostics
-class TranslationsPreferencesDiagnosticsEn {
-	TranslationsPreferencesDiagnosticsEn.internal(this._root);
+class Translations$preferences$diagnostics$en {
+	Translations$preferences$diagnostics$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -1874,8 +2090,8 @@ class TranslationsPreferencesDiagnosticsEn {
 }
 
 // Path: preferences.about
-class TranslationsPreferencesAboutEn {
-	TranslationsPreferencesAboutEn.internal(this._root);
+class Translations$preferences$about$en {
+	Translations$preferences$about$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -1901,8 +2117,8 @@ class TranslationsPreferencesAboutEn {
 }
 
 // Path: keybindings.categories
-class TranslationsKeybindingsCategoriesEn {
-	TranslationsKeybindingsCategoriesEn.internal(this._root);
+class Translations$keybindings$categories$en {
+	Translations$keybindings$categories$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -1928,8 +2144,8 @@ class TranslationsKeybindingsCategoriesEn {
 }
 
 // Path: fileView.date
-class TranslationsFileViewDateEn {
-	TranslationsFileViewDateEn.internal(this._root);
+class Translations$fileView$date$en {
+	Translations$fileView$date$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -1958,8 +2174,8 @@ class TranslationsFileViewDateEn {
 }
 
 // Path: fileView.columns
-class TranslationsFileViewColumnsEn {
-	TranslationsFileViewColumnsEn.internal(this._root);
+class Translations$fileView$columns$en {
+	Translations$fileView$columns$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -1979,8 +2195,8 @@ class TranslationsFileViewColumnsEn {
 }
 
 // Path: sidebar.connectDialog
-class TranslationsSidebarConnectDialogEn {
-	TranslationsSidebarConnectDialogEn.internal(this._root);
+class Translations$sidebar$connectDialog$en {
+	Translations$sidebar$connectDialog$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -2027,8 +2243,8 @@ class TranslationsSidebarConnectDialogEn {
 }
 
 // Path: sidebar.driveSpace
-class TranslationsSidebarDriveSpaceEn {
-	TranslationsSidebarDriveSpaceEn.internal(this._root);
+class Translations$sidebar$driveSpace$en {
+	Translations$sidebar$driveSpace$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -2045,8 +2261,8 @@ class TranslationsSidebarDriveSpaceEn {
 }
 
 // Path: sidebar.drives
-class TranslationsSidebarDrivesEn {
-	TranslationsSidebarDrivesEn.internal(this._root);
+class Translations$sidebar$drives$en {
+	Translations$sidebar$drives$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -2072,8 +2288,8 @@ class TranslationsSidebarDrivesEn {
 }
 
 // Path: tasks.status
-class TranslationsTasksStatusEn {
-	TranslationsTasksStatusEn.internal(this._root);
+class Translations$tasks$status$en {
+	Translations$tasks$status$en.internal(this._root);
 
 	final Translations _root; // ignore: unused_field
 
@@ -2246,6 +2462,18 @@ extension on Translations {
 			'preferences.appearance.loadingThemes' => 'Loading themes…',
 			'preferences.appearance.noCustomThemes' => 'No custom themes yet.',
 			'preferences.appearance.invalidTheme' => 'Invalid theme JSON',
+			'preferences.appearance.themeFileMustContainJsonObject' => 'Theme file must contain a JSON object',
+			'preferences.appearance.missingThemeId' => 'Missing theme id',
+			'preferences.appearance.missingThemeName' => 'Missing theme name',
+			'preferences.appearance.missingThemeBrightness' => 'Missing theme brightness',
+			'preferences.appearance.missingThemePalette' => 'Missing theme palette',
+			'preferences.appearance.invalidThemeBrightness' => 'Invalid theme brightness',
+			'preferences.appearance.missingColor' => ({required Object key}) => 'Missing color "${key}"',
+			'preferences.appearance.invalidColor' => ({required Object key}) => 'Invalid color "${key}"',
+			'preferences.appearance.couldNotLoadCustomThemes' => 'Could not load custom themes',
+			'preferences.appearance.unknownThemeUsingDefault' => ({required Object id, required Object theme}) => 'Unknown theme "${id}", using ${theme}',
+			'preferences.appearance.skippingDuplicateTheme' => ({required Object id, required Object path}) => 'Skipping theme "${id}" from ${path}: duplicate id',
+			'preferences.appearance.skippingThemeFile' => ({required Object path}) => 'Skipping theme file ${path}',
 			'preferences.appearance.filesSection' => 'Files',
 			'preferences.appearance.showHidden' => 'Show hidden files by default',
 			'preferences.appearance.showHiddenHint' => 'Applies to new tabs. Existing tabs keep their setting.',
@@ -2333,6 +2561,8 @@ extension on Translations {
 			'update.bundleNotWritable' => 'Cannot write to bundle directory. Install the new version manually.',
 			'update.installerLaunchFailed' => ({required Object error}) => 'Failed to launch installer: ${error}',
 			'update.relaunchFailed' => ({required Object error}) => 'Failed to relaunch: ${error}',
+			'update.terminalInstallOk' => '--- Install OK. Press Enter to close ---',
+			'update.terminalInstallFailed' => ({required Object status}) => '--- Install failed (exit ${status}). Press Enter to close ---',
 			'appMenu.quit' => 'Quit',
 			'keybindings.title' => 'Keyboard Shortcuts',
 			'keybindings.menuLabel' => 'Shortcuts',
@@ -2534,6 +2764,8 @@ extension on Translations {
 			'search.modeRegex' => 'Regex',
 			'search.invalidGlob' => 'Invalid glob pattern',
 			'search.invalidRegex' => 'Invalid regex',
+			'search.complete' => 'complete',
+			'search.go' => 'go',
 			'statusBar.items' => ({required Object count}) => '${count} items',
 			'statusBar.folders' => ({required Object count}) => '${count} folders',
 			'statusBar.files' => ({required Object count}) => '${count} files',
@@ -2562,8 +2794,12 @@ extension on Translations {
 			'password.dismiss' => 'Dismiss',
 			'password.mountPrompt' => 'Enter your password to mount this drive.',
 			'password.smbPrompt' => 'Enter credentials for this network share.',
+			'password.sftpPrompt' => 'SSH/SFTP authentication',
 			'password.username' => 'Username',
 			'password.password' => 'Password',
+			'password.privateKey' => 'Private key',
+			'password.privateKeyPath' => 'Private key path',
+			'password.passphraseOptional' => 'Passphrase (optional)',
 			'password.unlock' => 'Unlock',
 			'selectPattern.title' => 'Select by pattern',
 			'selectPattern.hint' => '*.jpg, *.png',
@@ -2574,6 +2810,10 @@ extension on Translations {
 			'operations.noActive' => 'No active operations',
 			'operations.resolveConflicts' => 'Resolve Conflicts',
 			'operations.errorsCount' => ({required Object count}) => '${count} errors',
+			'operations.compressing' => 'Compressing…',
+			'operations.compressingGzip' => 'Compressing (gzip)…',
+			'operations.compressingBzip2' => 'Compressing (bzip2)…',
+			'operations.compressingXz' => 'Compressing (xz)…',
 			'operations.justNow' => 'just now',
 			'operations.secondsAgo' => ({required Object count}) => '${count}s ago',
 			'operations.minutesAgo' => ({required Object count}) => '${count}m ago',
@@ -2596,16 +2836,61 @@ extension on Translations {
 			'operations.newer' => '  ← newer',
 			'operations.applyToAll' => ({required Object count}) => 'Apply to all remaining conflicts (${count})',
 			'errors.permissionDenied' => 'Permission denied',
+			'errors.authenticationRequired' => 'Authentication required',
 			'errors.noSpace' => 'No space left on device',
 			'errors.readOnly' => 'Read-only file system',
 			'errors.notFound' => 'File not found',
+			'errors.sourceNotFound' => 'Source not found',
 			'errors.pathNotFound' => 'Path not found',
+			'errors.missingSmbHost' => 'Missing host in smb:// URI',
+			_ => null,
+		} ?? switch (path) {
+			'errors.missingSmbServer' => 'Missing server in smb:// URI',
+			'errors.missingSmbShare' => 'Missing share in smb:// URI',
+			'errors.missingSftpHost' => 'Missing host in sftp:// URI',
+			'errors.invalidSmbUri' => 'Invalid smb:// URI',
+			'errors.smbPortsNotSupportedOnWindows' => 'SMB ports are not supported on Windows',
+			'errors.smbShareNotMounted' => 'SMB share not mounted',
+			'errors.smbClientUnavailable' => ({required Object message}) => 'smbclient unavailable: ${message}',
+			'errors.smbClientFailed' => ({required Object code}) => 'smbclient failed (${code})',
+			'errors.smbutilUnavailable' => ({required Object message}) => 'smbutil unavailable: ${message}',
+			'errors.smbutilFailed' => ({required Object code}) => 'smbutil failed (${code})',
+			'errors.netUnavailable' => ({required Object message}) => 'net unavailable: ${message}',
+			'errors.netViewFailed' => ({required Object code}) => 'net view failed (${code})',
+			'errors.smbMountedShareNotFound' => 'Mounted share could not be located in gvfs',
+			'errors.failedToCreatePath' => ({required Object path, required Object error}) => 'Failed to create ${path}: ${error}',
+			'errors.gioMountFailed' => 'gio mount failed',
+			'errors.mountSmbfsFailed' => ({required Object code}) => 'mount_smbfs failed (${code})',
 			'errors.notEmpty' => 'Directory not empty',
 			'errors.crossDevice' => 'Cannot move across devices',
+			'errors.targetExists' => 'Target exists',
+			'errors.sftpNotSupported' => 'SFTP not supported',
+			'errors.sftpConnectFailed' => 'SFTP connect failed',
+			'errors.sftpError' => ({required Object error}) => 'SFTP: ${error}',
+			'errors.sftpNoActiveSession' => 'No active SFTP session',
+			'errors.sftpNoActiveSessionFor' => ({required Object path}) => 'No active SFTP session for ${path}',
+			'errors.sftpListingFailed' => 'SFTP listing failed',
+			'errors.sftpReadFailed' => 'SFTP read failed',
+			'errors.sftpWriteFailed' => 'SFTP write failed',
+			'errors.sftpMkdirFailed' => 'SFTP mkdir failed',
+			'errors.sftpRemoveFailed' => 'SFTP remove failed',
+			'errors.sftpRenameFailed' => 'SFTP rename failed',
+			'errors.sftpOpenReaderFailed' => 'SFTP open reader failed',
+			'errors.sftpOpenWriterFailed' => 'SFTP open writer failed',
+			'errors.sftpCloseFailed' => 'SFTP close failed',
+			'errors.directoryNotReadable' => 'Directory not readable',
 			'errors.transferIntoSelf' => 'Cannot copy or move a folder into itself.',
 			'errors.workerExitedUnexpectedly' => 'Worker exited unexpectedly',
 			'errors.appearedDuring' => 'File appeared at destination during operation',
 			'errors.archiveError' => 'Could not read archive',
+			'errors.archiveCreateFailed' => ({required Object error}) => 'Could not create archive: ${error}',
+			'errors.archiveReadFailed' => ({required Object error}) => 'Archive error: ${error}',
+			'errors.archiveEntryNotFound' => ({required Object path}) => 'Archive entry not found: ${path}',
+			'errors.unsupportedArchiveFormat' => 'Unsupported archive format',
+			'errors.nativeCoreNotFound' => ({required Object paths}) => 'Native waydir_core not found; searched: ${paths}',
+			'errors.moveFileExFailed' => ({required Object error}) => 'MoveFileEx failed with Windows error ${error}',
+			'errors.nativeTrashListFailed' => 'Native trash list failed',
+			'errors.nativeTrashListFailedWithMessage' => ({required Object message}) => 'Native trash list failed: ${message}',
 			'errors.smbNotSupportedOnPlatform' => 'Network shares (smb://) are not supported on this platform yet.',
 			'tasks.copyingSingle' => ({required Object name}) => 'Copying ${name}',
 			'tasks.copyingMultiple' => ({required Object count}) => 'Copying ${count} items',
@@ -2627,8 +2912,6 @@ extension on Translations {
 			'tasks.status.scanning' => 'Scanning files...',
 			'tasks.status.conflicts' => ({required Object count}) => '${count} conflicts',
 			'tasks.status.running' => ({required Object current, required Object processed, required Object total}) => '${current} (${processed}/${total})',
-			_ => null,
-		} ?? switch (path) {
 			'tasks.status.cancelling' => 'Cancelling...',
 			'tasks.status.completedWithErrors' => ({required Object count}) => 'Completed with ${count} errors',
 			'tasks.status.completed' => 'Completed',
@@ -2667,6 +2950,11 @@ extension on Translations {
 			'openWith.open' => 'Open',
 			'openWith.failed' => ({required Object app}) => 'Could not open the file with ${app}',
 			'openWith.setDefaultFailed' => 'Could not set the default application',
+			'openWith.unsupportedPlatform' => 'Unsupported platform',
+			'openWith.xdgMimeFailed' => 'xdg-mime failed',
+			'openWith.dutiRequired' => 'Setting the default app on macOS requires the "duti" tool',
+			'openWith.bundleIdReadFailed' => 'Could not read app bundle id',
+			'openWith.windowsDefaultDialogRequired' => 'Use the system "Open with" dialog to change the default on Windows',
 			_ => null,
 		};
 	}
