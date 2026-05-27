@@ -915,9 +915,7 @@ class _WaydirPageState extends State<WaydirPage> {
       return;
     }
     final outcome = await store.multiRename(
-      result.renames
-          .map((r) => (path: r.oldPath, newName: r.newName))
-          .toList(),
+      result.renames.map((r) => (path: r.oldPath, newName: r.newName)).toList(),
     );
     if (mounted) _showMultiRenameToast(outcome);
     _restoreFocus();

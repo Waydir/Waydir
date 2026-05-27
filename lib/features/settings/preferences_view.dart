@@ -7,6 +7,8 @@ import '../../i18n/strings.g.dart';
 import '../../ui/theme/app_theme.dart';
 import '../../ui/theme/app_text_styles.dart';
 import '../../ui/widgets/app_dropdown.dart';
+import '../../ui/widgets/app_modal.dart';
+import '../../ui/widgets/app_text_field.dart';
 import 'panes/about_pane.dart';
 import 'panes/appearance_pane.dart';
 import 'panes/diagnostics_pane.dart';
@@ -69,109 +71,21 @@ class _PreferencesDialogState extends State<_PreferencesDialog> {
     final size = MediaQuery.of(context).size;
     final dialogWidth = size.width * 0.8 > 920 ? 920.0 : size.width * 0.8;
     final dialogHeight = size.height - 96 > 640 ? 640.0 : size.height - 96;
-    return Align(
-      alignment: Alignment.center,
-      child: Material(
-        type: MaterialType.transparency,
-        child: Container(
-          width: dialogWidth,
-          height: dialogHeight,
-          decoration: BoxDecoration(
-            color: AppColors.bgSurface,
-            borderRadius: BorderRadius.zero,
-            border: Border.all(color: AppColors.borderColor),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.6),
-                blurRadius: 30,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.zero,
-            child: Column(
-              children: [
-                _Header(onClose: () => Navigator.of(context).pop()),
-                Container(height: 1, color: AppColors.bgDivider),
-                Expanded(
-                  child: Row(
-                    children: [
-                      _CategorySidebar(
-                        selected: _selected,
-                        onSelect: (c) => setState(() => _selected = c),
-                      ),
-                      Container(width: 1, color: AppColors.bgDivider),
-                      Expanded(child: _ContentPane(category: _selected)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Header extends StatelessWidget {
-  final VoidCallback onClose;
-  const _Header({required this.onClose});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 36,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(color: AppColors.bgSidebar),
+    return AppModal(
+      icon: WaydirIconsRegular.gearSix,
+      title: t.preferences.title,
+      width: dialogWidth,
+      height: dialogHeight,
+      onClose: () => Navigator.of(context).pop(),
       child: Row(
         children: [
-          Icon(WaydirIconsRegular.gearSix, size: 16, color: AppColors.fgAccent),
-          const SizedBox(width: 8),
-          Text(t.preferences.title, style: context.txt.dialogTitle),
-          const Spacer(),
-          _CloseButton(onTap: onClose),
+          _CategorySidebar(
+            selected: _selected,
+            onSelect: (c) => setState(() => _selected = c),
+          ),
+          Container(width: 1, color: AppColors.bgDivider),
+          Expanded(child: _ContentPane(category: _selected)),
         ],
-      ),
-    );
-  }
-}
-
-class _CloseButton extends StatefulWidget {
-  final VoidCallback onTap;
-  const _CloseButton({required this.onTap});
-
-  @override
-  State<_CloseButton> createState() => _CloseButtonState();
-}
-
-class _CloseButtonState extends State<_CloseButton> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        behavior: HitTestBehavior.opaque,
-        child: Container(
-          width: 26,
-          height: 26,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: _hovered ? AppColors.bgHover : Colors.transparent,
-            borderRadius: BorderRadius.zero,
-          ),
-          child: Icon(
-            WaydirIconsRegular.x,
-            size: 14,
-            color: _hovered ? AppColors.fg : AppColors.fgMuted,
-          ),
-        ),
       ),
     );
   }
@@ -480,26 +394,7 @@ class _SettingsTextFieldState extends State<SettingsTextField> {
     return TextField(
       controller: _controller,
       style: context.txt.body,
-      decoration: InputDecoration(
-        isDense: true,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        hintText: widget.setting.hintText,
-        hintStyle: context.txt.body.copyWith(color: AppColors.fgMuted),
-        filled: true,
-        fillColor: AppColors.bgInput,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.zero,
-          borderSide: BorderSide(color: AppColors.borderColor),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.zero,
-          borderSide: BorderSide(color: AppColors.borderColor),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.zero,
-          borderSide: BorderSide(color: AppColors.accent),
-        ),
-      ),
+      decoration: appInputDecoration(hintText: widget.setting.hintText),
       cursorColor: AppColors.accent,
     );
   }

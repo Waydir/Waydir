@@ -7,6 +7,9 @@ import '../../i18n/strings.g.dart';
 import '../icons/waydir_icons.dart';
 import '../theme/app_text_styles.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_modal.dart';
+import '../widgets/app_text_field.dart';
+import '../widgets/app_toggle_chip.dart';
 import 'dialog.dart';
 
 enum _RenameMode { template, findReplace }
@@ -100,8 +103,12 @@ class _MultiRenameBodyState extends State<_MultiRenameBody> {
       final entry = widget.entries[i];
       return switch (_mode) {
         _RenameMode.template => _applyTemplate(_templateCtrl.text, entry, i),
-        _RenameMode.findReplace =>
-          _applyFindReplace(_findCtrl.text, _replaceCtrl.text, entry, i),
+        _RenameMode.findReplace => _applyFindReplace(
+          _findCtrl.text,
+          _replaceCtrl.text,
+          entry,
+          i,
+        ),
       };
     });
   }
@@ -215,7 +222,9 @@ class _MultiRenameBodyState extends State<_MultiRenameBody> {
   }
 
   void _insertToken(String token) {
-    final focus = _mode == _RenameMode.template ? _templateFocus : _replaceFocus;
+    final focus = _mode == _RenameMode.template
+        ? _templateFocus
+        : _replaceFocus;
     final ctrl = _mode == _RenameMode.template ? _templateCtrl : _replaceCtrl;
     focus.requestFocus();
     final sel = ctrl.selection;
@@ -260,38 +269,25 @@ class _MultiRenameBodyState extends State<_MultiRenameBody> {
         }
         return KeyEventResult.ignored;
       },
-      child: Container(
+      child: AppModal(
+        icon: WaydirIconsRegular.pencilSimple,
+        title: t.multiRename.title,
         width: 640,
         padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: AppColors.bgSurface,
-          border: Border.all(color: AppColors.borderColor),
-        ),
+        onClose: () => Navigator.of(context).pop(),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Icon(
-                  WaydirIconsRegular.pencilSimple,
-                  color: AppColors.accent,
-                  size: 18,
-                ),
-                const SizedBox(width: 8),
-                Text(t.multiRename.title, style: context.txt.heading),
-                const SizedBox(width: 10),
-                Text(
-                  t.multiRename.subtitle(count: widget.entries.length),
-                  style: context.txt.body.copyWith(color: AppColors.fgMuted),
-                ),
-              ],
+            Text(
+              t.multiRename.subtitle(count: widget.entries.length),
+              style: context.txt.body.copyWith(color: AppColors.fgMuted),
             ),
             const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
-                  child: _ToggleChip(
+                  child: AppToggleChip(
                     label: t.multiRename.modeTemplate,
                     selected: _mode == _RenameMode.template,
                     onTap: () => setState(() => _mode = _RenameMode.template),
@@ -299,7 +295,7 @@ class _MultiRenameBodyState extends State<_MultiRenameBody> {
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: _ToggleChip(
+                  child: AppToggleChip(
                     label: t.multiRename.modeFindReplace,
                     selected: _mode == _RenameMode.findReplace,
                     onTap: () =>
@@ -348,13 +344,10 @@ class _MultiRenameBodyState extends State<_MultiRenameBody> {
       children: [
         Text(t.multiRename.namePattern, style: context.txt.fieldLabel),
         const SizedBox(height: 6),
-        TextField(
+        AppTextField(
           controller: _templateCtrl,
           focusNode: _templateFocus,
           autofocus: true,
-          style: context.txt.body,
-          cursorColor: AppColors.accent,
-          decoration: _inputDecoration(),
           onSubmitted: (_) => _submit(_previews),
         ),
       ],
@@ -374,12 +367,10 @@ class _MultiRenameBodyState extends State<_MultiRenameBody> {
                 children: [
                   Text(t.multiRename.find, style: context.txt.fieldLabel),
                   const SizedBox(height: 6),
-                  TextField(
+                  AppTextField(
                     controller: _findCtrl,
                     autofocus: true,
-                    style: context.txt.body,
-                    cursorColor: AppColors.accent,
-                    decoration: _inputDecoration(),
+                    onSubmitted: (_) => _submit(_previews),
                   ),
                 ],
               ),
@@ -389,14 +380,14 @@ class _MultiRenameBodyState extends State<_MultiRenameBody> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(t.multiRename.replaceWith, style: context.txt.fieldLabel),
+                  Text(
+                    t.multiRename.replaceWith,
+                    style: context.txt.fieldLabel,
+                  ),
                   const SizedBox(height: 6),
-                  TextField(
+                  AppTextField(
                     controller: _replaceCtrl,
                     focusNode: _replaceFocus,
-                    style: context.txt.body,
-                    cursorColor: AppColors.accent,
-                    decoration: _inputDecoration(),
                     onSubmitted: (_) => _submit(_previews),
                   ),
                 ],
@@ -517,56 +508,6 @@ class _MultiRenameBodyState extends State<_MultiRenameBody> {
                   ),
           ),
         ],
-      ),
-    );
-  }
-
-  InputDecoration _inputDecoration() => InputDecoration(
-    isDense: true,
-    filled: true,
-    fillColor: AppColors.bgInput,
-    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.zero,
-      borderSide: BorderSide(color: AppColors.borderColor),
-    ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.zero,
-      borderSide: BorderSide(color: AppColors.accent),
-    ),
-  );
-}
-
-class _ToggleChip extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  const _ToggleChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        height: 30,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: selected ? AppColors.accent : AppColors.bgInput,
-          border: Border.all(
-            color: selected ? AppColors.accent : AppColors.borderColor,
-          ),
-        ),
-        child: Text(
-          label,
-          style: context.txt.body.copyWith(
-            color: selected ? AppColors.bg : AppColors.fg,
-          ),
-        ),
       ),
     );
   }

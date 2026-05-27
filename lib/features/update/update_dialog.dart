@@ -10,6 +10,7 @@ import '../../i18n/strings.g.dart';
 import '../../ui/icons/waydir_icons.dart';
 import '../../ui/theme/app_text_styles.dart';
 import '../../ui/theme/app_theme.dart';
+import '../../ui/widgets/app_close_button.dart';
 import '../../utils/format.dart';
 
 Future<void> showUpdateDialog(BuildContext context) {
@@ -118,45 +119,8 @@ class _Header extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          _CloseButton(onTap: onClose),
+          AppCloseButton(onTap: onClose, size: 28),
         ],
-      ),
-    );
-  }
-}
-
-class _CloseButton extends StatefulWidget {
-  final VoidCallback onTap;
-
-  const _CloseButton({required this.onTap});
-
-  @override
-  State<_CloseButton> createState() => _CloseButtonState();
-}
-
-class _CloseButtonState extends State<_CloseButton> {
-  bool _hover = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hover = true),
-      onExit: (_) => setState(() => _hover = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        behavior: HitTestBehavior.opaque,
-        child: Container(
-          width: 28,
-          height: 28,
-          alignment: Alignment.center,
-          color: _hover ? AppColors.bgHover : Colors.transparent,
-          child: Icon(
-            Icons.close,
-            size: 16,
-            color: _hover ? AppColors.fg : AppColors.fgMuted,
-          ),
-        ),
       ),
     );
   }

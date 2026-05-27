@@ -5,6 +5,8 @@ import '../../ui/dialogs/dialog.dart';
 import '../../ui/icons/waydir_icons.dart';
 import '../../ui/theme/app_text_styles.dart';
 import '../../ui/theme/app_theme.dart';
+import '../../ui/widgets/app_text_field.dart';
+import '../../ui/widgets/app_toggle_chip.dart';
 
 enum ConnectProtocol { smb, sftp }
 
@@ -165,7 +167,7 @@ class _ConnectBodyState extends State<_ConnectBody> {
         Row(
           children: [
             Expanded(
-              child: _ProtocolChip(
+              child: AppToggleChip(
                 label: 'SMB',
                 selected: !isSftp,
                 onTap: () => _selectProtocol(ConnectProtocol.smb),
@@ -173,7 +175,7 @@ class _ConnectBodyState extends State<_ConnectBody> {
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: _ProtocolChip(
+              child: AppToggleChip(
                 label: 'SFTP',
                 selected: isSftp,
                 onTap: () => _selectProtocol(ConnectProtocol.sftp),
@@ -189,10 +191,11 @@ class _ConnectBodyState extends State<_ConnectBody> {
               flex: 3,
               child: _Labeled(
                 label: t.sidebar.connectDialog.host,
-                child: _Input(
+                child: AppTextField(
                   controller: _host,
-                  hint: t.sidebar.connectDialog.hostHint,
+                  hintText: t.sidebar.connectDialog.hostHint,
                   autofocus: true,
+                  height: 34,
                 ),
               ),
             ),
@@ -201,7 +204,11 @@ class _ConnectBodyState extends State<_ConnectBody> {
               flex: 1,
               child: _Labeled(
                 label: t.sidebar.connectDialog.port,
-                child: _Input(controller: _port, hint: isSftp ? '22' : '445'),
+                child: AppTextField(
+                  controller: _port,
+                  hintText: isSftp ? '22' : '445',
+                  height: 34,
+                ),
               ),
             ),
           ],
@@ -209,27 +216,30 @@ class _ConnectBodyState extends State<_ConnectBody> {
         const SizedBox(height: 10),
         _Labeled(
           label: t.sidebar.connectDialog.username,
-          child: _Input(
+          child: AppTextField(
             controller: _username,
-            hint: t.sidebar.connectDialog.usernameHint,
+            hintText: t.sidebar.connectDialog.usernameHint,
+            height: 34,
           ),
         ),
         if (!isSftp) ...[
           const SizedBox(height: 10),
           _Labeled(
             label: t.sidebar.connectDialog.share,
-            child: _Input(
+            child: AppTextField(
               controller: _share,
-              hint: t.sidebar.connectDialog.shareHint,
+              hintText: t.sidebar.connectDialog.shareHint,
+              height: 34,
             ),
           ),
         ],
         const SizedBox(height: 10),
         _Labeled(
           label: t.sidebar.connectDialog.pathLabel,
-          child: _Input(
+          child: AppTextField(
             controller: _path,
-            hint: isSftp ? '/home/user' : t.sidebar.connectDialog.pathHint,
+            hintText: isSftp ? '/home/user' : t.sidebar.connectDialog.pathHint,
+            height: 34,
           ),
         ),
         const SizedBox(height: 10),
@@ -240,42 +250,6 @@ class _ConnectBodyState extends State<_ConnectBody> {
           overflow: TextOverflow.ellipsis,
         ),
       ],
-    );
-  }
-}
-
-class _ProtocolChip extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  const _ProtocolChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        height: 32,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: selected ? AppColors.accent : AppColors.bgInput,
-          border: Border.all(
-            color: selected ? AppColors.accent : AppColors.borderColor,
-          ),
-        ),
-        child: Text(
-          label,
-          style: context.txt.body.copyWith(
-            color: selected ? AppColors.bg : AppColors.fg,
-            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-          ),
-        ),
-      ),
     );
   }
 }
@@ -294,49 +268,6 @@ class _Labeled extends StatelessWidget {
         const SizedBox(height: 4),
         child,
       ],
-    );
-  }
-}
-
-class _Input extends StatelessWidget {
-  final TextEditingController controller;
-  final String hint;
-  final bool autofocus;
-  const _Input({
-    required this.controller,
-    required this.hint,
-    this.autofocus = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 34,
-      child: TextField(
-        controller: controller,
-        autofocus: autofocus,
-        style: context.txt.body,
-        cursorColor: AppColors.accent,
-        decoration: InputDecoration(
-          isDense: true,
-          filled: true,
-          fillColor: AppColors.bgInput,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 10,
-            vertical: 8,
-          ),
-          hintText: hint,
-          hintStyle: context.txt.body.copyWith(color: AppColors.fgMuted),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.zero,
-            borderSide: BorderSide(color: AppColors.borderColor),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.zero,
-            borderSide: BorderSide(color: AppColors.accent),
-          ),
-        ),
-      ),
     );
   }
 }

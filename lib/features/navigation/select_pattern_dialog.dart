@@ -5,6 +5,8 @@ import '../../i18n/strings.g.dart';
 import '../../ui/dialogs/dialog.dart';
 import '../../ui/theme/app_theme.dart';
 import '../../ui/theme/app_text_styles.dart';
+import '../../ui/widgets/app_modal.dart';
+import '../../ui/widgets/app_text_field.dart';
 
 /// Prompts for a shell-style glob (e.g. `*.jpg`) and returns it, or null if
 /// cancelled / left empty.
@@ -74,66 +76,21 @@ class _SelectPatternDialogState extends State<_SelectPatternDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AppModal(
+      icon: WaydirIconsRegular.selectionAll,
+      title: t.selectPattern.title,
       width: 360,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.bgSurface,
-        borderRadius: BorderRadius.zero,
-        border: Border.all(color: AppColors.borderColor),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.6),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
+      onClose: widget.onCancel,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(
-                WaydirIconsRegular.selectionAll,
-                size: 18,
-                color: AppColors.accent,
-              ),
-              const SizedBox(width: 8),
-              Text(t.selectPattern.title, style: context.txt.heading),
-            ],
-          ),
-          const SizedBox(height: 12),
-          TextField(
+          AppTextField(
             controller: widget.controller,
             autofocus: true,
-            style: context.txt.body,
+            hintText: t.selectPattern.hint,
             onSubmitted: (_) => _submit(),
-            decoration: InputDecoration(
-              isDense: true,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 10,
-                vertical: 8,
-              ),
-              hintText: t.selectPattern.hint,
-              hintStyle: context.txt.body.copyWith(color: AppColors.fgMuted),
-              filled: true,
-              fillColor: AppColors.bgInput,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.zero,
-                borderSide: BorderSide(color: AppColors.borderColor),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.zero,
-                borderSide: BorderSide(color: AppColors.borderColor),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.zero,
-                borderSide: BorderSide(color: AppColors.accent),
-              ),
-            ),
-            cursorColor: AppColors.accent,
           ),
           const SizedBox(height: 8),
           Text(t.selectPattern.help, style: context.txt.muted),

@@ -9,6 +9,7 @@ import '../../i18n/strings.g.dart';
 import '../theme/app_text_styles.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_icon.dart';
+import '../widgets/app_modal.dart';
 
 /// Shows the "Open With" chooser for [entry]. Resolves the file type, lists
 /// recommended/recent/all applications, launches the chosen one and (when
@@ -107,22 +108,12 @@ class _OpenWithBodyState extends State<_OpenWithBody> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AppModal(
+      icon: WaydirIconsRegular.appWindow,
+      title: t.openWith.title,
       width: 460,
-      constraints: const BoxConstraints(maxHeight: 560),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.bgSurface,
-        borderRadius: BorderRadius.zero,
-        border: Border.all(color: AppColors.borderColor),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.6),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
+      onClose: () => Navigator.of(context).pop(),
       child: FutureBuilder<_LoadedOptions>(
         future: _future,
         builder: (context, snap) {
@@ -184,31 +175,10 @@ class _OpenWithBodyState extends State<_OpenWithBody> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Icon(
-              WaydirIconsRegular.appWindow,
-              size: 20,
-              color: AppColors.accent,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(t.openWith.title, style: context.txt.heading),
-                  const SizedBox(height: 2),
-                  Text(
-                    t.openWith.subtitle(name: widget.entry.name),
-                    style: context.txt.captionSmall.copyWith(
-                      color: AppColors.fgMuted,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-          ],
+        Text(
+          t.openWith.subtitle(name: widget.entry.name),
+          style: context.txt.captionSmall.copyWith(color: AppColors.fgMuted),
+          overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 14),
         Flexible(

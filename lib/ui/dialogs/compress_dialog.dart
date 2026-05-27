@@ -6,6 +6,8 @@ import '../../i18n/strings.g.dart';
 import '../theme/app_text_styles.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_dropdown.dart';
+import '../widgets/app_modal.dart';
+import '../widgets/app_text_field.dart';
 import 'dialog.dart';
 
 class CompressRequest {
@@ -85,38 +87,23 @@ class _CompressBodyState extends State<_CompressBody> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AppModal(
+      icon: WaydirIconsRegular.fileZip,
+      title: t.compress.title,
       width: 420,
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.bgSurface,
-        borderRadius: BorderRadius.zero,
-        border: Border.all(color: AppColors.borderColor),
-      ),
+      onClose: () => Navigator.of(context).pop(),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(
-                WaydirIconsRegular.fileZip,
-                color: AppColors.accent,
-                size: 18,
-              ),
-              const SizedBox(width: 8),
-              Text(t.compress.title, style: context.txt.heading),
-            ],
-          ),
-          const SizedBox(height: 16),
           Text(t.compress.archiveName, style: context.txt.fieldLabel),
           const SizedBox(height: 6),
-          TextField(
+          AppTextField(
             controller: _name,
             autofocus: true,
-            style: context.txt.body,
-            cursorColor: AppColors.accent,
-            decoration: _inputDecoration(suffix: '.${_format.extension}'),
+            suffixText: '.${_format.extension}',
+            suffixStyle: context.txt.body.copyWith(color: AppColors.fgMuted),
             onSubmitted: (_) => _submit(),
           ),
           const SizedBox(height: 14),
@@ -180,21 +167,4 @@ class _CompressBodyState extends State<_CompressBody> {
       ),
     );
   }
-
-  InputDecoration _inputDecoration({String? suffix}) => InputDecoration(
-    isDense: true,
-    filled: true,
-    fillColor: AppColors.bgInput,
-    suffixText: suffix,
-    suffixStyle: context.txt.body.copyWith(color: AppColors.fgMuted),
-    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.zero,
-      borderSide: BorderSide(color: AppColors.borderColor),
-    ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.zero,
-      borderSide: BorderSide(color: AppColors.accent),
-    ),
-  );
 }

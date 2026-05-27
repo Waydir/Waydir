@@ -5,6 +5,7 @@ import '../../core/keyboard/keyboard_shortcuts.dart';
 import '../../i18n/strings.g.dart';
 import '../../ui/theme/app_theme.dart';
 import '../../ui/theme/app_text_styles.dart';
+import '../../ui/widgets/app_modal.dart';
 
 Future<void> showKeybindingsHelp(BuildContext context) {
   return showDialog<void>(
@@ -127,70 +128,24 @@ class _KeybindingsHelpDialogState extends State<_KeybindingsHelpDialog> {
     final height = (size.height * 0.9).clamp(360.0, 720.0).toDouble();
     final groups = _filtered();
 
-    return Center(
-      child: Material(
-        type: MaterialType.transparency,
-        child: Container(
-          width: width,
-          height: height,
-          decoration: BoxDecoration(
-            color: AppColors.bgSurface,
-            borderRadius: BorderRadius.zero,
-            border: Border.all(color: AppColors.borderColor),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.6),
-                blurRadius: 30,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.zero,
-            child: Column(
-              children: [
-                _Header(onClose: () => Navigator.of(context).pop()),
-                Container(height: 1, color: AppColors.bgDivider),
-                _SearchBar(
-                  controller: _searchCtl,
-                  onChanged: (v) => setState(() => _query = v),
-                ),
-                Container(height: 1, color: AppColors.bgDivider),
-                Expanded(
-                  child: groups.isEmpty
-                      ? const _EmptyState()
-                      : _ShortcutList(groups: groups),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Header extends StatelessWidget {
-  final VoidCallback onClose;
-  const _Header({required this.onClose});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 44,
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: BoxDecoration(color: AppColors.bgSidebar),
-      child: Row(
+    return AppModal(
+      icon: WaydirIconsRegular.keyboard,
+      title: t.keybindings.title,
+      width: width,
+      height: height,
+      onClose: () => Navigator.of(context).pop(),
+      child: Column(
         children: [
-          Icon(
-            WaydirIconsRegular.keyboard,
-            size: 16,
-            color: AppColors.fgAccent,
+          _SearchBar(
+            controller: _searchCtl,
+            onChanged: (v) => setState(() => _query = v),
           ),
-          const SizedBox(width: 8),
-          Text(t.keybindings.title, style: context.txt.dialogTitle),
-          const Spacer(),
-          _CloseButton(onTap: onClose),
+          Container(height: 1, color: AppColors.bgDivider),
+          Expanded(
+            child: groups.isEmpty
+                ? const _EmptyState()
+                : _ShortcutList(groups: groups),
+          ),
         ],
       ),
     );
@@ -277,44 +232,6 @@ class _ClearButtonState extends State<_ClearButton> {
           WaydirIconsRegular.x,
           size: 12,
           color: _hovered ? AppColors.fg : AppColors.fgSubtle,
-        ),
-      ),
-    );
-  }
-}
-
-class _CloseButton extends StatefulWidget {
-  final VoidCallback onTap;
-  const _CloseButton({required this.onTap});
-
-  @override
-  State<_CloseButton> createState() => _CloseButtonState();
-}
-
-class _CloseButtonState extends State<_CloseButton> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: Container(
-          width: 26,
-          height: 26,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: _hovered ? AppColors.bgHover : Colors.transparent,
-            borderRadius: BorderRadius.zero,
-          ),
-          child: Icon(
-            WaydirIconsRegular.x,
-            size: 14,
-            color: _hovered ? AppColors.fg : AppColors.fgMuted,
-          ),
         ),
       ),
     );
