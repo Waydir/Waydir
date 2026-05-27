@@ -42,6 +42,13 @@ void main() {
 
     final version = await db.customSelect('PRAGMA user_version').getSingle();
     expect(version.read<int>('user_version'), db.schemaVersion);
+
+    final recentPathsTable = await db
+        .customSelect(
+          "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'recent_entered_paths'",
+        )
+        .getSingleOrNull();
+    expect(recentPathsTable, isNotNull);
   });
 }
 

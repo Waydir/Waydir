@@ -3023,6 +3023,216 @@ class RecentAppsCompanion extends UpdateCompanion<RecentApp> {
   }
 }
 
+class $RecentEnteredPathsTable extends RecentEnteredPaths
+    with TableInfo<$RecentEnteredPathsTable, RecentEnteredPath> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RecentEnteredPathsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _pathMeta = const VerificationMeta('path');
+  @override
+  late final GeneratedColumn<String> path = GeneratedColumn<String>(
+    'path',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _usedAtMeta = const VerificationMeta('usedAt');
+  @override
+  late final GeneratedColumn<int> usedAt = GeneratedColumn<int>(
+    'used_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [path, usedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'recent_entered_paths';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<RecentEnteredPath> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('path')) {
+      context.handle(
+        _pathMeta,
+        path.isAcceptableOrUnknown(data['path']!, _pathMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_pathMeta);
+    }
+    if (data.containsKey('used_at')) {
+      context.handle(
+        _usedAtMeta,
+        usedAt.isAcceptableOrUnknown(data['used_at']!, _usedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {path};
+  @override
+  RecentEnteredPath map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RecentEnteredPath(
+      path: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}path'],
+      )!,
+      usedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}used_at'],
+      )!,
+    );
+  }
+
+  @override
+  $RecentEnteredPathsTable createAlias(String alias) {
+    return $RecentEnteredPathsTable(attachedDatabase, alias);
+  }
+}
+
+class RecentEnteredPath extends DataClass
+    implements Insertable<RecentEnteredPath> {
+  final String path;
+  final int usedAt;
+  const RecentEnteredPath({required this.path, required this.usedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['path'] = Variable<String>(path);
+    map['used_at'] = Variable<int>(usedAt);
+    return map;
+  }
+
+  RecentEnteredPathsCompanion toCompanion(bool nullToAbsent) {
+    return RecentEnteredPathsCompanion(
+      path: Value(path),
+      usedAt: Value(usedAt),
+    );
+  }
+
+  factory RecentEnteredPath.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RecentEnteredPath(
+      path: serializer.fromJson<String>(json['path']),
+      usedAt: serializer.fromJson<int>(json['usedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'path': serializer.toJson<String>(path),
+      'usedAt': serializer.toJson<int>(usedAt),
+    };
+  }
+
+  RecentEnteredPath copyWith({String? path, int? usedAt}) =>
+      RecentEnteredPath(path: path ?? this.path, usedAt: usedAt ?? this.usedAt);
+  RecentEnteredPath copyWithCompanion(RecentEnteredPathsCompanion data) {
+    return RecentEnteredPath(
+      path: data.path.present ? data.path.value : this.path,
+      usedAt: data.usedAt.present ? data.usedAt.value : this.usedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RecentEnteredPath(')
+          ..write('path: $path, ')
+          ..write('usedAt: $usedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(path, usedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RecentEnteredPath &&
+          other.path == this.path &&
+          other.usedAt == this.usedAt);
+}
+
+class RecentEnteredPathsCompanion extends UpdateCompanion<RecentEnteredPath> {
+  final Value<String> path;
+  final Value<int> usedAt;
+  final Value<int> rowid;
+  const RecentEnteredPathsCompanion({
+    this.path = const Value.absent(),
+    this.usedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  RecentEnteredPathsCompanion.insert({
+    required String path,
+    this.usedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : path = Value(path);
+  static Insertable<RecentEnteredPath> custom({
+    Expression<String>? path,
+    Expression<int>? usedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (path != null) 'path': path,
+      if (usedAt != null) 'used_at': usedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  RecentEnteredPathsCompanion copyWith({
+    Value<String>? path,
+    Value<int>? usedAt,
+    Value<int>? rowid,
+  }) {
+    return RecentEnteredPathsCompanion(
+      path: path ?? this.path,
+      usedAt: usedAt ?? this.usedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (path.present) {
+      map['path'] = Variable<String>(path.value);
+    }
+    if (usedAt.present) {
+      map['used_at'] = Variable<int>(usedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RecentEnteredPathsCompanion(')
+          ..write('path: $path, ')
+          ..write('usedAt: $usedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $DefaultAppsTable extends DefaultApps
     with TableInfo<$DefaultAppsTable, DefaultApp> {
   @override
@@ -3397,6 +3607,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $BookmarksTable bookmarks = $BookmarksTable(this);
   late final $FolderPrefsTable folderPrefs = $FolderPrefsTable(this);
   late final $RecentAppsTable recentApps = $RecentAppsTable(this);
+  late final $RecentEnteredPathsTable recentEnteredPaths =
+      $RecentEnteredPathsTable(this);
   late final $DefaultAppsTable defaultApps = $DefaultAppsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -3408,6 +3620,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     bookmarks,
     folderPrefs,
     recentApps,
+    recentEnteredPaths,
     defaultApps,
   ];
 }
@@ -4874,6 +5087,162 @@ typedef $$RecentAppsTableProcessedTableManager =
       RecentApp,
       PrefetchHooks Function()
     >;
+typedef $$RecentEnteredPathsTableCreateCompanionBuilder =
+    RecentEnteredPathsCompanion Function({
+      required String path,
+      Value<int> usedAt,
+      Value<int> rowid,
+    });
+typedef $$RecentEnteredPathsTableUpdateCompanionBuilder =
+    RecentEnteredPathsCompanion Function({
+      Value<String> path,
+      Value<int> usedAt,
+      Value<int> rowid,
+    });
+
+class $$RecentEnteredPathsTableFilterComposer
+    extends Composer<_$AppDatabase, $RecentEnteredPathsTable> {
+  $$RecentEnteredPathsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get path => $composableBuilder(
+    column: $table.path,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get usedAt => $composableBuilder(
+    column: $table.usedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$RecentEnteredPathsTableOrderingComposer
+    extends Composer<_$AppDatabase, $RecentEnteredPathsTable> {
+  $$RecentEnteredPathsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get path => $composableBuilder(
+    column: $table.path,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get usedAt => $composableBuilder(
+    column: $table.usedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$RecentEnteredPathsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $RecentEnteredPathsTable> {
+  $$RecentEnteredPathsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get path =>
+      $composableBuilder(column: $table.path, builder: (column) => column);
+
+  GeneratedColumn<int> get usedAt =>
+      $composableBuilder(column: $table.usedAt, builder: (column) => column);
+}
+
+class $$RecentEnteredPathsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $RecentEnteredPathsTable,
+          RecentEnteredPath,
+          $$RecentEnteredPathsTableFilterComposer,
+          $$RecentEnteredPathsTableOrderingComposer,
+          $$RecentEnteredPathsTableAnnotationComposer,
+          $$RecentEnteredPathsTableCreateCompanionBuilder,
+          $$RecentEnteredPathsTableUpdateCompanionBuilder,
+          (
+            RecentEnteredPath,
+            BaseReferences<
+              _$AppDatabase,
+              $RecentEnteredPathsTable,
+              RecentEnteredPath
+            >,
+          ),
+          RecentEnteredPath,
+          PrefetchHooks Function()
+        > {
+  $$RecentEnteredPathsTableTableManager(
+    _$AppDatabase db,
+    $RecentEnteredPathsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RecentEnteredPathsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RecentEnteredPathsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RecentEnteredPathsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> path = const Value.absent(),
+                Value<int> usedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RecentEnteredPathsCompanion(
+                path: path,
+                usedAt: usedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String path,
+                Value<int> usedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RecentEnteredPathsCompanion.insert(
+                path: path,
+                usedAt: usedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$RecentEnteredPathsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $RecentEnteredPathsTable,
+      RecentEnteredPath,
+      $$RecentEnteredPathsTableFilterComposer,
+      $$RecentEnteredPathsTableOrderingComposer,
+      $$RecentEnteredPathsTableAnnotationComposer,
+      $$RecentEnteredPathsTableCreateCompanionBuilder,
+      $$RecentEnteredPathsTableUpdateCompanionBuilder,
+      (
+        RecentEnteredPath,
+        BaseReferences<
+          _$AppDatabase,
+          $RecentEnteredPathsTable,
+          RecentEnteredPath
+        >,
+      ),
+      RecentEnteredPath,
+      PrefetchHooks Function()
+    >;
 typedef $$DefaultAppsTableCreateCompanionBuilder =
     DefaultAppsCompanion Function({
       required String typeKey,
@@ -5088,6 +5457,8 @@ class $AppDatabaseManager {
       $$FolderPrefsTableTableManager(_db, _db.folderPrefs);
   $$RecentAppsTableTableManager get recentApps =>
       $$RecentAppsTableTableManager(_db, _db.recentApps);
+  $$RecentEnteredPathsTableTableManager get recentEnteredPaths =>
+      $$RecentEnteredPathsTableTableManager(_db, _db.recentEnteredPaths);
   $$DefaultAppsTableTableManager get defaultApps =>
       $$DefaultAppsTableTableManager(_db, _db.defaultApps);
 }
