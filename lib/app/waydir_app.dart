@@ -19,22 +19,24 @@ class WaydirApp extends StatefulWidget {
 class _WaydirAppState extends State<WaydirApp> {
   @override
   Widget build(BuildContext context) {
-    return Watch((context) {
-      final themeId = SettingsStore.instance.themeId.value;
-      AppThemeRegistry.instance.loadSync();
-      final theme = AppThemeRegistry.instance.resolve(themeId);
-      AppColors.setTheme(theme);
-      return MaterialApp(
-        key: ValueKey(theme.id),
-        title: t.app.title,
-        navigatorKey: waydirNavigatorKey,
-        locale: TranslationProvider.of(context).flutterLocale,
-        supportedLocales: AppLocaleUtils.supportedLocales,
-        localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.build(theme),
-        home: const WaydirPage(),
-      );
-    });
+    return SignalBuilder(
+      builder: (context) {
+        final themeId = SettingsStore.instance.themeId.value;
+        AppThemeRegistry.instance.loadSync();
+        final theme = AppThemeRegistry.instance.resolve(themeId);
+        AppColors.setTheme(theme);
+        return MaterialApp(
+          key: ValueKey(theme.id),
+          title: t.app.title,
+          navigatorKey: waydirNavigatorKey,
+          locale: TranslationProvider.of(context).flutterLocale,
+          supportedLocales: AppLocaleUtils.supportedLocales,
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.build(theme),
+          home: const WaydirPage(),
+        );
+      },
+    );
   }
 }

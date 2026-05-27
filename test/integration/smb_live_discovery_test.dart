@@ -7,6 +7,11 @@ import 'package:waydir/core/platform/platform_paths.dart';
 import 'package:waydir/features/locations/location_resolver.dart';
 
 void main() {
+  const liveSmbEnabled = bool.fromEnvironment('WAYDIR_LIVE_SMB');
+  const liveSmbSkip = liveSmbEnabled
+      ? null
+      : 'Run with --dart-define=WAYDIR_LIVE_SMB=true and an SMB server on 127.0.0.1:1445';
+
   group('live SMB discovery against podman container on 127.0.0.1:1445', () {
     setUp(SmbShareDiscovery.invalidateAll);
 
@@ -16,7 +21,7 @@ void main() {
       final names = (r as SmbShareListOk).shares.map((s) => s.name).toList();
       expect(names, containsAll(['public', 'media', 'backup']));
       expect(names, isNot(contains('IPC\$')));
-    });
+    }, skip: liveSmbSkip);
 
     test('bad host returns error not crash', () async {
       final r = await SmbShareDiscovery.list(host: 'nonexistent.invalid');
@@ -37,36 +42,44 @@ void main() {
         (a as SmbShareListOk).shares.map((s) => s.name),
         (b as SmbShareListOk).shares.map((s) => s.name),
       );
-    });
+    }, skip: liveSmbSkip);
 
-    test('with bogus creds still resolves (guest fallback or auth error)',
-        () async {
-      final r = await SmbShareDiscovery.list(
-        host: '127.0.0.1',
-        port: 1445,
-        credentials: const SmbCredentials(
-          username: 'wronguser',
-          password: 'wrongpass',
-        ),
-      );
-      expect(r, anyOf(isA<SmbShareListOk>(), isA<SmbShareListError>()));
-    });
+    test(
+      'with bogus creds still resolves (guest fallback or auth error)',
+      () async {
+        final r = await SmbShareDiscovery.list(
+          host: '127.0.0.1',
+          port: 1445,
+          credentials: const SmbCredentials(
+            username: 'wronguser',
+            password: 'wrongpass',
+          ),
+        );
+        expect(r, anyOf(isA<SmbShareListOk>(), isA<SmbShareListError>()));
+      },
+    );
   });
 
   group('PlatformPaths SMB segmentation', () {
     test('smb://host has one segment', () {
-      expect(PlatformPaths.segments('smb://127.0.0.1:1445'),
-          ['smb://127.0.0.1:1445']);
+      expect(PlatformPaths.segments('smb://127.0.0.1:1445'), [
+        'smb://127.0.0.1:1445',
+      ]);
     });
 
     test('smb://host/share splits host and share', () {
-      expect(PlatformPaths.segments('smb://127.0.0.1:1445/public'),
-          ['smb://127.0.0.1:1445', 'public']);
+      expect(PlatformPaths.segments('smb://127.0.0.1:1445/public'), [
+        'smb://127.0.0.1:1445',
+        'public',
+      ]);
     });
 
     test('smb://host/share/sub splits all three', () {
-      expect(PlatformPaths.segments('smb://h/share/sub'),
-          ['smb://h', 'share', 'sub']);
+      expect(PlatformPaths.segments('smb://h/share/sub'), [
+        'smb://h',
+        'share',
+        'sub',
+      ]);
     });
 
     test('parentOf walks back through share to host', () {

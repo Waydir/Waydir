@@ -333,7 +333,9 @@ class _ContextMenuItemTileState extends State<_ContextMenuItemTile> {
               ],
               if (item.isToggle && item.toggleSignal != null) ...[
                 const SizedBox(width: 8),
-                Watch((_) => _Checkbox(value: item.toggleSignal!.value)),
+                SignalBuilder(
+                  builder: (_) => _Checkbox(value: item.toggleSignal!.value),
+                ),
               ],
               if (item.hasChildren) ...[
                 const SizedBox(width: 8),

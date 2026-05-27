@@ -98,11 +98,7 @@ class BreadcrumbBar extends StatelessWidget {
     );
   }
 
-  Widget _segmentWidget(
-    int i, {
-    required bool isLast,
-    required bool flexible,
-  }) {
+  Widget _segmentWidget(int i, {required bool isLast, required bool flexible}) {
     final segment = _CrumbSegment(
       crumb: crumbs[i],
       isLast: isLast,
@@ -210,9 +206,7 @@ class _CrumbSegmentState extends State<_CrumbSegment> {
         onTap: widget.onTap,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 3),
-          decoration: _hovered
-              ? BoxDecoration(color: AppColors.bgHover)
-              : null,
+          decoration: _hovered ? BoxDecoration(color: AppColors.bgHover) : null,
           child: content,
         ),
       ),
@@ -269,9 +263,7 @@ class _EllipsisMenuState extends State<_EllipsisMenu> {
         onTap: _openMenu,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 3),
-          decoration: _hovered
-              ? BoxDecoration(color: AppColors.bgHover)
-              : null,
+          decoration: _hovered ? BoxDecoration(color: AppColors.bgHover) : null,
           child: Tooltip(
             message: widget.hiddenCrumbs.map((c) => c.label).join(' › '),
             child: Text(

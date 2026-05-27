@@ -58,111 +58,120 @@ class _DiagnosticsPaneState extends State<DiagnosticsPane> {
 
   @override
   Widget build(BuildContext context) {
-    return Watch((context) {
-      final all = log.entries.value;
-      final visible = _filtered(all);
-      return SettingsPaneScaffold(
-        children: [
-          Text(t.preferences.diagnostics.title, style: context.txt.dialogTitle),
-          const SizedBox(height: 4),
-          Text(t.preferences.diagnostics.subtitle, style: context.txt.muted),
-          const SizedBox(height: 8),
-          SelectableText(
-            '${t.preferences.diagnostics.native}: ${WaydirCoreLoader.buildInfo() ?? t.preferences.diagnostics.unavailable}',
-            style: context.txt.muted,
-          ),
-          const SizedBox(height: 16),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Focus(
-                  onFocusChange: (focused) =>
-                      setState(() => _searchFocused = focused),
-                  child: Container(
-                    height: 34,
-                    alignment: Alignment.centerLeft,
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    decoration: BoxDecoration(
-                      color: AppColors.bgInput,
-                      borderRadius: BorderRadius.zero,
-                      border: Border.all(
-                        color: _searchFocused
-                            ? AppColors.accent
-                            : AppColors.borderColor,
-                      ),
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: (v) => setState(() => _query = v),
-                      style: context.txt.body,
-                      decoration: InputDecoration.collapsed(
-                        hintText: t.preferences.diagnostics.search,
-                        hintStyle: context.txt.body.copyWith(
-                          color: AppColors.fgMuted,
+    return SignalBuilder(
+      builder: (context) {
+        final all = log.entries.value;
+        final visible = _filtered(all);
+        return SettingsPaneScaffold(
+          children: [
+            Text(
+              t.preferences.diagnostics.title,
+              style: context.txt.dialogTitle,
+            ),
+            const SizedBox(height: 4),
+            Text(t.preferences.diagnostics.subtitle, style: context.txt.muted),
+            const SizedBox(height: 8),
+            SelectableText(
+              '${t.preferences.diagnostics.native}: ${WaydirCoreLoader.buildInfo() ?? t.preferences.diagnostics.unavailable}',
+              style: context.txt.muted,
+            ),
+            const SizedBox(height: 16),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Focus(
+                    onFocusChange: (focused) =>
+                        setState(() => _searchFocused = focused),
+                    child: Container(
+                      height: 34,
+                      alignment: Alignment.centerLeft,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      decoration: BoxDecoration(
+                        color: AppColors.bgInput,
+                        borderRadius: BorderRadius.zero,
+                        border: Border.all(
+                          color: _searchFocused
+                              ? AppColors.accent
+                              : AppColors.borderColor,
                         ),
                       ),
-                      cursorColor: AppColors.accent,
+                      child: TextField(
+                        controller: _searchController,
+                        onChanged: (v) => setState(() => _query = v),
+                        style: context.txt.body,
+                        decoration: InputDecoration.collapsed(
+                          hintText: t.preferences.diagnostics.search,
+                          hintStyle: context.txt.body.copyWith(
+                            color: AppColors.fgMuted,
+                          ),
+                        ),
+                        cursorColor: AppColors.accent,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              _Btn(
-                icon: WaydirIconsRegular.copy,
-                label: t.preferences.diagnostics.copy,
-                onTap: visible.isEmpty ? null : () => _copy(visible),
-              ),
-              const SizedBox(width: 6),
-              _Btn(
-                icon: WaydirIconsRegular.trashSimple,
-                label: t.preferences.diagnostics.clear,
-                onTap: all.isEmpty ? null : log.clear,
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.bgSurface,
-              borderRadius: BorderRadius.zero,
-              border: Border.all(color: AppColors.borderColor),
+                const SizedBox(width: 8),
+                _Btn(
+                  icon: WaydirIconsRegular.copy,
+                  label: t.preferences.diagnostics.copy,
+                  onTap: visible.isEmpty ? null : () => _copy(visible),
+                ),
+                const SizedBox(width: 6),
+                _Btn(
+                  icon: WaydirIconsRegular.trashSimple,
+                  label: t.preferences.diagnostics.clear,
+                  onTap: all.isEmpty ? null : log.clear,
+                ),
+              ],
             ),
-            constraints: const BoxConstraints(minHeight: 120),
-            child: visible.isEmpty
-                ? Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Text(
-                      t.preferences.diagnostics.empty,
-                      style: context.txt.muted,
-                    ),
-                  )
-                : Column(
-                    children: [
-                      for (var i = visible.length - 1; i >= 0; i--) ...[
-                        if (i < visible.length - 1)
-                          Container(height: 1, color: AppColors.bgDivider),
-                        _LogRow(entry: visible[i]),
-                      ],
-                    ],
-                  ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Icon(WaydirIconsRegular.info, size: 13, color: AppColors.fgMuted),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  t.preferences.diagnostics.privacyNote,
-                  style: context.txt.muted,
-                ),
+            const SizedBox(height: 12),
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.bgSurface,
+                borderRadius: BorderRadius.zero,
+                border: Border.all(color: AppColors.borderColor),
               ),
-            ],
-          ),
-        ],
-      );
-    });
+              constraints: const BoxConstraints(minHeight: 120),
+              child: visible.isEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Text(
+                        t.preferences.diagnostics.empty,
+                        style: context.txt.muted,
+                      ),
+                    )
+                  : Column(
+                      children: [
+                        for (var i = visible.length - 1; i >= 0; i--) ...[
+                          if (i < visible.length - 1)
+                            Container(height: 1, color: AppColors.bgDivider),
+                          _LogRow(entry: visible[i]),
+                        ],
+                      ],
+                    ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Icon(
+                  WaydirIconsRegular.info,
+                  size: 13,
+                  color: AppColors.fgMuted,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    t.preferences.diagnostics.privacyNote,
+                    style: context.txt.muted,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
   }
 }
 

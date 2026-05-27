@@ -42,6 +42,7 @@ class SettingsStore {
   final _disposers = <void Function()>[];
 
   AppDatabase get db => _db;
+  bool get isLoaded => _loaded;
 
   Future<void> load() async {
     if (_loaded) return;

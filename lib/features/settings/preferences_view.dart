@@ -400,36 +400,38 @@ class RegistrySettingRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Watch((_) {
-      final stretch = setting is ChoiceSetting || setting is TextSetting;
-      final control = switch (setting) {
-        ToggleSetting toggle => SettingsToggle(
-          value: toggle.value,
-          onChanged: (value) => toggle.value = value,
-        ),
-        ChoiceSetting choice => AppDropdown<dynamic>(
-          value: choice.value,
-          items: [
-            for (final option in choice.choices)
-              AppDropdownItem<dynamic>(
-                value: option.value,
-                label: option.label(),
-                icon: option.icon,
-              ),
-          ],
-          onChanged: (value) => choice.value = value,
-        ),
-        TextSetting text => SettingsTextField(setting: text),
-        _ => const SizedBox.shrink(),
-      };
+    return SignalBuilder(
+      builder: (_) {
+        final stretch = setting is ChoiceSetting || setting is TextSetting;
+        final control = switch (setting) {
+          ToggleSetting toggle => SettingsToggle(
+            value: toggle.value,
+            onChanged: (value) => toggle.value = value,
+          ),
+          ChoiceSetting choice => AppDropdown<dynamic>(
+            value: choice.value,
+            items: [
+              for (final option in choice.choices)
+                AppDropdownItem<dynamic>(
+                  value: option.value,
+                  label: option.label(),
+                  icon: option.icon,
+                ),
+            ],
+            onChanged: (value) => choice.value = value,
+          ),
+          TextSetting text => SettingsTextField(setting: text),
+          _ => const SizedBox.shrink(),
+        };
 
-      return SettingsRow(
-        label: setting.label(),
-        hint: setting.hint?.call(),
-        control: control,
-        stretchControl: stretch,
-      );
-    });
+        return SettingsRow(
+          label: setting.label(),
+          hint: setting.hint?.call(),
+          control: control,
+          stretchControl: stretch,
+        );
+      },
+    );
   }
 }
 

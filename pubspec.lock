@@ -286,6 +286,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_hooks:
+    dependency: transitive
+    description:
+      name: flutter_hooks
+      sha256: "8ae1f090e5f4ef5cfa6670ce1ab5dddadd33f3533a7f9ba19d9f958aa2a89f42"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.21.3+1"
   flutter_lints:
     dependency: "direct dev"
     description:
@@ -489,10 +497,10 @@ packages:
     dependency: transitive
     description:
       name: meta
-      sha256: "1741988757a65eb6b36abe716829688cf01910bbf91c34354ff7ec1c3de2b349"
+      sha256: "23f08335362185a5ea2ad3a4e597f1375e78bce8a040df5c600c8d3552ef2394"
       url: "https://pub.dev"
     source: hosted
-    version: "1.18.0"
+    version: "1.17.0"
   mime:
     dependency: "direct main"
     description:
@@ -649,10 +657,10 @@ packages:
     dependency: transitive
     description:
       name: preact_signals
-      sha256: ad45313c86b2228536a16d3dfc86da8263705d4acb4136c42907378de6910d8c
+      sha256: "18f45e7f91a4dfad8bd0138efa6b85770bb25e13278b863fdaafd28a56579b16"
       url: "https://pub.dev"
     source: hosted
-    version: "1.9.4"
+    version: "7.0.0"
   pub_semver:
     dependency: transitive
     description:
@@ -713,26 +721,34 @@ packages:
     dependency: "direct main"
     description:
       name: signals
-      sha256: "0d644f4ec8ce4862c61e3d3d1168d08a7b9b6ecbe067d4f96e26dd35287f5dcd"
+      sha256: "202013a4f7811650c4811dba22755753471cf3e13305200fd83895075039190a"
       url: "https://pub.dev"
     source: hosted
-    version: "6.3.0"
+    version: "7.0.0"
   signals_core:
     dependency: transitive
     description:
       name: signals_core
-      sha256: ea427bd53619e69e6f6cf244177e3b72870e433065c807600fb496fd80611c9f
+      sha256: "04d7ccb0265264191a4e2666050031129f47c2bbf4ac3f31f6586889a9903b62"
       url: "https://pub.dev"
     source: hosted
-    version: "6.2.1"
+    version: "7.0.0"
   signals_flutter:
     dependency: transitive
     description:
       name: signals_flutter
-      sha256: "7c83418f47e3538685217e583f0fbd17a29716fa1a9ce2247e2455786e8ea81a"
+      sha256: f82955b66b96fc7f53150ce7737d2bb6c87f23377583e00bd355aae9cb36a45a
       url: "https://pub.dev"
     source: hosted
-    version: "6.3.0"
+    version: "7.0.0"
+  signals_hooks:
+    dependency: transitive
+    description:
+      name: signals_hooks
+      sha256: a06a9f5123174d572a353565b7e6f9ed03bb2201d98dcb370c593f072040135c
+      url: "https://pub.dev"
+    source: hosted
+    version: "7.0.0"
   sky_engine:
     dependency: transitive
     description: flutter
@@ -742,26 +758,26 @@ packages:
     dependency: "direct main"
     description:
       name: slang
-      sha256: ea6702ed6b1c82065fb2de906fe34ac9298117342e3c2ea2567132efdc81bd17
+      sha256: "46e929158c2f563994c4d1fce5819cfa13e18b164941473d2553bcddcf387c31"
       url: "https://pub.dev"
     source: hosted
-    version: "4.14.0"
+    version: "4.15.0"
   slang_build_runner:
     dependency: "direct dev"
     description:
       name: slang_build_runner
-      sha256: "1db59254041026aec97df5aca30a602e09e9d1546c3d16b55c3c7cf4c16cdb6c"
+      sha256: "7da604c926c15435543a4a7088133bd4b9d027a55257e516474811534701e676"
       url: "https://pub.dev"
     source: hosted
-    version: "4.14.0"
+    version: "4.15.0"
   slang_flutter:
     dependency: "direct main"
     description:
       name: slang_flutter
-      sha256: dcc4e77527c91b12348fc8bdd43d3eb92d8cea37c12a23a1f9719cdc12c804c6
+      sha256: "0eb6348416a296f1bd940fe02669bcd2df5c5cfdabf893b98e448df8b7ecf4ac"
       url: "https://pub.dev"
     source: hosted
-    version: "4.14.0"
+    version: "4.15.0"
   source_gen:
     dependency: transitive
     description:
@@ -886,10 +902,10 @@ packages:
     dependency: transitive
     description:
       name: test_api
-      sha256: "949a932224383300f01be9221c39180316445ecb8e7547f70a41a35bf421fb9e"
+      sha256: "8161c84903fd860b26bfdefb7963b3f0b68fee7adea0f59ef805ecca346f0c7a"
       url: "https://pub.dev"
     source: hosted
-    version: "0.7.11"
+    version: "0.7.10"
   typed_data:
     dependency: transitive
     description:

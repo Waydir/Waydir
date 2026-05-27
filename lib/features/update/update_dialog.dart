@@ -49,24 +49,26 @@ class _UpdateDialog extends StatelessWidget {
               color: AppColors.bgSurface,
               border: Border.all(color: AppColors.borderColor),
             ),
-            child: Watch((_) {
-              final status = store.status.value;
-              final release = store.latestRelease.value;
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _Header(
-                    status: status,
-                    version: release?.version,
-                    onClose: () => Navigator.of(context).pop(),
-                  ),
-                  Container(height: 1, color: AppColors.bgDivider),
-                  _Body(store: store),
-                  Container(height: 1, color: AppColors.bgDivider),
-                  _Footer(store: store),
-                ],
-              );
-            }),
+            child: SignalBuilder(
+              builder: (_) {
+                final status = store.status.value;
+                final release = store.latestRelease.value;
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _Header(
+                      status: status,
+                      version: release?.version,
+                      onClose: () => Navigator.of(context).pop(),
+                    ),
+                    Container(height: 1, color: AppColors.bgDivider),
+                    _Body(store: store),
+                    Container(height: 1, color: AppColors.bgDivider),
+                    _Footer(store: store),
+                  ],
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -167,59 +169,61 @@ class _Body extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Watch((_) {
-      final status = store.status.value;
-      if (status == UpdateStatus.error) {
-        return _CenterMessage(
-          message: store.errorMessage.value ?? t.update.unknownError,
-          color: AppColors.danger,
-        );
-      }
-      if (status == UpdateStatus.checking) {
-        return _CenterMessage(message: t.update.checking);
-      }
-      if (status == UpdateStatus.upToDate) {
-        return _CenterMessage(
-          message: t.update.upToDate(version: store.currentVersion),
-        );
-      }
-      if (status == UpdateStatus.installed) {
-        final v =
-            store.pendingRestartVersion.value ??
-            store.latestRelease.value?.version ??
-            '';
-        return _CenterMessage(
-          message: t.update.restartHint(version: v),
-          color: AppColors.success,
-        );
-      }
-      final release = store.latestRelease.value;
-      if (release == null) {
-        return _CenterMessage(message: t.update.noRelease);
-      }
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(18, 14, 18, 8),
-            child: _CurrentVersionRow(
-              current: store.currentVersion,
-              next: release.version,
+    return SignalBuilder(
+      builder: (_) {
+        final status = store.status.value;
+        if (status == UpdateStatus.error) {
+          return _CenterMessage(
+            message: store.errorMessage.value ?? t.update.unknownError,
+            color: AppColors.danger,
+          );
+        }
+        if (status == UpdateStatus.checking) {
+          return _CenterMessage(message: t.update.checking);
+        }
+        if (status == UpdateStatus.upToDate) {
+          return _CenterMessage(
+            message: t.update.upToDate(version: store.currentVersion),
+          );
+        }
+        if (status == UpdateStatus.installed) {
+          final v =
+              store.pendingRestartVersion.value ??
+              store.latestRelease.value?.version ??
+              '';
+          return _CenterMessage(
+            message: t.update.restartHint(version: v),
+            color: AppColors.success,
+          );
+        }
+        final release = store.latestRelease.value;
+        if (release == null) {
+          return _CenterMessage(message: t.update.noRelease);
+        }
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 14, 18, 8),
+              child: _CurrentVersionRow(
+                current: store.currentVersion,
+                next: release.version,
+              ),
             ),
-          ),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxHeight: 280, minHeight: 80),
-            child: _ReleaseNotes(body: release.body),
-          ),
-          Container(height: 1, color: AppColors.bgDivider),
-          _AssetRow(store: store),
-          if (status == UpdateStatus.downloading ||
-              status == UpdateStatus.ready) ...[
-            _Progress(store: store),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 280, minHeight: 80),
+              child: _ReleaseNotes(body: release.body),
+            ),
+            Container(height: 1, color: AppColors.bgDivider),
+            _AssetRow(store: store),
+            if (status == UpdateStatus.downloading ||
+                status == UpdateStatus.ready) ...[
+              _Progress(store: store),
+            ],
           ],
-        ],
-      );
-    });
+        );
+      },
+    );
   }
 }
 
@@ -429,52 +433,56 @@ class _Progress extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Watch((_) {
-      final p = store.progress.value;
-      final received = store.downloadedBytes.value;
-      final total = store.totalBytes.value;
-      final done = store.status.value == UpdateStatus.ready;
-      return Padding(
-        padding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              height: 4,
-              color: AppColors.bgInput,
-              child: FractionallySizedBox(
-                alignment: Alignment.centerLeft,
-                widthFactor: p.clamp(0.0, 1.0),
-                child: Container(
-                  color: done ? AppColors.success : AppColors.warning,
-                ),
-              ),
-            ),
-            const SizedBox(height: 6),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  done
-                      ? t.update.downloaded
-                      : total > 0
-                      ? '${formatBytes(received)} / ${formatBytes(total)}'
-                      : formatBytes(received),
-                  style: context.txt.caption.copyWith(color: AppColors.fgMuted),
-                ),
-                Text(
-                  '${(p * 100).toStringAsFixed(0)}%',
-                  style: context.txt.caption.copyWith(
-                    color: done ? AppColors.success : AppColors.fgMuted,
-                    fontWeight: FontWeight.w600,
+    return SignalBuilder(
+      builder: (_) {
+        final p = store.progress.value;
+        final received = store.downloadedBytes.value;
+        final total = store.totalBytes.value;
+        final done = store.status.value == UpdateStatus.ready;
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                height: 4,
+                color: AppColors.bgInput,
+                child: FractionallySizedBox(
+                  alignment: Alignment.centerLeft,
+                  widthFactor: p.clamp(0.0, 1.0),
+                  child: Container(
+                    color: done ? AppColors.success : AppColors.warning,
                   ),
                 ),
-              ],
-            ),
-          ],
-        ),
-      );
-    });
+              ),
+              const SizedBox(height: 6),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    done
+                        ? t.update.downloaded
+                        : total > 0
+                        ? '${formatBytes(received)} / ${formatBytes(total)}'
+                        : formatBytes(received),
+                    style: context.txt.caption.copyWith(
+                      color: AppColors.fgMuted,
+                    ),
+                  ),
+                  Text(
+                    '${(p * 100).toStringAsFixed(0)}%',
+                    style: context.txt.caption.copyWith(
+                      color: done ? AppColors.success : AppColors.fgMuted,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }
 
@@ -589,41 +597,43 @@ class _PrimaryButtonState extends State<_PrimaryButton> {
 
   @override
   Widget build(BuildContext context) {
-    return Watch((_) {
-      final status = widget.store.status.value;
-      final fmt = widget.store.installFormat.value;
-      final enabled =
-          status != UpdateStatus.checking &&
-          status != UpdateStatus.downloading &&
-          status != UpdateStatus.launching;
-      final bg = !enabled
-          ? AppColors.bgHover
-          : _hover
-          ? AppColors.accentHover
-          : AppColors.accent;
-      return MouseRegion(
-        cursor: enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
-        onEnter: (_) => setState(() => _hover = true),
-        onExit: (_) => setState(() => _hover = false),
-        child: GestureDetector(
-          onTap: enabled ? () => _onTap(context) : null,
-          behavior: HitTestBehavior.opaque,
-          child: Container(
-            height: 30,
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            alignment: Alignment.center,
-            color: bg,
-            child: Text(
-              _label(status, fmt),
-              style: context.txt.bodyEmphasis.copyWith(
-                color: AppColors.bg,
-                fontWeight: FontWeight.w600,
+    return SignalBuilder(
+      builder: (_) {
+        final status = widget.store.status.value;
+        final fmt = widget.store.installFormat.value;
+        final enabled =
+            status != UpdateStatus.checking &&
+            status != UpdateStatus.downloading &&
+            status != UpdateStatus.launching;
+        final bg = !enabled
+            ? AppColors.bgHover
+            : _hover
+            ? AppColors.accentHover
+            : AppColors.accent;
+        return MouseRegion(
+          cursor: enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
+          onEnter: (_) => setState(() => _hover = true),
+          onExit: (_) => setState(() => _hover = false),
+          child: GestureDetector(
+            onTap: enabled ? () => _onTap(context) : null,
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              height: 30,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              alignment: Alignment.center,
+              color: bg,
+              child: Text(
+                _label(status, fmt),
+                style: context.txt.bodyEmphasis.copyWith(
+                  color: AppColors.bg,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
   }
 }
 

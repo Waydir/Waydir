@@ -68,31 +68,33 @@ class AboutPane extends StatelessWidget {
           ),
           child: Column(
             children: [
-              Watch((_) {
-                final status = UpdateStore.instance.status.value;
-                final available = UpdateStore.instance.updateAvailable.value;
-                final latest =
-                    UpdateStore.instance.latestRelease.value?.version;
-                final suffix = available && latest != null
-                    ? '  →  v$latest'
-                    : status == UpdateStatus.checking
-                    ? '  ·  ${t.update.statusCheckingInline}'
-                    : status == UpdateStatus.upToDate
-                    ? '  ·  ${t.update.statusUpToDateInline}'
-                    : '';
-                return _InfoRow(
-                  label: t.preferences.about.version,
-                  value: '${AppInfo.versionLabel.value}$suffix',
-                  valueColor: available ? AppColors.warning : null,
-                  onCopy: () => _copy(context, AppInfo.version.value),
-                  trailing: _CheckUpdatesButton(
-                    onTap: () async {
-                      await UpdateStore.instance.check(force: true);
-                      if (context.mounted) await showUpdateDialog(context);
-                    },
-                  ),
-                );
-              }),
+              SignalBuilder(
+                builder: (_) {
+                  final status = UpdateStore.instance.status.value;
+                  final available = UpdateStore.instance.updateAvailable.value;
+                  final latest =
+                      UpdateStore.instance.latestRelease.value?.version;
+                  final suffix = available && latest != null
+                      ? '  →  v$latest'
+                      : status == UpdateStatus.checking
+                      ? '  ·  ${t.update.statusCheckingInline}'
+                      : status == UpdateStatus.upToDate
+                      ? '  ·  ${t.update.statusUpToDateInline}'
+                      : '';
+                  return _InfoRow(
+                    label: t.preferences.about.version,
+                    value: '${AppInfo.versionLabel.value}$suffix',
+                    valueColor: available ? AppColors.warning : null,
+                    onCopy: () => _copy(context, AppInfo.version.value),
+                    trailing: _CheckUpdatesButton(
+                      onTap: () async {
+                        await UpdateStore.instance.check(force: true);
+                        if (context.mounted) await showUpdateDialog(context);
+                      },
+                    ),
+                  );
+                },
+              ),
               Container(height: 1, color: AppColors.bgDivider),
               _InfoRow(
                 label: t.preferences.about.repository,

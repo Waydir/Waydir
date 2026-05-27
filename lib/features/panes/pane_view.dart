@@ -53,41 +53,48 @@ class PaneView extends StatelessWidget {
           Column(
             children: [
               TabStrip(tabsStore: pane.tabs, isActive: isActive),
-              Watch(
-                (_) => PaneLocationBar(store: pane.tabs.activeTab.value.store),
+              SignalBuilder(
+                builder: (_) =>
+                    PaneLocationBar(store: pane.tabs.activeTab.value.store),
               ),
-              Watch(
-                (_) => pane.tabs.activeTab.value.store.searchActive.value
+              SignalBuilder(
+                builder: (_) =>
+                    pane.tabs.activeTab.value.store.searchActive.value
                     ? AppSearchBar(store: pane.tabs.activeTab.value.store)
                     : const SizedBox.shrink(),
               ),
               Expanded(
-                child: Watch((_) {
-                  final idx = pane.tabs.activeIndex.value;
-                  final tabs = pane.tabs.tabs.value;
-                  return IndexedStack(
-                    index: idx,
-                    children: [
-                      for (final tab in tabs)
-                        _TabContent(
-                          store: tab.store,
-                          onBackgroundContextMenu: onBackgroundContextMenu,
-                          onContextMenu: onContextMenu,
-                          onMenuAction: onMenuAction,
-                          onOpenInNewTab: onOpenInNewTab,
-                          onRectSelect: (paths, {additive = false}) =>
-                              tab.store.onRectSelect(paths, additive: additive),
-                        ),
-                    ],
-                  );
-                }),
+                child: SignalBuilder(
+                  builder: (_) {
+                    final idx = pane.tabs.activeIndex.value;
+                    final tabs = pane.tabs.tabs.value;
+                    return IndexedStack(
+                      index: idx,
+                      children: [
+                        for (final tab in tabs)
+                          _TabContent(
+                            store: tab.store,
+                            onBackgroundContextMenu: onBackgroundContextMenu,
+                            onContextMenu: onContextMenu,
+                            onMenuAction: onMenuAction,
+                            onOpenInNewTab: onOpenInNewTab,
+                            onRectSelect: (paths, {additive = false}) => tab
+                                .store
+                                .onRectSelect(paths, additive: additive),
+                          ),
+                      ],
+                    );
+                  },
+                ),
               ),
-              Watch((_) {
-                final gitStore = pane.tabs.activeTab.value.store.gitStatus;
-                final status = gitStore.status.value;
-                if (status == null) return const SizedBox.shrink();
-                return GitStatusBar(status: status, store: gitStore);
-              }),
+              SignalBuilder(
+                builder: (_) {
+                  final gitStore = pane.tabs.activeTab.value.store.gitStatus;
+                  final status = gitStore.status.value;
+                  if (status == null) return const SizedBox.shrink();
+                  return GitStatusBar(status: status, store: gitStore);
+                },
+              ),
             ],
           ),
           if (!isActive)
@@ -121,58 +128,62 @@ class _TabContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Watch((context) {
-      if (store.isLoading.value) {
-        return Center(
-          child: SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: AppColors.fgMuted,
+    return SignalBuilder(
+      builder: (context) {
+        if (store.isLoading.value) {
+          return Center(
+            child: SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.fgMuted,
+              ),
             ),
-          ),
-        );
-      }
-      return Watch((context) {
-        if (store.trashAccessDenied.value) {
-          return const _TrashPermissionPrompt();
+          );
         }
-        final files = store.visibleFiles.value;
-        final selected = store.selectedPaths.value;
-        final cursorIndex = store.cursorIndex.value;
-        final cutPaths = store.clipboardMode.value == ClipboardMode.cut
-            ? store.clipboardPaths.value
-            : <String>{};
-        final currentPath = store.currentPath.value;
-        return FileList(
-          files: files,
-          currentPath: currentPath,
-          recursiveResults:
-              store.searchActive.value && store.searchRecursive.value,
-          onSelect: store.onSelect,
-          onOpen: store.onOpen,
-          onBackgroundTap: store.onBackgroundTap,
-          onBackgroundContextMenu: onBackgroundContextMenu,
-          onContextMenu: onContextMenu,
-          onMenuAction: onMenuAction,
-          onDropFiles: store.dropFiles,
-          selectedPaths: selected,
-          cursorIndex: cursorIndex,
-          cutPaths: cutPaths,
-          renamingPath: store.renamingPath.value,
-          renameAttempt: store.renameAttempt.value,
-          onRenameSubmit: store.commitRename,
-          onRenameCancel: store.cancelRename,
-          onCloseSearch: store.closeSearch,
-          onOpenInNewTab: onOpenInNewTab,
-          onRectSelect: onRectSelect,
-          sortColumn: store.sortKey.value,
-          sortAscending: store.sortAscending.value,
-          onSortColumn: store.cycleSortColumn,
+        return SignalBuilder(
+          builder: (context) {
+            if (store.trashAccessDenied.value) {
+              return const _TrashPermissionPrompt();
+            }
+            final files = store.visibleFiles.value;
+            final selected = store.selectedPaths.value;
+            final cursorIndex = store.cursorIndex.value;
+            final cutPaths = store.clipboardMode.value == ClipboardMode.cut
+                ? store.clipboardPaths.value
+                : <String>{};
+            final currentPath = store.currentPath.value;
+            return FileList(
+              files: files,
+              currentPath: currentPath,
+              recursiveResults:
+                  store.searchActive.value && store.searchRecursive.value,
+              onSelect: store.onSelect,
+              onOpen: store.onOpen,
+              onBackgroundTap: store.onBackgroundTap,
+              onBackgroundContextMenu: onBackgroundContextMenu,
+              onContextMenu: onContextMenu,
+              onMenuAction: onMenuAction,
+              onDropFiles: store.dropFiles,
+              selectedPaths: selected,
+              cursorIndex: cursorIndex,
+              cutPaths: cutPaths,
+              renamingPath: store.renamingPath.value,
+              renameAttempt: store.renameAttempt.value,
+              onRenameSubmit: store.commitRename,
+              onRenameCancel: store.cancelRename,
+              onCloseSearch: store.closeSearch,
+              onOpenInNewTab: onOpenInNewTab,
+              onRectSelect: onRectSelect,
+              sortColumn: store.sortKey.value,
+              sortAscending: store.sortAscending.value,
+              onSortColumn: store.cycleSortColumn,
+            );
+          },
         );
-      });
-    });
+      },
+    );
   }
 }
 

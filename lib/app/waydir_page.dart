@@ -1433,87 +1433,89 @@ class _WaydirPageState extends State<WaydirPage> {
   }
 
   Widget _buildViewMenu() {
-    return Watch((_) {
-      if (!_shell.ready.value) return const SizedBox.shrink();
-      final store = _active;
-      final selectedCount = store.selectedCount.value;
-      final hasVisibleFiles = store.visibleFiles.value.isNotEmpty;
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TitleMenuButton(
-            label: t.menu.view,
-            items: [
-              ContextMenuItem(
-                icon: WaydirIconsRegular.columns,
-                label: t.menu.dualPaneMode,
-                action: 'toggle_dual',
-                isToggle: true,
-                toggleSignal: _shell.isDual,
-              ),
-              ContextMenuItem.divider,
-              ContextMenuItem(
-                icon: WaydirIconsRegular.eye,
-                label: t.menu.showHidden,
-                action: 'toggle_hidden',
-                isToggle: true,
-                toggleSignal: SettingsStore.instance.showHiddenDefault,
-              ),
-            ],
-            onSelect: (action) {
-              switch (action) {
-                case 'toggle_dual':
-                  _shell.toggleDual();
-                case 'toggle_hidden':
-                  _toggleShowHiddenGlobal();
-              }
-            },
-          ),
-          TitleMenuButton(
-            label: t.keybindings.categories.selection,
-            items: [
-              ContextMenuItem(
-                icon: WaydirIconsRegular.selectionAll,
-                label: t.menu.selectAll,
-                action: 'select_all',
-                shortcut: AppShortcuts.getById('select_all').displayKeys,
-                enabled: hasVisibleFiles,
-              ),
-              ContextMenuItem(
-                icon: WaydirIconsRegular.selectionAll,
-                label: t.menu.selectByPattern,
-                action: 'select_pattern',
-                shortcut: AppShortcuts.getById('select_pattern').displayKeys,
-                enabled: hasVisibleFiles,
-              ),
-              ContextMenuItem(
-                icon: WaydirIconsRegular.selectionAll,
-                label: t.menu.deselectAll,
-                action: 'deselect_all',
-                shortcut: AppShortcuts.getById('deselect_all').displayKeys,
-                enabled: selectedCount > 0,
-              ),
-              ContextMenuItem.divider,
-              ContextMenuItem(
-                icon: WaydirIconsRegular.floppyDisk,
-                label: t.menu.saveSelection,
-                action: 'save_selection',
-                shortcut: AppShortcuts.getById('save_selection').displayKeys,
-                enabled: selectedCount > 0,
-              ),
-              ContextMenuItem(
-                icon: WaydirIconsRegular.fileTxt,
-                label: t.menu.loadSelection,
-                action: 'load_selection',
-                shortcut: AppShortcuts.getById('load_selection').displayKeys,
-                enabled: hasVisibleFiles,
-              ),
-            ],
-            onSelect: _handleSelectionMenuAction,
-          ),
-        ],
-      );
-    });
+    return SignalBuilder(
+      builder: (_) {
+        if (!_shell.ready.value) return const SizedBox.shrink();
+        final store = _active;
+        final selectedCount = store.selectedCount.value;
+        final hasVisibleFiles = store.visibleFiles.value.isNotEmpty;
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TitleMenuButton(
+              label: t.menu.view,
+              items: [
+                ContextMenuItem(
+                  icon: WaydirIconsRegular.columns,
+                  label: t.menu.dualPaneMode,
+                  action: 'toggle_dual',
+                  isToggle: true,
+                  toggleSignal: _shell.isDual,
+                ),
+                ContextMenuItem.divider,
+                ContextMenuItem(
+                  icon: WaydirIconsRegular.eye,
+                  label: t.menu.showHidden,
+                  action: 'toggle_hidden',
+                  isToggle: true,
+                  toggleSignal: SettingsStore.instance.showHiddenDefault,
+                ),
+              ],
+              onSelect: (action) {
+                switch (action) {
+                  case 'toggle_dual':
+                    _shell.toggleDual();
+                  case 'toggle_hidden':
+                    _toggleShowHiddenGlobal();
+                }
+              },
+            ),
+            TitleMenuButton(
+              label: t.keybindings.categories.selection,
+              items: [
+                ContextMenuItem(
+                  icon: WaydirIconsRegular.selectionAll,
+                  label: t.menu.selectAll,
+                  action: 'select_all',
+                  shortcut: AppShortcuts.getById('select_all').displayKeys,
+                  enabled: hasVisibleFiles,
+                ),
+                ContextMenuItem(
+                  icon: WaydirIconsRegular.selectionAll,
+                  label: t.menu.selectByPattern,
+                  action: 'select_pattern',
+                  shortcut: AppShortcuts.getById('select_pattern').displayKeys,
+                  enabled: hasVisibleFiles,
+                ),
+                ContextMenuItem(
+                  icon: WaydirIconsRegular.selectionAll,
+                  label: t.menu.deselectAll,
+                  action: 'deselect_all',
+                  shortcut: AppShortcuts.getById('deselect_all').displayKeys,
+                  enabled: selectedCount > 0,
+                ),
+                ContextMenuItem.divider,
+                ContextMenuItem(
+                  icon: WaydirIconsRegular.floppyDisk,
+                  label: t.menu.saveSelection,
+                  action: 'save_selection',
+                  shortcut: AppShortcuts.getById('save_selection').displayKeys,
+                  enabled: selectedCount > 0,
+                ),
+                ContextMenuItem(
+                  icon: WaydirIconsRegular.fileTxt,
+                  label: t.menu.loadSelection,
+                  action: 'load_selection',
+                  shortcut: AppShortcuts.getById('load_selection').displayKeys,
+                  enabled: hasVisibleFiles,
+                ),
+              ],
+              onSelect: _handleSelectionMenuAction,
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _handleSelectionMenuAction(String action) {
@@ -1612,118 +1614,130 @@ class _WaydirPageState extends State<WaydirPage> {
         onKeyEvent: _handleKeyEvent,
         child: Stack(
           children: [
-            Watch((_) {
-              if (_shell.ready.value) {
-                _active.selectedCount.value;
-                _active.visibleFiles.value.length;
-              }
-              return TitleBar(
-                menuTrailing: _buildViewMenu(),
-                platformMenus: _platformViewMenus(),
-                child: Watch((context) {
-                  if (!_shell.ready.value) {
-                    return Center(
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.fgMuted,
-                        ),
-                      ),
-                    );
-                  }
-                  return Column(
-                    children: [
-                      Expanded(
-                        child: Row(
-                          children: [
-                            _SidebarHost(
-                              active: _active,
-                              operationStore: _operationStore,
-                              onOpenInNewTab: _openInNewTab,
+            SignalBuilder(
+              builder: (_) {
+                if (_shell.ready.value) {
+                  _active.selectedCount.value;
+                  _active.visibleFiles.value.length;
+                }
+                return TitleBar(
+                  menuTrailing: _buildViewMenu(),
+                  platformMenus: _platformViewMenus(),
+                  child: SignalBuilder(
+                    builder: (context) {
+                      if (!_shell.ready.value) {
+                        return Center(
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.fgMuted,
                             ),
-                            Container(width: 1, color: AppColors.bgDivider),
-                            Expanded(
-                              child: LayoutBuilder(
-                                builder: (context, constraints) {
-                                  return Watch((_) {
-                                    final dual = _shell.isDual.value;
-                                    final panes = _shell.panes.value;
-                                    final activeIdx =
-                                        _shell.activePaneIndex.value;
+                          ),
+                        );
+                      }
+                      return Column(
+                        children: [
+                          Expanded(
+                            child: Row(
+                              children: [
+                                _SidebarHost(
+                                  active: _active,
+                                  operationStore: _operationStore,
+                                  onOpenInNewTab: _openInNewTab,
+                                ),
+                                Container(width: 1, color: AppColors.bgDivider),
+                                Expanded(
+                                  child: LayoutBuilder(
+                                    builder: (context, constraints) {
+                                      return SignalBuilder(
+                                        builder: (_) {
+                                          final dual = _shell.isDual.value;
+                                          final panes = _shell.panes.value;
+                                          final activeIdx =
+                                              _shell.activePaneIndex.value;
 
-                                    if (!dual) {
-                                      return PaneView(
-                                        pane: panes[0],
-                                        isActive: true,
-                                        onActivate: _restoreFocus,
-                                        onBackgroundContextMenu:
-                                            _handleBackgroundContextMenu,
-                                        onContextMenu: _handleContextMenu,
-                                        onMenuAction: _handleMenuAction,
-                                        onOpenInNewTab: _openInNewTab,
+                                          if (!dual) {
+                                            return PaneView(
+                                              pane: panes[0],
+                                              isActive: true,
+                                              onActivate: _restoreFocus,
+                                              onBackgroundContextMenu:
+                                                  _handleBackgroundContextMenu,
+                                              onContextMenu: _handleContextMenu,
+                                              onMenuAction: _handleMenuAction,
+                                              onOpenInNewTab: _openInNewTab,
+                                            );
+                                          }
+
+                                          final ratio = _shell.splitRatio.value;
+                                          final leftFlex = (ratio * 1000)
+                                              .round();
+                                          final rightFlex = ((1 - ratio) * 1000)
+                                              .round();
+
+                                          return Row(
+                                            children: [
+                                              Flexible(
+                                                flex: leftFlex,
+                                                child: PaneView(
+                                                  pane: panes[0],
+                                                  isActive: activeIdx == 0,
+                                                  onActivate: _activatePane(0),
+                                                  onBackgroundContextMenu:
+                                                      _handleBackgroundContextMenu,
+                                                  onContextMenu:
+                                                      _handleContextMenu,
+                                                  onMenuAction:
+                                                      _handleMenuAction,
+                                                  onOpenInNewTab: _openInNewTab,
+                                                ),
+                                              ),
+                                              PaneDivider(
+                                                shell: _shell,
+                                                totalWidth:
+                                                    constraints.maxWidth,
+                                              ),
+                                              Flexible(
+                                                flex: rightFlex,
+                                                child: PaneView(
+                                                  pane: panes[1],
+                                                  isActive: activeIdx == 1,
+                                                  onActivate: _activatePane(1),
+                                                  onBackgroundContextMenu:
+                                                      _handleBackgroundContextMenu,
+                                                  onContextMenu:
+                                                      _handleContextMenu,
+                                                  onMenuAction:
+                                                      _handleMenuAction,
+                                                  onOpenInNewTab: _openInNewTab,
+                                                ),
+                                              ),
+                                            ],
+                                          );
+                                        },
                                       );
-                                    }
-
-                                    final ratio = _shell.splitRatio.value;
-                                    final leftFlex = (ratio * 1000).round();
-                                    final rightFlex = ((1 - ratio) * 1000)
-                                        .round();
-
-                                    return Row(
-                                      children: [
-                                        Flexible(
-                                          flex: leftFlex,
-                                          child: PaneView(
-                                            pane: panes[0],
-                                            isActive: activeIdx == 0,
-                                            onActivate: _activatePane(0),
-                                            onBackgroundContextMenu:
-                                                _handleBackgroundContextMenu,
-                                            onContextMenu: _handleContextMenu,
-                                            onMenuAction: _handleMenuAction,
-                                            onOpenInNewTab: _openInNewTab,
-                                          ),
-                                        ),
-                                        PaneDivider(
-                                          shell: _shell,
-                                          totalWidth: constraints.maxWidth,
-                                        ),
-                                        Flexible(
-                                          flex: rightFlex,
-                                          child: PaneView(
-                                            pane: panes[1],
-                                            isActive: activeIdx == 1,
-                                            onActivate: _activatePane(1),
-                                            onBackgroundContextMenu:
-                                                _handleBackgroundContextMenu,
-                                            onContextMenu: _handleContextMenu,
-                                            onMenuAction: _handleMenuAction,
-                                            onOpenInNewTab: _openInNewTab,
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  });
-                                },
-                              ),
+                                    },
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
-                      Watch(
-                        (context) => StatusBar(
-                          store: _active,
-                          operationStore: _operationStore,
-                          notificationStore: _notificationStore,
-                        ),
-                      ),
-                    ],
-                  );
-                }),
-              );
-            }),
+                          ),
+                          SignalBuilder(
+                            builder: (context) => StatusBar(
+                              store: _active,
+                              operationStore: _operationStore,
+                              notificationStore: _notificationStore,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                );
+              },
+            ),
             NotificationOverlay(store: _notificationStore),
           ],
         ),
@@ -1759,23 +1773,25 @@ class _SidebarHostState extends State<_SidebarHost> {
 
   @override
   Widget build(BuildContext context) {
-    return Watch((context) {
-      final collapsed = SettingsStore.instance.sidebarCollapsed.value;
+    return SignalBuilder(
+      builder: (context) {
+        final collapsed = SettingsStore.instance.sidebarCollapsed.value;
 
-      return AnimatedContainer(
-        duration: _animDuration,
-        curve: Curves.easeOut,
-        width: collapsed ? _railWidth : _expandedWidth,
-        child: ClipRect(
-          child: Sidebar(
-            store: widget.active,
-            operationStore: widget.operationStore,
-            onOpenInNewTab: widget.onOpenInNewTab,
-            collapsed: collapsed,
-            onToggleCollapsed: _toggleUserCollapsed,
+        return AnimatedContainer(
+          duration: _animDuration,
+          curve: Curves.easeOut,
+          width: collapsed ? _railWidth : _expandedWidth,
+          child: ClipRect(
+            child: Sidebar(
+              store: widget.active,
+              operationStore: widget.operationStore,
+              onOpenInNewTab: widget.onOpenInNewTab,
+              collapsed: collapsed,
+              onToggleCollapsed: _toggleUserCollapsed,
+            ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
   }
 }

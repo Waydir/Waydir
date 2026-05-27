@@ -35,32 +35,34 @@ class StatusBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Watch((context) {
-            final total = store.totalItems.value;
-            final folders = store.folderCount.value;
-            final files = store.fileCount.value;
-            final selected = store.selectedCount.value;
+          SignalBuilder(
+            builder: (context) {
+              final total = store.totalItems.value;
+              final folders = store.folderCount.value;
+              final files = store.fileCount.value;
+              final selected = store.selectedCount.value;
 
-            return Row(
-              children: [
-                _statusText(context, t.statusBar.items(count: total)),
-                _sep(context),
-                _statusText(
-                  context,
-                  '${t.statusBar.folders(count: folders)}, ${t.statusBar.files(count: files)}',
-                ),
-                if (selected > 0) ...[
+              return Row(
+                children: [
+                  _statusText(context, t.statusBar.items(count: total)),
                   _sep(context),
-                  Text(
-                    t.statusBar.selected(count: selected),
-                    style: context.txt.rowEmphasis.copyWith(
-                      color: AppColors.fgAccent,
-                    ),
+                  _statusText(
+                    context,
+                    '${t.statusBar.folders(count: folders)}, ${t.statusBar.files(count: files)}',
                   ),
+                  if (selected > 0) ...[
+                    _sep(context),
+                    Text(
+                      t.statusBar.selected(count: selected),
+                      style: context.txt.rowEmphasis.copyWith(
+                        color: AppColors.fgAccent,
+                      ),
+                    ),
+                  ],
                 ],
-              ],
-            );
-          }),
+              );
+            },
+          ),
           const Spacer(),
           _StatusVersion(),
           const SizedBox(width: 8),
@@ -95,52 +97,54 @@ class _StatusVersionState extends State<_StatusVersion> {
 
   @override
   Widget build(BuildContext context) {
-    return Watch((context) {
-      final available = UpdateStore.instance.updateAvailable.value;
-      final label = '${t.app.title} ${AppInfo.versionLabel.value}';
-      final latest = UpdateStore.instance.latestRelease.value?.version;
-      final color = available
-          ? AppColors.warning
-          : (_hover ? AppColors.fg : AppColors.fgMuted);
-      final tooltip = available && latest != null
-          ? t.update.tooltipAvailable(version: latest)
-          : t.update.tooltipUpToDate;
+    return SignalBuilder(
+      builder: (context) {
+        final available = UpdateStore.instance.updateAvailable.value;
+        final label = '${t.app.title} ${AppInfo.versionLabel.value}';
+        final latest = UpdateStore.instance.latestRelease.value?.version;
+        final color = available
+            ? AppColors.warning
+            : (_hover ? AppColors.fg : AppColors.fgMuted);
+        final tooltip = available && latest != null
+            ? t.update.tooltipAvailable(version: latest)
+            : t.update.tooltipUpToDate;
 
-      final inner = Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label,
-            style: context.txt.muted.copyWith(
-              color: color,
-              fontWeight: available ? FontWeight.w600 : FontWeight.w400,
+        final inner = Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: context.txt.muted.copyWith(
+                color: color,
+                fontWeight: available ? FontWeight.w600 : FontWeight.w400,
+              ),
             ),
-          ),
-          if (available) ...[
-            const SizedBox(width: 4),
-            Icon(WaydirIconsRegular.arrowUp, size: 11, color: color),
+            if (available) ...[
+              const SizedBox(width: 4),
+              Icon(WaydirIconsRegular.arrowUp, size: 11, color: color),
+            ],
           ],
-        ],
-      );
+        );
 
-      return Tooltip(
-        message: tooltip,
-        waitDuration: const Duration(milliseconds: 400),
-        child: MouseRegion(
-          cursor: available ? SystemMouseCursors.click : MouseCursor.defer,
-          onEnter: (_) => setState(() => _hover = true),
-          onExit: (_) => setState(() => _hover = false),
-          child: GestureDetector(
-            onTap: available ? () => showUpdateDialog(context) : null,
-            behavior: HitTestBehavior.opaque,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              child: inner,
+        return Tooltip(
+          message: tooltip,
+          waitDuration: const Duration(milliseconds: 400),
+          child: MouseRegion(
+            cursor: available ? SystemMouseCursors.click : MouseCursor.defer,
+            onEnter: (_) => setState(() => _hover = true),
+            onExit: (_) => setState(() => _hover = false),
+            child: GestureDetector(
+              onTap: available ? () => showUpdateDialog(context) : null,
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                child: inner,
+              ),
             ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
   }
 }
 
@@ -161,15 +165,17 @@ class _StatusNotificationsButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Watch((context) {
-      final count = notificationStore.history.value.length;
-      return _StatusIconButton(
-        icon: WaydirIconsRegular.bell,
-        tooltip: t.toolbar.notifications,
-        badge: count,
-        onTap: () => _open(context),
-      );
-    });
+    return SignalBuilder(
+      builder: (context) {
+        final count = notificationStore.history.value.length;
+        return _StatusIconButton(
+          icon: WaydirIconsRegular.bell,
+          tooltip: t.toolbar.notifications,
+          badge: count,
+          onTap: () => _open(context),
+        );
+      },
+    );
   }
 }
 

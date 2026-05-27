@@ -13,34 +13,36 @@ class TabStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Watch((context) {
-      final tabs = tabsStore.tabs.value;
-      return Container(
-        height: 30,
-        decoration: BoxDecoration(
-          color: isActive ? AppColors.bgSidebar : AppColors.bg,
-          border: Border(bottom: BorderSide(color: AppColors.bgDivider)),
-        ),
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          padding: EdgeInsets.zero,
-          itemCount: tabs.length + 1,
-          separatorBuilder: (_, _) => const SizedBox(width: 0),
-          itemBuilder: (context, i) {
-            if (i == tabs.length) {
-              return _AddButton(
-                onTap: () {
-                  final activePath =
-                      tabsStore.activeTab.value.store.currentPath.value;
-                  tabsStore.addTab(activePath);
-                },
-              );
-            }
-            return TabChip(tab: tabs[i], index: i, tabsStore: tabsStore);
-          },
-        ),
-      );
-    });
+    return SignalBuilder(
+      builder: (context) {
+        final tabs = tabsStore.tabs.value;
+        return Container(
+          height: 30,
+          decoration: BoxDecoration(
+            color: isActive ? AppColors.bgSidebar : AppColors.bg,
+            border: Border(bottom: BorderSide(color: AppColors.bgDivider)),
+          ),
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: EdgeInsets.zero,
+            itemCount: tabs.length + 1,
+            separatorBuilder: (_, _) => const SizedBox(width: 0),
+            itemBuilder: (context, i) {
+              if (i == tabs.length) {
+                return _AddButton(
+                  onTap: () {
+                    final activePath =
+                        tabsStore.activeTab.value.store.currentPath.value;
+                    tabsStore.addTab(activePath);
+                  },
+                );
+              }
+              return TabChip(tab: tabs[i], index: i, tabsStore: tabsStore);
+            },
+          ),
+        );
+      },
+    );
   }
 }
 
