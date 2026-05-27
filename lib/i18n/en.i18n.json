@@ -48,7 +48,8 @@
     "compress": "Compress",
     "compressTo": "Compress to $name",
     "compressOptions": "Add to Archive…",
-    "multiRename": "Multi Rename…"
+    "multiRename": "Multi Rename…",
+    "verifyChecksum": "Verify Checksum…"
   },
   "multiRename": {
     "title": "Multi Rename",
@@ -93,6 +94,21 @@
     "levelMaximum": "Maximum",
     "create": "Create",
     "cancel": "Cancel"
+  },
+  "checksum": {
+    "title": "Verify Checksum",
+    "md5": "MD5",
+    "sha256": "SHA-256",
+    "expected": "Expected checksum",
+    "expectedHint": "$algorithm digest",
+    "verify": "Verify",
+    "calculating": "Calculating…",
+    "match": "Checksum matches",
+    "mismatch": "Checksum does not match",
+    "copy": "Copy",
+    "copied": "Copied",
+    "invalidExpected": "$algorithm checksum must be $length hexadecimal characters",
+    "readError": "Could not read file"
   },
   "properties": {
     "title": "Properties",
