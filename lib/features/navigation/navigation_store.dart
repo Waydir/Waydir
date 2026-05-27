@@ -1511,8 +1511,7 @@ class NavigationStore {
 
     final localOrSmb = <({String path, String newName})>[];
     final sftp = <({String path, String newName})>[];
-    final archive =
-        <({ArchiveLocation loc, String oldPath, String newName})>[];
+    final archive = <({ArchiveLocation loc, String oldPath, String newName})>[];
 
     for (final r in renames) {
       final loc = await _archiveLocationFor(r.path);

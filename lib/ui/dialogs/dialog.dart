@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../theme/app_theme.dart';
 import '../theme/app_text_styles.dart';
+import '../widgets/app_modal.dart';
 
 class DialogAction {
   final String label;
@@ -23,19 +23,13 @@ Future<T?> showCustomDialog<T>({
     context: context,
     barrierColor: Colors.black.withValues(alpha: 0.4),
     builder: (ctx) {
-      return Center(
-        child: Material(
-          type: MaterialType.transparency,
-          child: _CustomDialogBody(
-            title: title,
-            icon: icon,
-            iconColor: iconColor ?? AppColors.accent,
-            width: width,
-            body: body,
-            actions: actions,
-            onAction: (label) => Navigator.of(ctx).pop(label as T),
-          ),
-        ),
+      return _CustomDialogBody(
+        title: title,
+        icon: icon,
+        width: width,
+        body: body,
+        actions: actions,
+        onAction: (label) => Navigator.of(ctx).pop(label as T),
       );
     },
   );
@@ -44,7 +38,6 @@ Future<T?> showCustomDialog<T>({
 class _CustomDialogBody extends StatelessWidget {
   final String title;
   final IconData icon;
-  final Color iconColor;
   final double width;
   final Widget body;
   final List<DialogAction> actions;
@@ -53,7 +46,6 @@ class _CustomDialogBody extends StatelessWidget {
   const _CustomDialogBody({
     required this.title,
     required this.icon,
-    required this.iconColor,
     this.width = 360,
     required this.body,
     required this.actions,
@@ -82,27 +74,17 @@ class _CustomDialogBody extends StatelessWidget {
     return Focus(
       autofocus: true,
       onKeyEvent: _handleKey,
-      child: Container(
+      child: AppModal(
+        icon: icon,
+        title: title,
         width: width,
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.bgSurface,
-          borderRadius: BorderRadius.zero,
-          border: Border.all(color: AppColors.borderColor),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.6),
-              blurRadius: 24,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
+        onClose: () =>
+            onAction(actions.isNotEmpty ? actions.first.label : null),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _DialogTitle(title: title, icon: icon, iconColor: iconColor),
-            const SizedBox(height: 12),
             body,
             const SizedBox(height: 12),
             Row(
@@ -121,29 +103,6 @@ class _CustomDialogBody extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _DialogTitle extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  final Color iconColor;
-
-  const _DialogTitle({
-    required this.title,
-    required this.icon,
-    required this.iconColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: iconColor),
-        const SizedBox(width: 8),
-        Text(title, style: context.txt.heading),
-      ],
     );
   }
 }

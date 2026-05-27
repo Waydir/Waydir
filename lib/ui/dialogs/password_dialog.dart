@@ -3,6 +3,8 @@ import '../../i18n/strings.g.dart';
 import '../../ui/dialogs/dialog.dart';
 import '../../ui/theme/app_theme.dart';
 import '../../ui/theme/app_text_styles.dart';
+import '../../ui/widgets/app_modal.dart';
+import '../../ui/widgets/app_text_field.dart';
 
 class CredentialsResult {
   final String username;
@@ -85,62 +87,45 @@ class _PasswordDialogState extends State<_PasswordDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Material(
-        color: Colors.transparent,
-        child: Container(
-          width: 320,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: AppColors.bgSurface,
-            borderRadius: BorderRadius.zero,
-            border: Border.all(color: AppColors.borderColor),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.5),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
-              ),
-            ],
+    return AppModal(
+      title: widget.title,
+      width: 320,
+      padding: const EdgeInsets.all(20),
+      onClose: () => Navigator.of(context).pop(),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            t.password.mountPrompt,
+            style: context.txt.body.copyWith(color: AppColors.fgMuted),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+          const SizedBox(height: 16),
+          _PasswordInput(
+            controller: _controller,
+            obscure: _obscure,
+            autofocus: true,
+            onToggleObscure: () => setState(() => _obscure = !_obscure),
+            onSubmitted: _submit,
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              Text(widget.title, style: context.txt.dialogTitle),
-              const SizedBox(height: 8),
-              Text(
-                t.password.mountPrompt,
-                style: context.txt.body.copyWith(color: AppColors.fgMuted),
+              DialogButton(
+                label: t.dialog.cancel,
+                color: AppColors.fgMuted,
+                onTap: () => Navigator.of(context).pop(),
               ),
-              const SizedBox(height: 16),
-              _PasswordInput(
-                controller: _controller,
-                obscure: _obscure,
-                autofocus: true,
-                onToggleObscure: () => setState(() => _obscure = !_obscure),
-                onSubmitted: _submit,
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  DialogButton(
-                    label: t.dialog.cancel,
-                    color: AppColors.fgMuted,
-                    onTap: () => Navigator.of(context).pop(),
-                  ),
-                  const SizedBox(width: 8),
-                  DialogButton(
-                    label: t.password.unlock,
-                    color: AppColors.accent,
-                    onTap: _submit,
-                  ),
-                ],
+              const SizedBox(width: 8),
+              DialogButton(
+                label: t.password.unlock,
+                color: AppColors.accent,
+                onTap: _submit,
               ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }
@@ -185,72 +170,55 @@ class _SmbCredentialsDialogState extends State<_SmbCredentialsDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Material(
-        color: Colors.transparent,
-        child: Container(
-          width: 340,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: AppColors.bgSurface,
-            borderRadius: BorderRadius.zero,
-            border: Border.all(color: AppColors.borderColor),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.5),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
-              ),
-            ],
+    return AppModal(
+      title: widget.title,
+      width: 340,
+      padding: const EdgeInsets.all(20),
+      onClose: () => Navigator.of(context).pop(),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            t.password.smbPrompt,
+            style: context.txt.body.copyWith(color: AppColors.fgMuted),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+          const SizedBox(height: 16),
+          Text(t.password.username, style: context.txt.fieldLabel),
+          const SizedBox(height: 6),
+          _TextInput(
+            controller: _username,
+            autofocus: _username.text.isEmpty,
+            onSubmitted: _submit,
+          ),
+          const SizedBox(height: 12),
+          Text(t.password.password, style: context.txt.fieldLabel),
+          const SizedBox(height: 6),
+          _PasswordInput(
+            controller: _password,
+            obscure: _obscure,
+            autofocus: _username.text.isNotEmpty,
+            onToggleObscure: () => setState(() => _obscure = !_obscure),
+            onSubmitted: _submit,
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              Text(widget.title, style: context.txt.dialogTitle),
-              const SizedBox(height: 8),
-              Text(
-                t.password.smbPrompt,
-                style: context.txt.body.copyWith(color: AppColors.fgMuted),
+              DialogButton(
+                label: t.dialog.cancel,
+                color: AppColors.fgMuted,
+                onTap: () => Navigator.of(context).pop(),
               ),
-              const SizedBox(height: 16),
-              Text(t.password.username, style: context.txt.fieldLabel),
-              const SizedBox(height: 6),
-              _TextInput(
-                controller: _username,
-                autofocus: _username.text.isEmpty,
-                onSubmitted: _submit,
-              ),
-              const SizedBox(height: 12),
-              Text(t.password.password, style: context.txt.fieldLabel),
-              const SizedBox(height: 6),
-              _PasswordInput(
-                controller: _password,
-                obscure: _obscure,
-                autofocus: _username.text.isNotEmpty,
-                onToggleObscure: () => setState(() => _obscure = !_obscure),
-                onSubmitted: _submit,
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  DialogButton(
-                    label: t.dialog.cancel,
-                    color: AppColors.fgMuted,
-                    onTap: () => Navigator.of(context).pop(),
-                  ),
-                  const SizedBox(width: 8),
-                  DialogButton(
-                    label: t.password.unlock,
-                    color: AppColors.accent,
-                    onTap: _submit,
-                  ),
-                ],
+              const SizedBox(width: 8),
+              DialogButton(
+                label: t.password.unlock,
+                color: AppColors.accent,
+                onTap: _submit,
               ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }
@@ -269,16 +237,11 @@ class _TextInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return AppTextField(
+      controller: controller,
+      autofocus: autofocus,
       height: 36,
-      child: TextField(
-        controller: controller,
-        autofocus: autofocus,
-        style: context.txt.body,
-        cursorColor: AppColors.accent,
-        decoration: _inputDecoration(context),
-        onSubmitted: (_) => onSubmitted(),
-      ),
+      onSubmitted: (_) => onSubmitted(),
     );
   }
 }
@@ -300,44 +263,21 @@ class _PasswordInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return AppTextField(
+      controller: controller,
+      obscureText: obscure,
+      autofocus: autofocus,
       height: 36,
-      child: TextField(
-        controller: controller,
-        obscureText: obscure,
-        autofocus: autofocus,
-        style: context.txt.body,
-        cursorColor: AppColors.accent,
-        decoration: _inputDecoration(context).copyWith(
-          suffixIcon: IconButton(
-            icon: Icon(
-              obscure ? Icons.visibility_off : Icons.visibility,
-              size: 16,
-              color: AppColors.fgMuted,
-            ),
-            onPressed: onToggleObscure,
-            splashRadius: 16,
-          ),
+      suffixIcon: IconButton(
+        icon: Icon(
+          obscure ? Icons.visibility_off : Icons.visibility,
+          size: 16,
+          color: AppColors.fgMuted,
         ),
-        onSubmitted: (_) => onSubmitted(),
+        onPressed: onToggleObscure,
+        splashRadius: 16,
       ),
+      onSubmitted: (_) => onSubmitted(),
     );
   }
-}
-
-InputDecoration _inputDecoration(BuildContext context) {
-  return InputDecoration(
-    isDense: true,
-    filled: true,
-    fillColor: AppColors.bgInput,
-    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.zero,
-      borderSide: BorderSide(color: AppColors.borderColor),
-    ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.zero,
-      borderSide: BorderSide(color: AppColors.accent),
-    ),
-  );
 }
