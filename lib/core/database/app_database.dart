@@ -87,6 +87,14 @@ class RecentApps extends Table {
   Set<Column> get primaryKey => {mime, appId};
 }
 
+class RecentEnteredPaths extends Table {
+  TextColumn get path => text()();
+  IntColumn get usedAt => integer().withDefault(const Constant(0))();
+
+  @override
+  Set<Column> get primaryKey => {path};
+}
+
 /// Waydir's own "file type → application" default mapping. Independent of the
 /// OS associations: [typeKey] is the MIME type on Linux/macOS and the file
 /// extension (with dot) on Windows.
@@ -108,6 +116,7 @@ class DefaultApps extends Table {
     Bookmarks,
     FolderPrefs,
     RecentApps,
+    RecentEnteredPaths,
     DefaultApps,
   ],
 )
@@ -115,7 +124,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 16;
+  int get schemaVersion => 17;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -200,6 +209,9 @@ class AppDatabase extends _$AppDatabase {
         await addFolderPrefColumn(folderPrefs.cursorPath);
         await addFolderPrefColumn(folderPrefs.selectedPaths);
       }
+      if (from < 17) {
+        await m.createTable(recentEnteredPaths);
+      }
     },
   );
 
@@ -256,6 +268,45 @@ class AppDatabase extends _$AppDatabase {
         usedAt: Value(DateTime.now().millisecondsSinceEpoch),
       ),
     );
+  }
+
+  static const int _maxRecentEnteredPaths = 20;
+
+  Future<List<String>> getRecentEnteredPaths({int limit = 20}) {
+    return (select(recentEnteredPaths)
+          ..orderBy([(t) => OrderingTerm.desc(t.usedAt)])
+          ..limit(limit))
+        .map((row) => row.path)
+        .get();
+  }
+
+  Future<void> recordRecentEnteredPath(String path) async {
+    final trimmed = path.trim();
+    if (trimmed.isEmpty) return;
+    await into(recentEnteredPaths).insertOnConflictUpdate(
+      RecentEnteredPathsCompanion.insert(
+        path: trimmed,
+        usedAt: Value(DateTime.now().millisecondsSinceEpoch),
+      ),
+    );
+    await _pruneRecentEnteredPaths();
+  }
+
+  Future<void> _pruneRecentEnteredPaths() async {
+    final countExp = recentEnteredPaths.path.count();
+    final row = await (selectOnly(
+      recentEnteredPaths,
+    )..addColumns([countExp])).getSingle();
+    final total = row.read(countExp) ?? 0;
+    if (total <= _maxRecentEnteredPaths) return;
+    final cutoff =
+        await (select(recentEnteredPaths)
+              ..orderBy([(t) => OrderingTerm.desc(t.usedAt)])
+              ..limit(1, offset: _maxRecentEnteredPaths - 1))
+            .getSingle();
+    await (delete(
+      recentEnteredPaths,
+    )..where((t) => t.usedAt.isSmallerThanValue(cutoff.usedAt))).go();
   }
 
   static QueryExecutor _openConnection() {

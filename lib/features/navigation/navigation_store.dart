@@ -720,6 +720,7 @@ class NavigationStore {
     String logical, {
     bool addToHistory = true,
     bool restoreState = false,
+    String? enteredPath,
   }) async {
     batch(() {
       isLoading.value = true;
@@ -732,6 +733,7 @@ class NavigationStore {
           result.physicalPath,
           addToHistory: addToHistory,
           restoreState: restoreState,
+          enteredPath: enteredPath,
         );
       case ResolveError(:final message):
         batch(() {
@@ -755,6 +757,7 @@ class NavigationStore {
     String logical, {
     bool addToHistory = true,
     bool restoreState = false,
+    String? enteredPath,
   }) async {
     final uri = LocationUri.parse(logical);
     if (uri.share == null || uri.share!.isEmpty) {
@@ -762,6 +765,7 @@ class NavigationStore {
         logical,
         addToHistory: addToHistory,
         restoreState: restoreState,
+        enteredPath: enteredPath,
       );
       return;
     }
@@ -776,6 +780,7 @@ class NavigationStore {
           logical,
           addToHistory: addToHistory,
           restoreState: restoreState,
+          enteredPath: enteredPath,
         );
       case ResolveError(:final message):
         batch(() {
@@ -832,6 +837,7 @@ class NavigationStore {
     String path, {
     bool addToHistory = true,
     bool restoreState = false,
+    String? enteredPath,
   }) {
     final uri = LocationUri.parse(path);
     if (uri.scheme == LocationScheme.sftp) {
@@ -839,6 +845,7 @@ class NavigationStore {
         path,
         addToHistory: addToHistory,
         restoreState: restoreState,
+        enteredPath: enteredPath,
       );
       return;
     }
@@ -847,6 +854,7 @@ class NavigationStore {
         path,
         addToHistory: addToHistory,
         restoreState: restoreState,
+        enteredPath: enteredPath,
       );
       return;
     }
@@ -856,6 +864,7 @@ class NavigationStore {
       resolved,
       addToHistory: addToHistory,
       restoreState: restoreState,
+      enteredPath: enteredPath,
     );
   }
 
@@ -863,6 +872,7 @@ class NavigationStore {
     String resolved, {
     bool addToHistory = true,
     bool restoreState = false,
+    String? enteredPath,
   }) {
     final normalized = isTrashPath(resolved)
         ? resolved
@@ -885,6 +895,14 @@ class NavigationStore {
     });
     _loadSortFor(normalized);
     loadDirectory(normalized);
+    _recordEnteredPath(enteredPath);
+  }
+
+  void _recordEnteredPath(String? path) {
+    if (path == null || path.trim().isEmpty) return;
+    final s = SettingsStore.instance;
+    if (!s.isLoaded) return;
+    s.db.recordRecentEnteredPath(path).catchError((_) {});
   }
 
   void _saveFolderState(String path) {
@@ -963,11 +981,11 @@ class NavigationStore {
     if (trimmed.isEmpty) return false;
     final uri = LocationUri.parse(trimmed);
     if (uri.scheme == LocationScheme.sftp) {
-      navigateTo(trimmed);
+      navigateTo(trimmed, enteredPath: trimmed);
       return true;
     }
     if (uri.scheme == LocationScheme.smb && !PlatformPaths.isWindows) {
-      navigateTo(trimmed);
+      navigateTo(trimmed, enteredPath: trimmed);
       return true;
     }
     final resolved = _resolveForNavigationSync(trimmed);
@@ -976,13 +994,13 @@ class NavigationStore {
         ? resolved
         : PlatformPaths.normalize(resolved);
     if (isTrashPath(normalized)) {
-      navigateTo(normalized);
+      navigateTo(normalized, enteredPath: trimmed);
       return true;
     }
 
     final type = FileSystemEntity.typeSync(normalized);
     if (type == FileSystemEntityType.directory) {
-      navigateTo(normalized);
+      navigateTo(normalized, enteredPath: trimmed);
       return true;
     }
     if (type == FileSystemEntityType.file ||
@@ -991,7 +1009,7 @@ class NavigationStore {
       if (parent.isEmpty || !await FileSystemService.isNavigable(parent)) {
         return false;
       }
-      revealInFolder(normalized);
+      revealInFolder(normalized, enteredPath: trimmed);
       return true;
     }
     return false;
@@ -1595,11 +1613,11 @@ class NavigationStore {
     });
   }
 
-  void revealInFolder(String path) {
+  void revealInFolder(String path, {String? enteredPath}) {
     final parent = PlatformPaths.parentOf(path);
     if (parent.isEmpty) return;
     closeSearch();
-    navigateTo(parent);
+    navigateTo(parent, enteredPath: enteredPath);
     selectedPaths.value = {path};
   }
 

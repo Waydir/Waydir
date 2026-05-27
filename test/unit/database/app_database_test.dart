@@ -166,6 +166,30 @@ void main() {
     });
   });
 
+  group('RecentEnteredPaths', () {
+    test('returns most recently recorded paths first', () async {
+      await db.recordRecentEnteredPath('/tmp/one');
+      await db.recordRecentEnteredPath('/tmp/two');
+      await db.recordRecentEnteredPath('/tmp/one');
+
+      final paths = await db.getRecentEnteredPaths();
+
+      expect(paths.take(2), ['/tmp/one', '/tmp/two']);
+    });
+
+    test('keeps only latest 20 paths', () async {
+      for (var i = 0; i < 25; i++) {
+        await db.recordRecentEnteredPath('/tmp/$i');
+      }
+
+      final paths = await db.getRecentEnteredPaths(limit: 30);
+
+      expect(paths.length, 20);
+      expect(paths, isNot(contains('/tmp/0')));
+      expect(paths, contains('/tmp/24'));
+    });
+  });
+
   group('Bookmarks', () {
     test('getBookmarks returns empty list initially', () async {
       final bookmarks = await db.getBookmarks();

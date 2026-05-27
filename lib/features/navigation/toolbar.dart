@@ -4,6 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:waydir/ui/icons/waydir_icons.dart';
 import 'package:signals/signals_flutter.dart';
+import '../../core/fs/file_system_service.dart';
+import '../../core/models/file_entry.dart';
+import '../../core/platform/platform_paths.dart';
+import '../../core/settings/settings_store.dart';
 import 'bookmark_store.dart';
 import 'breadcrumbs/breadcrumb_bar.dart';
 import 'breadcrumbs/crumb.dart';
@@ -282,13 +286,21 @@ class _PathBarState extends State<_PathBar> {
   bool _editing = false;
   late TextEditingController _controller;
   final _focusNode = FocusNode();
-  final _editorKeyFocusNode = FocusNode();
+  final _suggestionLayerLink = LayerLink();
+  OverlayEntry? _suggestionOverlay;
+  List<_PathSuggestion> _suggestions = const [];
+  int _suggestionIndex = -1;
+  int _suggestionToken = 0;
+  bool _choosingSuggestion = false;
   void Function()? _disposePathListener;
+
+  static const int _maxSuggestions = 8;
 
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.store.currentPath.value);
+    _controller.addListener(_handleControllerChanged);
     _focusNode.addListener(_handleFocusChanged);
     _initPathEffect();
   }
@@ -313,36 +325,38 @@ class _PathBarState extends State<_PathBar> {
 
   @override
   void dispose() {
+    _hideSuggestions();
     _disposePathListener?.call();
+    _controller.removeListener(_handleControllerChanged);
     _focusNode.removeListener(_handleFocusChanged);
     _controller.dispose();
     _focusNode.dispose();
-    _editorKeyFocusNode.dispose();
     super.dispose();
   }
 
   void _startEditing() {
-    setState(() {
-      _editing = true;
-      _controller.text = widget.store.currentPath.value;
-    });
+    _controller.text = widget.store.currentPath.value;
+    setState(() => _editing = true);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusNode.requestFocus();
       _controller.selection = TextSelection(
         baseOffset: 0,
         extentOffset: _controller.text.length,
       );
+      _queueSuggestions();
     });
   }
 
   void _handleFocusChanged() {
-    if (!_focusNode.hasFocus && _editing) {
+    if (!_focusNode.hasFocus && _editing && !_choosingSuggestion) {
       _cancel();
     }
+    if (_focusNode.hasFocus && _editing) _queueSuggestions();
   }
 
   Future<void> _submit() async {
     final text = _controller.text.trim();
+    _hideSuggestions();
     setState(() => _editing = false);
     if (text.isEmpty || text == widget.store.currentPath.value) {
       _controller.text = widget.store.currentPath.value;
@@ -356,8 +370,235 @@ class _PathBarState extends State<_PathBar> {
   }
 
   void _cancel() {
+    _hideSuggestions();
     setState(() => _editing = false);
     _controller.text = widget.store.currentPath.value;
+  }
+
+  void _handleControllerChanged() {
+    if (!_editing) return;
+    _queueSuggestions();
+  }
+
+  void _queueSuggestions() {
+    final token = ++_suggestionToken;
+    if (!_editing || !_focusNode.hasFocus) {
+      _setSuggestions(const []);
+      return;
+    }
+    unawaited(_loadSuggestions(token));
+  }
+
+  Future<void> _loadSuggestions(int token) async {
+    final value = _controller.value;
+    final suggestions = _isAllSelected(value)
+        ? await _recentPathSuggestions()
+        : await _folderPathSuggestions(value);
+    if (!mounted || token != _suggestionToken) return;
+    if (!_editing || !_focusNode.hasFocus) return;
+    _setSuggestions(suggestions);
+  }
+
+  void _setSuggestions(List<_PathSuggestion> suggestions) {
+    if (!mounted) return;
+    setState(() {
+      _suggestions = suggestions;
+      if (suggestions.isEmpty) {
+        _suggestionIndex = -1;
+      } else if (_suggestionIndex < 0 ||
+          _suggestionIndex >= suggestions.length) {
+        _suggestionIndex = 0;
+      }
+    });
+    if (suggestions.isEmpty) {
+      _hideSuggestions();
+    } else {
+      _showSuggestions();
+    }
+  }
+
+  bool _isAllSelected(TextEditingValue value) {
+    final textLength = value.text.length;
+    if (textLength == 0) return false;
+    final selection = value.selection;
+    if (!selection.isValid || selection.isCollapsed) return false;
+    return selection.start == 0 && selection.end == textLength;
+  }
+
+  Future<List<_PathSuggestion>> _recentPathSuggestions() async {
+    final settings = SettingsStore.instance;
+    if (!settings.isLoaded) return const [];
+    try {
+      final paths = await settings.db.getRecentEnteredPaths();
+      return [
+        for (final path in paths)
+          _PathSuggestion(
+            path: path,
+            label: path,
+            icon: WaydirIconsRegular.clockClockwise,
+          ),
+      ];
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  Future<List<_PathSuggestion>> _folderPathSuggestions(
+    TextEditingValue value,
+  ) async {
+    if (!value.selection.isCollapsed) return const [];
+    final input = value.text.trim();
+    if (input.isEmpty) return const [];
+    final parts = _PathInputParts.from(input);
+    if (parts == null) return const [];
+    try {
+      final entries = _samePath(parts.parent, widget.store.currentPath.value)
+          ? widget.store.files.value
+          : await FileSystemService.listDirectory(parts.parent);
+      final prefix = parts.prefix.toLowerCase();
+      final folders =
+          entries
+              .where((entry) => entry.type == FileItemType.folder)
+              .where(
+                (entry) => widget.store.showHidden.value || !entry.isHidden,
+              )
+              .where((entry) => entry.name.toLowerCase().startsWith(prefix))
+              .toList()
+            ..sort(
+              (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+            );
+      final suggestions = <_PathSuggestion>[];
+      for (final entry in folders) {
+        final path = _samePath(parts.parent, widget.store.currentPath.value)
+            ? entry.path
+            : PlatformPaths.join(parts.parent, entry.name);
+        if (_samePath(path, input)) continue;
+        suggestions.add(
+          _PathSuggestion(
+            path: path,
+            label: path,
+            icon: WaydirIconsRegular.folder,
+          ),
+        );
+        if (suggestions.length >= _maxSuggestions) break;
+      }
+      return suggestions;
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  bool _samePath(String a, String b) {
+    if (PlatformPaths.isRemoteUri(a) || PlatformPaths.isRemoteUri(b)) {
+      return a == b;
+    }
+    return PlatformPaths.normalize(a) == PlatformPaths.normalize(b);
+  }
+
+  void _showSuggestions() {
+    if (_suggestionOverlay != null) {
+      _suggestionOverlay!.markNeedsBuild();
+      return;
+    }
+    _suggestionOverlay = OverlayEntry(
+      builder: (_) => CompositedTransformFollower(
+        link: _suggestionLayerLink,
+        showWhenUnlinked: false,
+        targetAnchor: Alignment.bottomLeft,
+        followerAnchor: Alignment.topLeft,
+        offset: const Offset(0, 2),
+        child: Align(
+          alignment: Alignment.topLeft,
+          widthFactor: 1,
+          heightFactor: 1,
+          child: Material(
+            type: MaterialType.transparency,
+            child: SizedBox(
+              width: _suggestionWidth,
+              child: _PathSuggestionPopup(
+                suggestions: _suggestions,
+                highlightedIndex: _suggestionIndex,
+                onPointerDown: _completeSuggestion,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    Overlay.of(context).insert(_suggestionOverlay!);
+  }
+
+  void _hideSuggestions() {
+    _suggestionToken++;
+    _suggestions = const [];
+    _suggestionIndex = -1;
+    final overlay = _suggestionOverlay;
+    _suggestionOverlay = null;
+    overlay?.remove();
+  }
+
+  double get _suggestionWidth {
+    final box = context.findRenderObject() as RenderBox?;
+    return box?.size.width ?? 360;
+  }
+
+  KeyEventResult _handleEditorKey(FocusNode node, KeyEvent event) {
+    if (event is! KeyDownEvent) return KeyEventResult.ignored;
+    if (event.logicalKey == LogicalKeyboardKey.escape) {
+      if (_suggestionOverlay != null) {
+        _setSuggestions(const []);
+      } else {
+        _cancel();
+      }
+      return KeyEventResult.handled;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+      if (_suggestions.isEmpty) return KeyEventResult.ignored;
+      setState(() {
+        _suggestionIndex = (_suggestionIndex + 1) % _suggestions.length;
+      });
+      _suggestionOverlay?.markNeedsBuild();
+      return KeyEventResult.handled;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+      if (_suggestions.isEmpty) return KeyEventResult.ignored;
+      setState(() {
+        _suggestionIndex =
+            (_suggestionIndex - 1 + _suggestions.length) % _suggestions.length;
+      });
+      _suggestionOverlay?.markNeedsBuild();
+      return KeyEventResult.handled;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.tab) {
+      if (_suggestions.isEmpty || _suggestionIndex < 0) {
+        return KeyEventResult.ignored;
+      }
+      _completeSuggestion(_suggestions[_suggestionIndex]);
+      return KeyEventResult.handled;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.enter ||
+        event.logicalKey == LogicalKeyboardKey.numpadEnter) {
+      unawaited(_submit());
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
+  void _completeSuggestion(_PathSuggestion suggestion) {
+    _choosingSuggestion = true;
+    _controller.value = TextEditingValue(
+      text: suggestion.path,
+      selection: TextSelection.collapsed(offset: suggestion.path.length),
+    );
+    _hideSuggestions();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _focusNode.requestFocus();
+      _queueSuggestions();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _choosingSuggestion = false;
+      });
+    });
   }
 
   @override
@@ -367,17 +608,20 @@ class _PathBarState extends State<_PathBar> {
         final path = widget.store.currentPath.value;
         return GestureDetector(
           onTap: _editing ? null : _startEditing,
-          child: Container(
-            height: 26,
-            decoration: BoxDecoration(
-              color: AppColors.bgInput,
-              borderRadius: BorderRadius.zero,
-              border: Border.all(
-                color: _editing ? AppColors.accent : AppColors.borderColor,
+          child: CompositedTransformTarget(
+            link: _suggestionLayerLink,
+            child: Container(
+              height: 26,
+              decoration: BoxDecoration(
+                color: AppColors.bgInput,
+                borderRadius: BorderRadius.zero,
+                border: Border.all(
+                  color: _editing ? AppColors.accent : AppColors.borderColor,
+                ),
               ),
+              padding: EdgeInsets.symmetric(horizontal: _editing ? 4 : 8),
+              child: _editing ? _buildEditor() : _buildBreadcrumbs(path),
             ),
-            padding: EdgeInsets.symmetric(horizontal: _editing ? 4 : 8),
-            child: _editing ? _buildEditor() : _buildBreadcrumbs(path),
           ),
         );
       },
@@ -388,19 +632,15 @@ class _PathBarState extends State<_PathBar> {
     return Row(
       children: [
         Expanded(
-          child: KeyboardListener(
-            focusNode: _editorKeyFocusNode,
-            onKeyEvent: (event) {
-              if (event is KeyDownEvent &&
-                  event.logicalKey == LogicalKeyboardKey.escape) {
-                _cancel();
-              }
-            },
+          child: Focus(
+            onKeyEvent: _handleEditorKey,
             child: TextField(
               controller: _controller,
               focusNode: _focusNode,
               onSubmitted: (_) => _submit(),
-              onTapOutside: (_) => _cancel(),
+              onTapOutside: (_) {
+                if (!_choosingSuggestion) _cancel();
+              },
               style: context.txt.body,
               decoration: const InputDecoration(
                 isDense: true,
@@ -437,6 +677,182 @@ class _PathBarState extends State<_PathBar> {
     return BreadcrumbBar(
       crumbs: crumbsFromPath(path),
       onNavigate: widget.store.navigateTo,
+    );
+  }
+}
+
+class _PathSuggestion {
+  final String path;
+  final String label;
+  final IconData icon;
+
+  const _PathSuggestion({
+    required this.path,
+    required this.label,
+    required this.icon,
+  });
+}
+
+class _PathInputParts {
+  final String parent;
+  final String prefix;
+
+  const _PathInputParts({required this.parent, required this.prefix});
+
+  static _PathInputParts? from(String input) {
+    if (input.isEmpty) return null;
+    if (_endsWithSeparator(input)) {
+      final parent = _stripTrailingSeparators(input);
+      if (parent.isEmpty) return const _PathInputParts(parent: '/', prefix: '');
+      return _PathInputParts(parent: parent, prefix: '');
+    }
+    final parent = PlatformPaths.parentOf(input);
+    if (parent.isEmpty || parent == '.') return null;
+    return _PathInputParts(
+      parent: parent,
+      prefix: PlatformPaths.fileName(input),
+    );
+  }
+
+  static bool _endsWithSeparator(String input) {
+    if (input.endsWith('/')) return true;
+    return PlatformPaths.isWindows && input.endsWith(r'\');
+  }
+
+  static String _stripTrailingSeparators(String input) {
+    if (input == '/') return '/';
+    if (PlatformPaths.isWindows && RegExp(r'^[A-Za-z]:\\?$').hasMatch(input)) {
+      return input.endsWith(r'\') ? input : '$input\\';
+    }
+    if ((PlatformPaths.isSmbUri(input) || PlatformPaths.isSftpUri(input)) &&
+        input.indexOf('/', input.indexOf('://') + 3) < 0) {
+      return input.endsWith('/') ? input.substring(0, input.length - 1) : input;
+    }
+    var out = input;
+    while (out.length > 1 && _endsWithSeparator(out)) {
+      out = out.substring(0, out.length - 1);
+    }
+    return out;
+  }
+}
+
+class _PathSuggestionPopup extends StatelessWidget {
+  final List<_PathSuggestion> suggestions;
+  final int highlightedIndex;
+  final ValueChanged<_PathSuggestion> onPointerDown;
+
+  static const double _rowHeight = 30;
+  static const int _maxVisibleRows = 5;
+
+  const _PathSuggestionPopup({
+    required this.suggestions,
+    required this.highlightedIndex,
+    required this.onPointerDown,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: AppColors.bgSurface,
+        border: Border.all(color: AppColors.borderColor),
+        borderRadius: BorderRadius.zero,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadowSubtle.withValues(alpha: 0.45),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: _rowHeight * _maxVisibleRows + 8,
+            ),
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              shrinkWrap: true,
+              primary: false,
+              itemCount: suggestions.length,
+              itemBuilder: (context, index) {
+                final suggestion = suggestions[index];
+                final highlighted = index == highlightedIndex;
+                final fg = highlighted ? AppColors.fg : AppColors.fgMuted;
+                return Listener(
+                  onPointerDown: (_) => onPointerDown(suggestion),
+                  child: Container(
+                    height: _rowHeight,
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    decoration: BoxDecoration(
+                      color: highlighted
+                          ? AppColors.bgHoverStrong
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.zero,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(suggestion.icon, size: 14, color: fg),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            suggestion.label,
+                            maxLines: 1,
+                            softWrap: false,
+                            overflow: TextOverflow.ellipsis,
+                            style: context.txt.body.copyWith(color: fg),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          Container(
+            height: 24,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            decoration: BoxDecoration(
+              color: AppColors.bgInput,
+              border: Border(top: BorderSide(color: AppColors.bgDivider)),
+            ),
+            child: Row(
+              children: [
+                Text(
+                  'Tab',
+                  style: context.txt.keyCap.copyWith(color: AppColors.fg),
+                ),
+                const SizedBox(width: 5),
+                Text(
+                  'complete',
+                  style: context.txt.caption.copyWith(color: AppColors.fgMuted),
+                ),
+                const SizedBox(width: 14),
+                Text(
+                  'Enter',
+                  style: context.txt.keyCap.copyWith(color: AppColors.fg),
+                ),
+                const SizedBox(width: 5),
+                Expanded(
+                  child: Text(
+                    'go',
+                    maxLines: 1,
+                    softWrap: false,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.txt.caption.copyWith(
+                      color: AppColors.fgMuted,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
