@@ -29,42 +29,47 @@ class PaneLocationBar extends StatelessWidget {
       ),
       child: LayoutBuilder(
         builder: (context, constraints) => Row(
-        children: [
-          Watch(
-            (context) => _ToolBtn(
-              WaydirIconsRegular.arrowLeft,
-              store.goBack,
-              store.canGoBack.value,
-              t.toolbar.back,
+          children: [
+            SignalBuilder(
+              builder: (context) => _ToolBtn(
+                WaydirIconsRegular.arrowLeft,
+                store.goBack,
+                store.canGoBack.value,
+                t.toolbar.back,
+              ),
             ),
-          ),
-          Watch(
-            (context) => _ToolBtn(
-              WaydirIconsRegular.arrowRight,
-              store.goForward,
-              store.canGoForward.value,
-              t.toolbar.forward,
+            SignalBuilder(
+              builder: (context) => _ToolBtn(
+                WaydirIconsRegular.arrowRight,
+                store.goForward,
+                store.canGoForward.value,
+                t.toolbar.forward,
+              ),
             ),
-          ),
-          _ToolBtn(WaydirIconsRegular.arrowUp, store.goUp, true, t.toolbar.up),
-          Container(
-            width: 1,
-            height: 16,
-            color: AppColors.bgDivider,
-            margin: const EdgeInsets.symmetric(horizontal: 4),
-          ),
-          _ToolBtn(
-            WaydirIconsRegular.arrowClockwise,
-            store.refresh,
-            true,
-            t.toolbar.refresh,
-          ),
-          const SizedBox(width: 6),
-          Expanded(child: _PathBar(store: store)),
-          const SizedBox(width: 6),
-          _RightActions(store: store, toolbarWidth: constraints.maxWidth),
-          const SizedBox(width: 4),
-        ],
+            _ToolBtn(
+              WaydirIconsRegular.arrowUp,
+              store.goUp,
+              true,
+              t.toolbar.up,
+            ),
+            Container(
+              width: 1,
+              height: 16,
+              color: AppColors.bgDivider,
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+            ),
+            _ToolBtn(
+              WaydirIconsRegular.arrowClockwise,
+              store.refresh,
+              true,
+              t.toolbar.refresh,
+            ),
+            const SizedBox(width: 6),
+            Expanded(child: _PathBar(store: store)),
+            const SizedBox(width: 6),
+            _RightActions(store: store, toolbarWidth: constraints.maxWidth),
+            const SizedBox(width: 4),
+          ],
         ),
       ),
     );
@@ -87,21 +92,23 @@ class _RightActions extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Watch((context) {
-          final path = store.currentPath.value;
-          final bookmarked = BookmarkStore.instance.containsPath(path);
-          return _ToolBtn(
-            WaydirIconsRegular.bookmarkSimple,
-            () => unawaited(BookmarkStore.instance.togglePath(path)),
-            path.isNotEmpty,
-            bookmarked
-                ? t.menu.removeBookmark
-                : t.sidebar.connectDialog.addBookmark,
-            active: bookmarked,
-          );
-        }),
-        Watch(
-          (context) => _ToolBtn(
+        SignalBuilder(
+          builder: (context) {
+            final path = store.currentPath.value;
+            final bookmarked = BookmarkStore.instance.containsPath(path);
+            return _ToolBtn(
+              WaydirIconsRegular.bookmarkSimple,
+              () => unawaited(BookmarkStore.instance.togglePath(path)),
+              path.isNotEmpty,
+              bookmarked
+                  ? t.menu.removeBookmark
+                  : t.sidebar.connectDialog.addBookmark,
+              active: bookmarked,
+            );
+          },
+        ),
+        SignalBuilder(
+          builder: (context) => _ToolBtn(
             WaydirIconsRegular.magnifyingGlass,
             () => store.searchActive.value
                 ? store.closeSearch()
@@ -355,24 +362,26 @@ class _PathBarState extends State<_PathBar> {
 
   @override
   Widget build(BuildContext context) {
-    return Watch((context) {
-      final path = widget.store.currentPath.value;
-      return GestureDetector(
-        onTap: _editing ? null : _startEditing,
-        child: Container(
-          height: 26,
-          decoration: BoxDecoration(
-            color: AppColors.bgInput,
-            borderRadius: BorderRadius.zero,
-            border: Border.all(
-              color: _editing ? AppColors.accent : AppColors.borderColor,
+    return SignalBuilder(
+      builder: (context) {
+        final path = widget.store.currentPath.value;
+        return GestureDetector(
+          onTap: _editing ? null : _startEditing,
+          child: Container(
+            height: 26,
+            decoration: BoxDecoration(
+              color: AppColors.bgInput,
+              borderRadius: BorderRadius.zero,
+              border: Border.all(
+                color: _editing ? AppColors.accent : AppColors.borderColor,
+              ),
             ),
+            padding: EdgeInsets.symmetric(horizontal: _editing ? 4 : 8),
+            child: _editing ? _buildEditor() : _buildBreadcrumbs(path),
           ),
-          padding: EdgeInsets.symmetric(horizontal: _editing ? 4 : 8),
-          child: _editing ? _buildEditor() : _buildBreadcrumbs(path),
-        ),
-      );
-    });
+        );
+      },
+    );
   }
 
   Widget _buildEditor() {

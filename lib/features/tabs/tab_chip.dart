@@ -27,90 +27,92 @@ class _TabChipState extends State<TabChip> {
 
   @override
   Widget build(BuildContext context) {
-    return Watch((context) {
-      final isActive = widget.tabsStore.activeIndex.value == widget.index;
-      final title = widget.tab.title.value;
-      final fullPath = widget.tab.store.currentPath.value;
-      final canClose = widget.tabsStore.tabs.value.length > 1;
+    return SignalBuilder(
+      builder: (context) {
+        final isActive = widget.tabsStore.activeIndex.value == widget.index;
+        final title = widget.tab.title.value;
+        final fullPath = widget.tab.store.currentPath.value;
+        final canClose = widget.tabsStore.tabs.value.length > 1;
 
-      Color bg;
-      Color fg;
-      if (isActive) {
-        bg = AppColors.bgHover;
-        fg = AppColors.fg;
-      } else if (_hovered) {
-        bg = AppColors.bg;
-        fg = AppColors.fg;
-      } else {
-        bg = Colors.transparent;
-        fg = AppColors.fgMuted;
-      }
+        Color bg;
+        Color fg;
+        if (isActive) {
+          bg = AppColors.bgHover;
+          fg = AppColors.fg;
+        } else if (_hovered) {
+          bg = AppColors.bg;
+          fg = AppColors.fg;
+        } else {
+          bg = Colors.transparent;
+          fg = AppColors.fgMuted;
+        }
 
-      final border = Border(
-        right: BorderSide(
-          color: (_hovered && !isActive)
-              ? Colors.transparent
-              : AppColors.bgDivider,
-          width: 1,
-        ),
-      );
+        final border = Border(
+          right: BorderSide(
+            color: (_hovered && !isActive)
+                ? Colors.transparent
+                : AppColors.bgDivider,
+            width: 1,
+          ),
+        );
 
-      return MouseRegion(
-        cursor: SystemMouseCursors.click,
-        onEnter: (_) => setState(() => _hovered = true),
-        onExit: (_) => setState(() => _hovered = false),
-        child: GestureDetector(
-          onTap: () => widget.tabsStore.selectTab(widget.index),
-          onTertiaryTapDown: canClose
-              ? (_) => widget.tabsStore.closeTab(widget.tab.id)
-              : null,
-          child: Tooltip(
-            message: fullPath,
-            child: Container(
-              height: 30,
-              constraints: const BoxConstraints(minWidth: 140, maxWidth: 220),
-              decoration: BoxDecoration(color: bg, border: border),
-              padding: const EdgeInsets.only(left: 10, right: 4),
-              child: Row(
-                children: [
-                  Icon(
-                    WaydirIconsRegular.folder,
-                    size: 14,
-                    color: isActive ? AppColors.accent : fg,
-                  ),
-                  const SizedBox(width: 7),
-                  Expanded(
-                    child: Text(
-                      title,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                      softWrap: false,
-                      style: context.txt.row.copyWith(
-                        color: fg,
-                        fontWeight: isActive
-                            ? FontWeight.w500
-                            : FontWeight.normal,
+        return MouseRegion(
+          cursor: SystemMouseCursors.click,
+          onEnter: (_) => setState(() => _hovered = true),
+          onExit: (_) => setState(() => _hovered = false),
+          child: GestureDetector(
+            onTap: () => widget.tabsStore.selectTab(widget.index),
+            onTertiaryTapDown: canClose
+                ? (_) => widget.tabsStore.closeTab(widget.tab.id)
+                : null,
+            child: Tooltip(
+              message: fullPath,
+              child: Container(
+                height: 30,
+                constraints: const BoxConstraints(minWidth: 140, maxWidth: 220),
+                decoration: BoxDecoration(color: bg, border: border),
+                padding: const EdgeInsets.only(left: 10, right: 4),
+                child: Row(
+                  children: [
+                    Icon(
+                      WaydirIconsRegular.folder,
+                      size: 14,
+                      color: isActive ? AppColors.accent : fg,
+                    ),
+                    const SizedBox(width: 7),
+                    Expanded(
+                      child: Text(
+                        title,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                        softWrap: false,
+                        style: context.txt.row.copyWith(
+                          color: fg,
+                          fontWeight: isActive
+                              ? FontWeight.w500
+                              : FontWeight.normal,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 4),
-                  SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: (canClose && (_hovered || isActive))
-                        ? _CloseButton(
-                            onTap: () =>
-                                widget.tabsStore.closeTab(widget.tab.id),
-                          )
-                        : null,
-                  ),
-                ],
+                    const SizedBox(width: 4),
+                    SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: (canClose && (_hovered || isActive))
+                          ? _CloseButton(
+                              onTap: () =>
+                                  widget.tabsStore.closeTab(widget.tab.id),
+                            )
+                          : null,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
   }
 }
 

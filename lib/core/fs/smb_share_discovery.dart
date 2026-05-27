@@ -73,11 +73,7 @@ class SmbShareDiscovery {
     return result;
   }
 
-  static void invalidate({
-    required String host,
-    int? port,
-    String? username,
-  }) {
+  static void invalidate({required String host, int? port, String? username}) {
     _cache.remove(_cacheKey(host, port, username));
   }
 

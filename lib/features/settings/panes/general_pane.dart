@@ -51,10 +51,12 @@ class GeneralPane extends StatelessWidget {
           title: t.preferences.general.terminalSection,
           children: [
             RegistrySettingRow(setting: terminal),
-            Watch((_) {
-              if (terminal.value != 'custom') return const SizedBox.shrink();
-              return RegistrySettingRow(setting: terminalCustom);
-            }),
+            SignalBuilder(
+              builder: (_) {
+                if (terminal.value != 'custom') return const SizedBox.shrink();
+                return RegistrySettingRow(setting: terminalCustom);
+              },
+            ),
           ],
         ),
       ],

@@ -252,201 +252,215 @@ class _SidebarState extends State<Sidebar> {
           Expanded(
             child: _SidebarDropTarget(
               onDropBookmark: _bookmarkStore.addPath,
-              child: Watch((context) {
-                final currentPath = widget.store.currentPath.value;
-                final currentDrives = driveStore.drives.value;
+              child: SignalBuilder(
+                builder: (context) {
+                  final currentPath = widget.store.currentPath.value;
+                  final currentDrives = driveStore.drives.value;
 
-                final devices = <Drive>[...currentDrives];
-                final isUnix = PlatformPaths.isLinux || PlatformPaths.isMacOS;
-                if (isUnix && !devices.any((d) => d.mountPoint == '/')) {
-                  devices.insert(
-                    0,
-                    Drive(
-                      id: '/',
-                      label: t.sidebar.root,
-                      isRemovable: false,
-                      mountPoint: '/',
-                    ),
-                  );
-                }
+                  final devices = <Drive>[...currentDrives];
+                  final isUnix = PlatformPaths.isLinux || PlatformPaths.isMacOS;
+                  if (isUnix && !devices.any((d) => d.mountPoint == '/')) {
+                    devices.insert(
+                      0,
+                      Drive(
+                        id: '/',
+                        label: t.sidebar.root,
+                        isRemovable: false,
+                        mountPoint: '/',
+                      ),
+                    );
+                  }
 
-                final collapsed = widget.collapsed;
-                final networkLocations = LocationResolver.mountedLocations();
-                return ListView(
-                  padding: EdgeInsets.zero,
-                  children: [
-                    if (!collapsed) _SectionHeader(title: t.sidebar.favorites),
-                    if (collapsed) const SizedBox(height: 6),
-                    ..._favorites.map((item) {
-                      final isRecycleBin = isTrashPath(item.path);
-                      return _ItemRow(
-                        item: item,
-                        isSelected: isRecycleBin
-                            ? isTrashPath(currentPath)
-                            : currentPath == item.path,
-                        isMounted: !isRecycleBin,
-                        collapsed: collapsed,
-                        onTap: widget.store.navigateTo,
-                        onMiddleTap:
-                            widget.onOpenInNewTab != null && !isRecycleBin
-                            ? () => widget.onOpenInNewTab!(item.path)
-                            : null,
-                        onDropFiles: (paths, {bool move = false}) {
-                          if (isRecycleBin) {
-                            widget.operationStore.enqueueTrash(paths);
-                            return;
-                          }
-                          widget.store.dropFiles(paths, item.path, move: move);
-                        },
-                      );
-                    }),
-                    SizedBox(height: collapsed ? 12 : 8),
-                    if (!collapsed)
-                      _SectionHeader(title: t.sidebar.devices)
-                    else
-                      const _SectionRailDivider(),
-                    ...devices.map((drive) {
-                      final path = drive.mountPoint ?? drive.id;
-                      final isSelected = currentPath == path;
-                      final isMounted = drive.isMounted;
-                      final label = drive.id == '/'
-                          ? t.sidebar.root
-                          : drive.label;
-                      final canUnmount =
-                          isMounted && drive.id != '/' && drive.isRemovable;
+                  final collapsed = widget.collapsed;
+                  final networkLocations = LocationResolver.mountedLocations();
+                  return ListView(
+                    padding: EdgeInsets.zero,
+                    children: [
+                      if (!collapsed)
+                        _SectionHeader(title: t.sidebar.favorites),
+                      if (collapsed) const SizedBox(height: 6),
+                      ..._favorites.map((item) {
+                        final isRecycleBin = isTrashPath(item.path);
+                        return _ItemRow(
+                          item: item,
+                          isSelected: isRecycleBin
+                              ? isTrashPath(currentPath)
+                              : currentPath == item.path,
+                          isMounted: !isRecycleBin,
+                          collapsed: collapsed,
+                          onTap: widget.store.navigateTo,
+                          onMiddleTap:
+                              widget.onOpenInNewTab != null && !isRecycleBin
+                              ? () => widget.onOpenInNewTab!(item.path)
+                              : null,
+                          onDropFiles: (paths, {bool move = false}) {
+                            if (isRecycleBin) {
+                              widget.operationStore.enqueueTrash(paths);
+                              return;
+                            }
+                            widget.store.dropFiles(
+                              paths,
+                              item.path,
+                              move: move,
+                            );
+                          },
+                        );
+                      }),
+                      SizedBox(height: collapsed ? 12 : 8),
+                      if (!collapsed)
+                        _SectionHeader(title: t.sidebar.devices)
+                      else
+                        const _SectionRailDivider(),
+                      ...devices.map((drive) {
+                        final path = drive.mountPoint ?? drive.id;
+                        final isSelected = currentPath == path;
+                        final isMounted = drive.isMounted;
+                        final label = drive.id == '/'
+                            ? t.sidebar.root
+                            : drive.label;
+                        final canUnmount =
+                            isMounted && drive.id != '/' && drive.isRemovable;
 
-                      return _ItemRow(
-                        item: _SidebarItem(
-                          label,
-                          drive.isRemovable
-                              ? WaydirIconsRegular.usb
-                              : WaydirIconsRegular.hardDrive,
-                          path,
-                        ),
-                        isSelected: isSelected,
-                        isMounted: isMounted,
-                        space: isMounted ? drive.space : null,
-                        collapsed: collapsed,
-                        onTap: (p) async {
-                          if (isMounted) {
-                            widget.store.navigateTo(p);
-                          } else {
-                            try {
-                              await driveStore.mount(drive);
-                              Future.microtask(() {
-                                final mountedDrive = driveStore.drives.value
-                                    .where((d) => d.id == drive.id)
-                                    .firstOrNull;
-                                if (mountedDrive?.isMounted == true) {
-                                  widget.store.navigateTo(
-                                    mountedDrive!.mountPoint!,
-                                  );
-                                }
-                              });
-                            } catch (e) {
-                              final error = e.toString().toLowerCase();
-                              if (error.contains('not authorized') ||
-                                  error.contains('polkit') ||
-                                  error.contains('authenticate')) {
-                                if (context.mounted) {
-                                  final pwd = await showPasswordDialog(
-                                    context,
-                                    title: t.sidebar.drives.mountTitle(
-                                      name: drive.label,
-                                    ),
-                                  );
-                                  if (pwd != null) {
-                                    try {
-                                      await driveStore.mountWithPassword(
-                                        drive,
-                                        pwd,
-                                      );
-                                      Future.microtask(() {
-                                        final mountedDrive = driveStore
-                                            .drives
-                                            .value
-                                            .where((d) => d.id == drive.id)
-                                            .firstOrNull;
-                                        if (mountedDrive?.isMounted == true) {
-                                          widget.store.navigateTo(
-                                            mountedDrive!.mountPoint!,
-                                          );
-                                        }
-                                      });
-                                    } catch (_) {}
+                        return _ItemRow(
+                          item: _SidebarItem(
+                            label,
+                            drive.isRemovable
+                                ? WaydirIconsRegular.usb
+                                : WaydirIconsRegular.hardDrive,
+                            path,
+                          ),
+                          isSelected: isSelected,
+                          isMounted: isMounted,
+                          space: isMounted ? drive.space : null,
+                          collapsed: collapsed,
+                          onTap: (p) async {
+                            if (isMounted) {
+                              widget.store.navigateTo(p);
+                            } else {
+                              try {
+                                await driveStore.mount(drive);
+                                Future.microtask(() {
+                                  final mountedDrive = driveStore.drives.value
+                                      .where((d) => d.id == drive.id)
+                                      .firstOrNull;
+                                  if (mountedDrive?.isMounted == true) {
+                                    widget.store.navigateTo(
+                                      mountedDrive!.mountPoint!,
+                                    );
+                                  }
+                                });
+                              } catch (e) {
+                                final error = e.toString().toLowerCase();
+                                if (error.contains('not authorized') ||
+                                    error.contains('polkit') ||
+                                    error.contains('authenticate')) {
+                                  if (context.mounted) {
+                                    final pwd = await showPasswordDialog(
+                                      context,
+                                      title: t.sidebar.drives.mountTitle(
+                                        name: drive.label,
+                                      ),
+                                    );
+                                    if (pwd != null) {
+                                      try {
+                                        await driveStore.mountWithPassword(
+                                          drive,
+                                          pwd,
+                                        );
+                                        Future.microtask(() {
+                                          final mountedDrive = driveStore
+                                              .drives
+                                              .value
+                                              .where((d) => d.id == drive.id)
+                                              .firstOrNull;
+                                          if (mountedDrive?.isMounted == true) {
+                                            widget.store.navigateTo(
+                                              mountedDrive!.mountPoint!,
+                                            );
+                                          }
+                                        });
+                                      } catch (_) {}
+                                    }
                                   }
                                 }
                               }
                             }
-                          }
-                        },
-                        onMiddleTap: widget.onOpenInNewTab != null && isMounted
-                            ? () => widget.onOpenInNewTab!(path)
-                            : null,
-                        onDropFiles: (paths, {bool move = false}) {
-                          if (isMounted) {
-                            widget.store.dropFiles(paths, path, move: move);
-                          }
-                        },
-                        onUnmount: canUnmount
-                            ? () async {
-                                final currentPath =
-                                    widget.store.currentPath.value;
-                                final mountPoint = drive.mountPoint;
-                                try {
-                                  await driveStore.unmount(drive);
-                                  if (mountPoint != null &&
-                                      currentPath.startsWith(mountPoint)) {
-                                    widget.store.navigateTo(
-                                      PlatformPaths.homePath,
-                                    );
-                                  }
-                                } catch (_) {}
-                              }
-                            : null,
-                      );
-                    }),
-                    SizedBox(height: collapsed ? 12 : 8),
-                    if (networkLocations.isNotEmpty) ...[
-                      _NetworkSection(
-                        locations: networkLocations,
-                        currentPath: currentPath,
-                        collapsed: collapsed,
-                        onNavigate: widget.store.navigateTo,
-                        onOpenInNewTab: widget.onOpenInNewTab,
-                        onDropFiles:
-                            (paths, destination, {bool move = false}) => widget
-                                .store
-                                .dropFiles(paths, destination, move: move),
-                        onUnmount: (path) async {
-                          final currentPath = widget.store.currentPath.value;
-                          await LocationResolver.unmount(path);
-                          if (mounted) setState(() {});
-                          if (currentPath == path ||
-                              currentPath.startsWith('$path/')) {
-                            widget.store.navigateTo(PlatformPaths.homePath);
-                          }
-                        },
-                      ),
+                          },
+                          onMiddleTap:
+                              widget.onOpenInNewTab != null && isMounted
+                              ? () => widget.onOpenInNewTab!(path)
+                              : null,
+                          onDropFiles: (paths, {bool move = false}) {
+                            if (isMounted) {
+                              widget.store.dropFiles(paths, path, move: move);
+                            }
+                          },
+                          onUnmount: canUnmount
+                              ? () async {
+                                  final currentPath =
+                                      widget.store.currentPath.value;
+                                  final mountPoint = drive.mountPoint;
+                                  try {
+                                    await driveStore.unmount(drive);
+                                    if (mountPoint != null &&
+                                        currentPath.startsWith(mountPoint)) {
+                                      widget.store.navigateTo(
+                                        PlatformPaths.homePath,
+                                      );
+                                    }
+                                  } catch (_) {}
+                                }
+                              : null,
+                        );
+                      }),
                       SizedBox(height: collapsed ? 12 : 8),
-                    ],
-                    Watch(
-                      (context) => _BookmarksSection(
-                        bookmarks: _bookmarkStore.bookmarks.value,
-                        currentPath: widget.store.currentPath.value,
-                        collapsed: collapsed,
-                        onNavigate: widget.store.navigateTo,
-                        onOpenInNewTab: widget.onOpenInNewTab,
-                        onDropFiles:
-                            (paths, destination, {bool move = false}) => widget
-                                .store
-                                .dropFiles(paths, destination, move: move),
-                        onContextMenu: _showBookmarkMenu,
+                      if (networkLocations.isNotEmpty) ...[
+                        _NetworkSection(
+                          locations: networkLocations,
+                          currentPath: currentPath,
+                          collapsed: collapsed,
+                          onNavigate: widget.store.navigateTo,
+                          onOpenInNewTab: widget.onOpenInNewTab,
+                          onDropFiles:
+                              (paths, destination, {bool move = false}) =>
+                                  widget.store.dropFiles(
+                                    paths,
+                                    destination,
+                                    move: move,
+                                  ),
+                          onUnmount: (path) async {
+                            final currentPath = widget.store.currentPath.value;
+                            await LocationResolver.unmount(path);
+                            if (mounted) setState(() {});
+                            if (currentPath == path ||
+                                currentPath.startsWith('$path/')) {
+                              widget.store.navigateTo(PlatformPaths.homePath);
+                            }
+                          },
+                        ),
+                        SizedBox(height: collapsed ? 12 : 8),
+                      ],
+                      SignalBuilder(
+                        builder: (context) => _BookmarksSection(
+                          bookmarks: _bookmarkStore.bookmarks.value,
+                          currentPath: widget.store.currentPath.value,
+                          collapsed: collapsed,
+                          onNavigate: widget.store.navigateTo,
+                          onOpenInNewTab: widget.onOpenInNewTab,
+                          onDropFiles:
+                              (paths, destination, {bool move = false}) =>
+                                  widget.store.dropFiles(
+                                    paths,
+                                    destination,
+                                    move: move,
+                                  ),
+                          onContextMenu: _showBookmarkMenu,
+                        ),
                       ),
-                    ),
-                  ],
-                );
-              }),
+                    ],
+                  );
+                },
+              ),
             ),
           ),
           _SidebarFooter(
@@ -874,18 +888,66 @@ class _SidebarOperationsButtonState extends State<_SidebarOperationsButton> {
 
   @override
   Widget build(BuildContext context) {
-    return Watch((context) {
-      final tasks = widget.operationStore.tasks.value;
-      final active = tasks.where(_isActiveTask).firstOrNull;
-      if (active == null) return _buildIdle(context);
+    return SignalBuilder(
+      builder: (context) {
+        final tasks = widget.operationStore.tasks.value;
+        final active = tasks.where(_isActiveTask).firstOrNull;
+        if (active == null) return _buildIdle(context);
 
-      final activeCount = widget.operationStore.activeCount.value;
-      final progress = active.progress.clamp(0.0, 1.0).toDouble();
-      final progressText = '${(progress * 100).round()}%';
+        final activeCount = widget.operationStore.activeCount.value;
+        final progress = active.progress.clamp(0.0, 1.0).toDouble();
+        final progressText = '${(progress * 100).round()}%';
 
-      if (widget.collapsed) {
+        if (widget.collapsed) {
+          return Tooltip(
+            message: '${t.toolbar.operations} · $progressText',
+            child: MouseRegion(
+              cursor: SystemMouseCursors.click,
+              onEnter: (_) => setState(() => _hovered = true),
+              onExit: (_) => setState(() => _hovered = false),
+              child: GestureDetector(
+                onTap: _openPanel,
+                behavior: HitTestBehavior.opaque,
+                child: Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: AppColors.accent.withValues(
+                      alpha: _hovered ? 0.22 : 0.14,
+                    ),
+                    borderRadius: BorderRadius.zero,
+                    border: Border.all(
+                      color: AppColors.accent.withValues(alpha: 0.42),
+                    ),
+                  ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      SizedBox(
+                        width: 23,
+                        height: 23,
+                        child: CircularProgressIndicator(
+                          value: active.totalFiles > 0 ? progress : null,
+                          strokeWidth: 2,
+                          backgroundColor: AppColors.bgInput,
+                          valueColor: AlwaysStoppedAnimation(AppColors.accent),
+                        ),
+                      ),
+                      Icon(
+                        _operationIcon(active),
+                        size: 12,
+                        color: AppColors.fgAccent,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+
         return Tooltip(
-          message: '${t.toolbar.operations} · $progressText',
+          message: t.toolbar.operations,
           child: MouseRegion(
             cursor: SystemMouseCursors.click,
             onEnter: (_) => setState(() => _hovered = true),
@@ -894,34 +956,58 @@ class _SidebarOperationsButtonState extends State<_SidebarOperationsButton> {
               onTap: _openPanel,
               behavior: HitTestBehavior.opaque,
               child: Container(
-                width: 30,
-                height: 30,
+                constraints: const BoxConstraints(minHeight: 38),
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
                 decoration: BoxDecoration(
                   color: AppColors.accent.withValues(
-                    alpha: _hovered ? 0.22 : 0.14,
+                    alpha: _hovered ? 0.18 : 0.11,
                   ),
                   borderRadius: BorderRadius.zero,
                   border: Border.all(
                     color: AppColors.accent.withValues(alpha: 0.42),
                   ),
                 ),
-                child: Stack(
-                  alignment: Alignment.center,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(
-                      width: 23,
-                      height: 23,
-                      child: CircularProgressIndicator(
+                    Row(
+                      children: [
+                        Icon(
+                          _operationIcon(active),
+                          size: 14,
+                          color: AppColors.fgAccent,
+                        ),
+                        const SizedBox(width: 7),
+                        Expanded(
+                          child: Text(
+                            TaskLabel.title(active),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: context.txt.rowEmphasis.copyWith(
+                              color: AppColors.fg,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          activeCount > 1
+                              ? '$progressText · $activeCount'
+                              : progressText,
+                          style: context.txt.caption.copyWith(
+                            color: AppColors.fgAccent,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    ClipRRect(
+                      borderRadius: BorderRadius.zero,
+                      child: LinearProgressIndicator(
                         value: active.totalFiles > 0 ? progress : null,
-                        strokeWidth: 2,
+                        minHeight: 3,
                         backgroundColor: AppColors.bgInput,
                         valueColor: AlwaysStoppedAnimation(AppColors.accent),
                       ),
-                    ),
-                    Icon(
-                      _operationIcon(active),
-                      size: 12,
-                      color: AppColors.fgAccent,
                     ),
                   ],
                 ),
@@ -929,78 +1015,8 @@ class _SidebarOperationsButtonState extends State<_SidebarOperationsButton> {
             ),
           ),
         );
-      }
-
-      return Tooltip(
-        message: t.toolbar.operations,
-        child: MouseRegion(
-          cursor: SystemMouseCursors.click,
-          onEnter: (_) => setState(() => _hovered = true),
-          onExit: (_) => setState(() => _hovered = false),
-          child: GestureDetector(
-            onTap: _openPanel,
-            behavior: HitTestBehavior.opaque,
-            child: Container(
-              constraints: const BoxConstraints(minHeight: 38),
-              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
-              decoration: BoxDecoration(
-                color: AppColors.accent.withValues(
-                  alpha: _hovered ? 0.18 : 0.11,
-                ),
-                borderRadius: BorderRadius.zero,
-                border: Border.all(
-                  color: AppColors.accent.withValues(alpha: 0.42),
-                ),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        _operationIcon(active),
-                        size: 14,
-                        color: AppColors.fgAccent,
-                      ),
-                      const SizedBox(width: 7),
-                      Expanded(
-                        child: Text(
-                          TaskLabel.title(active),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: context.txt.rowEmphasis.copyWith(
-                            color: AppColors.fg,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        activeCount > 1
-                            ? '$progressText · $activeCount'
-                            : progressText,
-                        style: context.txt.caption.copyWith(
-                          color: AppColors.fgAccent,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  ClipRRect(
-                    borderRadius: BorderRadius.zero,
-                    child: LinearProgressIndicator(
-                      value: active.totalFiles > 0 ? progress : null,
-                      minHeight: 3,
-                      backgroundColor: AppColors.bgInput,
-                      valueColor: AlwaysStoppedAnimation(AppColors.accent),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-    });
+      },
+    );
   }
 
   Widget _buildIdle(BuildContext context) {

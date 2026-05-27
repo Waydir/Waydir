@@ -58,7 +58,7 @@ class OperationStore {
 
   final tasks = signal<List<FileTask>>([]);
 
-  final taskCompleted = Signal<String?>(null, debugLabel: 'taskCompleted');
+  final taskCompleted = signal<String?>(null);
 
   late final activeTask = computed(
     () => tasks.value.firstWhereOrNull((t) => t.status == TaskStatus.running),

@@ -13,34 +13,36 @@ class NotificationOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Watch((context) {
-      final items = store.notifications.value;
-      if (items.isEmpty) return const SizedBox.shrink();
-      const maxVisible = 6;
-      final visible = items.length > maxVisible
-          ? items.sublist(items.length - maxVisible)
-          : items;
-      return Positioned(
-        top: 8,
-        right: 8,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 296),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: visible
-                .map(
-                  (n) => _NotificationCard(
-                    key: ValueKey(n.id),
-                    notification: n,
-                    onDismiss: () => store.dismiss(n.id),
-                  ),
-                )
-                .toList(),
+    return SignalBuilder(
+      builder: (context) {
+        final items = store.notifications.value;
+        if (items.isEmpty) return const SizedBox.shrink();
+        const maxVisible = 6;
+        final visible = items.length > maxVisible
+            ? items.sublist(items.length - maxVisible)
+            : items;
+        return Positioned(
+          top: 8,
+          right: 8,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 296),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: visible
+                  .map(
+                    (n) => _NotificationCard(
+                      key: ValueKey(n.id),
+                      notification: n,
+                      onDismiss: () => store.dismiss(n.id),
+                    ),
+                  )
+                  .toList(),
+            ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
   }
 }
 

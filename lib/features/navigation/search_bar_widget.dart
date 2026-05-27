@@ -127,21 +127,23 @@ class _AppSearchBarState extends State<AppSearchBar> {
               ),
             ),
           ),
-          Watch((context) {
-            final searching = widget.store.isSearching.value;
-            if (!searching) return const SizedBox.shrink();
-            return Padding(
-              padding: const EdgeInsets.only(right: 6),
-              child: SizedBox(
-                width: 12,
-                height: 12,
-                child: CircularProgressIndicator(
-                  strokeWidth: 1.5,
-                  color: AppColors.fgMuted,
+          SignalBuilder(
+            builder: (context) {
+              final searching = widget.store.isSearching.value;
+              if (!searching) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: SizedBox(
+                  width: 12,
+                  height: 12,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 1.5,
+                    color: AppColors.fgMuted,
+                  ),
                 ),
-              ),
-            );
-          }),
+              );
+            },
+          ),
           _ModeToggle(store: widget.store),
           _RecursiveToggle(store: widget.store),
           Padding(
@@ -161,7 +163,7 @@ class _StatusText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Watch((context) => _buildText(context));
+    return SignalBuilder(builder: (context) => _buildText(context));
   }
 
   Widget _buildText(BuildContext context) {
@@ -211,50 +213,56 @@ class _RecursiveToggleState extends State<_RecursiveToggle> {
 
   @override
   Widget build(BuildContext context) {
-    return Watch((context) {
-      final active = widget.store.searchRecursive.value;
-      return Tooltip(
-        message: t.search.subfoldersShortcut,
-        child: MouseRegion(
-          onEnter: (_) => setState(() => _hovered = true),
-          onExit: (_) => setState(() => _hovered = false),
-          child: GestureDetector(
-            onTap: widget.store.toggleRecursive,
-            child: Container(
-              height: 24,
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              decoration: BoxDecoration(
-                color: active
-                    ? AppColors.accent.withValues(alpha: 0.15)
-                    : (_hovered ? AppColors.bgHover : Colors.transparent),
-                borderRadius: BorderRadius.zero,
-                border: active
-                    ? Border.all(color: AppColors.accent.withValues(alpha: 0.4))
-                    : null,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    WaydirIconsRegular.treeStructure,
-                    size: 14,
-                    color: active ? AppColors.accent : AppColors.fgMuted,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    t.search.subfolders,
-                    style: context.txt.row.copyWith(
+    return SignalBuilder(
+      builder: (context) {
+        final active = widget.store.searchRecursive.value;
+        return Tooltip(
+          message: t.search.subfoldersShortcut,
+          child: MouseRegion(
+            onEnter: (_) => setState(() => _hovered = true),
+            onExit: (_) => setState(() => _hovered = false),
+            child: GestureDetector(
+              onTap: widget.store.toggleRecursive,
+              child: Container(
+                height: 24,
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                decoration: BoxDecoration(
+                  color: active
+                      ? AppColors.accent.withValues(alpha: 0.15)
+                      : (_hovered ? AppColors.bgHover : Colors.transparent),
+                  borderRadius: BorderRadius.zero,
+                  border: active
+                      ? Border.all(
+                          color: AppColors.accent.withValues(alpha: 0.4),
+                        )
+                      : null,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      WaydirIconsRegular.treeStructure,
+                      size: 14,
                       color: active ? AppColors.accent : AppColors.fgMuted,
-                      fontWeight: active ? FontWeight.w600 : FontWeight.normal,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 4),
+                    Text(
+                      t.search.subfolders,
+                      style: context.txt.row.copyWith(
+                        color: active ? AppColors.accent : AppColors.fgMuted,
+                        fontWeight: active
+                            ? FontWeight.w600
+                            : FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
   }
 }
 
@@ -265,45 +273,47 @@ class _ModeToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Watch((context) {
-      final current = SettingsStore.instance.searchMode.value;
-      return Container(
-        height: 24,
-        margin: const EdgeInsets.only(right: 4),
-        decoration: BoxDecoration(
-          border: Border.all(color: AppColors.bgDivider),
-          borderRadius: BorderRadius.zero,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _ModeSegment(
-              mode: 'substring',
-              label: 'Aa',
-              tooltip: t.search.modeSubstring,
-              active: current == 'substring',
-              onTap: () => store.setSearchMode('substring'),
-            ),
-            Container(width: 1, height: 24, color: AppColors.bgDivider),
-            _ModeSegment(
-              mode: 'glob',
-              label: '*',
-              tooltip: t.search.modeGlob,
-              active: current == 'glob',
-              onTap: () => store.setSearchMode('glob'),
-            ),
-            Container(width: 1, height: 24, color: AppColors.bgDivider),
-            _ModeSegment(
-              mode: 'regex',
-              label: '.*',
-              tooltip: t.search.modeRegex,
-              active: current == 'regex',
-              onTap: () => store.setSearchMode('regex'),
-            ),
-          ],
-        ),
-      );
-    });
+    return SignalBuilder(
+      builder: (context) {
+        final current = SettingsStore.instance.searchMode.value;
+        return Container(
+          height: 24,
+          margin: const EdgeInsets.only(right: 4),
+          decoration: BoxDecoration(
+            border: Border.all(color: AppColors.bgDivider),
+            borderRadius: BorderRadius.zero,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _ModeSegment(
+                mode: 'substring',
+                label: 'Aa',
+                tooltip: t.search.modeSubstring,
+                active: current == 'substring',
+                onTap: () => store.setSearchMode('substring'),
+              ),
+              Container(width: 1, height: 24, color: AppColors.bgDivider),
+              _ModeSegment(
+                mode: 'glob',
+                label: '*',
+                tooltip: t.search.modeGlob,
+                active: current == 'glob',
+                onTap: () => store.setSearchMode('glob'),
+              ),
+              Container(width: 1, height: 24, color: AppColors.bgDivider),
+              _ModeSegment(
+                mode: 'regex',
+                label: '.*',
+                tooltip: t.search.modeRegex,
+                active: current == 'regex',
+                onTap: () => store.setSearchMode('regex'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }
 

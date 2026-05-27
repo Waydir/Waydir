@@ -379,15 +379,14 @@ class AppDatabase extends _$AppDatabase {
     required String? selectedPaths,
   }) async {
     final now = DateTime.now().millisecondsSinceEpoch;
-    final updated = await (update(
-      folderPrefs,
-    )..where((t) => t.path.equals(path))).write(
-      FolderPrefsCompanion(
-        cursorPath: Value(cursorPath),
-        selectedPaths: Value(selectedPaths),
-        updatedAt: Value(now),
-      ),
-    );
+    final updated =
+        await (update(folderPrefs)..where((t) => t.path.equals(path))).write(
+          FolderPrefsCompanion(
+            cursorPath: Value(cursorPath),
+            selectedPaths: Value(selectedPaths),
+            updatedAt: Value(now),
+          ),
+        );
     if (updated == 0) {
       await into(folderPrefs).insert(
         FolderPrefsCompanion.insert(

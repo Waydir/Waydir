@@ -252,217 +252,223 @@ class _FileListState extends State<FileList> {
 
   @override
   Widget build(BuildContext context) {
-    final density = SettingsStore.instance.rowDensity.watch(context);
-    final horizontalSpacing = SettingsStore.instance.fileListHorizontalSpacing
-        .watch(context);
-    final verticalSpacing = SettingsStore.instance.fileListVerticalSpacing
-        .watch(context);
-    _dateFmt = SettingsStore.instance.dateFormat.watch(context);
-    _recentDatesRelative = SettingsStore.instance.recentDatesRelative.watch(
-      context,
-    );
-    _rowH = density == 'compact' ? _kRowHeightCompact : _kRowHeightComfortable;
-    _rowG = verticalSpacing.toDouble();
-    _listHorizontalSpacing = horizontalSpacing.toDouble();
-    _itemExt = _rowH + _rowG;
-    _revealSelectedRow();
+    return SignalBuilder(
+      builder: (context) {
+        final density = SettingsStore.instance.rowDensity.value;
+        final horizontalSpacing =
+            SettingsStore.instance.fileListHorizontalSpacing.value;
+        final verticalSpacing =
+            SettingsStore.instance.fileListVerticalSpacing.value;
+        _dateFmt = SettingsStore.instance.dateFormat.value;
+        _recentDatesRelative = SettingsStore.instance.recentDatesRelative.value;
+        _rowH = density == 'compact'
+            ? _kRowHeightCompact
+            : _kRowHeightComfortable;
+        _rowG = verticalSpacing.toDouble();
+        _listHorizontalSpacing = horizontalSpacing.toDouble();
+        _itemExt = _rowH + _rowG;
+        _revealSelectedRow();
 
-    if (widget.files.isEmpty) {
-      return GestureDetector(
-        onTap: widget.onBackgroundTap,
-        onSecondaryTapUp: widget.onBackgroundContextMenu != null
-            ? (d) => widget.onBackgroundContextMenu!(d.globalPosition)
-            : null,
-        behavior: HitTestBehavior.opaque,
-        child: _EmptyState(
-          isSearching: widget.recursiveResults,
-          onCloseSearch: widget.onCloseSearch,
-        ),
-      );
-    }
-
-    final columnWidths = _computeColumnWidths(context);
-
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: _ListHeader(
-                recursive: widget.recursiveResults,
-                sizeWidth: columnWidths.size,
-                dateWidth: columnWidths.date,
-                sortColumn: widget.sortColumn,
-                sortAscending: widget.sortAscending,
-                onSortColumn: widget.onSortColumn,
-              ),
+        if (widget.files.isEmpty) {
+          return GestureDetector(
+            onTap: widget.onBackgroundTap,
+            onSecondaryTapUp: widget.onBackgroundContextMenu != null
+                ? (d) => widget.onBackgroundContextMenu!(d.globalPosition)
+                : null,
+            behavior: HitTestBehavior.opaque,
+            child: _EmptyState(
+              isSearching: widget.recursiveResults,
+              onCloseSearch: widget.onCloseSearch,
             ),
-            SizedBox(
-              width: _kScrollbarGutterWidth,
-              height: 24,
-              child: ColoredBox(color: AppColors.bg),
+          );
+        }
+
+        final columnWidths = _computeColumnWidths(context);
+
+        return Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: _ListHeader(
+                    recursive: widget.recursiveResults,
+                    sizeWidth: columnWidths.size,
+                    dateWidth: columnWidths.date,
+                    sortColumn: widget.sortColumn,
+                    sortAscending: widget.sortAscending,
+                    onSortColumn: widget.onSortColumn,
+                  ),
+                ),
+                SizedBox(
+                  width: _kScrollbarGutterWidth,
+                  height: 24,
+                  child: ColoredBox(color: AppColors.bg),
+                ),
+              ],
+            ),
+            Divider(height: 1, thickness: 1, color: AppColors.bgDivider),
+            Expanded(
+              child: RubberBandLayer(
+                scrollController: _scrollController,
+                itemCount: widget.files.length,
+                itemExtent: _itemExt,
+                rowHeight: _rowH,
+                topPadding: _listTopPadding,
+                pathAt: (i) => widget.files[i].path,
+                rowAt: _rowAt,
+                canStartSelectionAt: _canStartRubberBandAt,
+                onSelectionChanged: widget.onRectSelect,
+                onBackgroundTap: widget.onBackgroundTap,
+                child: DropRegion(
+                  formats: [Formats.fileUri, formatLocalFile],
+                  hitTestBehavior: HitTestBehavior.opaque,
+                  onDropOver: (event) {
+                    _updateHover(event.position.local);
+                    return DragHintController.instance.mode.value ==
+                            DragMode.move
+                        ? DropOperation.move
+                        : DropOperation.copy;
+                  },
+                  onDropLeave: (_) => _clearDrag(),
+                  onDropEnded: (_) {
+                    _clearDrag();
+                  },
+                  onPerformDrop: (event) async {
+                    final pos = event.position.local;
+                    final index = _rowAt(pos);
+                    String? target;
+                    if (index >= 0 &&
+                        widget.files[index].type == FileItemType.folder) {
+                      target = widget.files[index].path;
+                    }
+                    final paths = await pathsFromSession(event.session);
+                    final move =
+                        DragHintController.instance.mode.value == DragMode.move;
+                    if (paths.isNotEmpty) {
+                      widget.onDropFiles?.call(
+                        paths,
+                        target ?? widget.currentPath,
+                        move: move,
+                      );
+                    }
+                    _clearDrag();
+                  },
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      _viewportWidth = constraints.maxWidth;
+                      return Stack(
+                        children: [
+                          ScrollConfiguration(
+                            behavior: ScrollConfiguration.of(
+                              context,
+                            ).copyWith(scrollbars: false),
+                            child: RawScrollbar(
+                              controller: _scrollController,
+                              thumbVisibility: true,
+                              thumbColor: AppColors.fgSubtle,
+                              thickness: _kScrollbarThumbWidth,
+                              crossAxisMargin: 0,
+                              radius: Radius.zero,
+                              child: GestureDetector(
+                                onSecondaryTapUp: (d) {
+                                  final index = _rowAt(d.localPosition);
+                                  if (index < 0) {
+                                    widget.onBackgroundTap?.call();
+                                    widget.onBackgroundContextMenu?.call(
+                                      d.globalPosition,
+                                    );
+                                  }
+                                },
+                                behavior: HitTestBehavior.translucent,
+                                child: ListView.builder(
+                                  controller: _scrollController,
+                                  padding: EdgeInsets.only(
+                                    left: _listHorizontalPadding,
+                                    top: _listTopPadding,
+                                    right:
+                                        _listHorizontalPadding +
+                                        _kScrollbarGutterWidth,
+                                  ),
+                                  itemCount: widget.files.length,
+                                  itemExtent: _itemExt,
+                                  addAutomaticKeepAlives: false,
+                                  addRepaintBoundaries: false,
+                                  addSemanticIndexes: false,
+                                  itemBuilder: (context, i) => RepaintBoundary(
+                                    child: Padding(
+                                      padding: EdgeInsets.only(bottom: _rowG),
+                                      child: _ListRow(
+                                        rowHeight: _rowH,
+                                        dateFmt: _dateFmt,
+                                        recentDatesRelative:
+                                            _recentDatesRelative,
+                                        entry: widget.files[i],
+                                        index: i,
+                                        selected: widget.selectedPaths.contains(
+                                          widget.files[i].path,
+                                        ),
+                                        selectedPaths: widget.selectedPaths,
+                                        isCut: widget.cutPaths.contains(
+                                          widget.files[i].path,
+                                        ),
+                                        isDraggingSelected:
+                                            widget.selectedPaths.isNotEmpty,
+                                        isFolderDragOver:
+                                            _hoveredFolderPath ==
+                                            widget.files[i].path,
+                                        isRenaming:
+                                            widget.renamingPath ==
+                                            widget.files[i].path,
+                                        renameAttempt: widget.renameAttempt,
+                                        onRenameSubmit: widget.onRenameSubmit,
+                                        onRenameCancel: widget.onRenameCancel,
+                                        onSelect: widget.onSelect,
+                                        onOpen: widget.onOpen,
+                                        onContextMenu: widget.onContextMenu,
+                                        onMenuAction: widget.onMenuAction,
+                                        recursive: widget.recursiveResults,
+                                        sizeWidth: columnWidths.size,
+                                        dateWidth: columnWidths.date,
+                                        location: widget.recursiveResults
+                                            ? _compactLocation(
+                                                widget.files[i].path,
+                                                widget.currentPath,
+                                              )
+                                            : null,
+                                        onOpenInNewTab: widget.onOpenInNewTab,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          if (_isDragOver)
+                            Positioned.fill(
+                              child: IgnorePointer(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: AppColors.accent.withValues(
+                                        alpha: 0.4,
+                                      ),
+                                      width: 1,
+                                    ),
+                                    borderRadius: BorderRadius.zero,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ),
             ),
           ],
-        ),
-        Divider(height: 1, thickness: 1, color: AppColors.bgDivider),
-        Expanded(
-          child: RubberBandLayer(
-            scrollController: _scrollController,
-            itemCount: widget.files.length,
-            itemExtent: _itemExt,
-            rowHeight: _rowH,
-            topPadding: _listTopPadding,
-            pathAt: (i) => widget.files[i].path,
-            rowAt: _rowAt,
-            canStartSelectionAt: _canStartRubberBandAt,
-            onSelectionChanged: widget.onRectSelect,
-            onBackgroundTap: widget.onBackgroundTap,
-            child: DropRegion(
-              formats: [Formats.fileUri, formatLocalFile],
-              hitTestBehavior: HitTestBehavior.opaque,
-              onDropOver: (event) {
-                _updateHover(event.position.local);
-                return DragHintController.instance.mode.value == DragMode.move
-                    ? DropOperation.move
-                    : DropOperation.copy;
-              },
-              onDropLeave: (_) => _clearDrag(),
-              onDropEnded: (_) {
-                _clearDrag();
-              },
-              onPerformDrop: (event) async {
-                final pos = event.position.local;
-                final index = _rowAt(pos);
-                String? target;
-                if (index >= 0 &&
-                    widget.files[index].type == FileItemType.folder) {
-                  target = widget.files[index].path;
-                }
-                final paths = await pathsFromSession(event.session);
-                final move =
-                    DragHintController.instance.mode.value == DragMode.move;
-                if (paths.isNotEmpty) {
-                  widget.onDropFiles?.call(
-                    paths,
-                    target ?? widget.currentPath,
-                    move: move,
-                  );
-                }
-                _clearDrag();
-              },
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  _viewportWidth = constraints.maxWidth;
-                  return Stack(
-                    children: [
-                      ScrollConfiguration(
-                        behavior: ScrollConfiguration.of(
-                          context,
-                        ).copyWith(scrollbars: false),
-                        child: RawScrollbar(
-                          controller: _scrollController,
-                          thumbVisibility: true,
-                          thumbColor: AppColors.fgSubtle,
-                          thickness: _kScrollbarThumbWidth,
-                          crossAxisMargin: 0,
-                          radius: Radius.zero,
-                          child: GestureDetector(
-                            onSecondaryTapUp: (d) {
-                              final index = _rowAt(d.localPosition);
-                              if (index < 0) {
-                                widget.onBackgroundTap?.call();
-                                widget.onBackgroundContextMenu?.call(
-                                  d.globalPosition,
-                                );
-                              }
-                            },
-                            behavior: HitTestBehavior.translucent,
-                            child: ListView.builder(
-                              controller: _scrollController,
-                              padding: EdgeInsets.only(
-                                left: _listHorizontalPadding,
-                                top: _listTopPadding,
-                                right:
-                                    _listHorizontalPadding +
-                                    _kScrollbarGutterWidth,
-                              ),
-                              itemCount: widget.files.length,
-                              itemExtent: _itemExt,
-                              addAutomaticKeepAlives: false,
-                              addRepaintBoundaries: false,
-                              addSemanticIndexes: false,
-                              itemBuilder: (context, i) => RepaintBoundary(
-                                child: Padding(
-                                  padding: EdgeInsets.only(bottom: _rowG),
-                                  child: _ListRow(
-                                    rowHeight: _rowH,
-                                    dateFmt: _dateFmt,
-                                    recentDatesRelative: _recentDatesRelative,
-                                    entry: widget.files[i],
-                                    index: i,
-                                    selected: widget.selectedPaths.contains(
-                                      widget.files[i].path,
-                                    ),
-                                    selectedPaths: widget.selectedPaths,
-                                    isCut: widget.cutPaths.contains(
-                                      widget.files[i].path,
-                                    ),
-                                    isDraggingSelected:
-                                        widget.selectedPaths.isNotEmpty,
-                                    isFolderDragOver:
-                                        _hoveredFolderPath ==
-                                        widget.files[i].path,
-                                    isRenaming:
-                                        widget.renamingPath ==
-                                        widget.files[i].path,
-                                    renameAttempt: widget.renameAttempt,
-                                    onRenameSubmit: widget.onRenameSubmit,
-                                    onRenameCancel: widget.onRenameCancel,
-                                    onSelect: widget.onSelect,
-                                    onOpen: widget.onOpen,
-                                    onContextMenu: widget.onContextMenu,
-                                    onMenuAction: widget.onMenuAction,
-                                    recursive: widget.recursiveResults,
-                                    sizeWidth: columnWidths.size,
-                                    dateWidth: columnWidths.date,
-                                    location: widget.recursiveResults
-                                        ? _compactLocation(
-                                            widget.files[i].path,
-                                            widget.currentPath,
-                                          )
-                                        : null,
-                                    onOpenInNewTab: widget.onOpenInNewTab,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (_isDragOver)
-                        Positioned.fill(
-                          child: IgnorePointer(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: AppColors.accent.withValues(
-                                    alpha: 0.4,
-                                  ),
-                                  width: 1,
-                                ),
-                                borderRadius: BorderRadius.zero,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  );
-                },
-              ),
-            ),
-          ),
-        ),
-      ],
+        );
+      },
     );
   }
 }

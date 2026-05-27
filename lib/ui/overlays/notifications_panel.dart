@@ -61,47 +61,51 @@ class _NotificationsPanelBody extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(t.notifications.title, style: context.txt.dialogTitle),
                 const Spacer(),
-                Watch((context) {
-                  final has = store.history.value.any((n) => n.dismissible);
-                  if (!has) return const SizedBox.shrink();
-                  return _ClearButton(onTap: () => store.clearHistory());
-                }),
+                SignalBuilder(
+                  builder: (context) {
+                    final has = store.history.value.any((n) => n.dismissible);
+                    if (!has) return const SizedBox.shrink();
+                    return _ClearButton(onTap: () => store.clearHistory());
+                  },
+                ),
               ],
             ),
           ),
           Divider(height: 1, thickness: 1, color: AppColors.bgDivider),
-          Watch((context) {
-            final items = store.history.value;
-            if (items.isEmpty) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 24),
-                child: Text(
-                  t.notifications.empty,
-                  style: context.txt.body.copyWith(color: AppColors.fgSubtle),
-                ),
-              );
-            }
-            final reversed = items.reversed.toList();
-            return Flexible(
-              child: ListView.separated(
-                shrinkWrap: true,
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                itemCount: reversed.length,
-                separatorBuilder: (_, _) => Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Divider(
-                    height: 1,
-                    thickness: 1,
-                    color: AppColors.bgDivider,
+          SignalBuilder(
+            builder: (context) {
+              final items = store.history.value;
+              if (items.isEmpty) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: Text(
+                    t.notifications.empty,
+                    style: context.txt.body.copyWith(color: AppColors.fgSubtle),
+                  ),
+                );
+              }
+              final reversed = items.reversed.toList();
+              return Flexible(
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  itemCount: reversed.length,
+                  separatorBuilder: (_, _) => Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: AppColors.bgDivider,
+                    ),
+                  ),
+                  itemBuilder: (_, i) => _NotificationTile(
+                    notification: reversed[i],
+                    onRemove: () => store.removeFromHistory(reversed[i].id),
                   ),
                 ),
-                itemBuilder: (_, i) => _NotificationTile(
-                  notification: reversed[i],
-                  onRemove: () => store.removeFromHistory(reversed[i].id),
-                ),
-              ),
-            );
-          }),
+              );
+            },
+          ),
         ],
       ),
     );

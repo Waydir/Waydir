@@ -66,45 +66,47 @@ class _OperationsPanelBody extends StatelessWidget {
             ),
           ),
           Divider(height: 1, thickness: 1, color: AppColors.bgDivider),
-          Watch((context) {
-            final ops = operationStore.tasks.value
-                .where(
-                  (task) =>
-                      task.status != TaskStatus.completed &&
-                      task.status != TaskStatus.failed &&
-                      task.status != TaskStatus.cancelled,
-                )
-                .toList();
-            if (ops.isEmpty) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 24),
-                child: Text(
-                  t.operations.noActive,
-                  style: context.txt.body.copyWith(color: AppColors.fgSubtle),
+          SignalBuilder(
+            builder: (context) {
+              final ops = operationStore.tasks.value
+                  .where(
+                    (task) =>
+                        task.status != TaskStatus.completed &&
+                        task.status != TaskStatus.failed &&
+                        task.status != TaskStatus.cancelled,
+                  )
+                  .toList();
+              if (ops.isEmpty) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: Text(
+                    t.operations.noActive,
+                    style: context.txt.body.copyWith(color: AppColors.fgSubtle),
+                  ),
+                );
+              }
+              return Flexible(
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  itemCount: ops.length,
+                  separatorBuilder: (_, _) => Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 2,
+                    ),
+                    child: Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: AppColors.bgDivider,
+                    ),
+                  ),
+                  itemBuilder: (_, i) =>
+                      _TaskTile(task: ops[i], operationStore: operationStore),
                 ),
               );
-            }
-            return Flexible(
-              child: ListView.separated(
-                shrinkWrap: true,
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                itemCount: ops.length,
-                separatorBuilder: (_, _) => Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 2,
-                  ),
-                  child: Divider(
-                    height: 1,
-                    thickness: 1,
-                    color: AppColors.bgDivider,
-                  ),
-                ),
-                itemBuilder: (_, i) =>
-                    _TaskTile(task: ops[i], operationStore: operationStore),
-              ),
-            );
-          }),
+            },
+          ),
         ],
       ),
     );

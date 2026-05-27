@@ -164,57 +164,38 @@ class _QuickLookState extends State<_QuickLook> {
                 ),
               ],
             ),
-            child: Watch((_) {
-              final override = widget.explicitEntry;
-              if (override != null) {
-                return Column(
-                  children: [
-                    _Header(
-                      entry: override,
-                      compact: true,
-                      showInfo: true,
-                      onToggleInfo: () {},
-                      onClose: () => Navigator.of(context).pop(),
-                    ),
-                    Container(height: 1, color: AppColors.bgDivider),
-                    Expanded(
-                      child: override.type == FileItemType.folder
-                          ? MultiProperties(entries: [override])
-                          : PropertiesOnly(entry: override),
-                    ),
-                  ],
-                );
-              }
-              final selected = widget.store.selectedPaths.value;
-              if (selected.length > 1) {
-                final entries = widget.store.selectedEntries;
-                return Column(
-                  children: [
-                    _Header(
-                      entry: null,
-                      compact: true,
-                      showInfo: _showInfo,
-                      multiCount: entries.length,
-                      onToggleInfo: () {},
-                      onClose: () => Navigator.of(context).pop(),
-                    ),
-                    Container(height: 1, color: AppColors.bgDivider),
-                    Expanded(child: MultiProperties(entries: entries)),
-                  ],
-                );
-              }
-              if (selected.length == 1) {
-                final entries = widget.store.selectedEntries;
-                if (entries.length == 1 &&
-                    entries.first.type == FileItemType.folder) {
-                  final entry = entries.first;
-                  _syncPresentation(entry);
+            child: SignalBuilder(
+              builder: (_) {
+                final override = widget.explicitEntry;
+                if (override != null) {
                   return Column(
                     children: [
                       _Header(
-                        entry: entry,
+                        entry: override,
                         compact: true,
                         showInfo: true,
+                        onToggleInfo: () {},
+                        onClose: () => Navigator.of(context).pop(),
+                      ),
+                      Container(height: 1, color: AppColors.bgDivider),
+                      Expanded(
+                        child: override.type == FileItemType.folder
+                            ? MultiProperties(entries: [override])
+                            : PropertiesOnly(entry: override),
+                      ),
+                    ],
+                  );
+                }
+                final selected = widget.store.selectedPaths.value;
+                if (selected.length > 1) {
+                  final entries = widget.store.selectedEntries;
+                  return Column(
+                    children: [
+                      _Header(
+                        entry: null,
+                        compact: true,
+                        showInfo: _showInfo,
+                        multiCount: entries.length,
                         onToggleInfo: () {},
                         onClose: () => Navigator.of(context).pop(),
                       ),
@@ -223,30 +204,52 @@ class _QuickLookState extends State<_QuickLook> {
                     ],
                   );
                 }
-              }
-              final entry = widget.store.cursorEntry.value;
-              _syncPresentation(entry);
-              return Column(
-                children: [
-                  _Header(
-                    entry: entry,
-                    compact: _compact,
-                    showInfo: _showInfo,
-                    onToggleInfo: () => setState(() => _showInfo = !_showInfo),
-                    onClose: () => Navigator.of(context).pop(),
-                  ),
-                  Container(height: 1, color: AppColors.bgDivider),
-                  Expanded(
-                    child: _Body(
+                if (selected.length == 1) {
+                  final entries = widget.store.selectedEntries;
+                  if (entries.length == 1 &&
+                      entries.first.type == FileItemType.folder) {
+                    final entry = entries.first;
+                    _syncPresentation(entry);
+                    return Column(
+                      children: [
+                        _Header(
+                          entry: entry,
+                          compact: true,
+                          showInfo: true,
+                          onToggleInfo: () {},
+                          onClose: () => Navigator.of(context).pop(),
+                        ),
+                        Container(height: 1, color: AppColors.bgDivider),
+                        Expanded(child: MultiProperties(entries: entries)),
+                      ],
+                    );
+                  }
+                }
+                final entry = widget.store.cursorEntry.value;
+                _syncPresentation(entry);
+                return Column(
+                  children: [
+                    _Header(
                       entry: entry,
-                      editorActive: _editorActive,
+                      compact: _compact,
                       showInfo: _showInfo,
-                      onCompactChanged: _setCompact,
+                      onToggleInfo: () =>
+                          setState(() => _showInfo = !_showInfo),
+                      onClose: () => Navigator.of(context).pop(),
                     ),
-                  ),
-                ],
-              );
-            }),
+                    Container(height: 1, color: AppColors.bgDivider),
+                    Expanded(
+                      child: _Body(
+                        entry: entry,
+                        editorActive: _editorActive,
+                        showInfo: _showInfo,
+                        onCompactChanged: _setCompact,
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
           ),
         ),
       ),

@@ -189,10 +189,7 @@ class NavigationStore {
       case SmbShareListError(:final message):
         throw FileSystemException(message, logical);
       case SmbShareListUnsupported():
-        throw FileSystemException(
-          t.errors.smbNotSupportedOnPlatform,
-          logical,
-        );
+        throw FileSystemException(t.errors.smbNotSupportedOnPlatform, logical);
     }
   }
 
@@ -332,6 +329,7 @@ class NavigationStore {
       s.foldersFirst.value,
     );
     if (!s.rememberFolderSort.value) return;
+    if (!s.isLoaded) return;
     try {
       final pref = await s.db.getFolderPref(path);
       if (token != _sortLoadToken) return;
@@ -348,8 +346,10 @@ class NavigationStore {
   void _persistSort() {
     final path = currentPath.value;
     if (path.isEmpty) return;
-    if (!SettingsStore.instance.rememberFolderSort.value) return;
-    SettingsStore.instance.db
+    final s = SettingsStore.instance;
+    if (!s.rememberFolderSort.value) return;
+    if (!s.isLoaded) return;
+    s.db
         .setFolderPref(
           path,
           sortKey: sortKeyToString(sortKey.value),
@@ -889,7 +889,8 @@ class NavigationStore {
 
   void _saveFolderState(String path) {
     if (path.isEmpty) return;
-    if (!SettingsStore.instance.rememberFolderState.value) return;
+    final s = SettingsStore.instance;
+    if (!s.rememberFolderState.value) return;
     final idx = cursorIndex.value;
     final list = _vf;
     final cursorPath = (idx >= 0 && idx < list.length) ? list[idx].path : null;
@@ -898,22 +899,20 @@ class NavigationStore {
       selectedPaths: selected,
       cursorPath: cursorPath,
     );
+    if (!s.isLoaded) return;
     final encoded = selected.isEmpty ? null : jsonEncode(selected.toList());
-    SettingsStore.instance.db
-        .setFolderUiState(
-          path,
-          cursorPath: cursorPath,
-          selectedPaths: encoded,
-        )
+    s.db
+        .setFolderUiState(path, cursorPath: cursorPath, selectedPaths: encoded)
         .catchError((_) {});
   }
 
   Future<void> _restoreFolderStateIfMatches(String path) async {
-    if (!SettingsStore.instance.rememberFolderState.value) return;
+    final s = SettingsStore.instance;
+    if (!s.rememberFolderState.value) return;
     _FolderState? state = _folderStateCache[path];
-    if (state == null) {
+    if (state == null && s.isLoaded) {
       try {
-        final pref = await SettingsStore.instance.db.getFolderPref(path);
+        final pref = await s.db.getFolderPref(path);
         if (pref == null) return;
         if (currentPath.value != path) return;
         Set<String> selected = const {};
@@ -937,6 +936,7 @@ class NavigationStore {
       }
     }
     final resolved = state;
+    if (resolved == null) return;
     final list = _vf;
     if (list.isEmpty) return;
     final visiblePaths = {for (final f in list) f.path};
