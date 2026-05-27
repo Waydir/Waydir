@@ -44,6 +44,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$menu$en menu = Translations$menu$en.internal(_root);
 	late final Translations$multiRename$en multiRename = Translations$multiRename$en.internal(_root);
 	late final Translations$compress$en compress = Translations$compress$en.internal(_root);
+	late final Translations$checksum$en checksum = Translations$checksum$en.internal(_root);
 	late final Translations$properties$en properties = Translations$properties$en.internal(_root);
 	late final Translations$preferences$en preferences = Translations$preferences$en.internal(_root);
 	late final Translations$update$en update = Translations$update$en.internal(_root);
@@ -213,6 +214,9 @@ class Translations$menu$en {
 
 	/// en: 'Multi Rename…'
 	String get multiRename => 'Multi Rename…';
+
+	/// en: 'Verify Checksum…'
+	String get verifyChecksum => 'Verify Checksum…';
 }
 
 // Path: multiRename
@@ -342,6 +346,54 @@ class Translations$compress$en {
 
 	/// en: 'Cancel'
 	String get cancel => 'Cancel';
+}
+
+// Path: checksum
+class Translations$checksum$en {
+	Translations$checksum$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Verify Checksum'
+	String get title => 'Verify Checksum';
+
+	/// en: 'MD5'
+	String get md5 => 'MD5';
+
+	/// en: 'SHA-256'
+	String get sha256 => 'SHA-256';
+
+	/// en: 'Expected checksum'
+	String get expected => 'Expected checksum';
+
+	/// en: '$algorithm digest'
+	String expectedHint({required Object algorithm}) => '${algorithm} digest';
+
+	/// en: 'Verify'
+	String get verify => 'Verify';
+
+	/// en: 'Calculating…'
+	String get calculating => 'Calculating…';
+
+	/// en: 'Checksum matches'
+	String get match => 'Checksum matches';
+
+	/// en: 'Checksum does not match'
+	String get mismatch => 'Checksum does not match';
+
+	/// en: 'Copy'
+	String get copy => 'Copy';
+
+	/// en: 'Copied'
+	String get copied => 'Copied';
+
+	/// en: '$algorithm checksum must be $length hexadecimal characters'
+	String invalidExpected({required Object algorithm, required Object length}) => '${algorithm} checksum must be ${length} hexadecimal characters';
+
+	/// en: 'Could not read file'
+	String get readError => 'Could not read file';
 }
 
 // Path: properties
@@ -2485,6 +2537,7 @@ extension on Translations {
 			'menu.compressTo' => ({required Object name}) => 'Compress to ${name}',
 			'menu.compressOptions' => 'Add to Archive…',
 			'menu.multiRename' => 'Multi Rename…',
+			'menu.verifyChecksum' => 'Verify Checksum…',
 			'multiRename.title' => 'Multi Rename',
 			'multiRename.subtitle' => ({required Object count}) => '${count} items selected',
 			'multiRename.modeTemplate' => 'Template',
@@ -2522,6 +2575,19 @@ extension on Translations {
 			'compress.levelMaximum' => 'Maximum',
 			'compress.create' => 'Create',
 			'compress.cancel' => 'Cancel',
+			'checksum.title' => 'Verify Checksum',
+			'checksum.md5' => 'MD5',
+			'checksum.sha256' => 'SHA-256',
+			'checksum.expected' => 'Expected checksum',
+			'checksum.expectedHint' => ({required Object algorithm}) => '${algorithm} digest',
+			'checksum.verify' => 'Verify',
+			'checksum.calculating' => 'Calculating…',
+			'checksum.match' => 'Checksum matches',
+			'checksum.mismatch' => 'Checksum does not match',
+			'checksum.copy' => 'Copy',
+			'checksum.copied' => 'Copied',
+			'checksum.invalidExpected' => ({required Object algorithm, required Object length}) => '${algorithm} checksum must be ${length} hexadecimal characters',
+			'checksum.readError' => 'Could not read file',
 			'properties.title' => 'Properties',
 			'properties.name' => 'Name',
 			'properties.type' => 'Type',
@@ -2941,6 +3007,8 @@ extension on Translations {
 			'password.mountPrompt' => 'Enter your password to mount this drive.',
 			'password.smbPrompt' => 'Enter credentials for this network share.',
 			'password.sftpPrompt' => 'SSH/SFTP authentication',
+			_ => null,
+		} ?? switch (path) {
 			'password.username' => 'Username',
 			'password.password' => 'Password',
 			'password.privateKey' => 'Private key',
@@ -2955,8 +3023,6 @@ extension on Translations {
 			'operations.clear' => 'Clear',
 			'operations.noActive' => 'No active operations',
 			'operations.resolveConflicts' => 'Resolve Conflicts',
-			_ => null,
-		} ?? switch (path) {
 			'operations.errorsCount' => ({required Object count}) => '${count} errors',
 			'operations.compressing' => 'Compressing…',
 			'operations.compressingGzip' => 'Compressing (gzip)…',

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Breadcrumb path entry now suggests folders and recent paths.
+- File checksums can now be calculated and verified with MD5 and SHA-256.
 - File list horizontal and vertical spacing can now be adjusted in Preferences.
 - Properties now shows statistics for selected files and folders.
 - Leave the Share field empty when connecting to SMB to browse the server's shared folders.

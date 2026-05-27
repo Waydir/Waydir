@@ -19,6 +19,7 @@ import '../core/models/file_entry.dart';
 import '../core/models/file_operation.dart';
 import '../core/settings/settings_store.dart';
 import '../core/update/update_store.dart';
+import '../features/checksum/checksum_dialog.dart';
 import '../features/update/update_dialog.dart';
 import '../features/navigation/navigation_store.dart';
 import '../features/navigation/sidebar.dart';
@@ -474,6 +475,10 @@ class _WaydirPageState extends State<WaydirPage> {
     final isSingleFolder =
         count == 1 && entries.first.type == FileItemType.folder;
     final isSingleFile = count == 1 && entries.first.type == FileItemType.file;
+    final canVerifyChecksum =
+        isSingleFile &&
+        !PlatformPaths.isRemoteUri(entries.first.realPath) &&
+        !FileSystemService.isInsideArchive(entries.first.realPath);
     final isRecursive = store.searchActive.value && store.searchRecursive.value;
 
     final openWithItems = isSingleFile
@@ -638,6 +643,12 @@ class _WaydirPageState extends State<WaydirPage> {
           label: t.menu.copyPath,
           action: 'copy_path',
         ),
+      if (canVerifyChecksum)
+        ContextMenuItem(
+          icon: WaydirIconsRegular.checkSquare,
+          label: t.menu.verifyChecksum,
+          action: 'verify_checksum',
+        ),
       ContextMenuItem.divider,
       if (count == 1)
         ContextMenuItem(
@@ -796,6 +807,14 @@ class _WaydirPageState extends State<WaydirPage> {
         store.paste();
       case 'copy_path':
         store.copySelectedPaths();
+      case 'verify_checksum':
+        final entries = store.selectedEntries;
+        if (entries.length == 1 && entries.first.type == FileItemType.file) {
+          showChecksumDialog(
+            context: context,
+            entry: entries.first,
+          ).then((_) => _restoreFocus());
+        }
       case 'rename':
         store.startRename();
       case 'multi_rename':

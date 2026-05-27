@@ -41,6 +41,7 @@ dependencies:
   mime: ^2.0.0
   flutter_svg: ^2.3.0
   archive: ^4.0.9
+  crypto: ^3.0.7
   http: ^1.6.0
   flutter_markdown_plus: ^1.0.7
   file_picker: ^11.0.2
