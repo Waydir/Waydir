@@ -43,6 +43,7 @@ import '../ui/overlays/notification_store.dart';
 import '../ui/overlays/toast.dart';
 import '../ui/theme/app_theme.dart';
 import '../ui/theme/app_text_styles.dart';
+import '../ui/window/window.dart';
 
 class WaydirPage extends StatefulWidget {
   const WaydirPage({super.key});
@@ -142,6 +143,19 @@ class _WaydirPageState extends State<WaydirPage> {
             }
           });
         }
+      }),
+    );
+    _effectDisposers.add(
+      effect(() {
+        if (!_shell.ready.value) return;
+        if (!isWindowChromeSupported) return;
+        final pane = _shell.activePane.value;
+        if (pane == null) {
+          appWindow.title = t.app.title;
+          return;
+        }
+        final title = pane.tabs.activeTab.value.title.value;
+        appWindow.title = '$title - ${t.app.title}';
       }),
     );
     _effectDisposers.add(
