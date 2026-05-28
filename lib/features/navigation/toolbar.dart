@@ -770,7 +770,7 @@ class _PathInputParts {
   }
 }
 
-class _PathSuggestionPopup extends StatelessWidget {
+class _PathSuggestionPopup extends StatefulWidget {
   final List<_PathSuggestion> suggestions;
   final int highlightedIndex;
   final ValueChanged<_PathSuggestion> onPointerDown;
@@ -785,7 +785,55 @@ class _PathSuggestionPopup extends StatelessWidget {
   });
 
   @override
+  State<_PathSuggestionPopup> createState() => _PathSuggestionPopupState();
+}
+
+class _PathSuggestionPopupState extends State<_PathSuggestionPopup> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void didUpdateWidget(covariant _PathSuggestionPopup oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.highlightedIndex != oldWidget.highlightedIndex) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToHighlighted());
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToHighlighted() {
+    if (!_scrollController.hasClients) return;
+    final index = widget.highlightedIndex;
+    if (index < 0) return;
+    final itemTop = index * _PathSuggestionPopup._rowHeight;
+    final itemBottom = itemTop + _PathSuggestionPopup._rowHeight;
+    final viewport = _scrollController.position.viewportDimension;
+    final offset = _scrollController.offset;
+    double? target;
+    if (itemTop < offset) {
+      target = itemTop;
+    } else if (itemBottom > offset + viewport) {
+      target = itemBottom - viewport;
+    }
+    if (target != null) {
+      _scrollController.jumpTo(
+        target.clamp(
+          _scrollController.position.minScrollExtent,
+          _scrollController.position.maxScrollExtent,
+        ),
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final suggestions = widget.suggestions;
+    final highlightedIndex = widget.highlightedIndex;
+    final onPointerDown = widget.onPointerDown;
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
@@ -805,9 +853,13 @@ class _PathSuggestionPopup extends StatelessWidget {
         children: [
           ConstrainedBox(
             constraints: BoxConstraints(
-              maxHeight: _rowHeight * _maxVisibleRows + 8,
+              maxHeight:
+                  _PathSuggestionPopup._rowHeight *
+                      _PathSuggestionPopup._maxVisibleRows +
+                  8,
             ),
             child: ListView.builder(
+              controller: _scrollController,
               padding: const EdgeInsets.symmetric(vertical: 4),
               shrinkWrap: true,
               primary: false,
@@ -819,7 +871,7 @@ class _PathSuggestionPopup extends StatelessWidget {
                 return Listener(
                   onPointerDown: (_) => onPointerDown(suggestion),
                   child: Container(
-                    height: _rowHeight,
+                    height: _PathSuggestionPopup._rowHeight,
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     decoration: BoxDecoration(
                       color: highlighted
