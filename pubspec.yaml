@@ -45,6 +45,8 @@ dependencies:
   http: ^1.6.0
   flutter_markdown_plus: ^1.0.7
   file_picker: ^11.0.2
+  waydir_term:
+    path: packages/waydir_term
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -2,7 +2,10 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:signals/signals_flutter.dart';
+import 'package:waydir_term/xterm.dart';
+import '../../core/terminal/pty_session.dart';
 import '../../features/files/file_view.dart'
     show
         FileList,
@@ -20,6 +23,7 @@ import '../tabs/tab_strip.dart';
 import '../../ui/icons/waydir_icons.dart';
 import '../../ui/theme/app_theme.dart';
 import '../../ui/theme/app_text_styles.dart';
+import '../../ui/widgets/app_close_button.dart';
 import '../../i18n/strings.g.dart';
 import 'pane_store.dart';
 
@@ -32,6 +36,9 @@ class PaneView extends StatelessWidget {
   final FileMenuActionCallback? onMenuAction;
   final OpenInNewTabCallback? onOpenInNewTab;
   final void Function(NavigationStore store)? onMultiRename;
+  final VoidCallback? onToggleTerminal;
+  final void Function(PaneStore pane)? onTerminalActivate;
+  final VoidCallback? onReturnFocusToFiles;
 
   const PaneView({
     super.key,
@@ -43,6 +50,9 @@ class PaneView extends StatelessWidget {
     this.onMenuAction,
     this.onOpenInNewTab,
     this.onMultiRename,
+    this.onToggleTerminal,
+    this.onTerminalActivate,
+    this.onReturnFocusToFiles,
   });
 
   @override
@@ -102,6 +112,22 @@ class PaneView extends StatelessWidget {
                   final status = gitStore.status.value;
                   if (status == null) return const SizedBox.shrink();
                   return GitStatusBar(status: status, store: gitStore);
+                },
+              ),
+              SignalBuilder(
+                builder: (_) {
+                  if (!pane.terminalVisible.value) {
+                    return const SizedBox.shrink();
+                  }
+                  final session = pane.activeTerminal;
+                  if (session == null) return const SizedBox.shrink();
+                  return _TerminalPanel(
+                    pane: pane,
+                    session: session,
+                    onToggleTerminal: onToggleTerminal,
+                    onActivate: onTerminalActivate,
+                    onReturnFocusToFiles: onReturnFocusToFiles,
+                  );
                 },
               ),
             ],
@@ -192,6 +218,190 @@ class _TabContent extends StatelessWidget {
           },
         );
       },
+    );
+  }
+}
+
+class _TerminalPanel extends StatefulWidget {
+  final PaneStore pane;
+  final PtySession session;
+  final VoidCallback? onToggleTerminal;
+  final void Function(PaneStore pane)? onActivate;
+  final VoidCallback? onReturnFocusToFiles;
+
+  const _TerminalPanel({
+    required this.pane,
+    required this.session,
+    this.onToggleTerminal,
+    this.onActivate,
+    this.onReturnFocusToFiles,
+  });
+
+  @override
+  State<_TerminalPanel> createState() => _TerminalPanelState();
+}
+
+class _TerminalPanelState extends State<_TerminalPanel> {
+  bool _focused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focused = widget.pane.terminalFocusNode.hasFocus;
+    widget.pane.terminalFocusNode.addListener(_onFocusChange);
+  }
+
+  @override
+  void dispose() {
+    widget.pane.terminalFocusNode.removeListener(_onFocusChange);
+    super.dispose();
+  }
+
+  void _onFocusChange() {
+    final focused = widget.pane.terminalFocusNode.hasFocus;
+    if (focused != _focused) setState(() => _focused = focused);
+  }
+
+  KeyEventResult _onKeyEvent(FocusNode node, KeyEvent event) {
+    if (event is KeyDownEvent &&
+        event.physicalKey == PhysicalKeyboardKey.backquote &&
+        HardwareKeyboard.instance.isControlPressed &&
+        !HardwareKeyboard.instance.isAltPressed) {
+      if (HardwareKeyboard.instance.isShiftPressed) {
+        widget.onToggleTerminal?.call();
+      } else {
+        widget.onReturnFocusToFiles?.call();
+      }
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final pane = widget.pane;
+    return SignalBuilder(
+      builder: (_) {
+        final height = pane.terminalHeight.value;
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _TerminalResizeHandle(pane: pane),
+            _TerminalHeader(focused: _focused, onClose: widget.onToggleTerminal),
+            SizedBox(
+              height: height,
+              child: Listener(
+                onPointerDown: (_) => widget.onActivate?.call(pane),
+                child: TerminalView(
+                  widget.session.terminal,
+                  focusNode: pane.terminalFocusNode,
+                  theme: _appTerminalTheme(),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 6,
+                  ),
+                  onKeyEvent: _onKeyEvent,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+TerminalTheme _appTerminalTheme() {
+  final c = AppColors.terminal;
+  return TerminalTheme(
+    cursor: AppColors.accent,
+    selection: AppColors.accent.withValues(alpha: 0.30),
+    foreground: AppColors.fg,
+    background: AppColors.bg,
+    black: c.black,
+    red: c.red,
+    green: c.green,
+    yellow: c.yellow,
+    blue: c.blue,
+    magenta: c.magenta,
+    cyan: c.cyan,
+    white: c.white,
+    brightBlack: c.brightBlack,
+    brightRed: c.brightRed,
+    brightGreen: c.brightGreen,
+    brightYellow: c.brightYellow,
+    brightBlue: c.brightBlue,
+    brightMagenta: c.brightMagenta,
+    brightCyan: c.brightCyan,
+    brightWhite: c.brightWhite,
+    searchHitBackground: AppColors.warning,
+    searchHitBackgroundCurrent: AppColors.accent,
+    searchHitForeground: AppColors.bg,
+  );
+}
+
+class _TerminalHeader extends StatelessWidget {
+  final bool focused;
+  final VoidCallback? onClose;
+
+  const _TerminalHeader({required this.focused, this.onClose});
+
+  @override
+  Widget build(BuildContext context) {
+    final fg = focused ? AppColors.fg : AppColors.fgMuted;
+    return Opacity(
+      opacity: focused ? 1.0 : 0.55,
+      child: Container(
+        height: 28,
+        padding: const EdgeInsets.only(left: 10, right: 4),
+        decoration: BoxDecoration(
+          color: AppColors.bgStatus,
+          border: Border(bottom: BorderSide(color: AppColors.bgDivider)),
+        ),
+        child: Row(
+          children: [
+            Icon(WaydirIconsRegular.terminal, size: 13, color: fg),
+            const SizedBox(width: 7),
+            Text(t.terminal.title, style: context.txt.body.copyWith(color: fg)),
+            const Spacer(),
+            if (onClose != null) AppCloseButton(onTap: onClose!, size: 22),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TerminalResizeHandle extends StatefulWidget {
+  final PaneStore pane;
+
+  const _TerminalResizeHandle({required this.pane});
+
+  @override
+  State<_TerminalResizeHandle> createState() => _TerminalResizeHandleState();
+}
+
+class _TerminalResizeHandleState extends State<_TerminalResizeHandle> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.resizeRow,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onVerticalDragUpdate: (details) {
+          final next = (widget.pane.terminalHeight.value - details.delta.dy)
+              .clamp(80.0, 900.0);
+          widget.pane.terminalHeight.value = next;
+        },
+        child: Container(
+          height: 5,
+          color: _hovered ? AppColors.accent : AppColors.bgDivider,
+        ),
+      ),
     );
   }
 }

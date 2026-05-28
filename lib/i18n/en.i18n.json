@@ -4,6 +4,9 @@
     "tagline": "Navigate your files. Your way.",
     "description": "A fast, keyboard-driven desktop file manager built with Flutter."
   },
+  "terminal": {
+    "title": "Terminal"
+  },
   "menu": {
     "view": "View",
     "open": "Open",
@@ -342,6 +345,8 @@
     "switchTab": "Switch to tab",
     "toggleDual": "Toggle dual pane",
     "switchPane": "Switch active pane",
+    "focusTerminal": "Open / focus terminal",
+    "toggleTerminal": "Toggle terminal",
     "toggleSidebar": "Toggle sidebar",
     "copy": "Copy",
     "cut": "Cut",
@@ -429,6 +434,7 @@
     "selectionLoaded(one)": "Selected 1 visible item",
     "selectionLoaded(other)": "Selected $count visible items",
     "selectionLoadEmpty": "No visible items matched",
+    "terminalUnavailable": "Terminal is unavailable: native core not loaded",
     "selectionFileError": "Selection file error: $message",
     "taskErrors(one)": "$label — 1 error",
     "taskErrors(other)": "$label — $count errors",

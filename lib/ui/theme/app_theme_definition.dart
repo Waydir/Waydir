@@ -3,6 +3,115 @@ import 'package:flutter/material.dart';
 import '../../i18n/strings.g.dart';
 
 @immutable
+class TerminalColors {
+  final Color black;
+  final Color red;
+  final Color green;
+  final Color yellow;
+  final Color blue;
+  final Color magenta;
+  final Color cyan;
+  final Color white;
+  final Color brightBlack;
+  final Color brightRed;
+  final Color brightGreen;
+  final Color brightYellow;
+  final Color brightBlue;
+  final Color brightMagenta;
+  final Color brightCyan;
+  final Color brightWhite;
+
+  const TerminalColors({
+    required this.black,
+    required this.red,
+    required this.green,
+    required this.yellow,
+    required this.blue,
+    required this.magenta,
+    required this.cyan,
+    required this.white,
+    required this.brightBlack,
+    required this.brightRed,
+    required this.brightGreen,
+    required this.brightYellow,
+    required this.brightBlue,
+    required this.brightMagenta,
+    required this.brightCyan,
+    required this.brightWhite,
+  });
+
+  static const standard = TerminalColors(
+    black: Color(0xFF000000),
+    red: Color(0xFFCD3131),
+    green: Color(0xFF0DBC79),
+    yellow: Color(0xFFE5E510),
+    blue: Color(0xFF2472C8),
+    magenta: Color(0xFFBC3FBC),
+    cyan: Color(0xFF11A8CD),
+    white: Color(0xFFE5E5E5),
+    brightBlack: Color(0xFF666666),
+    brightRed: Color(0xFFF14C4C),
+    brightGreen: Color(0xFF23D18B),
+    brightYellow: Color(0xFFF5F543),
+    brightBlue: Color(0xFF3B8EEA),
+    brightMagenta: Color(0xFFD670D6),
+    brightCyan: Color(0xFF29B8DB),
+    brightWhite: Color(0xFFFFFFFF),
+  );
+
+  factory TerminalColors.fromJson(Map<String, dynamic> json) {
+    Color read(String key, Color fallback) {
+      final value = json[key];
+      if (value is! String) return fallback;
+      try {
+        return parseThemeColor(value, key);
+      } catch (_) {
+        return fallback;
+      }
+    }
+
+    const d = standard;
+    return TerminalColors(
+      black: read('black', d.black),
+      red: read('red', d.red),
+      green: read('green', d.green),
+      yellow: read('yellow', d.yellow),
+      blue: read('blue', d.blue),
+      magenta: read('magenta', d.magenta),
+      cyan: read('cyan', d.cyan),
+      white: read('white', d.white),
+      brightBlack: read('brightBlack', d.brightBlack),
+      brightRed: read('brightRed', d.brightRed),
+      brightGreen: read('brightGreen', d.brightGreen),
+      brightYellow: read('brightYellow', d.brightYellow),
+      brightBlue: read('brightBlue', d.brightBlue),
+      brightMagenta: read('brightMagenta', d.brightMagenta),
+      brightCyan: read('brightCyan', d.brightCyan),
+      brightWhite: read('brightWhite', d.brightWhite),
+    );
+  }
+
+  Map<String, String> toJson() => {
+    'black': _hex(black),
+    'red': _hex(red),
+    'green': _hex(green),
+    'yellow': _hex(yellow),
+    'blue': _hex(blue),
+    'magenta': _hex(magenta),
+    'cyan': _hex(cyan),
+    'white': _hex(white),
+    'brightBlack': _hex(brightBlack),
+    'brightRed': _hex(brightRed),
+    'brightGreen': _hex(brightGreen),
+    'brightYellow': _hex(brightYellow),
+    'brightBlue': _hex(brightBlue),
+    'brightMagenta': _hex(brightMagenta),
+    'brightCyan': _hex(brightCyan),
+    'brightWhite': _hex(brightWhite),
+  };
+}
+
+@immutable
 class AppThemePalette {
   final Color bg;
   final Color bgSurface;
@@ -36,6 +145,7 @@ class AppThemePalette {
   final Color fileAudio;
   final Color fileVideo;
   final Color fileDefault;
+  final TerminalColors terminal;
 
   const AppThemePalette({
     required this.bg,
@@ -70,6 +180,7 @@ class AppThemePalette {
     required this.fileAudio,
     required this.fileVideo,
     required this.fileDefault,
+    this.terminal = TerminalColors.standard,
   });
 
   factory AppThemePalette.fromJson(Map<String, dynamic> json) {
@@ -114,10 +225,13 @@ class AppThemePalette {
       fileAudio: read('fileAudio'),
       fileVideo: read('fileVideo'),
       fileDefault: read('fileDefault'),
+      terminal: json['terminal'] is Map<String, dynamic>
+          ? TerminalColors.fromJson(json['terminal'] as Map<String, dynamic>)
+          : TerminalColors.standard,
     );
   }
 
-  Map<String, String> toJson() => {
+  Map<String, dynamic> toJson() => {
     'bg': _hex(bg),
     'bgSurface': _hex(bgSurface),
     'bgSidebar': _hex(bgSidebar),
@@ -150,6 +264,7 @@ class AppThemePalette {
     'fileAudio': _hex(fileAudio),
     'fileVideo': _hex(fileVideo),
     'fileDefault': _hex(fileDefault),
+    'terminal': terminal.toJson(),
   };
 }
 

@@ -208,6 +208,23 @@ class AppShortcuts {
       key: LogicalKeyboardKey.tab,
     ),
     ShortcutDef(
+      id: 'focus_terminal',
+      label: () => '',
+      group: ShortcutGroup.panes,
+      key: LogicalKeyboardKey.backquote,
+      ctrl: true,
+      customKeyDisplay: '`',
+    ),
+    ShortcutDef(
+      id: 'toggle_terminal',
+      label: () => '',
+      group: ShortcutGroup.panes,
+      key: LogicalKeyboardKey.backquote,
+      ctrl: true,
+      shift: true,
+      customKeyDisplay: '`',
+    ),
+    ShortcutDef(
       id: 'copy',
       label: () => '',
       group: ShortcutGroup.fileOps,

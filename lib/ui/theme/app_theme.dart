@@ -56,6 +56,8 @@ class AppColors {
   static Color get fileDefault => _p.fileDefault;
 
   static Color get folderColor => _p.accent;
+
+  static TerminalColors get terminal => _p.terminal;
 }
 
 class AppTheme {

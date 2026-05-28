@@ -41,6 +41,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 
 	// Translations
 	late final Translations$app$en app = Translations$app$en.internal(_root);
+	late final Translations$terminal$en terminal = Translations$terminal$en.internal(_root);
 	late final Translations$menu$en menu = Translations$menu$en.internal(_root);
 	late final Translations$multiRename$en multiRename = Translations$multiRename$en.internal(_root);
 	late final Translations$compress$en compress = Translations$compress$en.internal(_root);
@@ -88,6 +89,18 @@ class Translations$app$en {
 
 	/// en: 'A fast, keyboard-driven desktop file manager built with Flutter.'
 	String get description => 'A fast, keyboard-driven desktop file manager built with Flutter.';
+}
+
+// Path: terminal
+class Translations$terminal$en {
+	Translations$terminal$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Terminal'
+	String get title => 'Terminal';
 }
 
 // Path: menu
@@ -695,6 +708,12 @@ class Translations$keybindings$en {
 	/// en: 'Switch active pane'
 	String get switchPane => 'Switch active pane';
 
+	/// en: 'Open / focus terminal'
+	String get focusTerminal => 'Open / focus terminal';
+
+	/// en: 'Toggle terminal'
+	String get toggleTerminal => 'Toggle terminal';
+
 	/// en: 'Toggle sidebar'
 	String get toggleSidebar => 'Toggle sidebar';
 
@@ -952,6 +971,9 @@ class Translations$toast$en {
 
 	/// en: 'No visible items matched'
 	String get selectionLoadEmpty => 'No visible items matched';
+
+	/// en: 'Terminal is unavailable: native core not loaded'
+	String get terminalUnavailable => 'Terminal is unavailable: native core not loaded';
 
 	/// en: 'Selection file error: $message'
 	String selectionFileError({required Object message}) => 'Selection file error: ${message}';
@@ -2498,6 +2520,7 @@ extension on Translations {
 			'app.title' => 'Waydir',
 			'app.tagline' => 'Navigate your files. Your way.',
 			'app.description' => 'A fast, keyboard-driven desktop file manager built with Flutter.',
+			'terminal.title' => 'Terminal',
 			'menu.view' => 'View',
 			'menu.open' => 'Open',
 			'menu.openItems' => ({required Object count}) => 'Open ${count} Items',
@@ -2795,6 +2818,8 @@ extension on Translations {
 			'keybindings.switchTab' => 'Switch to tab',
 			'keybindings.toggleDual' => 'Toggle dual pane',
 			'keybindings.switchPane' => 'Switch active pane',
+			'keybindings.focusTerminal' => 'Open / focus terminal',
+			'keybindings.toggleTerminal' => 'Toggle terminal',
 			'keybindings.toggleSidebar' => 'Toggle sidebar',
 			'keybindings.copy' => 'Copy',
 			'keybindings.cut' => 'Cut',
@@ -2872,6 +2897,7 @@ extension on Translations {
 			'toast.selectionSaved' => ({required Object count, required Object path}) => 'Saved ${count} names to ${path}',
 			'toast.selectionLoaded' => ({required Object count}) => 'Selected ${count} visible items',
 			'toast.selectionLoadEmpty' => 'No visible items matched',
+			'toast.terminalUnavailable' => 'Terminal is unavailable: native core not loaded',
 			'toast.selectionFileError' => ({required Object message}) => 'Selection file error: ${message}',
 			'toast.taskErrors' => ({required Object label, required Object count}) => '${label} — ${count} errors',
 			'toast.renameAlreadyExists' => ({required Object name}) => 'An item named \'${name}\' already exists',
@@ -3003,12 +3029,12 @@ extension on Translations {
 			'dialog.confirmMoveSingle' => ({required Object name}) => 'Move "${name}" here?',
 			'dialog.confirmMoveMultiple' => ({required Object count}) => 'Move ${count} items here?',
 			'password.authenticationRequired' => 'Authentication Required',
+			_ => null,
+		} ?? switch (path) {
 			'password.dismiss' => 'Dismiss',
 			'password.mountPrompt' => 'Enter your password to mount this drive.',
 			'password.smbPrompt' => 'Enter credentials for this network share.',
 			'password.sftpPrompt' => 'SSH/SFTP authentication',
-			_ => null,
-		} ?? switch (path) {
 			'password.username' => 'Username',
 			'password.password' => 'Password',
 			'password.privateKey' => 'Private key',

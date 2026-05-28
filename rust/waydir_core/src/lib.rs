@@ -9,6 +9,7 @@ mod codec;
 mod enumerate;
 mod folder_scan;
 mod list;
+mod pty;
 mod search;
 mod sftp;
 mod trash;
@@ -21,6 +22,10 @@ pub use folder_scan::{
     waydir_folder_scan_start, FolderScanSession,
 };
 pub use list::waydir_list;
+pub use pty::{
+    waydir_pty_alive, waydir_pty_close, waydir_pty_open, waydir_pty_read, waydir_pty_resize,
+    waydir_pty_write,
+};
 pub use search::{
     waydir_search, waydir_search_cancel, waydir_search_free, waydir_search_poll,
     waydir_search_start, SearchSession,
@@ -47,7 +52,7 @@ pub unsafe extern "C" fn waydir_free(ptr: *mut u8, len: usize) {
 
 #[no_mangle]
 pub extern "C" fn waydir_core_abi() -> u32 {
-    10
+    11
 }
 
 #[no_mangle]

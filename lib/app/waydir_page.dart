@@ -25,6 +25,7 @@ import '../features/navigation/navigation_store.dart';
 import '../features/navigation/sidebar.dart';
 import '../features/navigation/status_bar.dart';
 import '../features/operations/operation_store.dart';
+import '../features/panes/pane_store.dart';
 import '../features/panes/pane_view.dart';
 import '../features/panes/pane_divider.dart';
 import '../features/panes/shell_store.dart';
@@ -73,6 +74,7 @@ class _WaydirPageState extends State<WaydirPage> {
   final Set<String> _openWithWarming = {};
   final _renameErrorDisposers = <String, void Function()>{};
   DateTime? _lastCursorRepeatAt;
+  DateTime? _terminalInteractionAt;
 
   static const _cursorRepeatInterval = Duration(milliseconds: 70);
 
@@ -1037,6 +1039,47 @@ class _WaydirPageState extends State<WaydirPage> {
     return navigator != null && navigator.canPop();
   }
 
+  bool _isTerminalFocused() {
+    for (final pane in _shell.panes.value) {
+      if (pane.terminalFocusNode.hasFocus) return true;
+    }
+    return false;
+  }
+
+  /// Ctrl+` — opens the terminal if hidden, then moves focus to it. Never
+  /// hides it.
+  void _focusTerminal() {
+    final pane = _shell.activePane.value;
+    if (pane == null) return;
+    _terminalInteractionAt = DateTime.now();
+    if (pane.terminalVisible.value) {
+      pane.terminalFocusNode.requestFocus();
+      return;
+    }
+    final cwd = pane.tabs.activeTab.value.store.currentPath.value;
+    final session = pane.terminalSession(cwd, onExit: _focusFiles);
+    if (session == null) {
+      showToast(context: context, message: t.toast.terminalUnavailable);
+      return;
+    }
+    pane.terminalVisible.value = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) pane.terminalFocusNode.requestFocus();
+    });
+  }
+
+  /// Ctrl+Shift+` — shows or hides the terminal.
+  void _toggleTerminal() {
+    final pane = _shell.activePane.value;
+    if (pane == null) return;
+    if (pane.terminalVisible.value) {
+      pane.terminalVisible.value = false;
+      _restoreFocus();
+      return;
+    }
+    _focusTerminal();
+  }
+
   void _openPreferences() {
     showPreferencesDialog(context).then((_) {
       if (!mounted) return;
@@ -1156,7 +1199,19 @@ class _WaydirPageState extends State<WaydirPage> {
       return KeyEventResult.handled;
     }
 
-    if (_isEditableFocused() || _isModalRouteOnTop()) {
+    if (!_isModalRouteOnTop() &&
+        ctrl &&
+        !alt &&
+        event.physicalKey == PhysicalKeyboardKey.backquote) {
+      if (shift) {
+        _toggleTerminal();
+      } else {
+        _focusTerminal();
+      }
+      return KeyEventResult.handled;
+    }
+
+    if (_isEditableFocused() || _isModalRouteOnTop() || _isTerminalFocused()) {
       return KeyEventResult.ignored;
     }
 
@@ -1504,8 +1559,24 @@ class _WaydirPageState extends State<WaydirPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       if (_isEditableFocused()) return;
+      final ti = _terminalInteractionAt;
+      if (ti != null &&
+          DateTime.now().difference(ti) < const Duration(milliseconds: 300)) {
+        return;
+      }
       _focusNode.requestFocus();
     });
+  }
+
+  void _focusFiles() {
+    _focusNode.requestFocus();
+  }
+
+  void _activateTerminal(PaneStore pane) {
+    final index = _shell.panes.value.indexOf(pane);
+    if (index >= 0) _shell.setActivePane(index);
+    _terminalInteractionAt = DateTime.now();
+    pane.terminalFocusNode.requestFocus();
   }
 
   VoidCallback _activatePane(int index) {
@@ -1765,6 +1836,9 @@ class _WaydirPageState extends State<WaydirPage> {
                                               onMenuAction: _handleMenuAction,
                                               onOpenInNewTab: _openInNewTab,
                                               onMultiRename: _multiRename,
+                                              onToggleTerminal: _toggleTerminal,
+                                              onTerminalActivate: _activateTerminal,
+                                              onReturnFocusToFiles: _focusFiles,
                                             );
                                           }
 
@@ -1790,6 +1864,9 @@ class _WaydirPageState extends State<WaydirPage> {
                                                       _handleMenuAction,
                                                   onOpenInNewTab: _openInNewTab,
                                                   onMultiRename: _multiRename,
+                                              onToggleTerminal: _toggleTerminal,
+                                              onTerminalActivate: _activateTerminal,
+                                              onReturnFocusToFiles: _focusFiles,
                                                 ),
                                               ),
                                               PaneDivider(
@@ -1811,6 +1888,9 @@ class _WaydirPageState extends State<WaydirPage> {
                                                       _handleMenuAction,
                                                   onOpenInNewTab: _openInNewTab,
                                                   onMultiRename: _multiRename,
+                                              onToggleTerminal: _toggleTerminal,
+                                              onTerminalActivate: _activateTerminal,
+                                              onReturnFocusToFiles: _focusFiles,
                                                 ),
                                               ),
                                             ],
