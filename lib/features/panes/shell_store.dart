@@ -3,21 +3,30 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:drift/drift.dart';
+import 'package:flutter/widgets.dart';
+import 'package:path/path.dart' as p;
 import 'package:signals/signals.dart';
 
 import '../../core/database/app_database.dart';
 import '../../core/platform/platform_paths.dart';
 import '../../core/settings/settings_store.dart';
+import '../../core/terminal/pty_session.dart';
 import '../navigation/navigation_store.dart';
 import '../operations/operation_store.dart';
 import '../../ui/overlays/notification_store.dart';
+import '../../i18n/strings.g.dart';
 import 'pane_store.dart';
+import 'terminal_tab.dart';
 
 class ShellStore {
   final isDual = signal(false);
   final panes = signal<List<PaneStore>>([]);
   final activePaneIndex = signal(0);
   final splitRatio = signal(0.5);
+  final terminals = signal<List<TerminalTab>>([]);
+  final activeTerminalId = signal<Map<int, int>>({});
+  final terminalVisible = signal<List<bool>>([false, false]);
+  final terminalHeight = signal<List<double>>([260, 260]);
   final OperationStore operationStore;
   final NotificationStore notificationStore;
   final ready = signal(false);
@@ -36,6 +45,7 @@ class ShellStore {
 
   void Function()? _persistDisposer;
   Timer? _tabPersistDebounce;
+  int _nextTerminalId = 1;
 
   ShellStore({required this.operationStore, required this.notificationStore}) {
     _restoreSession();
@@ -172,9 +182,27 @@ class ShellStore {
       operationStore: operationStore,
       initialPath: currentPath,
     );
+    final active = Map<int, int>.from(activeTerminalId.value);
+    final slot0 = terminals.value.where((t) => t.originPane == 0).toList();
+    final slot1 = terminals.value.where((t) => t.originPane == 1).toList();
+    if (!slot0.any((t) => t.id == active[0])) {
+      if (slot0.isEmpty) {
+        active.remove(0);
+      } else {
+        active[0] = slot0.first.id;
+      }
+    }
+    if (!slot1.any((t) => t.id == active[1])) {
+      if (slot1.isEmpty) {
+        active.remove(1);
+      } else {
+        active[1] = slot1.first.id;
+      }
+    }
     batch(() {
       panes.value = [panes.value[0], secondPane];
       activePaneIndex.value = 0;
+      activeTerminalId.value = active;
       isDual.value = true;
     });
   }
@@ -182,9 +210,28 @@ class ShellStore {
   void exitDual() {
     if (!isDual.value) return;
     final closing = panes.value[1];
+    final visible = terminalVisible.value;
+    final active = Map<int, int>.from(activeTerminalId.value);
+    final preferredSlot = activePaneIndex.value;
+    final preferredId = active[preferredSlot];
+    final all = terminals.value;
+    if (preferredId != null && all.any((t) => t.id == preferredId)) {
+      active[0] = preferredId;
+    } else if (active[0] != null && all.any((t) => t.id == active[0])) {
+      active[0] = active[0]!;
+    } else if (all.isNotEmpty) {
+      active[0] = all.first.id;
+    } else {
+      active.remove(0);
+    }
     batch(() {
       activePaneIndex.value = 0;
       panes.value = [panes.value[0]];
+      terminalVisible.value = [
+        visible.length > 1 ? visible[0] || visible[1] : visible.first,
+        visible.length > 1 ? visible[1] : false,
+      ];
+      activeTerminalId.value = active;
       isDual.value = false;
     });
     closing.dispose();
@@ -200,6 +247,153 @@ class ShellStore {
     splitRatio.value = ratio.clamp(0.2, 0.8);
   }
 
+  List<TerminalTab> terminalsForSlot(int slot) {
+    if (!isDual.value) return terminals.value;
+    return terminals.value.where((t) => t.originPane == slot).toList();
+  }
+
+  TerminalTab? activeTerminalForSlot(int slot) {
+    final tabs = terminalsForSlot(slot);
+    if (tabs.isEmpty) return null;
+    final id = activeTerminalId.value[slot];
+    for (final tab in tabs) {
+      if (tab.id == id) return tab;
+    }
+    return tabs.first;
+  }
+
+  TerminalTab? openTerminal(int slot, String cwd) {
+    final session = PtySession();
+    final id = _nextTerminalId++;
+    session.terminal.onTitleChange = (title) {
+      _setTerminalLabel(id, title);
+    };
+    final started = session.start(cwd: cwd, onExit: () => closeTerminalTab(id));
+    if (!started) {
+      session.dispose();
+      return null;
+    }
+    final tab = TerminalTab(
+      id: id,
+      originPane: isDual.value ? slot : 0,
+      session: session,
+      focusNode: FocusNode(debugLabel: 'terminal-tab-$id'),
+      label: _terminalLabel(cwd),
+    );
+    batch(() {
+      terminals.value = [...terminals.value, tab];
+      setActiveTerminal(slot, id);
+      setTerminalVisible(slot, true);
+    });
+    return tab;
+  }
+
+  void closeTerminalTab(int id) {
+    TerminalTab? closing;
+    for (final tab in terminals.value) {
+      if (tab.id == id) {
+        closing = tab;
+        break;
+      }
+    }
+    if (closing == null) return;
+    final slot = isDual.value ? closing.originPane : 0;
+    final oldVisible = terminalsForSlot(slot);
+    final nextTabs = terminals.value.where((t) => t.id != id).toList();
+    final active = Map<int, int>.from(activeTerminalId.value);
+    final visible = [...terminalVisible.value];
+    final replacement = _replacementTerminal(oldVisible, id, nextTabs);
+    if (replacement == null) {
+      active.remove(slot);
+      visible[slot] = false;
+    } else {
+      active[slot] = replacement.id;
+    }
+    batch(() {
+      terminals.value = nextTabs;
+      activeTerminalId.value = active;
+      terminalVisible.value = visible;
+    });
+    closing.dispose();
+  }
+
+  void setActiveTerminal(int slot, int id) {
+    TerminalTab? tab;
+    for (final candidate in terminals.value) {
+      if (candidate.id == id) {
+        tab = candidate;
+        break;
+      }
+    }
+    if (tab == null) return;
+    if (!isDual.value && slot == 0 && tab.originPane == 1) {
+      tab.originPane = 0;
+      terminals.value = [...terminals.value];
+    }
+    final active = Map<int, int>.from(activeTerminalId.value);
+    active[slot] = id;
+    activeTerminalId.value = active;
+  }
+
+  void cycleTerminal(int slot, int dir) {
+    final tabs = terminalsForSlot(slot);
+    if (tabs.isEmpty) return;
+    final current = activeTerminalForSlot(slot);
+    final currentIndex = current == null ? 0 : tabs.indexOf(current);
+    final next = (currentIndex + dir + tabs.length) % tabs.length;
+    setActiveTerminal(slot, tabs[next].id);
+  }
+
+  void setTerminalVisible(int slot, bool visible) {
+    final next = [...terminalVisible.value];
+    next[slot] = visible;
+    terminalVisible.value = next;
+  }
+
+  void setTerminalHeight(int slot, double height) {
+    final next = [...terminalHeight.value];
+    next[slot] = height;
+    terminalHeight.value = next;
+  }
+
+  TerminalTab? _replacementTerminal(
+    List<TerminalTab> oldVisible,
+    int closedId,
+    List<TerminalTab> nextTabs,
+  ) {
+    if (oldVisible.length <= 1) return null;
+    final closedIndex = oldVisible.indexWhere((t) => t.id == closedId);
+    final replacementIndex = closedIndex <= 0 ? 0 : closedIndex - 1;
+    final replacementId = oldVisible[replacementIndex].id == closedId
+        ? oldVisible[(replacementIndex + 1).clamp(0, oldVisible.length - 1)].id
+        : oldVisible[replacementIndex].id;
+    for (final tab in nextTabs) {
+      if (tab.id == replacementId) return tab;
+    }
+    return nextTabs.isEmpty ? null : nextTabs.first;
+  }
+
+  void _setTerminalLabel(int id, String title) {
+    final label = title.trim();
+    if (label.isEmpty) return;
+    final tabs = terminals.value;
+    for (final tab in tabs) {
+      if (tab.id == id) {
+        if (tab.label == label) return;
+        tab.label = label;
+        terminals.value = [...tabs];
+        return;
+      }
+    }
+  }
+
+  String _terminalLabel(String cwd) {
+    if (cwd == PlatformPaths.homePath) return '~';
+    final name = p.basename(cwd);
+    if (name.isNotEmpty) return name;
+    return cwd.isEmpty ? t.terminal.title : cwd;
+  }
+
   Iterable<NavigationStore> get allStores sync* {
     for (final pane in panes.value) {
       for (final tab in pane.tabs.tabs.value) {
@@ -212,6 +406,10 @@ class ShellStore {
     _persistDisposer?.call();
     _persistDisposer = null;
     _tabPersistDebounce?.cancel();
+    for (final tab in terminals.value) {
+      tab.dispose();
+    }
+    terminals.value = const [];
     for (final pane in panes.value) {
       pane.dispose();
     }

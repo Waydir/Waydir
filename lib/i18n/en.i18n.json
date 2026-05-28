@@ -347,6 +347,8 @@
     "switchPane": "Switch active pane",
     "focusTerminal": "Open / focus terminal",
     "toggleTerminal": "Toggle terminal",
+    "newTerminalTab": "New terminal tab",
+    "closeTerminalTab": "Close terminal tab",
     "toggleSidebar": "Toggle sidebar",
     "copy": "Copy",
     "cut": "Cut",

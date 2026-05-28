@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:waydir_term/xterm.dart';
-import '../../core/terminal/pty_session.dart';
 import '../../features/files/file_view.dart'
     show
         FileList,
@@ -26,6 +25,7 @@ import '../../ui/theme/app_text_styles.dart';
 import '../../ui/widgets/app_close_button.dart';
 import '../../i18n/strings.g.dart';
 import 'pane_store.dart';
+import 'terminal_tab.dart';
 
 class PaneView extends StatelessWidget {
   final PaneStore pane;
@@ -36,8 +36,19 @@ class PaneView extends StatelessWidget {
   final FileMenuActionCallback? onMenuAction;
   final OpenInNewTabCallback? onOpenInNewTab;
   final void Function(NavigationStore store)? onMultiRename;
-  final VoidCallback? onToggleTerminal;
-  final void Function(PaneStore pane)? onTerminalActivate;
+  final int terminalSlot;
+  final List<TerminalTab> terminalTabs;
+  final TerminalTab? activeTerminal;
+  final bool terminalVisible;
+  final double terminalHeight;
+  final bool isSingleMode;
+  final void Function(int slot)? onToggleTerminal;
+  final void Function(int slot, int id)? onTerminalActivate;
+  final void Function(int slot, int id)? onSelectTerminalTab;
+  final void Function(int id)? onCloseTerminalTab;
+  final void Function(int slot)? onNewTerminalTab;
+  final void Function(int slot, int dir)? onCycleTerminalTab;
+  final void Function(int slot, double height)? onTerminalHeightChanged;
   final VoidCallback? onReturnFocusToFiles;
 
   const PaneView({
@@ -50,8 +61,19 @@ class PaneView extends StatelessWidget {
     this.onMenuAction,
     this.onOpenInNewTab,
     this.onMultiRename,
+    required this.terminalSlot,
+    required this.terminalTabs,
+    required this.activeTerminal,
+    required this.terminalVisible,
+    required this.terminalHeight,
+    required this.isSingleMode,
     this.onToggleTerminal,
     this.onTerminalActivate,
+    this.onSelectTerminalTab,
+    this.onCloseTerminalTab,
+    this.onNewTerminalTab,
+    this.onCycleTerminalTab,
+    this.onTerminalHeightChanged,
     this.onReturnFocusToFiles,
   });
 
@@ -114,22 +136,22 @@ class PaneView extends StatelessWidget {
                   return GitStatusBar(status: status, store: gitStore);
                 },
               ),
-              SignalBuilder(
-                builder: (_) {
-                  if (!pane.terminalVisible.value) {
-                    return const SizedBox.shrink();
-                  }
-                  final session = pane.activeTerminal;
-                  if (session == null) return const SizedBox.shrink();
-                  return _TerminalPanel(
-                    pane: pane,
-                    session: session,
-                    onToggleTerminal: onToggleTerminal,
-                    onActivate: onTerminalActivate,
-                    onReturnFocusToFiles: onReturnFocusToFiles,
-                  );
-                },
-              ),
+              if (terminalVisible && activeTerminal != null)
+                _TerminalPanel(
+                  slot: terminalSlot,
+                  tabs: terminalTabs,
+                  active: activeTerminal!,
+                  height: terminalHeight,
+                  isSingleMode: isSingleMode,
+                  onToggleTerminal: onToggleTerminal,
+                  onActivate: onTerminalActivate,
+                  onSelectTab: onSelectTerminalTab,
+                  onCloseTab: onCloseTerminalTab,
+                  onNewTab: onNewTerminalTab,
+                  onCycleTab: onCycleTerminalTab,
+                  onHeightChanged: onTerminalHeightChanged,
+                  onReturnFocusToFiles: onReturnFocusToFiles,
+                ),
             ],
           ),
           if (!isActive)
@@ -223,17 +245,33 @@ class _TabContent extends StatelessWidget {
 }
 
 class _TerminalPanel extends StatefulWidget {
-  final PaneStore pane;
-  final PtySession session;
-  final VoidCallback? onToggleTerminal;
-  final void Function(PaneStore pane)? onActivate;
+  final int slot;
+  final List<TerminalTab> tabs;
+  final TerminalTab active;
+  final double height;
+  final bool isSingleMode;
+  final void Function(int slot)? onToggleTerminal;
+  final void Function(int slot, int id)? onActivate;
+  final void Function(int slot, int id)? onSelectTab;
+  final void Function(int id)? onCloseTab;
+  final void Function(int slot)? onNewTab;
+  final void Function(int slot, int dir)? onCycleTab;
+  final void Function(int slot, double height)? onHeightChanged;
   final VoidCallback? onReturnFocusToFiles;
 
   const _TerminalPanel({
-    required this.pane,
-    required this.session,
+    required this.slot,
+    required this.tabs,
+    required this.active,
+    required this.height,
+    required this.isSingleMode,
     this.onToggleTerminal,
     this.onActivate,
+    this.onSelectTab,
+    this.onCloseTab,
+    this.onNewTab,
+    this.onCycleTab,
+    this.onHeightChanged,
     this.onReturnFocusToFiles,
   });
 
@@ -247,18 +285,27 @@ class _TerminalPanelState extends State<_TerminalPanel> {
   @override
   void initState() {
     super.initState();
-    _focused = widget.pane.terminalFocusNode.hasFocus;
-    widget.pane.terminalFocusNode.addListener(_onFocusChange);
+    _focused = widget.active.focusNode.hasFocus;
+    widget.active.focusNode.addListener(_onFocusChange);
+  }
+
+  @override
+  void didUpdateWidget(covariant _TerminalPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.active.id == widget.active.id) return;
+    oldWidget.active.focusNode.removeListener(_onFocusChange);
+    _focused = widget.active.focusNode.hasFocus;
+    widget.active.focusNode.addListener(_onFocusChange);
   }
 
   @override
   void dispose() {
-    widget.pane.terminalFocusNode.removeListener(_onFocusChange);
+    widget.active.focusNode.removeListener(_onFocusChange);
     super.dispose();
   }
 
   void _onFocusChange() {
-    final focused = widget.pane.terminalFocusNode.hasFocus;
+    final focused = widget.active.focusNode.hasFocus;
     if (focused != _focused) setState(() => _focused = focused);
   }
 
@@ -268,10 +315,42 @@ class _TerminalPanelState extends State<_TerminalPanel> {
         HardwareKeyboard.instance.isControlPressed &&
         !HardwareKeyboard.instance.isAltPressed) {
       if (HardwareKeyboard.instance.isShiftPressed) {
-        widget.onToggleTerminal?.call();
+        widget.onToggleTerminal?.call(widget.slot);
       } else {
         widget.onReturnFocusToFiles?.call();
       }
+      return KeyEventResult.handled;
+    }
+    if (event is KeyDownEvent &&
+        HardwareKeyboard.instance.isControlPressed &&
+        HardwareKeyboard.instance.isShiftPressed &&
+        !HardwareKeyboard.instance.isAltPressed &&
+        event.physicalKey == PhysicalKeyboardKey.keyT) {
+      widget.onNewTab?.call(widget.slot);
+      return KeyEventResult.handled;
+    }
+    if (event is KeyDownEvent &&
+        HardwareKeyboard.instance.isControlPressed &&
+        HardwareKeyboard.instance.isShiftPressed &&
+        !HardwareKeyboard.instance.isAltPressed &&
+        event.physicalKey == PhysicalKeyboardKey.keyW) {
+      widget.onCloseTab?.call(widget.active.id);
+      return KeyEventResult.handled;
+    }
+    if (event is KeyDownEvent &&
+        HardwareKeyboard.instance.isControlPressed &&
+        !HardwareKeyboard.instance.isShiftPressed &&
+        !HardwareKeyboard.instance.isAltPressed &&
+        event.physicalKey == PhysicalKeyboardKey.pageDown) {
+      widget.onCycleTab?.call(widget.slot, 1);
+      return KeyEventResult.handled;
+    }
+    if (event is KeyDownEvent &&
+        HardwareKeyboard.instance.isControlPressed &&
+        !HardwareKeyboard.instance.isShiftPressed &&
+        !HardwareKeyboard.instance.isAltPressed &&
+        event.physicalKey == PhysicalKeyboardKey.pageUp) {
+      widget.onCycleTab?.call(widget.slot, -1);
       return KeyEventResult.handled;
     }
     return KeyEventResult.ignored;
@@ -279,34 +358,40 @@ class _TerminalPanelState extends State<_TerminalPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final pane = widget.pane;
-    return SignalBuilder(
-      builder: (_) {
-        final height = pane.terminalHeight.value;
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _TerminalResizeHandle(pane: pane),
-            _TerminalHeader(focused: _focused, onClose: widget.onToggleTerminal),
-            SizedBox(
-              height: height,
-              child: Listener(
-                onPointerDown: (_) => widget.onActivate?.call(pane),
-                child: TerminalView(
-                  widget.session.terminal,
-                  focusNode: pane.terminalFocusNode,
-                  theme: _appTerminalTheme(),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 6,
-                  ),
-                  onKeyEvent: _onKeyEvent,
-                ),
-              ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _TerminalResizeHandle(
+          slot: widget.slot,
+          height: widget.height,
+          onHeightChanged: widget.onHeightChanged,
+        ),
+        _TerminalHeader(
+          focused: _focused,
+          slot: widget.slot,
+          tabs: widget.tabs,
+          active: widget.active,
+          isSingleMode: widget.isSingleMode,
+          onSelectTab: widget.onSelectTab,
+          onCloseTab: widget.onCloseTab,
+          onNewTab: widget.onNewTab,
+          onClose: widget.onToggleTerminal,
+        ),
+        SizedBox(
+          height: widget.height,
+          child: Listener(
+            onPointerDown: (_) =>
+                widget.onActivate?.call(widget.slot, widget.active.id),
+            child: TerminalView(
+              widget.active.session.terminal,
+              focusNode: widget.active.focusNode,
+              theme: _appTerminalTheme(),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              onKeyEvent: _onKeyEvent,
             ),
-          ],
-        );
-      },
+          ),
+        ),
+      ],
     );
   }
 }
@@ -342,9 +427,26 @@ TerminalTheme _appTerminalTheme() {
 
 class _TerminalHeader extends StatelessWidget {
   final bool focused;
-  final VoidCallback? onClose;
+  final int slot;
+  final List<TerminalTab> tabs;
+  final TerminalTab active;
+  final bool isSingleMode;
+  final void Function(int slot, int id)? onSelectTab;
+  final void Function(int id)? onCloseTab;
+  final void Function(int slot)? onNewTab;
+  final void Function(int slot)? onClose;
 
-  const _TerminalHeader({required this.focused, this.onClose});
+  const _TerminalHeader({
+    required this.focused,
+    required this.slot,
+    required this.tabs,
+    required this.active,
+    required this.isSingleMode,
+    this.onSelectTab,
+    this.onCloseTab,
+    this.onNewTab,
+    this.onClose,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -362,9 +464,32 @@ class _TerminalHeader extends StatelessWidget {
           children: [
             Icon(WaydirIconsRegular.terminal, size: 13, color: fg),
             const SizedBox(width: 7),
-            Text(t.terminal.title, style: context.txt.body.copyWith(color: fg)),
-            const Spacer(),
-            if (onClose != null) AppCloseButton(onTap: onClose!, size: 22),
+            Expanded(
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: tabs.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 4),
+                itemBuilder: (context, index) {
+                  final tab = tabs[index];
+                  return _TerminalTabChip(
+                    tab: tab,
+                    active: tab.id == active.id,
+                    foreign: isSingleMode && tab.originPane == 1,
+                    onSelect: () => onSelectTab?.call(slot, tab.id),
+                    onClose: () => onCloseTab?.call(tab.id),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(width: 4),
+            if (onClose != null)
+              _TerminalIconButton(
+                icon: WaydirIconsRegular.plus,
+                onTap: () => onNewTab?.call(slot),
+              ),
+            if (onClose != null) const SizedBox(width: 2),
+            if (onClose != null)
+              AppCloseButton(onTap: () => onClose!(slot), size: 22),
           ],
         ),
       ),
@@ -372,10 +497,111 @@ class _TerminalHeader extends StatelessWidget {
   }
 }
 
-class _TerminalResizeHandle extends StatefulWidget {
-  final PaneStore pane;
+class _TerminalTabChip extends StatelessWidget {
+  final TerminalTab tab;
+  final bool active;
+  final bool foreign;
+  final VoidCallback onSelect;
+  final VoidCallback onClose;
 
-  const _TerminalResizeHandle({required this.pane});
+  const _TerminalTabChip({
+    required this.tab,
+    required this.active,
+    required this.foreign,
+    required this.onSelect,
+    required this.onClose,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final fg = active ? AppColors.fg : AppColors.fgMuted;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onSelect,
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 150),
+        padding: const EdgeInsets.only(left: 8, right: 4),
+        decoration: BoxDecoration(
+          color: active ? AppColors.bgHover : Colors.transparent,
+          borderRadius: BorderRadius.zero,
+          border: Border.all(
+            color: active ? AppColors.bgDivider : Colors.transparent,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (foreign) ...[
+              Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: AppColors.accent,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 6),
+            ],
+            Flexible(
+              child: Text(
+                tab.label,
+                overflow: TextOverflow.ellipsis,
+                style: context.txt.micro.copyWith(color: fg),
+              ),
+            ),
+            const SizedBox(width: 4),
+            _TerminalIconButton(
+              icon: WaydirIconsRegular.x,
+              onTap: onClose,
+              size: 18,
+              iconSize: 11,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TerminalIconButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  final double size;
+  final double iconSize;
+
+  const _TerminalIconButton({
+    required this.icon,
+    required this.onTap,
+    this.size = 22,
+    this.iconSize = 13,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: Center(
+          child: Icon(icon, size: iconSize, color: AppColors.fgMuted),
+        ),
+      ),
+    );
+  }
+}
+
+class _TerminalResizeHandle extends StatefulWidget {
+  final int slot;
+  final double height;
+  final void Function(int slot, double height)? onHeightChanged;
+
+  const _TerminalResizeHandle({
+    required this.slot,
+    required this.height,
+    this.onHeightChanged,
+  });
 
   @override
   State<_TerminalResizeHandle> createState() => _TerminalResizeHandleState();
@@ -393,9 +619,8 @@ class _TerminalResizeHandleState extends State<_TerminalResizeHandle> {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onVerticalDragUpdate: (details) {
-          final next = (widget.pane.terminalHeight.value - details.delta.dy)
-              .clamp(80.0, 900.0);
-          widget.pane.terminalHeight.value = next;
+          final next = (widget.height - details.delta.dy).clamp(80.0, 900.0);
+          widget.onHeightChanged?.call(widget.slot, next);
         },
         child: Container(
           height: 5,

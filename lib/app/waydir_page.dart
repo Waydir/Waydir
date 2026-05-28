@@ -25,10 +25,10 @@ import '../features/navigation/navigation_store.dart';
 import '../features/navigation/sidebar.dart';
 import '../features/navigation/status_bar.dart';
 import '../features/operations/operation_store.dart';
-import '../features/panes/pane_store.dart';
 import '../features/panes/pane_view.dart';
 import '../features/panes/pane_divider.dart';
 import '../features/panes/shell_store.dart';
+import '../features/panes/terminal_tab.dart';
 import '../features/settings/preferences_view.dart';
 import '../i18n/strings.g.dart';
 import '../ui/chrome/title_bar.dart';
@@ -1040,44 +1040,95 @@ class _WaydirPageState extends State<WaydirPage> {
   }
 
   bool _isTerminalFocused() {
-    for (final pane in _shell.panes.value) {
-      if (pane.terminalFocusNode.hasFocus) return true;
+    for (final tab in _shell.terminals.value) {
+      if (tab.focusNode.hasFocus) return true;
     }
     return false;
   }
 
-  /// Ctrl+` — opens the terminal if hidden, then moves focus to it. Never
-  /// hides it.
   void _focusTerminal() {
-    final pane = _shell.activePane.value;
-    if (pane == null) return;
+    final slot = _terminalSlotForActivePane();
     _terminalInteractionAt = DateTime.now();
-    if (pane.terminalVisible.value) {
-      pane.terminalFocusNode.requestFocus();
+    var active = _shell.activeTerminalForSlot(slot);
+    if (active == null) {
+      active = _openTerminalTab(slot);
+      if (active == null) return;
+    }
+    final visible = _shell.terminalVisible.value[slot];
+    if (visible) {
+      _shell.setActiveTerminal(slot, active.id);
+      active.focusNode.requestFocus();
       return;
     }
-    final cwd = pane.tabs.activeTab.value.store.currentPath.value;
-    final session = pane.terminalSession(cwd, onExit: _focusFiles);
-    if (session == null) {
-      showToast(context: context, message: t.toast.terminalUnavailable);
-      return;
-    }
-    pane.terminalVisible.value = true;
+    _shell.setTerminalVisible(slot, true);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) pane.terminalFocusNode.requestFocus();
+      if (!mounted) return;
+      _shell.setActiveTerminal(slot, active!.id);
+      active.focusNode.requestFocus();
     });
   }
 
-  /// Ctrl+Shift+` — shows or hides the terminal.
   void _toggleTerminal() {
-    final pane = _shell.activePane.value;
-    if (pane == null) return;
-    if (pane.terminalVisible.value) {
-      pane.terminalVisible.value = false;
+    final slot = _terminalSlotForActivePane();
+    _toggleTerminalSlot(slot);
+  }
+
+  void _toggleTerminalSlot(int slot) {
+    if (_shell.terminalVisible.value[slot]) {
+      _shell.setTerminalVisible(slot, false);
       _restoreFocus();
       return;
     }
+    if (_shell.isDual.value) _shell.setActivePane(slot);
     _focusTerminal();
+  }
+
+  int _terminalSlotForActivePane() {
+    return _shell.isDual.value ? _shell.activePaneIndex.value : 0;
+  }
+
+  TerminalTab? _openTerminalTab(int slot) {
+    final pane = _shell.panes.value[slot];
+    final cwd = pane.tabs.activeTab.value.store.currentPath.value;
+    final tab = _shell.openTerminal(slot, cwd);
+    if (tab == null) {
+      showToast(context: context, message: t.toast.terminalUnavailable);
+    }
+    return tab;
+  }
+
+  void _newTerminalTab(int slot) {
+    _terminalInteractionAt = DateTime.now();
+    final tab = _openTerminalTab(slot);
+    if (tab == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      tab.focusNode.requestFocus();
+    });
+  }
+
+  void _closeTerminalTab(int id) {
+    final wasFocused = _isTerminalFocused();
+    _shell.closeTerminalTab(id);
+    if (wasFocused && !_isTerminalFocused()) _focusFiles();
+  }
+
+  void _selectTerminalTab(int slot, int id) {
+    _terminalInteractionAt = DateTime.now();
+    _shell.setActiveTerminal(slot, id);
+    final tab = _shell.activeTerminalForSlot(slot);
+    tab?.focusNode.requestFocus();
+  }
+
+  void _cycleTerminalTab(int slot, int dir) {
+    _terminalInteractionAt = DateTime.now();
+    _shell.cycleTerminal(slot, dir);
+    final tab = _shell.activeTerminalForSlot(slot);
+    tab?.focusNode.requestFocus();
+  }
+
+  void _setTerminalHeight(int slot, double height) {
+    _shell.setTerminalHeight(slot, height);
   }
 
   void _openPreferences() {
@@ -1572,11 +1623,12 @@ class _WaydirPageState extends State<WaydirPage> {
     _focusNode.requestFocus();
   }
 
-  void _activateTerminal(PaneStore pane) {
-    final index = _shell.panes.value.indexOf(pane);
-    if (index >= 0) _shell.setActivePane(index);
+  void _activateTerminal(int slot, int id) {
+    if (_shell.isDual.value) _shell.setActivePane(slot);
     _terminalInteractionAt = DateTime.now();
-    pane.terminalFocusNode.requestFocus();
+    _shell.setActiveTerminal(slot, id);
+    final tab = _shell.activeTerminalForSlot(slot);
+    tab?.focusNode.requestFocus();
   }
 
   VoidCallback _activatePane(int index) {
@@ -1826,6 +1878,8 @@ class _WaydirPageState extends State<WaydirPage> {
                                               _shell.activePaneIndex.value;
 
                                           if (!dual) {
+                                            final tabs = _shell
+                                                .terminalsForSlot(0);
                                             return PaneView(
                                               pane: panes[0],
                                               isActive: true,
@@ -1836,8 +1890,30 @@ class _WaydirPageState extends State<WaydirPage> {
                                               onMenuAction: _handleMenuAction,
                                               onOpenInNewTab: _openInNewTab,
                                               onMultiRename: _multiRename,
-                                              onToggleTerminal: _toggleTerminal,
-                                              onTerminalActivate: _activateTerminal,
+                                              terminalSlot: 0,
+                                              terminalTabs: tabs,
+                                              activeTerminal: _shell
+                                                  .activeTerminalForSlot(0),
+                                              terminalVisible: _shell
+                                                  .terminalVisible
+                                                  .value[0],
+                                              terminalHeight: _shell
+                                                  .terminalHeight
+                                                  .value[0],
+                                              isSingleMode: true,
+                                              onToggleTerminal:
+                                                  _toggleTerminalSlot,
+                                              onTerminalActivate:
+                                                  _activateTerminal,
+                                              onSelectTerminalTab:
+                                                  _selectTerminalTab,
+                                              onCloseTerminalTab:
+                                                  _closeTerminalTab,
+                                              onNewTerminalTab: _newTerminalTab,
+                                              onCycleTerminalTab:
+                                                  _cycleTerminalTab,
+                                              onTerminalHeightChanged:
+                                                  _setTerminalHeight,
                                               onReturnFocusToFiles: _focusFiles,
                                             );
                                           }
@@ -1864,9 +1940,34 @@ class _WaydirPageState extends State<WaydirPage> {
                                                       _handleMenuAction,
                                                   onOpenInNewTab: _openInNewTab,
                                                   onMultiRename: _multiRename,
-                                              onToggleTerminal: _toggleTerminal,
-                                              onTerminalActivate: _activateTerminal,
-                                              onReturnFocusToFiles: _focusFiles,
+                                                  terminalSlot: 0,
+                                                  terminalTabs: _shell
+                                                      .terminalsForSlot(0),
+                                                  activeTerminal: _shell
+                                                      .activeTerminalForSlot(0),
+                                                  terminalVisible: _shell
+                                                      .terminalVisible
+                                                      .value[0],
+                                                  terminalHeight: _shell
+                                                      .terminalHeight
+                                                      .value[0],
+                                                  isSingleMode: false,
+                                                  onToggleTerminal:
+                                                      _toggleTerminalSlot,
+                                                  onTerminalActivate:
+                                                      _activateTerminal,
+                                                  onSelectTerminalTab:
+                                                      _selectTerminalTab,
+                                                  onCloseTerminalTab:
+                                                      _closeTerminalTab,
+                                                  onNewTerminalTab:
+                                                      _newTerminalTab,
+                                                  onCycleTerminalTab:
+                                                      _cycleTerminalTab,
+                                                  onTerminalHeightChanged:
+                                                      _setTerminalHeight,
+                                                  onReturnFocusToFiles:
+                                                      _focusFiles,
                                                 ),
                                               ),
                                               PaneDivider(
@@ -1888,9 +1989,34 @@ class _WaydirPageState extends State<WaydirPage> {
                                                       _handleMenuAction,
                                                   onOpenInNewTab: _openInNewTab,
                                                   onMultiRename: _multiRename,
-                                              onToggleTerminal: _toggleTerminal,
-                                              onTerminalActivate: _activateTerminal,
-                                              onReturnFocusToFiles: _focusFiles,
+                                                  terminalSlot: 1,
+                                                  terminalTabs: _shell
+                                                      .terminalsForSlot(1),
+                                                  activeTerminal: _shell
+                                                      .activeTerminalForSlot(1),
+                                                  terminalVisible: _shell
+                                                      .terminalVisible
+                                                      .value[1],
+                                                  terminalHeight: _shell
+                                                      .terminalHeight
+                                                      .value[1],
+                                                  isSingleMode: false,
+                                                  onToggleTerminal:
+                                                      _toggleTerminalSlot,
+                                                  onTerminalActivate:
+                                                      _activateTerminal,
+                                                  onSelectTerminalTab:
+                                                      _selectTerminalTab,
+                                                  onCloseTerminalTab:
+                                                      _closeTerminalTab,
+                                                  onNewTerminalTab:
+                                                      _newTerminalTab,
+                                                  onCycleTerminalTab:
+                                                      _cycleTerminalTab,
+                                                  onTerminalHeightChanged:
+                                                      _setTerminalHeight,
+                                                  onReturnFocusToFiles:
+                                                      _focusFiles,
                                                 ),
                                               ),
                                             ],

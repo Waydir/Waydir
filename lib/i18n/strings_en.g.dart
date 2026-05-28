@@ -714,6 +714,12 @@ class Translations$keybindings$en {
 	/// en: 'Toggle terminal'
 	String get toggleTerminal => 'Toggle terminal';
 
+	/// en: 'New terminal tab'
+	String get newTerminalTab => 'New terminal tab';
+
+	/// en: 'Close terminal tab'
+	String get closeTerminalTab => 'Close terminal tab';
+
 	/// en: 'Toggle sidebar'
 	String get toggleSidebar => 'Toggle sidebar';
 
@@ -2820,6 +2826,8 @@ extension on Translations {
 			'keybindings.switchPane' => 'Switch active pane',
 			'keybindings.focusTerminal' => 'Open / focus terminal',
 			'keybindings.toggleTerminal' => 'Toggle terminal',
+			'keybindings.newTerminalTab' => 'New terminal tab',
+			'keybindings.closeTerminalTab' => 'Close terminal tab',
 			'keybindings.toggleSidebar' => 'Toggle sidebar',
 			'keybindings.copy' => 'Copy',
 			'keybindings.cut' => 'Cut',
@@ -3027,10 +3035,10 @@ extension on Translations {
 			'dialog.confirmCopyMultiple' => ({required Object count}) => 'Copy ${count} items here?',
 			'dialog.confirmMoveTitle' => 'Move items?',
 			'dialog.confirmMoveSingle' => ({required Object name}) => 'Move "${name}" here?',
-			'dialog.confirmMoveMultiple' => ({required Object count}) => 'Move ${count} items here?',
-			'password.authenticationRequired' => 'Authentication Required',
 			_ => null,
 		} ?? switch (path) {
+			'dialog.confirmMoveMultiple' => ({required Object count}) => 'Move ${count} items here?',
+			'password.authenticationRequired' => 'Authentication Required',
 			'password.dismiss' => 'Dismiss',
 			'password.mountPrompt' => 'Enter your password to mount this drive.',
 			'password.smbPrompt' => 'Enter credentials for this network share.',

@@ -17,15 +17,18 @@ class PtySession {
   bool _exited = false;
   void Function()? _onExit;
 
-  PtySession({int maxLines = 5000})
-    : terminal = Terminal(maxLines: maxLines);
+  PtySession({int maxLines = 5000}) : terminal = Terminal(maxLines: maxLines);
 
   bool get isStarted => _id != null;
   bool get hasExited => _exited;
 
   /// Spawns the shell in [cwd]. Returns false if the native pty is
   /// unavailable. Safe to call once; later calls are no-ops.
-  bool start({required String cwd, String shell = '', void Function()? onExit}) {
+  bool start({
+    required String cwd,
+    String shell = '',
+    void Function()? onExit,
+  }) {
     if (_id != null) return true;
     _onExit = onExit;
     final id = WaydirCoreLoader.ptyOpen(

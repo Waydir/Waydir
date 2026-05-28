@@ -92,8 +92,7 @@ typedef _FreeDart = void Function(Pointer<Uint8>, int);
 
 typedef _PtyOpenNative =
     Uint64 Function(Pointer<Utf8>, Pointer<Utf8>, Uint16, Uint16);
-typedef _PtyOpenDart =
-    int Function(Pointer<Utf8>, Pointer<Utf8>, int, int);
+typedef _PtyOpenDart = int Function(Pointer<Utf8>, Pointer<Utf8>, int, int);
 
 typedef _PtyReadNative = Pointer<Uint8> Function(Uint64, Pointer<IntPtr>);
 typedef _PtyReadDart = Pointer<Uint8> Function(int, Pointer<IntPtr>);

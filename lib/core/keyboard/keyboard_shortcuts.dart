@@ -225,6 +225,22 @@ class AppShortcuts {
       customKeyDisplay: '`',
     ),
     ShortcutDef(
+      id: 'new_terminal_tab',
+      label: () => '',
+      group: ShortcutGroup.panes,
+      key: LogicalKeyboardKey.keyT,
+      ctrl: true,
+      shift: true,
+    ),
+    ShortcutDef(
+      id: 'close_terminal_tab',
+      label: () => '',
+      group: ShortcutGroup.panes,
+      key: LogicalKeyboardKey.keyW,
+      ctrl: true,
+      shift: true,
+    ),
+    ShortcutDef(
       id: 'copy',
       label: () => '',
       group: ShortcutGroup.fileOps,
