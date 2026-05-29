@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:waydir_term/xterm.dart';
+import '../../core/settings/settings_store.dart';
 import '../../features/files/file_view.dart'
     show
         FileList,
@@ -353,6 +354,24 @@ class _TerminalPanelState extends State<_TerminalPanel> {
       widget.onCycleTab?.call(widget.slot, -1);
       return KeyEventResult.handled;
     }
+    if (event is KeyDownEvent &&
+        HardwareKeyboard.instance.isControlPressed &&
+        !HardwareKeyboard.instance.isAltPressed) {
+      final settings = SettingsStore.instance;
+      final key = event.physicalKey;
+      if (key == PhysicalKeyboardKey.equal) {
+        settings.increaseTerminalFontSize();
+        return KeyEventResult.handled;
+      }
+      if (key == PhysicalKeyboardKey.minus) {
+        settings.decreaseTerminalFontSize();
+        return KeyEventResult.handled;
+      }
+      if (key == PhysicalKeyboardKey.digit0) {
+        settings.resetTerminalFontSize();
+        return KeyEventResult.handled;
+      }
+    }
     return KeyEventResult.ignored;
   }
 
@@ -382,12 +401,26 @@ class _TerminalPanelState extends State<_TerminalPanel> {
           child: Listener(
             onPointerDown: (_) =>
                 widget.onActivate?.call(widget.slot, widget.active.id),
-            child: TerminalView(
-              widget.active.session.terminal,
-              focusNode: widget.active.focusNode,
-              theme: _appTerminalTheme(),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              onKeyEvent: _onKeyEvent,
+            child: SignalBuilder(
+              builder: (context) {
+                final settings = SettingsStore.instance;
+                final family = settings.terminalFontFamily.value.trim();
+                return TerminalView(
+                  widget.active.session.terminal,
+                  focusNode: widget.active.focusNode,
+                  theme: _appTerminalTheme(),
+                  textStyle: TerminalStyle(
+                    fontSize: settings.terminalFontSize.value.toDouble(),
+                    height: settings.terminalLineHeight.value,
+                    fontFamily: family.isEmpty ? 'monospace' : family,
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 6,
+                  ),
+                  onKeyEvent: _onKeyEvent,
+                );
+              },
             ),
           ),
         ),

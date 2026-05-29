@@ -58,6 +58,42 @@ class $AppSettingsTable extends AppSettings
         requiredDuringInsert: false,
         defaultValue: const Constant(''),
       );
+  static const VerificationMeta _terminalFontFamilyMeta =
+      const VerificationMeta('terminalFontFamily');
+  @override
+  late final GeneratedColumn<String> terminalFontFamily =
+      GeneratedColumn<String>(
+        'terminal_font_family',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(''),
+      );
+  static const VerificationMeta _terminalFontSizeMeta = const VerificationMeta(
+    'terminalFontSize',
+  );
+  @override
+  late final GeneratedColumn<int> terminalFontSize = GeneratedColumn<int>(
+    'terminal_font_size',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(13),
+  );
+  static const VerificationMeta _terminalLineHeightMeta =
+      const VerificationMeta('terminalLineHeight');
+  @override
+  late final GeneratedColumn<double> terminalLineHeight =
+      GeneratedColumn<double>(
+        'terminal_line_height',
+        aliasedName,
+        false,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(1.2),
+      );
   static const VerificationMeta _isDualMeta = const VerificationMeta('isDual');
   @override
   late final GeneratedColumn<bool> isDual = GeneratedColumn<bool>(
@@ -360,6 +396,9 @@ class $AppSettingsTable extends AppSettings
     themeMode,
     terminal,
     terminalCustomCommand,
+    terminalFontFamily,
+    terminalFontSize,
+    terminalLineHeight,
     isDual,
     splitRatio,
     activePaneIndex,
@@ -416,6 +455,33 @@ class $AppSettingsTable extends AppSettings
         terminalCustomCommand.isAcceptableOrUnknown(
           data['terminal_custom_command']!,
           _terminalCustomCommandMeta,
+        ),
+      );
+    }
+    if (data.containsKey('terminal_font_family')) {
+      context.handle(
+        _terminalFontFamilyMeta,
+        terminalFontFamily.isAcceptableOrUnknown(
+          data['terminal_font_family']!,
+          _terminalFontFamilyMeta,
+        ),
+      );
+    }
+    if (data.containsKey('terminal_font_size')) {
+      context.handle(
+        _terminalFontSizeMeta,
+        terminalFontSize.isAcceptableOrUnknown(
+          data['terminal_font_size']!,
+          _terminalFontSizeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('terminal_line_height')) {
+      context.handle(
+        _terminalLineHeightMeta,
+        terminalLineHeight.isAcceptableOrUnknown(
+          data['terminal_line_height']!,
+          _terminalLineHeightMeta,
         ),
       );
     }
@@ -624,6 +690,18 @@ class $AppSettingsTable extends AppSettings
         DriftSqlType.string,
         data['${effectivePrefix}terminal_custom_command'],
       )!,
+      terminalFontFamily: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}terminal_font_family'],
+      )!,
+      terminalFontSize: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}terminal_font_size'],
+      )!,
+      terminalLineHeight: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}terminal_line_height'],
+      )!,
       isDual: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_dual'],
@@ -726,6 +804,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
   final String themeMode;
   final String terminal;
   final String terminalCustomCommand;
+  final String terminalFontFamily;
+  final int terminalFontSize;
+  final double terminalLineHeight;
   final bool isDual;
   final double splitRatio;
   final int activePaneIndex;
@@ -753,6 +834,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     required this.themeMode,
     required this.terminal,
     required this.terminalCustomCommand,
+    required this.terminalFontFamily,
+    required this.terminalFontSize,
+    required this.terminalLineHeight,
     required this.isDual,
     required this.splitRatio,
     required this.activePaneIndex,
@@ -783,6 +867,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     map['theme_mode'] = Variable<String>(themeMode);
     map['terminal'] = Variable<String>(terminal);
     map['terminal_custom_command'] = Variable<String>(terminalCustomCommand);
+    map['terminal_font_family'] = Variable<String>(terminalFontFamily);
+    map['terminal_font_size'] = Variable<int>(terminalFontSize);
+    map['terminal_line_height'] = Variable<double>(terminalLineHeight);
     map['is_dual'] = Variable<bool>(isDual);
     map['split_ratio'] = Variable<double>(splitRatio);
     map['active_pane_index'] = Variable<int>(activePaneIndex);
@@ -816,6 +903,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       themeMode: Value(themeMode),
       terminal: Value(terminal),
       terminalCustomCommand: Value(terminalCustomCommand),
+      terminalFontFamily: Value(terminalFontFamily),
+      terminalFontSize: Value(terminalFontSize),
+      terminalLineHeight: Value(terminalLineHeight),
       isDual: Value(isDual),
       splitRatio: Value(splitRatio),
       activePaneIndex: Value(activePaneIndex),
@@ -852,6 +942,13 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       terminal: serializer.fromJson<String>(json['terminal']),
       terminalCustomCommand: serializer.fromJson<String>(
         json['terminalCustomCommand'],
+      ),
+      terminalFontFamily: serializer.fromJson<String>(
+        json['terminalFontFamily'],
+      ),
+      terminalFontSize: serializer.fromJson<int>(json['terminalFontSize']),
+      terminalLineHeight: serializer.fromJson<double>(
+        json['terminalLineHeight'],
       ),
       isDual: serializer.fromJson<bool>(json['isDual']),
       splitRatio: serializer.fromJson<double>(json['splitRatio']),
@@ -895,6 +992,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       'themeMode': serializer.toJson<String>(themeMode),
       'terminal': serializer.toJson<String>(terminal),
       'terminalCustomCommand': serializer.toJson<String>(terminalCustomCommand),
+      'terminalFontFamily': serializer.toJson<String>(terminalFontFamily),
+      'terminalFontSize': serializer.toJson<int>(terminalFontSize),
+      'terminalLineHeight': serializer.toJson<double>(terminalLineHeight),
       'isDual': serializer.toJson<bool>(isDual),
       'splitRatio': serializer.toJson<double>(splitRatio),
       'activePaneIndex': serializer.toJson<int>(activePaneIndex),
@@ -929,6 +1029,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     String? themeMode,
     String? terminal,
     String? terminalCustomCommand,
+    String? terminalFontFamily,
+    int? terminalFontSize,
+    double? terminalLineHeight,
     bool? isDual,
     double? splitRatio,
     int? activePaneIndex,
@@ -956,6 +1059,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     themeMode: themeMode ?? this.themeMode,
     terminal: terminal ?? this.terminal,
     terminalCustomCommand: terminalCustomCommand ?? this.terminalCustomCommand,
+    terminalFontFamily: terminalFontFamily ?? this.terminalFontFamily,
+    terminalFontSize: terminalFontSize ?? this.terminalFontSize,
+    terminalLineHeight: terminalLineHeight ?? this.terminalLineHeight,
     isDual: isDual ?? this.isDual,
     splitRatio: splitRatio ?? this.splitRatio,
     activePaneIndex: activePaneIndex ?? this.activePaneIndex,
@@ -989,6 +1095,15 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       terminalCustomCommand: data.terminalCustomCommand.present
           ? data.terminalCustomCommand.value
           : this.terminalCustomCommand,
+      terminalFontFamily: data.terminalFontFamily.present
+          ? data.terminalFontFamily.value
+          : this.terminalFontFamily,
+      terminalFontSize: data.terminalFontSize.present
+          ? data.terminalFontSize.value
+          : this.terminalFontSize,
+      terminalLineHeight: data.terminalLineHeight.present
+          ? data.terminalLineHeight.value
+          : this.terminalLineHeight,
       isDual: data.isDual.present ? data.isDual.value : this.isDual,
       splitRatio: data.splitRatio.present
           ? data.splitRatio.value
@@ -1061,6 +1176,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           ..write('themeMode: $themeMode, ')
           ..write('terminal: $terminal, ')
           ..write('terminalCustomCommand: $terminalCustomCommand, ')
+          ..write('terminalFontFamily: $terminalFontFamily, ')
+          ..write('terminalFontSize: $terminalFontSize, ')
+          ..write('terminalLineHeight: $terminalLineHeight, ')
           ..write('isDual: $isDual, ')
           ..write('splitRatio: $splitRatio, ')
           ..write('activePaneIndex: $activePaneIndex, ')
@@ -1093,6 +1211,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     themeMode,
     terminal,
     terminalCustomCommand,
+    terminalFontFamily,
+    terminalFontSize,
+    terminalLineHeight,
     isDual,
     splitRatio,
     activePaneIndex,
@@ -1124,6 +1245,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           other.themeMode == this.themeMode &&
           other.terminal == this.terminal &&
           other.terminalCustomCommand == this.terminalCustomCommand &&
+          other.terminalFontFamily == this.terminalFontFamily &&
+          other.terminalFontSize == this.terminalFontSize &&
+          other.terminalLineHeight == this.terminalLineHeight &&
           other.isDual == this.isDual &&
           other.splitRatio == this.splitRatio &&
           other.activePaneIndex == this.activePaneIndex &&
@@ -1153,6 +1277,9 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
   final Value<String> themeMode;
   final Value<String> terminal;
   final Value<String> terminalCustomCommand;
+  final Value<String> terminalFontFamily;
+  final Value<int> terminalFontSize;
+  final Value<double> terminalLineHeight;
   final Value<bool> isDual;
   final Value<double> splitRatio;
   final Value<int> activePaneIndex;
@@ -1180,6 +1307,9 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.themeMode = const Value.absent(),
     this.terminal = const Value.absent(),
     this.terminalCustomCommand = const Value.absent(),
+    this.terminalFontFamily = const Value.absent(),
+    this.terminalFontSize = const Value.absent(),
+    this.terminalLineHeight = const Value.absent(),
     this.isDual = const Value.absent(),
     this.splitRatio = const Value.absent(),
     this.activePaneIndex = const Value.absent(),
@@ -1208,6 +1338,9 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.themeMode = const Value.absent(),
     this.terminal = const Value.absent(),
     this.terminalCustomCommand = const Value.absent(),
+    this.terminalFontFamily = const Value.absent(),
+    this.terminalFontSize = const Value.absent(),
+    this.terminalLineHeight = const Value.absent(),
     this.isDual = const Value.absent(),
     this.splitRatio = const Value.absent(),
     this.activePaneIndex = const Value.absent(),
@@ -1236,6 +1369,9 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Expression<String>? themeMode,
     Expression<String>? terminal,
     Expression<String>? terminalCustomCommand,
+    Expression<String>? terminalFontFamily,
+    Expression<int>? terminalFontSize,
+    Expression<double>? terminalLineHeight,
     Expression<bool>? isDual,
     Expression<double>? splitRatio,
     Expression<int>? activePaneIndex,
@@ -1265,6 +1401,11 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       if (terminal != null) 'terminal': terminal,
       if (terminalCustomCommand != null)
         'terminal_custom_command': terminalCustomCommand,
+      if (terminalFontFamily != null)
+        'terminal_font_family': terminalFontFamily,
+      if (terminalFontSize != null) 'terminal_font_size': terminalFontSize,
+      if (terminalLineHeight != null)
+        'terminal_line_height': terminalLineHeight,
       if (isDual != null) 'is_dual': isDual,
       if (splitRatio != null) 'split_ratio': splitRatio,
       if (activePaneIndex != null) 'active_pane_index': activePaneIndex,
@@ -1301,6 +1442,9 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Value<String>? themeMode,
     Value<String>? terminal,
     Value<String>? terminalCustomCommand,
+    Value<String>? terminalFontFamily,
+    Value<int>? terminalFontSize,
+    Value<double>? terminalLineHeight,
     Value<bool>? isDual,
     Value<double>? splitRatio,
     Value<int>? activePaneIndex,
@@ -1330,6 +1474,9 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       terminal: terminal ?? this.terminal,
       terminalCustomCommand:
           terminalCustomCommand ?? this.terminalCustomCommand,
+      terminalFontFamily: terminalFontFamily ?? this.terminalFontFamily,
+      terminalFontSize: terminalFontSize ?? this.terminalFontSize,
+      terminalLineHeight: terminalLineHeight ?? this.terminalLineHeight,
       isDual: isDual ?? this.isDual,
       splitRatio: splitRatio ?? this.splitRatio,
       activePaneIndex: activePaneIndex ?? this.activePaneIndex,
@@ -1373,6 +1520,15 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       map['terminal_custom_command'] = Variable<String>(
         terminalCustomCommand.value,
       );
+    }
+    if (terminalFontFamily.present) {
+      map['terminal_font_family'] = Variable<String>(terminalFontFamily.value);
+    }
+    if (terminalFontSize.present) {
+      map['terminal_font_size'] = Variable<int>(terminalFontSize.value);
+    }
+    if (terminalLineHeight.present) {
+      map['terminal_line_height'] = Variable<double>(terminalLineHeight.value);
     }
     if (isDual.present) {
       map['is_dual'] = Variable<bool>(isDual.value);
@@ -1456,6 +1612,9 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
           ..write('themeMode: $themeMode, ')
           ..write('terminal: $terminal, ')
           ..write('terminalCustomCommand: $terminalCustomCommand, ')
+          ..write('terminalFontFamily: $terminalFontFamily, ')
+          ..write('terminalFontSize: $terminalFontSize, ')
+          ..write('terminalLineHeight: $terminalLineHeight, ')
           ..write('isDual: $isDual, ')
           ..write('splitRatio: $splitRatio, ')
           ..write('activePaneIndex: $activePaneIndex, ')
@@ -3631,6 +3790,9 @@ typedef $$AppSettingsTableCreateCompanionBuilder =
       Value<String> themeMode,
       Value<String> terminal,
       Value<String> terminalCustomCommand,
+      Value<String> terminalFontFamily,
+      Value<int> terminalFontSize,
+      Value<double> terminalLineHeight,
       Value<bool> isDual,
       Value<double> splitRatio,
       Value<int> activePaneIndex,
@@ -3660,6 +3822,9 @@ typedef $$AppSettingsTableUpdateCompanionBuilder =
       Value<String> themeMode,
       Value<String> terminal,
       Value<String> terminalCustomCommand,
+      Value<String> terminalFontFamily,
+      Value<int> terminalFontSize,
+      Value<double> terminalLineHeight,
       Value<bool> isDual,
       Value<double> splitRatio,
       Value<int> activePaneIndex,
@@ -3710,6 +3875,21 @@ class $$AppSettingsTableFilterComposer
 
   ColumnFilters<String> get terminalCustomCommand => $composableBuilder(
     column: $table.terminalCustomCommand,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get terminalFontFamily => $composableBuilder(
+    column: $table.terminalFontFamily,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get terminalFontSize => $composableBuilder(
+    column: $table.terminalFontSize,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get terminalLineHeight => $composableBuilder(
+    column: $table.terminalLineHeight,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3853,6 +4033,21 @@ class $$AppSettingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get terminalFontFamily => $composableBuilder(
+    column: $table.terminalFontFamily,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get terminalFontSize => $composableBuilder(
+    column: $table.terminalFontSize,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get terminalLineHeight => $composableBuilder(
+    column: $table.terminalLineHeight,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get isDual => $composableBuilder(
     column: $table.isDual,
     builder: (column) => ColumnOrderings(column),
@@ -3984,6 +4179,21 @@ class $$AppSettingsTableAnnotationComposer
 
   GeneratedColumn<String> get terminalCustomCommand => $composableBuilder(
     column: $table.terminalCustomCommand,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get terminalFontFamily => $composableBuilder(
+    column: $table.terminalFontFamily,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get terminalFontSize => $composableBuilder(
+    column: $table.terminalFontSize,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get terminalLineHeight => $composableBuilder(
+    column: $table.terminalLineHeight,
     builder: (column) => column,
   );
 
@@ -4129,6 +4339,9 @@ class $$AppSettingsTableTableManager
                 Value<String> themeMode = const Value.absent(),
                 Value<String> terminal = const Value.absent(),
                 Value<String> terminalCustomCommand = const Value.absent(),
+                Value<String> terminalFontFamily = const Value.absent(),
+                Value<int> terminalFontSize = const Value.absent(),
+                Value<double> terminalLineHeight = const Value.absent(),
                 Value<bool> isDual = const Value.absent(),
                 Value<double> splitRatio = const Value.absent(),
                 Value<int> activePaneIndex = const Value.absent(),
@@ -4156,6 +4369,9 @@ class $$AppSettingsTableTableManager
                 themeMode: themeMode,
                 terminal: terminal,
                 terminalCustomCommand: terminalCustomCommand,
+                terminalFontFamily: terminalFontFamily,
+                terminalFontSize: terminalFontSize,
+                terminalLineHeight: terminalLineHeight,
                 isDual: isDual,
                 splitRatio: splitRatio,
                 activePaneIndex: activePaneIndex,
@@ -4185,6 +4401,9 @@ class $$AppSettingsTableTableManager
                 Value<String> themeMode = const Value.absent(),
                 Value<String> terminal = const Value.absent(),
                 Value<String> terminalCustomCommand = const Value.absent(),
+                Value<String> terminalFontFamily = const Value.absent(),
+                Value<int> terminalFontSize = const Value.absent(),
+                Value<double> terminalLineHeight = const Value.absent(),
                 Value<bool> isDual = const Value.absent(),
                 Value<double> splitRatio = const Value.absent(),
                 Value<int> activePaneIndex = const Value.absent(),
@@ -4212,6 +4431,9 @@ class $$AppSettingsTableTableManager
                 themeMode: themeMode,
                 terminal: terminal,
                 terminalCustomCommand: terminalCustomCommand,
+                terminalFontFamily: terminalFontFamily,
+                terminalFontSize: terminalFontSize,
+                terminalLineHeight: terminalLineHeight,
                 isDual: isDual,
                 splitRatio: splitRatio,
                 activePaneIndex: activePaneIndex,

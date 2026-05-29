@@ -11,6 +11,10 @@ class AppSettings extends Table {
   TextColumn get terminal => text().withDefault(const Constant('auto'))();
   TextColumn get terminalCustomCommand =>
       text().withDefault(const Constant(''))();
+  TextColumn get terminalFontFamily => text().withDefault(const Constant(''))();
+  IntColumn get terminalFontSize => integer().withDefault(const Constant(13))();
+  RealColumn get terminalLineHeight =>
+      real().withDefault(const Constant(1.2))();
   BoolColumn get isDual => boolean().withDefault(const Constant(false))();
   RealColumn get splitRatio => real().withDefault(const Constant(0.5))();
   IntColumn get activePaneIndex => integer().withDefault(const Constant(0))();
@@ -124,7 +128,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 17;
+  int get schemaVersion => 18;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -211,6 +215,11 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 17) {
         await m.createTable(recentEnteredPaths);
+      }
+      if (from < 18) {
+        await addSettingColumn(appSettings.terminalFontFamily);
+        await addSettingColumn(appSettings.terminalFontSize);
+        await addSettingColumn(appSettings.terminalLineHeight);
       }
     },
   );

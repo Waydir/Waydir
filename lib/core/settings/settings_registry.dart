@@ -7,7 +7,7 @@ import '../../ui/theme/app_theme_definition.dart';
 import '../../ui/theme/app_theme_registry.dart';
 import 'settings_store.dart';
 
-enum SettingsCategory { general, appearance }
+enum SettingsCategory { general, appearance, terminal }
 
 enum SettingKind { toggle, choice, text }
 
@@ -191,8 +191,8 @@ class SettingsRegistry {
       ],
     ),
     ChoiceSetting<String>(
-      id: 'general.terminal',
-      category: SettingsCategory.general,
+      id: 'terminal.external',
+      category: SettingsCategory.terminal,
       label: () => t.preferences.general.terminalLabel,
       hint: () => t.preferences.general.terminalHint,
       searchTerms: const ['terminal', 'open in terminal'],
@@ -211,13 +211,54 @@ class SettingsRegistry {
       ],
     ),
     TextSetting(
-      id: 'general.terminalCustomCommand',
-      category: SettingsCategory.general,
+      id: 'terminal.externalCustomCommand',
+      category: SettingsCategory.terminal,
       label: () => t.preferences.general.terminalCustomLabel,
       hint: () => t.preferences.general.terminalCustomHelp,
       hintText: t.preferences.general.terminalCustomHint,
       searchTerms: const ['terminal', 'command'],
       signal: SettingsStore.instance.terminalCustomCommand,
+    ),
+    TextSetting(
+      id: 'terminal.fontFamily',
+      category: SettingsCategory.terminal,
+      label: () => t.preferences.terminal.fontFamily,
+      hint: () => t.preferences.terminal.fontFamilyHint,
+      hintText: t.preferences.terminal.fontFamilyPlaceholder,
+      searchTerms: const ['terminal', 'font', 'family', 'monospace'],
+      signal: SettingsStore.instance.terminalFontFamily,
+    ),
+    ChoiceSetting<int>(
+      id: 'terminal.fontSize',
+      category: SettingsCategory.terminal,
+      label: () => t.preferences.terminal.fontSize,
+      hint: () => t.preferences.terminal.fontSizeHint,
+      searchTerms: const ['terminal', 'font', 'size', 'zoom'],
+      signal: SettingsStore.instance.terminalFontSize,
+      choices: [
+        for (final value in SettingsStore.terminalFontSizes)
+          SettingChoice(
+            value: value,
+            label: () => '${value}px',
+            icon: WaydirIconsRegular.textAa,
+          ),
+      ],
+    ),
+    ChoiceSetting<double>(
+      id: 'terminal.lineHeight',
+      category: SettingsCategory.terminal,
+      label: () => t.preferences.terminal.lineHeight,
+      hint: () => t.preferences.terminal.lineHeightHint,
+      searchTerms: const ['terminal', 'line', 'height', 'spacing', 'leading'],
+      signal: SettingsStore.instance.terminalLineHeight,
+      choices: [
+        for (final value in const [1.0, 1.1, 1.2, 1.3, 1.4, 1.5])
+          SettingChoice(
+            value: value,
+            label: () => value.toStringAsFixed(1),
+            icon: WaydirIconsRegular.rows,
+          ),
+      ],
     ),
     ChoiceSetting<String>(
       id: 'appearance.theme',

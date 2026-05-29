@@ -141,6 +141,7 @@
     "categories": {
       "general": "General",
       "appearance": "Appearance",
+      "terminal": "Terminal",
       "bookmarks": "Bookmarks",
       "diagnostics": "Diagnostics",
       "about": "About"
@@ -179,6 +180,19 @@
       "terminalCustomLabel": "Command",
       "terminalCustomHint": "e.g. kitty --working-directory={dir}",
       "terminalCustomHelp": "Use {dir} as a placeholder for the directory path."
+    },
+    "terminal": {
+      "title": "Terminal",
+      "subtitle": "Embedded terminal font and external terminal integration.",
+      "appearanceSection": "Appearance",
+      "fontFamily": "Font family",
+      "fontFamilyHint": "Leave empty to use the system monospace font.",
+      "fontFamilyPlaceholder": "monospace",
+      "fontSize": "Font size",
+      "fontSizeHint": "Adjust on the fly with Ctrl++, Ctrl+- and Ctrl+0.",
+      "lineHeight": "Line height",
+      "lineHeightHint": "Vertical spacing between terminal rows.",
+      "externalSection": "External terminal"
     },
     "appearance": {
       "title": "Appearance",
@@ -349,6 +363,9 @@
     "toggleTerminal": "Toggle terminal",
     "newTerminalTab": "New terminal tab",
     "closeTerminalTab": "Close terminal tab",
+    "terminalFontIncrease": "Increase terminal font",
+    "terminalFontDecrease": "Decrease terminal font",
+    "terminalFontReset": "Reset terminal font",
     "toggleSidebar": "Toggle sidebar",
     "copy": "Copy",
     "cut": "Cut",

@@ -13,6 +13,7 @@ import 'panes/about_pane.dart';
 import 'panes/appearance_pane.dart';
 import 'panes/diagnostics_pane.dart';
 import 'panes/general_pane.dart';
+import 'panes/terminal_pane.dart';
 
 Future<void> showPreferencesDialog(BuildContext context) {
   return showDialog<void>(
@@ -23,7 +24,7 @@ Future<void> showPreferencesDialog(BuildContext context) {
   );
 }
 
-enum Category { general, appearance, diagnostics, about }
+enum Category { general, appearance, terminal, diagnostics, about }
 
 class CategoryMeta {
   final Category id;
@@ -43,6 +44,11 @@ final categories = <CategoryMeta>[
     Category.appearance,
     WaydirIconsRegular.palette,
     () => t.preferences.categories.appearance,
+  ),
+  CategoryMeta(
+    Category.terminal,
+    WaydirIconsRegular.terminal,
+    () => t.preferences.categories.terminal,
   ),
   CategoryMeta(
     Category.diagnostics,
@@ -192,6 +198,7 @@ class _ContentPane extends StatelessWidget {
     return switch (category) {
       Category.general => const GeneralPane(),
       Category.appearance => const AppearancePane(),
+      Category.terminal => const TerminalPane(),
       Category.diagnostics => const DiagnosticsPane(),
       Category.about => const AboutPane(),
     };
