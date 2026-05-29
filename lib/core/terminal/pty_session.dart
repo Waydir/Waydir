@@ -5,6 +5,24 @@ import 'package:waydir_term/xterm.dart';
 
 import '../fs/waydir_core_loader.dart';
 
+const _minPollInterval = Duration(milliseconds: 16);
+const _maxPollInterval = Duration(milliseconds: 120);
+
+/// Computes the next poll delay for a pty session. Resets to [min] whenever
+/// there is activity so input echo stays responsive, and backs off
+/// geometrically toward [max] while the session is idle to avoid waking the
+/// event loop needlessly on quiet terminals.
+Duration nextPollInterval({
+  required Duration current,
+  required bool active,
+  Duration min = _minPollInterval,
+  Duration max = _maxPollInterval,
+}) {
+  if (active) return min;
+  final next = current * 2;
+  return next > max ? max : next;
+}
+
 /// Bridges an `xterm` [Terminal] to a native pseudo-terminal spawned by
 /// `waydir_core` (portable-pty). Output is polled off the native buffer and
 /// fed into the terminal; terminal input and resizes are forwarded to the pty.
@@ -14,6 +32,7 @@ class PtySession {
 
   int? _id;
   Timer? _poll;
+  Duration _interval = _minPollInterval;
   bool _exited = false;
   void Function()? _onExit;
 
@@ -44,22 +63,36 @@ class PtySession {
 
     terminal.onOutput = (data) {
       final i = _id;
-      if (i != null) WaydirCoreLoader.ptyWrite(i, utf8.encode(data));
+      if (i == null) return;
+      WaydirCoreLoader.ptyWrite(i, utf8.encode(data));
+      _wake();
     };
     terminal.onResize = (w, h, pw, ph) {
       final i = _id;
       if (i != null) WaydirCoreLoader.ptyResize(i, w, h);
     };
 
-    _poll = Timer.periodic(const Duration(milliseconds: 16), (_) => _drain());
+    _schedule();
     return true;
   }
 
-  void _drain() {
+  void _schedule() {
+    _poll = Timer(_interval, _tick);
+  }
+
+  void _wake() {
+    if (_id == null) return;
+    _interval = _minPollInterval;
+    _poll?.cancel();
+    _schedule();
+  }
+
+  void _tick() {
     final id = _id;
     if (id == null) return;
     final data = WaydirCoreLoader.ptyRead(id);
-    if (data != null && data.isNotEmpty) {
+    final hadData = data != null && data.isNotEmpty;
+    if (hadData) {
       terminal.write(_utf8.convert(data));
     }
     if (!WaydirCoreLoader.ptyAlive(id)) {
@@ -69,7 +102,10 @@ class PtySession {
       final cb = _onExit;
       _onExit = null;
       cb?.call();
+      return;
     }
+    _interval = nextPollInterval(current: _interval, active: hadData);
+    _schedule();
   }
 
   void dispose() {
