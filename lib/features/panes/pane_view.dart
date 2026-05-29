@@ -422,6 +422,7 @@ class _TerminalPanelState extends State<_TerminalPanel> {
                     vertical: 6,
                   ),
                   onKeyEvent: _onKeyEvent,
+                  hardwareKeyboardOnly: Platform.isWindows,
                 );
               },
             ),
