@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Embedded terminal in each pane with remote connections support.
+- Terminal preferences: font, size, line height and system font picker.
+
 ### Changed
 - Window title now follows the active folder.
 
