@@ -50,6 +50,12 @@ pub(crate) fn base_builder(root: &str) -> WalkBuilder {
     builder
 }
 
+pub(crate) fn apply_max_depth(builder: &mut WalkBuilder, max_depth: u32) {
+    if max_depth > 0 {
+        builder.max_depth(Some(max_depth as usize));
+    }
+}
+
 pub(crate) fn apply_search_filter(builder: &mut WalkBuilder, include_hidden: bool) {
     builder.hidden(!include_hidden);
     builder.filter_entry(|dirent| {
