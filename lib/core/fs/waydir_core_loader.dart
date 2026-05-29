@@ -15,6 +15,8 @@ typedef _SearchNative =
       Pointer<Utf8>,
       Bool,
       Uint8,
+      Bool,
+      Uint32,
       Pointer<IntPtr>,
     );
 typedef _SearchDart =
@@ -23,13 +25,22 @@ typedef _SearchDart =
       Pointer<Utf8>,
       bool,
       int,
+      bool,
+      int,
       Pointer<IntPtr>,
     );
 
 typedef _SearchStartNative =
-    Pointer<Void> Function(Pointer<Utf8>, Pointer<Utf8>, Bool, Uint8);
+    Pointer<Void> Function(
+      Pointer<Utf8>,
+      Pointer<Utf8>,
+      Bool,
+      Uint8,
+      Bool,
+      Uint32,
+    );
 typedef _SearchStartDart =
-    Pointer<Void> Function(Pointer<Utf8>, Pointer<Utf8>, bool, int);
+    Pointer<Void> Function(Pointer<Utf8>, Pointer<Utf8>, bool, int, bool, int);
 
 typedef _SearchPollNative =
     Pointer<Uint8> Function(
@@ -311,7 +322,7 @@ class NativeTrashItem {
 class WaydirCoreLoader {
   WaydirCoreLoader._();
 
-  static const int _requiredAbi = 8;
+  static const int _requiredAbi = 12;
 
   static DynamicLibrary? _cached;
   static bool _tried = false;
@@ -352,6 +363,8 @@ class WaydirCoreLoader {
     String query,
     bool includeHidden, {
     int mode = 0,
+    bool content = false,
+    int maxDepth = 0,
   }) {
     final lib = requireLib();
     final search = lib.lookupFunction<_SearchNative, _SearchDart>(
@@ -362,7 +375,15 @@ class WaydirCoreLoader {
     final queryPtr = query.toNativeUtf8();
     final outLen = calloc<IntPtr>();
     try {
-      final buf = search(rootPtr, queryPtr, includeHidden, mode, outLen);
+      final buf = search(
+        rootPtr,
+        queryPtr,
+        includeHidden,
+        mode,
+        content,
+        maxDepth,
+        outLen,
+      );
       if (buf == nullptr) return null;
       final len = outLen.value;
       final copy = Uint8List.fromList(buf.asTypedList(len));
@@ -382,6 +403,8 @@ class WaydirCoreLoader {
     String query,
     bool includeHidden, {
     int mode = 0,
+    bool content = false,
+    int maxDepth = 0,
   }) {
     final lib = requireLib();
     final start = lib.lookupFunction<_SearchStartNative, _SearchStartDart>(
@@ -390,7 +413,14 @@ class WaydirCoreLoader {
     final rootPtr = root.toNativeUtf8();
     final queryPtr = query.toNativeUtf8();
     try {
-      final session = start(rootPtr, queryPtr, includeHidden, mode);
+      final session = start(
+        rootPtr,
+        queryPtr,
+        includeHidden,
+        mode,
+        content,
+        maxDepth,
+      );
       if (session == nullptr) return null;
       return session.address;
     } catch (_) {

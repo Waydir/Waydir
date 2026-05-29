@@ -31,7 +31,16 @@ class _StartMsg {
   final String query;
   final bool includeHidden;
   final SearchMode mode;
-  const _StartMsg(this.root, this.query, this.includeHidden, this.mode);
+  final bool content;
+  final int maxDepth;
+  const _StartMsg(
+    this.root,
+    this.query,
+    this.includeHidden,
+    this.mode,
+    this.content,
+    this.maxDepth,
+  );
 }
 
 class _CancelMsg {
@@ -68,6 +77,8 @@ class RecursiveSearch {
     required void Function() onDone,
     required void Function(Object error) onError,
     SearchMode mode = SearchMode.substring,
+    bool content = false,
+    int maxDepth = 0,
   }) {
     final handle = SearchHandle._();
     final receivePort = ReceivePort();
@@ -92,7 +103,9 @@ class RecursiveSearch {
       if (!startSent && msg is SendPort) {
         startSent = true;
         handle._setCommandPort(msg);
-        msg.send(_StartMsg(root, query, includeHidden, mode));
+        msg.send(
+          _StartMsg(root, query, includeHidden, mode, content, maxDepth),
+        );
         if (handle._done) handle._commandPort?.send(const _CancelMsg());
         return;
       }
@@ -141,6 +154,8 @@ class RecursiveSearch {
           msg.query,
           msg.includeHidden,
           msg.mode,
+          msg.content,
+          msg.maxDepth,
           () => cancelled,
         ).whenComplete(() {
           commandPort.close();
@@ -160,6 +175,8 @@ class RecursiveSearch {
     String query,
     bool includeHidden,
     SearchMode mode,
+    bool content,
+    int maxDepth,
     bool Function() isCancelled,
   ) async {
     const pollInterval = Duration(milliseconds: 120);
@@ -175,6 +192,8 @@ class RecursiveSearch {
         query,
         includeHidden,
         mode: mode.index,
+        content: content,
+        maxDepth: maxDepth,
       );
     } catch (e) {
       mainPort.send(_ErrorMsg(e.toString()));
