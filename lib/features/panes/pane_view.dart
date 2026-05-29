@@ -582,7 +582,7 @@ class _TerminalTabChip extends StatelessWidget {
               child: Text(
                 tab.label,
                 overflow: TextOverflow.ellipsis,
-                style: context.txt.micro.copyWith(color: fg),
+                style: context.txt.row.copyWith(color: fg),
               ),
             ),
             const SizedBox(width: 4),
