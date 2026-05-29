@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:waydir/ui/icons/waydir_icons.dart';
 import 'package:signals/signals_flutter.dart';
+import '../../core/platform/platform_paths.dart';
 import '../../core/settings/settings_store.dart';
 import '../../i18n/strings.g.dart';
 import '../../ui/theme/app_theme.dart';
@@ -301,23 +302,36 @@ class _ContentToggleState extends State<_ContentToggle> {
     return SignalBuilder(
       builder: (context) {
         final active = widget.store.searchContent.value;
+        final enabled = !PlatformPaths.isSftpUri(
+          widget.store.currentPath.value,
+        );
+        final fg = !enabled
+            ? AppColors.fgSubtle
+            : (active ? AppColors.accent : AppColors.fgMuted);
         return Tooltip(
-          message: t.search.contentSearch,
+          message: enabled
+              ? t.search.contentSearch
+              : t.search.contentSftpUnsupported,
           child: MouseRegion(
-            onEnter: (_) => setState(() => _hovered = true),
-            onExit: (_) => setState(() => _hovered = false),
+            cursor: enabled
+                ? SystemMouseCursors.click
+                : SystemMouseCursors.basic,
+            onEnter: enabled ? (_) => setState(() => _hovered = true) : null,
+            onExit: enabled ? (_) => setState(() => _hovered = false) : null,
             child: GestureDetector(
-              onTap: widget.store.toggleContent,
+              onTap: enabled ? widget.store.toggleContent : null,
               child: Container(
                 height: 24,
                 margin: const EdgeInsets.only(right: 4),
                 padding: const EdgeInsets.symmetric(horizontal: 6),
                 decoration: BoxDecoration(
-                  color: active
+                  color: active && enabled
                       ? AppColors.accent.withValues(alpha: 0.15)
-                      : (_hovered ? AppColors.bgHover : Colors.transparent),
+                      : (_hovered && enabled
+                            ? AppColors.bgHover
+                            : Colors.transparent),
                   borderRadius: BorderRadius.zero,
-                  border: active
+                  border: active && enabled
                       ? Border.all(
                           color: AppColors.accent.withValues(alpha: 0.4),
                         )
@@ -326,17 +340,13 @@ class _ContentToggleState extends State<_ContentToggle> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      WaydirIconsRegular.fileTxt,
-                      size: 14,
-                      color: active ? AppColors.accent : AppColors.fgMuted,
-                    ),
+                    Icon(WaydirIconsRegular.fileTxt, size: 14, color: fg),
                     const SizedBox(width: 4),
                     Text(
                       t.search.content,
                       style: context.txt.row.copyWith(
-                        color: active ? AppColors.accent : AppColors.fgMuted,
-                        fontWeight: active
+                        color: fg,
+                        fontWeight: active && enabled
                             ? FontWeight.w600
                             : FontWeight.normal,
                       ),
