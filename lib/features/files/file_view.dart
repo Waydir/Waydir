@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -41,6 +42,10 @@ const _kScrollbarThumbWidth = 6.0;
 const _kScrollbarGutterWidth = _kScrollbarThumbWidth;
 const _kRowPaddingLeft = 8.0;
 const _kRowPaddingRight = 10.0;
+const _kNameMinWidth = 160.0;
+const _kIconSlotWidth = 22.0;
+const _kColumnGap = 16.0;
+const _kHeaderHeight = 24.0;
 
 class FileList extends StatefulWidget {
   final List<FileEntry> files;
@@ -100,6 +105,8 @@ class FileList extends StatefulWidget {
 
 class _FileListState extends State<FileList> {
   final _scrollController = ScrollController();
+  final _hScrollController = ScrollController();
+  double _contentWidth = 0;
   bool _isDragOver = false;
   String? _hoveredFolderPath;
   double _rowH = _kRowHeightComfortable;
@@ -170,9 +177,8 @@ class _FileListState extends State<FileList> {
     if (localPosition.dy < 0 || localPosition.dx < _listHorizontalPadding) {
       return -1;
     }
-    final rightEdge =
-        _viewportWidth - _kScrollbarGutterWidth - _listHorizontalPadding;
-    if (_viewportWidth > 0 && localPosition.dx >= rightEdge) return -1;
+    final rightEdge = _contentWidth - _listHorizontalPadding;
+    if (_contentWidth > 0 && localPosition.dx >= rightEdge) return -1;
 
     final adjustedY =
         localPosition.dy + _scrollController.offset - _listTopPadding;
@@ -187,8 +193,8 @@ class _FileListState extends State<FileList> {
   }
 
   bool _canStartRubberBandAt(Offset localPosition) {
-    if (_viewportWidth <= 0) return true;
-    return localPosition.dx < _viewportWidth - _kScrollbarGutterWidth;
+    if (_contentWidth <= 0) return true;
+    return localPosition.dx < _contentWidth - _listHorizontalPadding;
   }
 
   void _updateHover(Offset localPosition) {
@@ -247,6 +253,7 @@ class _FileListState extends State<FileList> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _hScrollController.dispose();
     super.dispose();
   }
 
@@ -284,189 +291,254 @@ class _FileListState extends State<FileList> {
         }
 
         final columnWidths = _computeColumnWidths(context);
+        final recursive = widget.recursiveResults;
 
-        return Column(
-          children: [
-            Row(
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            _viewportWidth = constraints.maxWidth;
+
+            final fixedCols =
+                _kIconSlotWidth +
+                columnWidths.size +
+                columnWidths.date +
+                _kColumnGap +
+                (recursive ? _kLocationWidth + _kColumnGap : 0);
+            final rowChrome =
+                _listHorizontalPadding * 2 +
+                _kScrollbarGutterWidth +
+                _kRowPaddingLeft +
+                _kRowPaddingRight;
+            final available = _viewportWidth - rowChrome - fixedCols;
+            final nameWidth = math.max(_kNameMinWidth, available);
+            _contentWidth = nameWidth + fixedCols + rowChrome;
+            final bodyWidth = math.max(_contentWidth, _viewportWidth);
+
+            return Stack(
               children: [
-                Expanded(
-                  child: _ListHeader(
-                    recursive: widget.recursiveResults,
-                    sizeWidth: columnWidths.size,
-                    dateWidth: columnWidths.date,
-                    sortColumn: widget.sortColumn,
-                    sortAscending: widget.sortAscending,
-                    onSortColumn: widget.onSortColumn,
-                  ),
-                ),
-                SizedBox(
-                  width: _kScrollbarGutterWidth,
-                  height: 24,
-                  child: ColoredBox(color: AppColors.bg),
-                ),
-              ],
-            ),
-            Divider(height: 1, thickness: 1, color: AppColors.bgDivider),
-            Expanded(
-              child: RubberBandLayer(
-                scrollController: _scrollController,
-                itemCount: widget.files.length,
-                itemExtent: _itemExt,
-                rowHeight: _rowH,
-                topPadding: _listTopPadding,
-                pathAt: (i) => widget.files[i].path,
-                rowAt: _rowAt,
-                canStartSelectionAt: _canStartRubberBandAt,
-                onSelectionChanged: widget.onRectSelect,
-                onBackgroundTap: widget.onBackgroundTap,
-                child: DropRegion(
-                  formats: [Formats.fileUri, formatLocalFile],
-                  hitTestBehavior: HitTestBehavior.opaque,
-                  onDropOver: (event) {
-                    _updateHover(event.position.local);
-                    return DragHintController.instance.mode.value ==
-                            DragMode.move
-                        ? DropOperation.move
-                        : DropOperation.copy;
-                  },
-                  onDropLeave: (_) => _clearDrag(),
-                  onDropEnded: (_) {
-                    _clearDrag();
-                  },
-                  onPerformDrop: (event) async {
-                    final pos = event.position.local;
-                    final index = _rowAt(pos);
-                    String? target;
-                    if (index >= 0 &&
-                        widget.files[index].type == FileItemType.folder) {
-                      target = widget.files[index].path;
-                    }
-                    final paths = await pathsFromSession(event.session);
-                    final move =
-                        DragHintController.instance.mode.value == DragMode.move;
-                    if (paths.isNotEmpty) {
-                      widget.onDropFiles?.call(
-                        paths,
-                        target ?? widget.currentPath,
-                        move: move,
-                      );
-                    }
-                    _clearDrag();
-                  },
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      _viewportWidth = constraints.maxWidth;
-                      return Stack(
-                        children: [
-                          ScrollConfiguration(
-                            behavior: ScrollConfiguration.of(
-                              context,
-                            ).copyWith(scrollbars: false),
-                            child: RawScrollbar(
-                              controller: _scrollController,
-                              thumbVisibility: true,
-                              thumbColor: AppColors.fgSubtle,
-                              thickness: _kScrollbarThumbWidth,
-                              crossAxisMargin: 0,
-                              radius: Radius.zero,
-                              child: GestureDetector(
-                                onSecondaryTapUp: (d) {
-                                  final index = _rowAt(d.localPosition);
-                                  if (index < 0) {
-                                    widget.onBackgroundTap?.call();
-                                    widget.onBackgroundContextMenu?.call(
-                                      d.globalPosition,
+                ScrollConfiguration(
+                  behavior: ScrollConfiguration.of(
+                    context,
+                  ).copyWith(scrollbars: false),
+                  child: RawScrollbar(
+                    controller: _hScrollController,
+                    thumbVisibility: bodyWidth > _viewportWidth,
+                    thumbColor: AppColors.fgSubtle,
+                    thickness: _kScrollbarThumbWidth,
+                    crossAxisMargin: 0,
+                    radius: Radius.zero,
+                    scrollbarOrientation: ScrollbarOrientation.bottom,
+                    child: SingleChildScrollView(
+                      controller: _hScrollController,
+                      scrollDirection: Axis.horizontal,
+                      child: SizedBox(
+                        width: bodyWidth,
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _ListHeader(
+                                    recursive: recursive,
+                                    nameWidth: nameWidth,
+                                    sizeWidth: columnWidths.size,
+                                    dateWidth: columnWidths.date,
+                                    sortColumn: widget.sortColumn,
+                                    sortAscending: widget.sortAscending,
+                                    onSortColumn: widget.onSortColumn,
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: _kScrollbarGutterWidth,
+                                  height: 24,
+                                  child: ColoredBox(color: AppColors.bg),
+                                ),
+                              ],
+                            ),
+                            Divider(
+                              height: 1,
+                              thickness: 1,
+                              color: AppColors.bgDivider,
+                            ),
+                            Expanded(
+                              child: RubberBandLayer(
+                                scrollController: _scrollController,
+                                itemCount: widget.files.length,
+                                itemExtent: _itemExt,
+                                rowHeight: _rowH,
+                                topPadding: _listTopPadding,
+                                pathAt: (i) => widget.files[i].path,
+                                rowAt: _rowAt,
+                                canStartSelectionAt: _canStartRubberBandAt,
+                                onSelectionChanged: widget.onRectSelect,
+                                onBackgroundTap: widget.onBackgroundTap,
+                                child: DropRegion(
+                                  formats: [Formats.fileUri, formatLocalFile],
+                                  hitTestBehavior: HitTestBehavior.opaque,
+                                  onDropOver: (event) {
+                                    _updateHover(event.position.local);
+                                    return DragHintController
+                                                .instance
+                                                .mode
+                                                .value ==
+                                            DragMode.move
+                                        ? DropOperation.move
+                                        : DropOperation.copy;
+                                  },
+                                  onDropLeave: (_) => _clearDrag(),
+                                  onDropEnded: (_) {
+                                    _clearDrag();
+                                  },
+                                  onPerformDrop: (event) async {
+                                    final pos = event.position.local;
+                                    final index = _rowAt(pos);
+                                    String? target;
+                                    if (index >= 0 &&
+                                        widget.files[index].type ==
+                                            FileItemType.folder) {
+                                      target = widget.files[index].path;
+                                    }
+                                    final paths = await pathsFromSession(
+                                      event.session,
                                     );
-                                  }
-                                },
-                                behavior: HitTestBehavior.translucent,
-                                child: ListView.builder(
-                                  controller: _scrollController,
-                                  padding: EdgeInsets.only(
-                                    left: _listHorizontalPadding,
-                                    top: _listTopPadding,
-                                    right:
-                                        _listHorizontalPadding +
-                                        _kScrollbarGutterWidth,
-                                  ),
-                                  itemCount: widget.files.length,
-                                  itemExtent: _itemExt,
-                                  addAutomaticKeepAlives: false,
-                                  addRepaintBoundaries: false,
-                                  addSemanticIndexes: false,
-                                  itemBuilder: (context, i) => RepaintBoundary(
-                                    child: Padding(
-                                      padding: EdgeInsets.only(bottom: _rowG),
-                                      child: _ListRow(
-                                        rowHeight: _rowH,
-                                        dateFmt: _dateFmt,
-                                        recentDatesRelative:
-                                            _recentDatesRelative,
-                                        entry: widget.files[i],
-                                        index: i,
-                                        selected: widget.selectedPaths.contains(
-                                          widget.files[i].path,
+                                    final move =
+                                        DragHintController
+                                            .instance
+                                            .mode
+                                            .value ==
+                                        DragMode.move;
+                                    if (paths.isNotEmpty) {
+                                      widget.onDropFiles?.call(
+                                        paths,
+                                        target ?? widget.currentPath,
+                                        move: move,
+                                      );
+                                    }
+                                    _clearDrag();
+                                  },
+                                  child: ScrollConfiguration(
+                                    behavior: ScrollConfiguration.of(
+                                      context,
+                                    ).copyWith(scrollbars: false),
+                                    child: GestureDetector(
+                                      onSecondaryTapUp: (d) {
+                                        final index = _rowAt(d.localPosition);
+                                        if (index < 0) {
+                                          widget.onBackgroundTap?.call();
+                                          widget.onBackgroundContextMenu?.call(
+                                            d.globalPosition,
+                                          );
+                                        }
+                                      },
+                                      behavior: HitTestBehavior.translucent,
+                                      child: ListView.builder(
+                                        controller: _scrollController,
+                                        padding: EdgeInsets.only(
+                                          left: _listHorizontalPadding,
+                                          top: _listTopPadding,
+                                          right:
+                                              _listHorizontalPadding +
+                                              _kScrollbarGutterWidth,
                                         ),
-                                        selectedPaths: widget.selectedPaths,
-                                        isCut: widget.cutPaths.contains(
-                                          widget.files[i].path,
-                                        ),
-                                        isDraggingSelected:
-                                            widget.selectedPaths.isNotEmpty,
-                                        isFolderDragOver:
-                                            _hoveredFolderPath ==
-                                            widget.files[i].path,
-                                        isRenaming:
-                                            widget.renamingPath ==
-                                            widget.files[i].path,
-                                        renameAttempt: widget.renameAttempt,
-                                        onRenameSubmit: widget.onRenameSubmit,
-                                        onRenameCancel: widget.onRenameCancel,
-                                        onSelect: widget.onSelect,
-                                        onOpen: widget.onOpen,
-                                        onContextMenu: widget.onContextMenu,
-                                        onMenuAction: widget.onMenuAction,
-                                        recursive: widget.recursiveResults,
-                                        sizeWidth: columnWidths.size,
-                                        dateWidth: columnWidths.date,
-                                        location: widget.recursiveResults
-                                            ? _compactLocation(
-                                                widget.files[i].path,
-                                                widget.currentPath,
-                                              )
-                                            : null,
-                                        onOpenInNewTab: widget.onOpenInNewTab,
+                                        itemCount: widget.files.length,
+                                        itemExtent: _itemExt,
+                                        addAutomaticKeepAlives: false,
+                                        addRepaintBoundaries: false,
+                                        addSemanticIndexes: false,
+                                        itemBuilder: (context, i) =>
+                                            RepaintBoundary(
+                                              child: Padding(
+                                                padding: EdgeInsets.only(
+                                                  bottom: _rowG,
+                                                ),
+                                                child: _ListRow(
+                                                  rowHeight: _rowH,
+                                                  dateFmt: _dateFmt,
+                                                  recentDatesRelative:
+                                                      _recentDatesRelative,
+                                                  entry: widget.files[i],
+                                                  index: i,
+                                                  nameWidth: nameWidth,
+                                                  selected: widget.selectedPaths
+                                                      .contains(
+                                                        widget.files[i].path,
+                                                      ),
+                                                  selectedPaths:
+                                                      widget.selectedPaths,
+                                                  isCut: widget.cutPaths
+                                                      .contains(
+                                                        widget.files[i].path,
+                                                      ),
+                                                  isDraggingSelected: widget
+                                                      .selectedPaths
+                                                      .isNotEmpty,
+                                                  isFolderDragOver:
+                                                      _hoveredFolderPath ==
+                                                      widget.files[i].path,
+                                                  isRenaming:
+                                                      widget.renamingPath ==
+                                                      widget.files[i].path,
+                                                  renameAttempt:
+                                                      widget.renameAttempt,
+                                                  onRenameSubmit:
+                                                      widget.onRenameSubmit,
+                                                  onRenameCancel:
+                                                      widget.onRenameCancel,
+                                                  onSelect: widget.onSelect,
+                                                  onOpen: widget.onOpen,
+                                                  onContextMenu:
+                                                      widget.onContextMenu,
+                                                  onMenuAction:
+                                                      widget.onMenuAction,
+                                                  recursive: recursive,
+                                                  sizeWidth: columnWidths.size,
+                                                  dateWidth: columnWidths.date,
+                                                  location: recursive
+                                                      ? _compactLocation(
+                                                          widget.files[i].path,
+                                                          widget.currentPath,
+                                                        )
+                                                      : null,
+                                                  onOpenInNewTab:
+                                                      widget.onOpenInNewTab,
+                                                ),
+                                              ),
+                                            ),
                                       ),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                          if (_isDragOver)
-                            Positioned.fill(
-                              child: IgnorePointer(
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: AppColors.accent.withValues(
-                                        alpha: 0.4,
-                                      ),
-                                      width: 1,
-                                    ),
-                                    borderRadius: BorderRadius.zero,
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
-                      );
-                    },
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-          ],
+                Positioned(
+                  top: _kHeaderHeight + 1,
+                  right: 0,
+                  bottom: 0,
+                  width: _kScrollbarGutterWidth,
+                  child: _PinnedVerticalScrollbar(controller: _scrollController),
+                ),
+                if (_isDragOver)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: AppColors.accent.withValues(alpha: 0.4),
+                            width: 1,
+                          ),
+                          borderRadius: BorderRadius.zero,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
         );
       },
     );
@@ -475,6 +547,7 @@ class _FileListState extends State<FileList> {
 
 class _ListHeader extends StatelessWidget {
   final bool recursive;
+  final double nameWidth;
   final double sizeWidth;
   final double dateWidth;
   final SortKey sortColumn;
@@ -482,6 +555,7 @@ class _ListHeader extends StatelessWidget {
   final void Function(SortKey key)? onSortColumn;
   const _ListHeader({
     this.recursive = false,
+    this.nameWidth = 0,
     this.sizeWidth = 0,
     this.dateWidth = 0,
     this.sortColumn = SortKey.name,
@@ -540,8 +614,8 @@ class _ListHeader extends StatelessWidget {
       child: Row(
         children: [
           const SizedBox(width: 22),
-          Expanded(
-            flex: 3,
+          SizedBox(
+            width: nameWidth,
             child: _sortable(
               context,
               t.fileView.columns.name,
@@ -606,6 +680,7 @@ class _ListRow extends StatefulWidget {
   final FileContextMenuCallback? onContextMenu;
   final FileMenuActionCallback? onMenuAction;
   final bool recursive;
+  final double nameWidth;
   final double sizeWidth;
   final double dateWidth;
   final double rowHeight;
@@ -631,6 +706,7 @@ class _ListRow extends StatefulWidget {
     this.onContextMenu,
     this.onMenuAction,
     this.recursive = false,
+    this.nameWidth = 0,
     this.sizeWidth = 0,
     this.dateWidth = 0,
     this.rowHeight = _kRowHeightComfortable,
@@ -947,8 +1023,8 @@ class _ListRowState extends State<_ListRow> {
                   size: 16,
                 ),
                 const SizedBox(width: 6),
-                Expanded(
-                  flex: 3,
+                SizedBox(
+                  width: widget.nameWidth,
                   child: CallbackShortcuts(
                     bindings: {
                       const SingleActivator(LogicalKeyboardKey.escape):
@@ -1078,8 +1154,8 @@ class _ListRowState extends State<_ListRow> {
                   size: 16,
                 ),
                 const SizedBox(width: 6),
-                Expanded(
-                  flex: 3,
+                SizedBox(
+                  width: widget.nameWidth,
                   child: Text(
                     e.name,
                     overflow: TextOverflow.ellipsis,
@@ -1270,4 +1346,67 @@ String _formatRelative(DateTime d) {
     return t.fileView.date.monthsAgo(count: (diff.inDays / 30).floor());
   }
   return t.fileView.date.yearsAgo(count: (diff.inDays / 365).floor());
+}
+
+class _PinnedVerticalScrollbar extends StatelessWidget {
+  final ScrollController controller;
+  const _PinnedVerticalScrollbar({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final trackHeight = constraints.maxHeight;
+        return AnimatedBuilder(
+          animation: controller,
+          builder: (context, _) {
+            if (!controller.hasClients) return const SizedBox.shrink();
+            final position = controller.position;
+            if (!position.hasContentDimensions ||
+                !position.hasViewportDimension ||
+                !position.hasPixels) {
+              return const SizedBox.shrink();
+            }
+            final maxScroll = position.maxScrollExtent;
+            final viewport = position.viewportDimension;
+            if (maxScroll <= 0 || viewport <= 0) {
+              return const SizedBox.shrink();
+            }
+            final thumbHeight = math.max(
+              24.0,
+              trackHeight * viewport / (viewport + maxScroll),
+            );
+            final maxTravel = trackHeight - thumbHeight;
+            final t = (position.pixels / maxScroll).clamp(0.0, 1.0);
+            final top = maxTravel * t;
+            return Stack(
+              children: [
+                Positioned(
+                  top: top,
+                  right: 0,
+                  width: _kScrollbarThumbWidth,
+                  height: thumbHeight,
+                  child: GestureDetector(
+                    onVerticalDragUpdate: (d) {
+                      if (maxTravel <= 0) return;
+                      final delta = d.delta.dy / maxTravel * maxScroll;
+                      controller.jumpTo(
+                        (position.pixels + delta).clamp(
+                          position.minScrollExtent,
+                          position.maxScrollExtent,
+                        ),
+                      );
+                    },
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(color: AppColors.fgSubtle),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 }
