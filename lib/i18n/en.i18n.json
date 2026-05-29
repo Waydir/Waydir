@@ -586,6 +586,7 @@
     "subfoldersShortcut": "Subfolders (Ctrl+Shift+F)",
     "content": "Content",
     "contentSearch": "Search inside file contents",
+    "contentSftpUnsupported": "Content search is not available over SFTP",
     "close": "Close search",
     "results(one)": "1 result",
     "results(other)": "$count results",

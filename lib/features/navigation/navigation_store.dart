@@ -433,6 +433,7 @@ class NavigationStore {
   }
 
   void toggleContent() {
+    if (PlatformPaths.isSftpUri(currentPath.value)) return;
     final enabling = !searchContent.value;
     batch(() {
       searchContent.value = enabling;
@@ -598,6 +599,10 @@ class NavigationStore {
       return;
     }
     if (PlatformPaths.isSftpUri(root)) {
+      if (searchContent.value) {
+        isSearching.value = false;
+        return;
+      }
       final matcher = _localMatcher(q, mode);
       if (matcher == null) {
         isSearching.value = false;

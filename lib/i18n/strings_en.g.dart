@@ -1250,6 +1250,9 @@ class Translations$search$en {
 	/// en: 'Search inside file contents'
 	String get contentSearch => 'Search inside file contents';
 
+	/// en: 'Content search is not available over SFTP'
+	String get contentSftpUnsupported => 'Content search is not available over SFTP';
+
 	/// en: 'Close search'
 	String get close => 'Close search';
 
@@ -3079,6 +3082,7 @@ extension on Translations {
 			'search.subfoldersShortcut' => 'Subfolders (Ctrl+Shift+F)',
 			'search.content' => 'Content',
 			'search.contentSearch' => 'Search inside file contents',
+			'search.contentSftpUnsupported' => 'Content search is not available over SFTP',
 			'search.close' => 'Close search',
 			'search.results' => ({required Object count}) => '${count} results',
 			'search.found' => ({required Object count}) => '${count} found',
@@ -3098,9 +3102,9 @@ extension on Translations {
 			'statusBar.folders' => ({required Object count}) => '${count} folders',
 			'statusBar.files' => ({required Object count}) => '${count} files',
 			'statusBar.selected' => ({required Object count}) => '${count} selected',
-			'dialog.create' => 'Create',
 			_ => null,
 		} ?? switch (path) {
+			'dialog.create' => 'Create',
 			'dialog.cancel' => 'Cancel',
 			'dialog.folderNameHint' => 'Folder name',
 			'dialog.close' => 'Close',
