@@ -316,7 +316,8 @@ class TerminalViewState extends State<TerminalView> {
     );
 
     child = Container(
-      color: widget.theme.background.withOpacity(widget.backgroundOpacity),
+      color:
+          widget.theme.background.withValues(alpha: widget.backgroundOpacity),
       padding: widget.padding,
       child: child,
     );
@@ -346,7 +347,7 @@ class TerminalViewState extends State<TerminalView> {
     widget.onTapUp?.call(details, offset);
   }
 
-  void _onTapDown(_) {
+  void _onTapDown(TapDownDetails _) {
     if (_controller.selection != null) {
       _controller.clearSelection();
     } else {
