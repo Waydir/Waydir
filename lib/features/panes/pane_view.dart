@@ -555,7 +555,7 @@ class _TerminalTabChip extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: onSelect,
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 150),
+        constraints: const BoxConstraints(maxWidth: 220),
         padding: const EdgeInsets.only(left: 8, right: 4),
         decoration: BoxDecoration(
           color: active ? AppColors.bgHover : Colors.transparent,
