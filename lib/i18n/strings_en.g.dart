@@ -41,6 +41,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 
 	// Translations
 	late final Translations$app$en app = Translations$app$en.internal(_root);
+	late final Translations$terminal$en terminal = Translations$terminal$en.internal(_root);
 	late final Translations$menu$en menu = Translations$menu$en.internal(_root);
 	late final Translations$multiRename$en multiRename = Translations$multiRename$en.internal(_root);
 	late final Translations$compress$en compress = Translations$compress$en.internal(_root);
@@ -88,6 +89,18 @@ class Translations$app$en {
 
 	/// en: 'A fast, keyboard-driven desktop file manager built with Flutter.'
 	String get description => 'A fast, keyboard-driven desktop file manager built with Flutter.';
+}
+
+// Path: terminal
+class Translations$terminal$en {
+	Translations$terminal$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Terminal'
+	String get title => 'Terminal';
 }
 
 // Path: menu
@@ -475,6 +488,7 @@ class Translations$preferences$en {
 
 	late final Translations$preferences$categories$en categories = Translations$preferences$categories$en.internal(_root);
 	late final Translations$preferences$general$en general = Translations$preferences$general$en.internal(_root);
+	late final Translations$preferences$terminal$en terminal = Translations$preferences$terminal$en.internal(_root);
 	late final Translations$preferences$appearance$en appearance = Translations$preferences$appearance$en.internal(_root);
 	late final Translations$preferences$bookmarks$en bookmarks = Translations$preferences$bookmarks$en.internal(_root);
 	late final Translations$preferences$diagnostics$en diagnostics = Translations$preferences$diagnostics$en.internal(_root);
@@ -694,6 +708,27 @@ class Translations$keybindings$en {
 
 	/// en: 'Switch active pane'
 	String get switchPane => 'Switch active pane';
+
+	/// en: 'Open / focus terminal'
+	String get focusTerminal => 'Open / focus terminal';
+
+	/// en: 'Toggle terminal'
+	String get toggleTerminal => 'Toggle terminal';
+
+	/// en: 'New terminal tab'
+	String get newTerminalTab => 'New terminal tab';
+
+	/// en: 'Close terminal tab'
+	String get closeTerminalTab => 'Close terminal tab';
+
+	/// en: 'Increase terminal font'
+	String get terminalFontIncrease => 'Increase terminal font';
+
+	/// en: 'Decrease terminal font'
+	String get terminalFontDecrease => 'Decrease terminal font';
+
+	/// en: 'Reset terminal font'
+	String get terminalFontReset => 'Reset terminal font';
 
 	/// en: 'Toggle sidebar'
 	String get toggleSidebar => 'Toggle sidebar';
@@ -952,6 +987,9 @@ class Translations$toast$en {
 
 	/// en: 'No visible items matched'
 	String get selectionLoadEmpty => 'No visible items matched';
+
+	/// en: 'Terminal is unavailable: native core not loaded'
+	String get terminalUnavailable => 'Terminal is unavailable: native core not loaded';
 
 	/// en: 'Selection file error: $message'
 	String selectionFileError({required Object message}) => 'Selection file error: ${message}';
@@ -1883,6 +1921,9 @@ class Translations$preferences$categories$en {
 	/// en: 'Appearance'
 	String get appearance => 'Appearance';
 
+	/// en: 'Terminal'
+	String get terminal => 'Terminal';
+
 	/// en: 'Bookmarks'
 	String get bookmarks => 'Bookmarks';
 
@@ -1999,6 +2040,51 @@ class Translations$preferences$general$en {
 
 	/// en: 'Use {dir} as a placeholder for the directory path.'
 	String get terminalCustomHelp => 'Use {dir} as a placeholder for the directory path.';
+}
+
+// Path: preferences.terminal
+class Translations$preferences$terminal$en {
+	Translations$preferences$terminal$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Terminal'
+	String get title => 'Terminal';
+
+	/// en: 'Embedded terminal font and external terminal integration.'
+	String get subtitle => 'Embedded terminal font and external terminal integration.';
+
+	/// en: 'Appearance'
+	String get appearanceSection => 'Appearance';
+
+	/// en: 'Use system font'
+	String get useSystemFont => 'Use system font';
+
+	/// en: 'Render the terminal with the system monospace font.'
+	String get useSystemFontHint => 'Render the terminal with the system monospace font.';
+
+	/// en: 'Font family'
+	String get fontFamily => 'Font family';
+
+	/// en: 'Pick an installed monospace font.'
+	String get fontFamilyHint => 'Pick an installed monospace font.';
+
+	/// en: 'Font size'
+	String get fontSize => 'Font size';
+
+	/// en: 'Adjust on the fly with Ctrl++, Ctrl+- and Ctrl+0.'
+	String get fontSizeHint => 'Adjust on the fly with Ctrl++, Ctrl+- and Ctrl+0.';
+
+	/// en: 'Line height'
+	String get lineHeight => 'Line height';
+
+	/// en: 'Vertical spacing between terminal rows.'
+	String get lineHeightHint => 'Vertical spacing between terminal rows.';
+
+	/// en: 'External terminal'
+	String get externalSection => 'External terminal';
 }
 
 // Path: preferences.appearance
@@ -2498,6 +2584,7 @@ extension on Translations {
 			'app.title' => 'Waydir',
 			'app.tagline' => 'Navigate your files. Your way.',
 			'app.description' => 'A fast, keyboard-driven desktop file manager built with Flutter.',
+			'terminal.title' => 'Terminal',
 			'menu.view' => 'View',
 			'menu.open' => 'Open',
 			'menu.openItems' => ({required Object count}) => 'Open ${count} Items',
@@ -2610,6 +2697,7 @@ extension on Translations {
 			'preferences.comingSoon' => 'Coming soon',
 			'preferences.categories.general' => 'General',
 			'preferences.categories.appearance' => 'Appearance',
+			'preferences.categories.terminal' => 'Terminal',
 			'preferences.categories.bookmarks' => 'Bookmarks',
 			'preferences.categories.diagnostics' => 'Diagnostics',
 			'preferences.categories.about' => 'About',
@@ -2646,6 +2734,18 @@ extension on Translations {
 			'preferences.general.terminalCustomLabel' => 'Command',
 			'preferences.general.terminalCustomHint' => 'e.g. kitty --working-directory={dir}',
 			'preferences.general.terminalCustomHelp' => 'Use {dir} as a placeholder for the directory path.',
+			'preferences.terminal.title' => 'Terminal',
+			'preferences.terminal.subtitle' => 'Embedded terminal font and external terminal integration.',
+			'preferences.terminal.appearanceSection' => 'Appearance',
+			'preferences.terminal.useSystemFont' => 'Use system font',
+			'preferences.terminal.useSystemFontHint' => 'Render the terminal with the system monospace font.',
+			'preferences.terminal.fontFamily' => 'Font family',
+			'preferences.terminal.fontFamilyHint' => 'Pick an installed monospace font.',
+			'preferences.terminal.fontSize' => 'Font size',
+			'preferences.terminal.fontSizeHint' => 'Adjust on the fly with Ctrl++, Ctrl+- and Ctrl+0.',
+			'preferences.terminal.lineHeight' => 'Line height',
+			'preferences.terminal.lineHeightHint' => 'Vertical spacing between terminal rows.',
+			'preferences.terminal.externalSection' => 'External terminal',
 			'preferences.appearance.title' => 'Appearance',
 			'preferences.appearance.subtitle' => 'Defaults for how files and the sidebar are displayed.',
 			'preferences.appearance.themeSection' => 'Theme',
@@ -2795,6 +2895,13 @@ extension on Translations {
 			'keybindings.switchTab' => 'Switch to tab',
 			'keybindings.toggleDual' => 'Toggle dual pane',
 			'keybindings.switchPane' => 'Switch active pane',
+			'keybindings.focusTerminal' => 'Open / focus terminal',
+			'keybindings.toggleTerminal' => 'Toggle terminal',
+			'keybindings.newTerminalTab' => 'New terminal tab',
+			'keybindings.closeTerminalTab' => 'Close terminal tab',
+			'keybindings.terminalFontIncrease' => 'Increase terminal font',
+			'keybindings.terminalFontDecrease' => 'Decrease terminal font',
+			'keybindings.terminalFontReset' => 'Reset terminal font',
 			'keybindings.toggleSidebar' => 'Toggle sidebar',
 			'keybindings.copy' => 'Copy',
 			'keybindings.cut' => 'Cut',
@@ -2872,6 +2979,7 @@ extension on Translations {
 			'toast.selectionSaved' => ({required Object count, required Object path}) => 'Saved ${count} names to ${path}',
 			'toast.selectionLoaded' => ({required Object count}) => 'Selected ${count} visible items',
 			'toast.selectionLoadEmpty' => 'No visible items matched',
+			'toast.terminalUnavailable' => 'Terminal is unavailable: native core not loaded',
 			'toast.selectionFileError' => ({required Object message}) => 'Selection file error: ${message}',
 			'toast.taskErrors' => ({required Object label, required Object count}) => '${label} — ${count} errors',
 			'toast.renameAlreadyExists' => ({required Object name}) => 'An item named \'${name}\' already exists',
@@ -2985,6 +3093,8 @@ extension on Translations {
 			'dialog.create' => 'Create',
 			'dialog.cancel' => 'Cancel',
 			'dialog.folderNameHint' => 'Folder name',
+			_ => null,
+		} ?? switch (path) {
 			'dialog.close' => 'Close',
 			'dialog.delete' => 'Delete',
 			'dialog.moveToTrash' => 'Move to Trash',
@@ -3007,8 +3117,6 @@ extension on Translations {
 			'password.mountPrompt' => 'Enter your password to mount this drive.',
 			'password.smbPrompt' => 'Enter credentials for this network share.',
 			'password.sftpPrompt' => 'SSH/SFTP authentication',
-			_ => null,
-		} ?? switch (path) {
 			'password.username' => 'Username',
 			'password.password' => 'Password',
 			'password.privateKey' => 'Private key',

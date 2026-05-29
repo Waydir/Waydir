@@ -88,6 +88,10 @@ class AppShortcuts {
         pressed.contains(LogicalKeyboardKey.controlRight);
   }
 
+  static PhysicalKeyboardKey get terminalTogglePhysicalKey => Platform.isMacOS
+      ? PhysicalKeyboardKey.keyJ
+      : PhysicalKeyboardKey.backquote;
+
   static bool get isShift =>
       HardwareKeyboard.instance.logicalKeysPressed.contains(
         LogicalKeyboardKey.shiftLeft,
@@ -206,6 +210,67 @@ class AppShortcuts {
       label: () => '',
       group: ShortcutGroup.panes,
       key: LogicalKeyboardKey.tab,
+    ),
+    ShortcutDef(
+      id: 'focus_terminal',
+      label: () => '',
+      group: ShortcutGroup.panes,
+      key: Platform.isMacOS
+          ? LogicalKeyboardKey.keyJ
+          : LogicalKeyboardKey.backquote,
+      ctrl: true,
+      customKeyDisplay: Platform.isMacOS ? 'J' : '`',
+    ),
+    ShortcutDef(
+      id: 'toggle_terminal',
+      label: () => '',
+      group: ShortcutGroup.panes,
+      key: Platform.isMacOS
+          ? LogicalKeyboardKey.keyJ
+          : LogicalKeyboardKey.backquote,
+      ctrl: true,
+      shift: true,
+      customKeyDisplay: Platform.isMacOS ? 'J' : '`',
+    ),
+    ShortcutDef(
+      id: 'new_terminal_tab',
+      label: () => '',
+      group: ShortcutGroup.panes,
+      key: LogicalKeyboardKey.keyT,
+      ctrl: true,
+      shift: true,
+    ),
+    ShortcutDef(
+      id: 'close_terminal_tab',
+      label: () => '',
+      group: ShortcutGroup.panes,
+      key: LogicalKeyboardKey.keyW,
+      ctrl: true,
+      shift: true,
+    ),
+    ShortcutDef(
+      id: 'terminal_font_increase',
+      label: () => '',
+      group: ShortcutGroup.panes,
+      key: LogicalKeyboardKey.equal,
+      ctrl: true,
+      customKeyDisplay: '+',
+    ),
+    ShortcutDef(
+      id: 'terminal_font_decrease',
+      label: () => '',
+      group: ShortcutGroup.panes,
+      key: LogicalKeyboardKey.minus,
+      ctrl: true,
+      customKeyDisplay: '-',
+    ),
+    ShortcutDef(
+      id: 'terminal_font_reset',
+      label: () => '',
+      group: ShortcutGroup.panes,
+      key: LogicalKeyboardKey.digit0,
+      ctrl: true,
+      customKeyDisplay: '0',
     ),
     ShortcutDef(
       id: 'copy',

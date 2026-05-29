@@ -4,6 +4,9 @@
     "tagline": "Navigate your files. Your way.",
     "description": "A fast, keyboard-driven desktop file manager built with Flutter."
   },
+  "terminal": {
+    "title": "Terminal"
+  },
   "menu": {
     "view": "View",
     "open": "Open",
@@ -138,6 +141,7 @@
     "categories": {
       "general": "General",
       "appearance": "Appearance",
+      "terminal": "Terminal",
       "bookmarks": "Bookmarks",
       "diagnostics": "Diagnostics",
       "about": "About"
@@ -176,6 +180,20 @@
       "terminalCustomLabel": "Command",
       "terminalCustomHint": "e.g. kitty --working-directory={dir}",
       "terminalCustomHelp": "Use {dir} as a placeholder for the directory path."
+    },
+    "terminal": {
+      "title": "Terminal",
+      "subtitle": "Embedded terminal font and external terminal integration.",
+      "appearanceSection": "Appearance",
+      "useSystemFont": "Use system font",
+      "useSystemFontHint": "Render the terminal with the system monospace font.",
+      "fontFamily": "Font family",
+      "fontFamilyHint": "Pick an installed monospace font.",
+      "fontSize": "Font size",
+      "fontSizeHint": "Adjust on the fly with Ctrl++, Ctrl+- and Ctrl+0.",
+      "lineHeight": "Line height",
+      "lineHeightHint": "Vertical spacing between terminal rows.",
+      "externalSection": "External terminal"
     },
     "appearance": {
       "title": "Appearance",
@@ -342,6 +360,13 @@
     "switchTab": "Switch to tab",
     "toggleDual": "Toggle dual pane",
     "switchPane": "Switch active pane",
+    "focusTerminal": "Open / focus terminal",
+    "toggleTerminal": "Toggle terminal",
+    "newTerminalTab": "New terminal tab",
+    "closeTerminalTab": "Close terminal tab",
+    "terminalFontIncrease": "Increase terminal font",
+    "terminalFontDecrease": "Decrease terminal font",
+    "terminalFontReset": "Reset terminal font",
     "toggleSidebar": "Toggle sidebar",
     "copy": "Copy",
     "cut": "Cut",
@@ -429,6 +454,7 @@
     "selectionLoaded(one)": "Selected 1 visible item",
     "selectionLoaded(other)": "Selected $count visible items",
     "selectionLoadEmpty": "No visible items matched",
+    "terminalUnavailable": "Terminal is unavailable: native core not loaded",
     "selectionFileError": "Selection file error: $message",
     "taskErrors(one)": "$label — 1 error",
     "taskErrors(other)": "$label — $count errors",

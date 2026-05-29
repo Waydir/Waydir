@@ -88,6 +88,34 @@ typedef _TrashListDart = Pointer<Uint8> Function(Pointer<IntPtr>);
 typedef _FreeNative = Void Function(Pointer<Uint8>, IntPtr);
 typedef _FreeDart = void Function(Pointer<Uint8>, int);
 
+// PTY
+
+typedef _PtyOpenNative =
+    Uint64 Function(
+      Pointer<Utf8>,
+      Pointer<Utf8>,
+      Pointer<Utf8>,
+      Uint16,
+      Uint16,
+    );
+typedef _PtyOpenDart =
+    int Function(Pointer<Utf8>, Pointer<Utf8>, Pointer<Utf8>, int, int);
+
+typedef _PtyReadNative = Pointer<Uint8> Function(Uint64, Pointer<IntPtr>);
+typedef _PtyReadDart = Pointer<Uint8> Function(int, Pointer<IntPtr>);
+
+typedef _PtyWriteNative = Int32 Function(Uint64, Pointer<Uint8>, IntPtr);
+typedef _PtyWriteDart = int Function(int, Pointer<Uint8>, int);
+
+typedef _PtyResizeNative = Int32 Function(Uint64, Uint16, Uint16);
+typedef _PtyResizeDart = int Function(int, int, int);
+
+typedef _PtyAliveNative = Int32 Function(Uint64);
+typedef _PtyAliveDart = int Function(int);
+
+typedef _PtyCloseNative = Void Function(Uint64);
+typedef _PtyCloseDart = void Function(int);
+
 typedef _AbiNative = Uint32 Function();
 typedef _AbiDart = int Function();
 
@@ -1063,6 +1091,105 @@ class WaydirCoreLoader {
       calloc.free(fromP);
       calloc.free(toP);
     }
+  }
+
+  static bool supportsPty() {
+    final lib = load();
+    if (lib == null) return false;
+    try {
+      lib.lookupFunction<_PtyOpenNative, _PtyOpenDart>('waydir_pty_open');
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Spawns a shell on a pseudo-terminal. Returns the session id, or null.
+  static int? ptyOpen({
+    required String shell,
+    required String cwd,
+    required int cols,
+    required int rows,
+    List<String> args = const [],
+  }) {
+    final lib = requireLib();
+    final fn = lib.lookupFunction<_PtyOpenNative, _PtyOpenDart>(
+      'waydir_pty_open',
+    );
+    final shellPtr = shell.toNativeUtf8();
+    final cwdPtr = cwd.toNativeUtf8();
+    final argsPtr = args.join('\n').toNativeUtf8();
+    try {
+      final id = fn(shellPtr, cwdPtr, argsPtr, cols, rows);
+      return id == 0 ? null : id;
+    } catch (_) {
+      return null;
+    } finally {
+      calloc.free(shellPtr);
+      calloc.free(cwdPtr);
+      calloc.free(argsPtr);
+    }
+  }
+
+  /// Drains pending shell output, or null if nothing is buffered.
+  static Uint8List? ptyRead(int id) {
+    final lib = requireLib();
+    final fn = lib.lookupFunction<_PtyReadNative, _PtyReadDart>(
+      'waydir_pty_read',
+    );
+    final free = lib.lookupFunction<_FreeNative, _FreeDart>('waydir_free');
+    final outLen = calloc<IntPtr>();
+    try {
+      final buf = fn(id, outLen);
+      if (buf == nullptr) return null;
+      final len = outLen.value;
+      final copy = Uint8List.fromList(buf.asTypedList(len));
+      free(buf, len);
+      return copy;
+    } catch (_) {
+      return null;
+    } finally {
+      calloc.free(outLen);
+    }
+  }
+
+  static void ptyWrite(int id, Uint8List data) {
+    if (data.isEmpty) return;
+    final lib = requireLib();
+    final fn = lib.lookupFunction<_PtyWriteNative, _PtyWriteDart>(
+      'waydir_pty_write',
+    );
+    final dataPtr = calloc<Uint8>(data.length);
+    try {
+      dataPtr.asTypedList(data.length).setRange(0, data.length, data);
+      fn(id, dataPtr, data.length);
+    } finally {
+      calloc.free(dataPtr);
+    }
+  }
+
+  static void ptyResize(int id, int cols, int rows) {
+    final lib = requireLib();
+    final fn = lib.lookupFunction<_PtyResizeNative, _PtyResizeDart>(
+      'waydir_pty_resize',
+    );
+    fn(id, cols, rows);
+  }
+
+  static bool ptyAlive(int id) {
+    final lib = requireLib();
+    final fn = lib.lookupFunction<_PtyAliveNative, _PtyAliveDart>(
+      'waydir_pty_alive',
+    );
+    return fn(id) != 0;
+  }
+
+  static void ptyClose(int id) {
+    final lib = requireLib();
+    final fn = lib.lookupFunction<_PtyCloseNative, _PtyCloseDart>(
+      'waydir_pty_close',
+    );
+    fn(id);
   }
 
   static List<String> _candidatePaths() {

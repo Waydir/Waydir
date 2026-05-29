@@ -795,7 +795,9 @@ class _PathSuggestionPopupState extends State<_PathSuggestionPopup> {
   void didUpdateWidget(covariant _PathSuggestionPopup oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.highlightedIndex != oldWidget.highlightedIndex) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToHighlighted());
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _scrollToHighlighted(),
+      );
     }
   }
 

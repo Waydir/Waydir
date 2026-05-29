@@ -13,6 +13,10 @@ class SettingsStore {
   final themeId = signal<String>('dark');
   final terminal = signal<String>('auto');
   final terminalCustomCommand = signal<String>('');
+  final terminalUseSystemFont = signal<bool>(true);
+  final terminalFontFamily = signal<String>('');
+  final terminalFontSize = signal<int>(13);
+  final terminalLineHeight = signal<double>(1.2);
   final sessionIsDual = signal<bool>(false);
   final sessionSplitRatio = signal<double>(0.5);
   final sessionActivePaneIndex = signal<int>(0);
@@ -57,6 +61,10 @@ class SettingsStore {
     themeId.value = row.themeMode == 'system' ? 'dark' : row.themeMode;
     terminal.value = row.terminal;
     terminalCustomCommand.value = row.terminalCustomCommand;
+    terminalUseSystemFont.value = row.terminalUseSystemFont;
+    terminalFontFamily.value = row.terminalFontFamily;
+    terminalFontSize.value = row.terminalFontSize;
+    terminalLineHeight.value = row.terminalLineHeight;
     sessionIsDual.value = row.isDual;
     sessionSplitRatio.value = row.splitRatio;
     sessionActivePaneIndex.value = row.activePaneIndex;
@@ -87,6 +95,10 @@ class SettingsStore {
         themeId.value;
         terminal.value;
         terminalCustomCommand.value;
+        terminalUseSystemFont.value;
+        terminalFontFamily.value;
+        terminalFontSize.value;
+        terminalLineHeight.value;
         sessionIsDual.value;
         sessionSplitRatio.value;
         sessionActivePaneIndex.value;
@@ -127,6 +139,10 @@ class SettingsStore {
           themeMode: Value(themeId.value),
           terminal: Value(terminal.value),
           terminalCustomCommand: Value(terminalCustomCommand.value),
+          terminalUseSystemFont: Value(terminalUseSystemFont.value),
+          terminalFontFamily: Value(terminalFontFamily.value),
+          terminalFontSize: Value(terminalFontSize.value),
+          terminalLineHeight: Value(terminalLineHeight.value),
           isDual: Value(sessionIsDual.value),
           splitRatio: Value(sessionSplitRatio.value),
           activePaneIndex: Value(sessionActivePaneIndex.value),
@@ -152,6 +168,28 @@ class SettingsStore {
         ),
       );
     } catch (_) {}
+  }
+
+  static const terminalFontSizes = [10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24];
+  static const defaultTerminalFontSize = 13;
+
+  void increaseTerminalFontSize() => _stepTerminalFontSize(1);
+
+  void decreaseTerminalFontSize() => _stepTerminalFontSize(-1);
+
+  void resetTerminalFontSize() =>
+      terminalFontSize.value = defaultTerminalFontSize;
+
+  void _stepTerminalFontSize(int direction) {
+    final sizes = terminalFontSizes;
+    final current = terminalFontSize.value;
+    var index = sizes.indexOf(current);
+    if (index < 0) {
+      index = sizes.indexWhere((s) => s >= current);
+      if (index < 0) index = sizes.length - 1;
+    }
+    final next = (index + direction).clamp(0, sizes.length - 1);
+    terminalFontSize.value = sizes[next];
   }
 
   void dispose() {
