@@ -91,8 +91,15 @@ typedef _FreeDart = void Function(Pointer<Uint8>, int);
 // PTY
 
 typedef _PtyOpenNative =
-    Uint64 Function(Pointer<Utf8>, Pointer<Utf8>, Uint16, Uint16);
-typedef _PtyOpenDart = int Function(Pointer<Utf8>, Pointer<Utf8>, int, int);
+    Uint64 Function(
+      Pointer<Utf8>,
+      Pointer<Utf8>,
+      Pointer<Utf8>,
+      Uint16,
+      Uint16,
+    );
+typedef _PtyOpenDart =
+    int Function(Pointer<Utf8>, Pointer<Utf8>, Pointer<Utf8>, int, int);
 
 typedef _PtyReadNative = Pointer<Uint8> Function(Uint64, Pointer<IntPtr>);
 typedef _PtyReadDart = Pointer<Uint8> Function(int, Pointer<IntPtr>);
@@ -1103,6 +1110,7 @@ class WaydirCoreLoader {
     required String cwd,
     required int cols,
     required int rows,
+    List<String> args = const [],
   }) {
     final lib = requireLib();
     final fn = lib.lookupFunction<_PtyOpenNative, _PtyOpenDart>(
@@ -1110,14 +1118,16 @@ class WaydirCoreLoader {
     );
     final shellPtr = shell.toNativeUtf8();
     final cwdPtr = cwd.toNativeUtf8();
+    final argsPtr = args.join('\n').toNativeUtf8();
     try {
-      final id = fn(shellPtr, cwdPtr, cols, rows);
+      final id = fn(shellPtr, cwdPtr, argsPtr, cols, rows);
       return id == 0 ? null : id;
     } catch (_) {
       return null;
     } finally {
       calloc.free(shellPtr);
       calloc.free(cwdPtr);
+      calloc.free(argsPtr);
     }
   }
 

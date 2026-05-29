@@ -11,6 +11,7 @@ import '../../core/database/app_database.dart';
 import '../../core/platform/platform_paths.dart';
 import '../../core/settings/settings_store.dart';
 import '../../core/terminal/pty_session.dart';
+import '../../core/terminal/terminal_launch.dart';
 import '../navigation/navigation_store.dart';
 import '../operations/operation_store.dart';
 import '../../ui/overlays/notification_store.dart';
@@ -268,7 +269,13 @@ class ShellStore {
     session.terminal.onTitleChange = (title) {
       _setTerminalLabel(id, title);
     };
-    final started = session.start(cwd: cwd, onExit: () => closeTerminalTab(id));
+    final spec = TerminalLaunch.resolve(cwd);
+    final started = session.start(
+      cwd: spec.cwd,
+      shell: spec.shell,
+      args: spec.args,
+      onExit: () => closeTerminalTab(id),
+    );
     if (!started) {
       session.dispose();
       return null;

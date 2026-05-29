@@ -38,17 +38,25 @@ fn default_shell() -> String {
 /// Spawns a shell attached to a pseudo-terminal and starts a reader thread.
 /// Returns a session id, or 0 on failure.
 ///
+/// `args` is an optional newline-separated argument list passed to `shell`;
+/// empty or null spawns the program with no arguments.
+///
 /// # Safety
-/// `shell` and `cwd` must be valid NUL-terminated C strings or null.
+/// `shell`, `cwd` and `args` must be valid NUL-terminated C strings or null.
 #[no_mangle]
 pub unsafe extern "C" fn waydir_pty_open(
     shell: *const c_char,
     cwd: *const c_char,
+    args: *const c_char,
     cols: u16,
     rows: u16,
 ) -> u64 {
     let shell = cstr(shell).filter(|s| !s.is_empty()).unwrap_or_else(default_shell);
     let cwd = cstr(cwd).filter(|s| !s.is_empty());
+    let args: Vec<String> = cstr(args)
+        .filter(|s| !s.is_empty())
+        .map(|s| s.split('\n').map(|a| a.to_owned()).collect())
+        .unwrap_or_default();
 
     let pty_system = native_pty_system();
     let size = PtySize {
@@ -63,6 +71,9 @@ pub unsafe extern "C" fn waydir_pty_open(
     };
 
     let mut cmd = CommandBuilder::new(&shell);
+    for arg in &args {
+        cmd.arg(arg);
+    }
     if let Some(dir) = &cwd {
         cmd.cwd(dir);
     }

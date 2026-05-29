@@ -27,6 +27,7 @@ class PtySession {
   bool start({
     required String cwd,
     String shell = '',
+    List<String> args = const [],
     void Function()? onExit,
   }) {
     if (_id != null) return true;
@@ -34,6 +35,7 @@ class PtySession {
     final id = WaydirCoreLoader.ptyOpen(
       shell: shell,
       cwd: cwd,
+      args: args,
       cols: terminal.viewWidth,
       rows: terminal.viewHeight,
     );
