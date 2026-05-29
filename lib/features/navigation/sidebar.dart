@@ -11,8 +11,8 @@ import '../drives/drive_store.dart';
 import '../drives/drive_model.dart';
 import '../../ui/theme/app_theme.dart';
 import '../../ui/theme/app_text_styles.dart';
-import '../../ui/dialogs/dialog.dart';
 import '../../ui/dialogs/password_dialog.dart';
+import '../../ui/dialogs/rename_dialog.dart';
 import '../../ui/dialogs/sftp_credentials_dialog.dart';
 import '../../ui/overlays/context_menu.dart';
 import '../../core/platform/platform_paths.dart';
@@ -166,32 +166,13 @@ class _SidebarState extends State<Sidebar> {
   }
 
   Future<void> _renameBookmark(Bookmark bookmark) async {
-    final controller = TextEditingController(text: bookmark.label);
-    final result = await showCustomDialog<String>(
-      context: context,
+    final label = await showRenameDialog(
+      context,
       title: t.menu.rename,
       icon: WaydirIconsRegular.pencilSimple,
-      body: TextField(
-        controller: controller,
-        autofocus: true,
-        style: context.txt.body,
-        decoration: InputDecoration(
-          isDense: true,
-          border: InputBorder.none,
-          hintText: bookmark.label,
-          hintStyle: context.txt.bodyMuted,
-        ),
-        cursorColor: AppColors.accent,
-        onSubmitted: (_) => Navigator.of(context).pop(t.menu.rename),
-      ),
-      actions: [
-        DialogAction(label: t.dialog.cancel, color: AppColors.fgMuted),
-        DialogAction(label: t.menu.rename, color: AppColors.accent),
-      ],
+      initialValue: bookmark.label,
     );
-    final label = controller.text;
-    controller.dispose();
-    if (result == t.menu.rename) {
+    if (label != null && label != bookmark.label) {
       await _bookmarkStore.rename(bookmark, label);
     }
   }
