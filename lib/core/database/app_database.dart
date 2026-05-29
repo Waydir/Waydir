@@ -307,20 +307,17 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> _pruneRecentEnteredPaths() async {
-    final countExp = recentEnteredPaths.path.count();
-    final row = await (selectOnly(
-      recentEnteredPaths,
-    )..addColumns([countExp])).getSingle();
-    final total = row.read(countExp) ?? 0;
-    if (total <= _maxRecentEnteredPaths) return;
-    final cutoff =
+    final keep =
         await (select(recentEnteredPaths)
-              ..orderBy([(t) => OrderingTerm.desc(t.usedAt)])
-              ..limit(1, offset: _maxRecentEnteredPaths - 1))
-            .getSingle();
-    await (delete(
-      recentEnteredPaths,
-    )..where((t) => t.usedAt.isSmallerThanValue(cutoff.usedAt))).go();
+              ..orderBy([
+                (t) => OrderingTerm.desc(t.usedAt),
+                (t) => OrderingTerm.desc(t.path),
+              ])
+              ..limit(_maxRecentEnteredPaths))
+            .map((row) => row.path)
+            .get();
+    if (keep.length < _maxRecentEnteredPaths) return;
+    await (delete(recentEnteredPaths)..where((t) => t.path.isNotIn(keep))).go();
   }
 
   static QueryExecutor _openConnection() {
