@@ -5,7 +5,7 @@ import '../core/settings/settings_store.dart';
 import '../i18n/strings.g.dart';
 import '../ui/theme/app_theme.dart';
 import '../ui/theme/app_theme_registry.dart';
-import 'waydir_page.dart';
+import 'waydir_shell.dart';
 
 final waydirNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -34,7 +34,7 @@ class _WaydirAppState extends State<WaydirApp> {
           localizationsDelegates: GlobalMaterialLocalizations.delegates,
           debugShowCheckedModeBanner: false,
           theme: AppTheme.build(theme),
-          home: const WaydirPage(),
+          home: const WaydirShell(),
         );
       },
     );
