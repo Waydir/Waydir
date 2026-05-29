@@ -1253,7 +1253,7 @@ class _WaydirPageState extends State<WaydirPage> {
     if (!_isModalRouteOnTop() &&
         ctrl &&
         !alt &&
-        event.physicalKey == PhysicalKeyboardKey.backquote) {
+        event.physicalKey == AppShortcuts.terminalTogglePhysicalKey) {
       if (shift) {
         _toggleTerminal();
       } else {

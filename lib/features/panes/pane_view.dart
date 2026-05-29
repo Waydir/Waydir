@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:waydir_term/xterm.dart';
+import '../../core/keyboard/keyboard_shortcuts.dart';
 import '../../core/settings/settings_store.dart';
 import '../../features/files/file_view.dart'
     show
@@ -312,8 +313,8 @@ class _TerminalPanelState extends State<_TerminalPanel> {
 
   KeyEventResult _onKeyEvent(FocusNode node, KeyEvent event) {
     if (event is KeyDownEvent &&
-        event.physicalKey == PhysicalKeyboardKey.backquote &&
-        HardwareKeyboard.instance.isControlPressed &&
+        event.physicalKey == AppShortcuts.terminalTogglePhysicalKey &&
+        AppShortcuts.isControl &&
         !HardwareKeyboard.instance.isAltPressed) {
       if (HardwareKeyboard.instance.isShiftPressed) {
         widget.onToggleTerminal?.call(widget.slot);

@@ -88,6 +88,10 @@ class AppShortcuts {
         pressed.contains(LogicalKeyboardKey.controlRight);
   }
 
+  static PhysicalKeyboardKey get terminalTogglePhysicalKey => Platform.isMacOS
+      ? PhysicalKeyboardKey.keyJ
+      : PhysicalKeyboardKey.backquote;
+
   static bool get isShift =>
       HardwareKeyboard.instance.logicalKeysPressed.contains(
         LogicalKeyboardKey.shiftLeft,
@@ -211,18 +215,22 @@ class AppShortcuts {
       id: 'focus_terminal',
       label: () => '',
       group: ShortcutGroup.panes,
-      key: LogicalKeyboardKey.backquote,
+      key: Platform.isMacOS
+          ? LogicalKeyboardKey.keyJ
+          : LogicalKeyboardKey.backquote,
       ctrl: true,
-      customKeyDisplay: '`',
+      customKeyDisplay: Platform.isMacOS ? 'J' : '`',
     ),
     ShortcutDef(
       id: 'toggle_terminal',
       label: () => '',
       group: ShortcutGroup.panes,
-      key: LogicalKeyboardKey.backquote,
+      key: Platform.isMacOS
+          ? LogicalKeyboardKey.keyJ
+          : LogicalKeyboardKey.backquote,
       ctrl: true,
       shift: true,
-      customKeyDisplay: '`',
+      customKeyDisplay: Platform.isMacOS ? 'J' : '`',
     ),
     ShortcutDef(
       id: 'new_terminal_tab',
