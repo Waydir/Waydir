@@ -2059,14 +2059,17 @@ class Translations$preferences$terminal$en {
 	/// en: 'Appearance'
 	String get appearanceSection => 'Appearance';
 
+	/// en: 'Use system font'
+	String get useSystemFont => 'Use system font';
+
+	/// en: 'Render the terminal with the system monospace font.'
+	String get useSystemFontHint => 'Render the terminal with the system monospace font.';
+
 	/// en: 'Font family'
 	String get fontFamily => 'Font family';
 
-	/// en: 'Leave empty to use the system monospace font.'
-	String get fontFamilyHint => 'Leave empty to use the system monospace font.';
-
-	/// en: 'monospace'
-	String get fontFamilyPlaceholder => 'monospace';
+	/// en: 'Pick an installed monospace font.'
+	String get fontFamilyHint => 'Pick an installed monospace font.';
 
 	/// en: 'Font size'
 	String get fontSize => 'Font size';
@@ -2734,9 +2737,10 @@ extension on Translations {
 			'preferences.terminal.title' => 'Terminal',
 			'preferences.terminal.subtitle' => 'Embedded terminal font and external terminal integration.',
 			'preferences.terminal.appearanceSection' => 'Appearance',
+			'preferences.terminal.useSystemFont' => 'Use system font',
+			'preferences.terminal.useSystemFontHint' => 'Render the terminal with the system monospace font.',
 			'preferences.terminal.fontFamily' => 'Font family',
-			'preferences.terminal.fontFamilyHint' => 'Leave empty to use the system monospace font.',
-			'preferences.terminal.fontFamilyPlaceholder' => 'monospace',
+			'preferences.terminal.fontFamilyHint' => 'Pick an installed monospace font.',
 			'preferences.terminal.fontSize' => 'Font size',
 			'preferences.terminal.fontSizeHint' => 'Adjust on the fly with Ctrl++, Ctrl+- and Ctrl+0.',
 			'preferences.terminal.lineHeight' => 'Line height',
@@ -3089,9 +3093,9 @@ extension on Translations {
 			'dialog.create' => 'Create',
 			'dialog.cancel' => 'Cancel',
 			'dialog.folderNameHint' => 'Folder name',
-			'dialog.close' => 'Close',
 			_ => null,
 		} ?? switch (path) {
+			'dialog.close' => 'Close',
 			'dialog.delete' => 'Delete',
 			'dialog.moveToTrash' => 'Move to Trash',
 			'dialog.confirmDeleteTitle' => 'Delete permanently?',

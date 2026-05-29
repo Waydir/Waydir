@@ -13,6 +13,7 @@ class SettingsStore {
   final themeId = signal<String>('dark');
   final terminal = signal<String>('auto');
   final terminalCustomCommand = signal<String>('');
+  final terminalUseSystemFont = signal<bool>(true);
   final terminalFontFamily = signal<String>('');
   final terminalFontSize = signal<int>(13);
   final terminalLineHeight = signal<double>(1.2);
@@ -60,6 +61,7 @@ class SettingsStore {
     themeId.value = row.themeMode == 'system' ? 'dark' : row.themeMode;
     terminal.value = row.terminal;
     terminalCustomCommand.value = row.terminalCustomCommand;
+    terminalUseSystemFont.value = row.terminalUseSystemFont;
     terminalFontFamily.value = row.terminalFontFamily;
     terminalFontSize.value = row.terminalFontSize;
     terminalLineHeight.value = row.terminalLineHeight;
@@ -93,6 +95,7 @@ class SettingsStore {
         themeId.value;
         terminal.value;
         terminalCustomCommand.value;
+        terminalUseSystemFont.value;
         terminalFontFamily.value;
         terminalFontSize.value;
         terminalLineHeight.value;
@@ -136,6 +139,7 @@ class SettingsStore {
           themeMode: Value(themeId.value),
           terminal: Value(terminal.value),
           terminalCustomCommand: Value(terminalCustomCommand.value),
+          terminalUseSystemFont: Value(terminalUseSystemFont.value),
           terminalFontFamily: Value(terminalFontFamily.value),
           terminalFontSize: Value(terminalFontSize.value),
           terminalLineHeight: Value(terminalLineHeight.value),

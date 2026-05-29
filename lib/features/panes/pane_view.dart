@@ -404,6 +404,7 @@ class _TerminalPanelState extends State<_TerminalPanel> {
             child: SignalBuilder(
               builder: (context) {
                 final settings = SettingsStore.instance;
+                final useSystem = settings.terminalUseSystemFont.value;
                 final family = settings.terminalFontFamily.value.trim();
                 return TerminalView(
                   widget.active.session.terminal,
@@ -412,7 +413,9 @@ class _TerminalPanelState extends State<_TerminalPanel> {
                   textStyle: TerminalStyle(
                     fontSize: settings.terminalFontSize.value.toDouble(),
                     height: settings.terminalLineHeight.value,
-                    fontFamily: family.isEmpty ? 'monospace' : family,
+                    fontFamily: (useSystem || family.isEmpty)
+                        ? 'monospace'
+                        : family,
                   ),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,

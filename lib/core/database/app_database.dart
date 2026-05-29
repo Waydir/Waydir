@@ -11,6 +11,8 @@ class AppSettings extends Table {
   TextColumn get terminal => text().withDefault(const Constant('auto'))();
   TextColumn get terminalCustomCommand =>
       text().withDefault(const Constant(''))();
+  BoolColumn get terminalUseSystemFont =>
+      boolean().withDefault(const Constant(true))();
   TextColumn get terminalFontFamily => text().withDefault(const Constant(''))();
   IntColumn get terminalFontSize => integer().withDefault(const Constant(13))();
   RealColumn get terminalLineHeight =>
@@ -128,7 +130,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 18;
+  int get schemaVersion => 19;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -220,6 +222,9 @@ class AppDatabase extends _$AppDatabase {
         await addSettingColumn(appSettings.terminalFontFamily);
         await addSettingColumn(appSettings.terminalFontSize);
         await addSettingColumn(appSettings.terminalLineHeight);
+      }
+      if (from < 19) {
+        await addSettingColumn(appSettings.terminalUseSystemFont);
       }
     },
   );

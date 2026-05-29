@@ -219,14 +219,22 @@ class SettingsRegistry {
       searchTerms: const ['terminal', 'command'],
       signal: SettingsStore.instance.terminalCustomCommand,
     ),
-    TextSetting(
+    ToggleSetting(
+      id: 'terminal.useSystemFont',
+      category: SettingsCategory.terminal,
+      label: () => t.preferences.terminal.useSystemFont,
+      hint: () => t.preferences.terminal.useSystemFontHint,
+      searchTerms: const ['terminal', 'font', 'system', 'monospace'],
+      signal: SettingsStore.instance.terminalUseSystemFont,
+    ),
+    ChoiceSetting<String>(
       id: 'terminal.fontFamily',
       category: SettingsCategory.terminal,
       label: () => t.preferences.terminal.fontFamily,
       hint: () => t.preferences.terminal.fontFamilyHint,
-      hintText: t.preferences.terminal.fontFamilyPlaceholder,
       searchTerms: const ['terminal', 'font', 'family', 'monospace'],
       signal: SettingsStore.instance.terminalFontFamily,
+      choices: _fontChoices(const ['monospace']),
     ),
     ChoiceSetting<int>(
       id: 'terminal.fontSize',
@@ -401,6 +409,16 @@ class SettingsRegistry {
     return all.firstWhere((setting) => setting.id == id);
   }
 
+  void refreshTerminalFontChoices(List<String> families) {
+    final setting = byId('terminal.fontFamily') as ChoiceSetting<String>;
+    final current = setting.value;
+    final names = [
+      ...families,
+      if (current.isNotEmpty && !families.contains(current)) current,
+    ];
+    setting.choices = _fontChoices(names);
+  }
+
   void refreshThemeChoices() {
     final setting = byId('appearance.theme') as ChoiceSetting<String>;
     setting.choices = [
@@ -412,6 +430,17 @@ class SettingsRegistry {
         ),
     ];
   }
+}
+
+List<SettingChoice<String>> _fontChoices(List<String> families) {
+  return [
+    for (final family in families)
+      SettingChoice(
+        value: family,
+        label: () => family,
+        icon: WaydirIconsRegular.textAa,
+      ),
+  ];
 }
 
 List<SettingChoice<int>> _spacingChoices(IconData icon) {

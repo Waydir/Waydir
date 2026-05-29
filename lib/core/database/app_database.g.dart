@@ -58,6 +58,21 @@ class $AppSettingsTable extends AppSettings
         requiredDuringInsert: false,
         defaultValue: const Constant(''),
       );
+  static const VerificationMeta _terminalUseSystemFontMeta =
+      const VerificationMeta('terminalUseSystemFont');
+  @override
+  late final GeneratedColumn<bool> terminalUseSystemFont =
+      GeneratedColumn<bool>(
+        'terminal_use_system_font',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("terminal_use_system_font" IN (0, 1))',
+        ),
+        defaultValue: const Constant(true),
+      );
   static const VerificationMeta _terminalFontFamilyMeta =
       const VerificationMeta('terminalFontFamily');
   @override
@@ -396,6 +411,7 @@ class $AppSettingsTable extends AppSettings
     themeMode,
     terminal,
     terminalCustomCommand,
+    terminalUseSystemFont,
     terminalFontFamily,
     terminalFontSize,
     terminalLineHeight,
@@ -455,6 +471,15 @@ class $AppSettingsTable extends AppSettings
         terminalCustomCommand.isAcceptableOrUnknown(
           data['terminal_custom_command']!,
           _terminalCustomCommandMeta,
+        ),
+      );
+    }
+    if (data.containsKey('terminal_use_system_font')) {
+      context.handle(
+        _terminalUseSystemFontMeta,
+        terminalUseSystemFont.isAcceptableOrUnknown(
+          data['terminal_use_system_font']!,
+          _terminalUseSystemFontMeta,
         ),
       );
     }
@@ -690,6 +715,10 @@ class $AppSettingsTable extends AppSettings
         DriftSqlType.string,
         data['${effectivePrefix}terminal_custom_command'],
       )!,
+      terminalUseSystemFont: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}terminal_use_system_font'],
+      )!,
       terminalFontFamily: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}terminal_font_family'],
@@ -804,6 +833,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
   final String themeMode;
   final String terminal;
   final String terminalCustomCommand;
+  final bool terminalUseSystemFont;
   final String terminalFontFamily;
   final int terminalFontSize;
   final double terminalLineHeight;
@@ -834,6 +864,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     required this.themeMode,
     required this.terminal,
     required this.terminalCustomCommand,
+    required this.terminalUseSystemFont,
     required this.terminalFontFamily,
     required this.terminalFontSize,
     required this.terminalLineHeight,
@@ -867,6 +898,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     map['theme_mode'] = Variable<String>(themeMode);
     map['terminal'] = Variable<String>(terminal);
     map['terminal_custom_command'] = Variable<String>(terminalCustomCommand);
+    map['terminal_use_system_font'] = Variable<bool>(terminalUseSystemFont);
     map['terminal_font_family'] = Variable<String>(terminalFontFamily);
     map['terminal_font_size'] = Variable<int>(terminalFontSize);
     map['terminal_line_height'] = Variable<double>(terminalLineHeight);
@@ -903,6 +935,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       themeMode: Value(themeMode),
       terminal: Value(terminal),
       terminalCustomCommand: Value(terminalCustomCommand),
+      terminalUseSystemFont: Value(terminalUseSystemFont),
       terminalFontFamily: Value(terminalFontFamily),
       terminalFontSize: Value(terminalFontSize),
       terminalLineHeight: Value(terminalLineHeight),
@@ -942,6 +975,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       terminal: serializer.fromJson<String>(json['terminal']),
       terminalCustomCommand: serializer.fromJson<String>(
         json['terminalCustomCommand'],
+      ),
+      terminalUseSystemFont: serializer.fromJson<bool>(
+        json['terminalUseSystemFont'],
       ),
       terminalFontFamily: serializer.fromJson<String>(
         json['terminalFontFamily'],
@@ -992,6 +1028,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       'themeMode': serializer.toJson<String>(themeMode),
       'terminal': serializer.toJson<String>(terminal),
       'terminalCustomCommand': serializer.toJson<String>(terminalCustomCommand),
+      'terminalUseSystemFont': serializer.toJson<bool>(terminalUseSystemFont),
       'terminalFontFamily': serializer.toJson<String>(terminalFontFamily),
       'terminalFontSize': serializer.toJson<int>(terminalFontSize),
       'terminalLineHeight': serializer.toJson<double>(terminalLineHeight),
@@ -1029,6 +1066,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     String? themeMode,
     String? terminal,
     String? terminalCustomCommand,
+    bool? terminalUseSystemFont,
     String? terminalFontFamily,
     int? terminalFontSize,
     double? terminalLineHeight,
@@ -1059,6 +1097,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     themeMode: themeMode ?? this.themeMode,
     terminal: terminal ?? this.terminal,
     terminalCustomCommand: terminalCustomCommand ?? this.terminalCustomCommand,
+    terminalUseSystemFont: terminalUseSystemFont ?? this.terminalUseSystemFont,
     terminalFontFamily: terminalFontFamily ?? this.terminalFontFamily,
     terminalFontSize: terminalFontSize ?? this.terminalFontSize,
     terminalLineHeight: terminalLineHeight ?? this.terminalLineHeight,
@@ -1095,6 +1134,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       terminalCustomCommand: data.terminalCustomCommand.present
           ? data.terminalCustomCommand.value
           : this.terminalCustomCommand,
+      terminalUseSystemFont: data.terminalUseSystemFont.present
+          ? data.terminalUseSystemFont.value
+          : this.terminalUseSystemFont,
       terminalFontFamily: data.terminalFontFamily.present
           ? data.terminalFontFamily.value
           : this.terminalFontFamily,
@@ -1176,6 +1218,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           ..write('themeMode: $themeMode, ')
           ..write('terminal: $terminal, ')
           ..write('terminalCustomCommand: $terminalCustomCommand, ')
+          ..write('terminalUseSystemFont: $terminalUseSystemFont, ')
           ..write('terminalFontFamily: $terminalFontFamily, ')
           ..write('terminalFontSize: $terminalFontSize, ')
           ..write('terminalLineHeight: $terminalLineHeight, ')
@@ -1211,6 +1254,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     themeMode,
     terminal,
     terminalCustomCommand,
+    terminalUseSystemFont,
     terminalFontFamily,
     terminalFontSize,
     terminalLineHeight,
@@ -1245,6 +1289,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           other.themeMode == this.themeMode &&
           other.terminal == this.terminal &&
           other.terminalCustomCommand == this.terminalCustomCommand &&
+          other.terminalUseSystemFont == this.terminalUseSystemFont &&
           other.terminalFontFamily == this.terminalFontFamily &&
           other.terminalFontSize == this.terminalFontSize &&
           other.terminalLineHeight == this.terminalLineHeight &&
@@ -1277,6 +1322,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
   final Value<String> themeMode;
   final Value<String> terminal;
   final Value<String> terminalCustomCommand;
+  final Value<bool> terminalUseSystemFont;
   final Value<String> terminalFontFamily;
   final Value<int> terminalFontSize;
   final Value<double> terminalLineHeight;
@@ -1307,6 +1353,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.themeMode = const Value.absent(),
     this.terminal = const Value.absent(),
     this.terminalCustomCommand = const Value.absent(),
+    this.terminalUseSystemFont = const Value.absent(),
     this.terminalFontFamily = const Value.absent(),
     this.terminalFontSize = const Value.absent(),
     this.terminalLineHeight = const Value.absent(),
@@ -1338,6 +1385,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.themeMode = const Value.absent(),
     this.terminal = const Value.absent(),
     this.terminalCustomCommand = const Value.absent(),
+    this.terminalUseSystemFont = const Value.absent(),
     this.terminalFontFamily = const Value.absent(),
     this.terminalFontSize = const Value.absent(),
     this.terminalLineHeight = const Value.absent(),
@@ -1369,6 +1417,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Expression<String>? themeMode,
     Expression<String>? terminal,
     Expression<String>? terminalCustomCommand,
+    Expression<bool>? terminalUseSystemFont,
     Expression<String>? terminalFontFamily,
     Expression<int>? terminalFontSize,
     Expression<double>? terminalLineHeight,
@@ -1401,6 +1450,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       if (terminal != null) 'terminal': terminal,
       if (terminalCustomCommand != null)
         'terminal_custom_command': terminalCustomCommand,
+      if (terminalUseSystemFont != null)
+        'terminal_use_system_font': terminalUseSystemFont,
       if (terminalFontFamily != null)
         'terminal_font_family': terminalFontFamily,
       if (terminalFontSize != null) 'terminal_font_size': terminalFontSize,
@@ -1442,6 +1493,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Value<String>? themeMode,
     Value<String>? terminal,
     Value<String>? terminalCustomCommand,
+    Value<bool>? terminalUseSystemFont,
     Value<String>? terminalFontFamily,
     Value<int>? terminalFontSize,
     Value<double>? terminalLineHeight,
@@ -1474,6 +1526,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       terminal: terminal ?? this.terminal,
       terminalCustomCommand:
           terminalCustomCommand ?? this.terminalCustomCommand,
+      terminalUseSystemFont:
+          terminalUseSystemFont ?? this.terminalUseSystemFont,
       terminalFontFamily: terminalFontFamily ?? this.terminalFontFamily,
       terminalFontSize: terminalFontSize ?? this.terminalFontSize,
       terminalLineHeight: terminalLineHeight ?? this.terminalLineHeight,
@@ -1519,6 +1573,11 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     if (terminalCustomCommand.present) {
       map['terminal_custom_command'] = Variable<String>(
         terminalCustomCommand.value,
+      );
+    }
+    if (terminalUseSystemFont.present) {
+      map['terminal_use_system_font'] = Variable<bool>(
+        terminalUseSystemFont.value,
       );
     }
     if (terminalFontFamily.present) {
@@ -1612,6 +1671,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
           ..write('themeMode: $themeMode, ')
           ..write('terminal: $terminal, ')
           ..write('terminalCustomCommand: $terminalCustomCommand, ')
+          ..write('terminalUseSystemFont: $terminalUseSystemFont, ')
           ..write('terminalFontFamily: $terminalFontFamily, ')
           ..write('terminalFontSize: $terminalFontSize, ')
           ..write('terminalLineHeight: $terminalLineHeight, ')
@@ -3790,6 +3850,7 @@ typedef $$AppSettingsTableCreateCompanionBuilder =
       Value<String> themeMode,
       Value<String> terminal,
       Value<String> terminalCustomCommand,
+      Value<bool> terminalUseSystemFont,
       Value<String> terminalFontFamily,
       Value<int> terminalFontSize,
       Value<double> terminalLineHeight,
@@ -3822,6 +3883,7 @@ typedef $$AppSettingsTableUpdateCompanionBuilder =
       Value<String> themeMode,
       Value<String> terminal,
       Value<String> terminalCustomCommand,
+      Value<bool> terminalUseSystemFont,
       Value<String> terminalFontFamily,
       Value<int> terminalFontSize,
       Value<double> terminalLineHeight,
@@ -3875,6 +3937,11 @@ class $$AppSettingsTableFilterComposer
 
   ColumnFilters<String> get terminalCustomCommand => $composableBuilder(
     column: $table.terminalCustomCommand,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get terminalUseSystemFont => $composableBuilder(
+    column: $table.terminalUseSystemFont,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4033,6 +4100,11 @@ class $$AppSettingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get terminalUseSystemFont => $composableBuilder(
+    column: $table.terminalUseSystemFont,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get terminalFontFamily => $composableBuilder(
     column: $table.terminalFontFamily,
     builder: (column) => ColumnOrderings(column),
@@ -4179,6 +4251,11 @@ class $$AppSettingsTableAnnotationComposer
 
   GeneratedColumn<String> get terminalCustomCommand => $composableBuilder(
     column: $table.terminalCustomCommand,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get terminalUseSystemFont => $composableBuilder(
+    column: $table.terminalUseSystemFont,
     builder: (column) => column,
   );
 
@@ -4339,6 +4416,7 @@ class $$AppSettingsTableTableManager
                 Value<String> themeMode = const Value.absent(),
                 Value<String> terminal = const Value.absent(),
                 Value<String> terminalCustomCommand = const Value.absent(),
+                Value<bool> terminalUseSystemFont = const Value.absent(),
                 Value<String> terminalFontFamily = const Value.absent(),
                 Value<int> terminalFontSize = const Value.absent(),
                 Value<double> terminalLineHeight = const Value.absent(),
@@ -4369,6 +4447,7 @@ class $$AppSettingsTableTableManager
                 themeMode: themeMode,
                 terminal: terminal,
                 terminalCustomCommand: terminalCustomCommand,
+                terminalUseSystemFont: terminalUseSystemFont,
                 terminalFontFamily: terminalFontFamily,
                 terminalFontSize: terminalFontSize,
                 terminalLineHeight: terminalLineHeight,
@@ -4401,6 +4480,7 @@ class $$AppSettingsTableTableManager
                 Value<String> themeMode = const Value.absent(),
                 Value<String> terminal = const Value.absent(),
                 Value<String> terminalCustomCommand = const Value.absent(),
+                Value<bool> terminalUseSystemFont = const Value.absent(),
                 Value<String> terminalFontFamily = const Value.absent(),
                 Value<int> terminalFontSize = const Value.absent(),
                 Value<double> terminalLineHeight = const Value.absent(),
@@ -4431,6 +4511,7 @@ class $$AppSettingsTableTableManager
                 themeMode: themeMode,
                 terminal: terminal,
                 terminalCustomCommand: terminalCustomCommand,
+                terminalUseSystemFont: terminalUseSystemFont,
                 terminalFontFamily: terminalFontFamily,
                 terminalFontSize: terminalFontSize,
                 terminalLineHeight: terminalLineHeight,
