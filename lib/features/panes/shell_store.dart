@@ -17,6 +17,7 @@ import '../operations/operation_store.dart';
 import '../../ui/overlays/notification_store.dart';
 import '../../i18n/strings.g.dart';
 import 'pane_store.dart';
+import 'terminal_layout.dart';
 import 'terminal_tab.dart';
 
 class ShellStore {
@@ -183,23 +184,9 @@ class ShellStore {
       operationStore: operationStore,
       initialPath: currentPath,
     );
-    final active = Map<int, int>.from(activeTerminalId.value);
-    final slot0 = terminals.value.where((t) => t.originPane == 0).toList();
-    final slot1 = terminals.value.where((t) => t.originPane == 1).toList();
-    if (!slot0.any((t) => t.id == active[0])) {
-      if (slot0.isEmpty) {
-        active.remove(0);
-      } else {
-        active[0] = slot0.first.id;
-      }
-    }
-    if (!slot1.any((t) => t.id == active[1])) {
-      if (slot1.isEmpty) {
-        active.remove(1);
-      } else {
-        active[1] = slot1.first.id;
-      }
-    }
+    final active = TerminalLayout.reassignForDual(activeTerminalId.value, [
+      for (final t in terminals.value) TerminalRef(t.id, t.originPane),
+    ]);
     batch(() {
       panes.value = [panes.value[0], secondPane];
       activePaneIndex.value = 0;
@@ -212,26 +199,13 @@ class ShellStore {
     if (!isDual.value) return;
     final closing = panes.value[1];
     final visible = terminalVisible.value;
-    final active = Map<int, int>.from(activeTerminalId.value);
-    final preferredSlot = activePaneIndex.value;
-    final preferredId = active[preferredSlot];
-    final all = terminals.value;
-    if (preferredId != null && all.any((t) => t.id == preferredId)) {
-      active[0] = preferredId;
-    } else if (active[0] != null && all.any((t) => t.id == active[0])) {
-      active[0] = active[0]!;
-    } else if (all.isNotEmpty) {
-      active[0] = all.first.id;
-    } else {
-      active.remove(0);
-    }
+    final active = TerminalLayout.mergeForSingle(activeTerminalId.value, [
+      for (final t in terminals.value) t.id,
+    ], activePaneIndex.value);
     batch(() {
       activePaneIndex.value = 0;
       panes.value = [panes.value[0]];
-      terminalVisible.value = [
-        visible.length > 1 ? visible[0] || visible[1] : visible.first,
-        visible.length > 1 ? visible[1] : false,
-      ];
+      terminalVisible.value = TerminalLayout.mergeVisibilityForSingle(visible);
       activeTerminalId.value = active;
       isDual.value = false;
     });
@@ -305,16 +279,19 @@ class ShellStore {
     }
     if (closing == null) return;
     final slot = isDual.value ? closing.originPane : 0;
-    final oldVisible = terminalsForSlot(slot);
     final nextTabs = terminals.value.where((t) => t.id != id).toList();
     final active = Map<int, int>.from(activeTerminalId.value);
     final visible = [...terminalVisible.value];
-    final replacement = _replacementTerminal(oldVisible, id, nextTabs);
+    final replacement = TerminalLayout.replacementId(
+      [for (final t in terminalsForSlot(slot)) t.id],
+      id,
+      [for (final t in nextTabs) t.id],
+    );
     if (replacement == null) {
       active.remove(slot);
       visible[slot] = false;
     } else {
-      active[slot] = replacement.id;
+      active[slot] = replacement;
     }
     batch(() {
       terminals.value = nextTabs;
@@ -361,23 +338,6 @@ class ShellStore {
     final next = [...terminalHeight.value];
     next[slot] = height;
     terminalHeight.value = next;
-  }
-
-  TerminalTab? _replacementTerminal(
-    List<TerminalTab> oldVisible,
-    int closedId,
-    List<TerminalTab> nextTabs,
-  ) {
-    if (oldVisible.length <= 1) return null;
-    final closedIndex = oldVisible.indexWhere((t) => t.id == closedId);
-    final replacementIndex = closedIndex <= 0 ? 0 : closedIndex - 1;
-    final replacementId = oldVisible[replacementIndex].id == closedId
-        ? oldVisible[(replacementIndex + 1).clamp(0, oldVisible.length - 1)].id
-        : oldVisible[replacementIndex].id;
-    for (final tab in nextTabs) {
-      if (tab.id == replacementId) return tab;
-    }
-    return nextTabs.isEmpty ? null : nextTabs.first;
   }
 
   void _setTerminalLabel(int id, String title) {
