@@ -9,8 +9,11 @@ use ignore::WalkState;
 use regex::Regex;
 
 use crate::codec::{assemble, finish_buffer, put_record, put_u32, MAGIC};
-use crate::util::os_bytes;
-use crate::walker::{apply_search_filter, base_builder, ChunkSink};
+use crate::util::{os_bytes, search_threads};
+use crate::walker::{apply_max_depth, apply_search_filter, base_builder, ChunkSink};
+
+const MAX_CONTENT_BYTES: u64 = 16 * 1024 * 1024;
+const BINARY_SCAN_BYTES: usize = 8192;
 
 #[derive(Clone)]
 enum Matcher {
@@ -20,10 +23,50 @@ enum Matcher {
         path_scope: bool,
     },
     Regex(Regex),
+    Content(ContentMatcher),
+}
+
+#[derive(Clone)]
+enum ContentMatcher {
+    Substring(String),
+    Regex(Regex),
+}
+
+impl ContentMatcher {
+    fn file_matches(&self, path: &Path) -> bool {
+        if let Ok(meta) = std::fs::metadata(path) {
+            if meta.len() > MAX_CONTENT_BYTES {
+                return false;
+            }
+        }
+        let bytes = match std::fs::read(path) {
+            Ok(b) => b,
+            Err(_) => return false,
+        };
+        let scan = bytes.len().min(BINARY_SCAN_BYTES);
+        if bytes[..scan].contains(&0) {
+            return false;
+        }
+        let text = String::from_utf8_lossy(&bytes);
+        match self {
+            ContentMatcher::Substring(q) => text.to_lowercase().contains(q),
+            ContentMatcher::Regex(r) => r.is_match(&text),
+        }
+    }
 }
 
 impl Matcher {
-    fn build(query: &str, mode: u8) -> Option<Self> {
+    fn build(query: &str, mode: u8, content: bool) -> Option<Self> {
+        if content {
+            return match mode {
+                2 => Regex::new(query)
+                    .ok()
+                    .map(|r| Matcher::Content(ContentMatcher::Regex(r))),
+                _ => Some(Matcher::Content(ContentMatcher::Substring(
+                    query.to_lowercase(),
+                ))),
+            };
+        }
         match mode {
             1 => {
                 let path_scope = query.contains('/') || query.contains("**");
@@ -37,7 +80,7 @@ impl Matcher {
         }
     }
 
-    fn matches(&self, name: &str, rel_path: &Path) -> bool {
+    fn matches(&self, name: &str, rel_path: &Path, full_path: &Path, is_dir: bool) -> bool {
         match self {
             Matcher::Substring(q) => name.to_lowercase().contains(q),
             Matcher::Glob {
@@ -51,6 +94,7 @@ impl Matcher {
                 }
             }
             Matcher::Regex(r) => r.is_match(name),
+            Matcher::Content(cm) => !is_dir && cm.file_matches(full_path),
         }
     }
 }
@@ -74,9 +118,6 @@ pub struct SearchSession {
     handle: Option<JoinHandle<()>>,
 }
 
-/// Recursive name search. `mode`: 0=substring (case-insensitive), 1=glob, 2=regex.
-/// Returns null on argument errors or invalid pattern.
-///
 /// # Safety
 /// `root` and `query` must be valid NUL-terminated C strings. `out_len`
 /// must be a valid writable pointer.
@@ -86,6 +127,8 @@ pub unsafe extern "C" fn waydir_search(
     query: *const c_char,
     include_hidden: bool,
     mode: u8,
+    content: bool,
+    max_depth: u32,
     out_len: *mut usize,
 ) -> *mut u8 {
     if root.is_null() || query.is_null() || out_len.is_null() {
@@ -99,7 +142,7 @@ pub unsafe extern "C" fn waydir_search(
         Some(q) => q,
         None => return std::ptr::null_mut(),
     };
-    let matcher = match Matcher::build(&query, mode) {
+    let matcher = match Matcher::build(&query, mode, content) {
         Some(m) => m,
         None => return std::ptr::null_mut(),
     };
@@ -109,6 +152,10 @@ pub unsafe extern "C" fn waydir_search(
 
     let mut builder = base_builder(&root_str);
     apply_search_filter(&mut builder, include_hidden);
+    apply_max_depth(&mut builder, max_depth);
+    if content {
+        builder.threads(search_threads());
+    }
 
     let walker = builder.build_parallel();
     walker.run(|| {
@@ -133,8 +180,8 @@ pub unsafe extern "C" fn waydir_search(
                 .path()
                 .strip_prefix(&root_path)
                 .unwrap_or(dirent.path());
-            if matcher.matches(&name_lossy, rel) {
-                let is_dir = dirent.file_type().map(|t| t.is_dir()).unwrap_or(false);
+            let is_dir = dirent.file_type().map(|t| t.is_dir()).unwrap_or(false);
+            if matcher.matches(&name_lossy, rel, dirent.path(), is_dir) {
                 put_record(
                     &mut sink.local,
                     is_dir,
@@ -163,6 +210,8 @@ pub unsafe extern "C" fn waydir_search_start(
     query: *const c_char,
     include_hidden: bool,
     mode: u8,
+    content: bool,
+    max_depth: u32,
 ) -> *mut SearchSession {
     if root.is_null() || query.is_null() {
         return std::ptr::null_mut();
@@ -175,7 +224,7 @@ pub unsafe extern "C" fn waydir_search_start(
         Some(q) => q,
         None => return std::ptr::null_mut(),
     };
-    let matcher = match Matcher::build(&query, mode) {
+    let matcher = match Matcher::build(&query, mode, content) {
         Some(m) => m,
         None => return std::ptr::null_mut(),
     };
@@ -194,6 +243,10 @@ pub unsafe extern "C" fn waydir_search_start(
     let handle = std::thread::spawn(move || {
         let mut builder = base_builder(&root_str);
         apply_search_filter(&mut builder, include_hidden);
+        apply_max_depth(&mut builder, max_depth);
+        if content {
+            builder.threads(search_threads());
+        }
 
         let walker = builder.build_parallel();
         walker.run(|| {
@@ -220,8 +273,8 @@ pub unsafe extern "C" fn waydir_search_start(
                     .path()
                     .strip_prefix(&root_path)
                     .unwrap_or(dirent.path());
-                if matcher.matches(&name_lossy, rel) {
-                    let is_dir = dirent.file_type().map(|t| t.is_dir()).unwrap_or(false);
+                let is_dir = dirent.file_type().map(|t| t.is_dir()).unwrap_or(false);
+                if matcher.matches(&name_lossy, rel, dirent.path(), is_dir) {
                     let mut g = pending.lock().unwrap();
                     put_record(
                         &mut g.0,

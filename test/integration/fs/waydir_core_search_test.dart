@@ -35,4 +35,31 @@ void main() {
       root.deleteSync(recursive: true);
     }
   });
+
+  test('native content search matches file bodies and skips binaries', () {
+    expect(WaydirCoreLoader.load(), isNotNull);
+
+    final root = Directory.systemTemp.createTempSync('waydir_core_grep');
+    try {
+      File('${root.path}/hit.txt').writeAsStringSync('hello NEEDLE world');
+      File('${root.path}/miss.txt').writeAsStringSync('nothing here');
+      File(
+        '${root.path}/bin.dat',
+      ).writeAsBytesSync([0x00, 0x4e, 0x45, 0x45, 0x44, 0x4c, 0x45]);
+
+      final blob = WaydirCoreLoader.search(
+        root.path,
+        'needle',
+        true,
+        content: true,
+      );
+      expect(blob, isNotNull);
+      final names = FileEntryCodec.decode(blob!).map((e) => e.name).toSet();
+      expect(names, contains('hit.txt'));
+      expect(names.contains('miss.txt'), isFalse);
+      expect(names.contains('bin.dat'), isFalse);
+    } finally {
+      root.deleteSync(recursive: true);
+    }
+  });
 }

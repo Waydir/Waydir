@@ -1244,6 +1244,12 @@ class Translations$search$en {
 	/// en: 'Subfolders (Ctrl+Shift+F)'
 	String get subfoldersShortcut => 'Subfolders (Ctrl+Shift+F)';
 
+	/// en: 'Content'
+	String get content => 'Content';
+
+	/// en: 'Search inside file contents'
+	String get contentSearch => 'Search inside file contents';
+
 	/// en: 'Close search'
 	String get close => 'Close search';
 
@@ -3071,6 +3077,8 @@ extension on Translations {
 			'search.placeholder' => 'Filter…',
 			'search.subfolders' => 'Subfolders',
 			'search.subfoldersShortcut' => 'Subfolders (Ctrl+Shift+F)',
+			'search.content' => 'Content',
+			'search.contentSearch' => 'Search inside file contents',
 			'search.close' => 'Close search',
 			'search.results' => ({required Object count}) => '${count} results',
 			'search.found' => ({required Object count}) => '${count} found',
@@ -3091,10 +3099,10 @@ extension on Translations {
 			'statusBar.files' => ({required Object count}) => '${count} files',
 			'statusBar.selected' => ({required Object count}) => '${count} selected',
 			'dialog.create' => 'Create',
-			'dialog.cancel' => 'Cancel',
-			'dialog.folderNameHint' => 'Folder name',
 			_ => null,
 		} ?? switch (path) {
+			'dialog.cancel' => 'Cancel',
+			'dialog.folderNameHint' => 'Folder name',
 			'dialog.close' => 'Close',
 			'dialog.delete' => 'Delete',
 			'dialog.moveToTrash' => 'Move to Trash',

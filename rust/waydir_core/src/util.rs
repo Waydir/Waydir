@@ -39,6 +39,10 @@ pub(crate) fn num_cpus() -> usize {
         .unwrap_or(4)
 }
 
+pub(crate) fn search_threads() -> usize {
+    num_cpus().saturating_sub(1).max(1)
+}
+
 pub(crate) fn mtime_ms(meta: &std::fs::Metadata) -> i64 {
     match meta.modified() {
         Ok(t) => match t.duration_since(std::time::UNIX_EPOCH) {

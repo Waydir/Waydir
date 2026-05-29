@@ -200,6 +200,7 @@ class NavigationStore {
   final searchActive = signal(false);
   final searchQuery = signal('');
   final searchRecursive = signal(false);
+  final searchContent = signal(false);
   final searchResults = signal<List<FileEntry>>([]);
   final isSearching = signal(false);
   final searchScannedDirs = signal(0);
@@ -214,7 +215,7 @@ class NavigationStore {
   void Function()? _showHiddenDisposer;
   List<FileEntry>? _pendingSearchResults;
   int _searchToken = 0;
-  static const _kSearchUiFlushMs = 100;
+  static const _kSearchUiFlushMs = 180;
 
   late final canGoBack = computed(() => historyIndex.value > 0);
   late final canGoForward = computed(
@@ -222,7 +223,7 @@ class NavigationStore {
   );
   late final visibleFiles = computed(() {
     final pending = pendingCreate.value;
-    if (searchActive.value && searchRecursive.value) {
+    if (searchActive.value && (searchRecursive.value || searchContent.value)) {
       final sorted = sortEntries(
         searchResults.value,
         key: sortKey.value,
@@ -376,7 +377,8 @@ class NavigationStore {
   void _setupShowHiddenEffect() {
     _showHiddenDisposer = effect(() {
       showHidden.value;
-      if (searchActive.value && searchRecursive.value) {
+      if (searchActive.value &&
+          (searchRecursive.value || searchContent.value)) {
         _restartRecursiveSearch();
       }
     });
@@ -401,6 +403,7 @@ class NavigationStore {
     batch(() {
       searchActive.value = false;
       searchRecursive.value = false;
+      searchContent.value = false;
       searchQuery.value = '';
       searchResults.value = [];
       isSearching.value = false;
@@ -429,6 +432,21 @@ class NavigationStore {
     _scheduleSearchRestart();
   }
 
+  void toggleContent() {
+    final enabling = !searchContent.value;
+    batch(() {
+      searchContent.value = enabling;
+      if (enabling && SettingsStore.instance.searchMode.value == 'glob') {
+        SettingsStore.instance.searchMode.value = 'substring';
+        searchPatternError.value = validateSearchPattern(
+          searchQuery.value.trim(),
+          _currentSearchMode(),
+        );
+      }
+    });
+    _scheduleSearchRestart();
+  }
+
   void cycleSearchMode() {
     const order = ['substring', 'glob', 'regex'];
     final s = SettingsStore.instance;
@@ -438,6 +456,7 @@ class NavigationStore {
 
   void setSearchMode(String mode) {
     final s = SettingsStore.instance;
+    if (mode == 'glob' && searchContent.value) return;
     if (s.searchMode.value == mode) return;
     s.searchMode.value = mode;
     searchPatternError.value = validateSearchPattern(
@@ -533,7 +552,7 @@ class NavigationStore {
 
   void _scheduleSearchRestart() {
     _searchDebounce?.cancel();
-    if (searchRecursive.value) {
+    if (searchRecursive.value || searchContent.value) {
       _searchDebounce = Timer(const Duration(milliseconds: 250), () {
         _restartRecursiveSearch();
       });
@@ -557,7 +576,10 @@ class NavigationStore {
       cursorIndex.value = -1;
       anchorIndex.value = -1;
     });
-    if (!searchActive.value || !searchRecursive.value) return;
+    if (!searchActive.value ||
+        (!searchRecursive.value && !searchContent.value)) {
+      return;
+    }
     final q = searchQuery.value.trim();
     if (q.isEmpty) return;
     isSearching.value = true;
@@ -594,6 +616,8 @@ class NavigationStore {
       query: q,
       includeHidden: showHidden.value,
       mode: mode,
+      content: searchContent.value,
+      maxDepth: searchRecursive.value ? 0 : 1,
       onBatch: (b) {
         acc.addAll(b.map(_logicalEntryFromPhysical));
         _pendingSearchResults = acc;

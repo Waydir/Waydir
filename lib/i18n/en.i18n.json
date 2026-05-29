@@ -584,6 +584,8 @@
     "placeholder": "Filter…",
     "subfolders": "Subfolders",
     "subfoldersShortcut": "Subfolders (Ctrl+Shift+F)",
+    "content": "Content",
+    "contentSearch": "Search inside file contents",
     "close": "Close search",
     "results(one)": "1 result",
     "results(other)": "$count results",

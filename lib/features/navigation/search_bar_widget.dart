@@ -79,124 +79,142 @@ class _AppSearchBarState extends State<AppSearchBar> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 32,
       decoration: BoxDecoration(
         color: AppColors.bgToolbar,
         border: Border(bottom: BorderSide(color: AppColors.bgDivider)),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            WaydirIconsRegular.magnifyingGlass,
-            size: 16,
-            color: AppColors.fgMuted,
-          ),
-          const SizedBox(width: 6),
-          Expanded(
-            child: KeyboardListener(
-              focusNode: _wrapperFocusNode,
-              onKeyEvent: (event) {
-                if (event is KeyDownEvent &&
-                    event.logicalKey == LogicalKeyboardKey.escape) {
-                  widget.store.closeSearch();
-                }
-              },
-              child: TextField(
-                controller: _controller,
-                focusNode: _focusNode,
-                onChanged: (v) => widget.store.setSearchQuery(v),
-                onSubmitted: (_) {
-                  widget.store.openSelected();
-                },
-                style: context.txt.body,
-                decoration: InputDecoration(
-                  isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                    vertical: 4,
+          SizedBox(
+            height: 32,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Row(
+                children: [
+                  Icon(
+                    WaydirIconsRegular.magnifyingGlass,
+                    size: 16,
+                    color: AppColors.fgMuted,
                   ),
-                  border: InputBorder.none,
-                  hintText: t.search.placeholder,
-                  hintStyle: context.txt.body.copyWith(
-                    color: AppColors.fgSubtle,
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: KeyboardListener(
+                      focusNode: _wrapperFocusNode,
+                      onKeyEvent: (event) {
+                        if (event is KeyDownEvent &&
+                            event.logicalKey == LogicalKeyboardKey.escape) {
+                          widget.store.closeSearch();
+                        }
+                      },
+                      child: TextField(
+                        controller: _controller,
+                        focusNode: _focusNode,
+                        onChanged: (v) => widget.store.setSearchQuery(v),
+                        onSubmitted: (_) {
+                          widget.store.openSelected();
+                        },
+                        style: context.txt.body,
+                        decoration: InputDecoration(
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 4,
+                          ),
+                          border: InputBorder.none,
+                          hintText: t.search.placeholder,
+                          hintStyle: context.txt.body.copyWith(
+                            color: AppColors.fgSubtle,
+                          ),
+                        ),
+                        cursorColor: AppColors.accent,
+                        cursorHeight: 14,
+                      ),
+                    ),
                   ),
-                ),
-                cursorColor: AppColors.accent,
-                cursorHeight: 14,
+                  _ModeToggle(store: widget.store),
+                  _ContentToggle(store: widget.store),
+                  _RecursiveToggle(store: widget.store),
+                  const SizedBox(width: 6),
+                  _CloseButton(onTap: widget.store.closeSearch),
+                ],
               ),
             ),
           ),
-          SignalBuilder(
-            builder: (context) {
-              final searching = widget.store.isSearching.value;
-              if (!searching) return const SizedBox.shrink();
-              return Padding(
-                padding: const EdgeInsets.only(right: 6),
-                child: SizedBox(
-                  width: 12,
-                  height: 12,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 1.5,
-                    color: AppColors.fgMuted,
-                  ),
-                ),
-              );
-            },
-          ),
-          _ModeToggle(store: widget.store),
-          _RecursiveToggle(store: widget.store),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            child: _StatusText(store: widget.store),
-          ),
-          _CloseButton(onTap: widget.store.closeSearch),
+          _StatusLine(store: widget.store),
         ],
       ),
     );
   }
 }
 
-class _StatusText extends StatelessWidget {
+class _StatusLine extends StatelessWidget {
   final NavigationStore store;
-  const _StatusText({required this.store});
+  const _StatusLine({required this.store});
 
   @override
   Widget build(BuildContext context) {
-    return SignalBuilder(builder: (context) => _buildText(context));
+    return SignalBuilder(
+      builder: (context) {
+        final child = _statusText(context, store);
+        if (child == null) return const SizedBox.shrink();
+        final searching = store.isSearching.value;
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 16,
+                child: searching
+                    ? Center(
+                        child: SizedBox(
+                          width: 12,
+                          height: 12,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 1.5,
+                            color: AppColors.fgMuted,
+                          ),
+                        ),
+                      )
+                    : null,
+              ),
+              const SizedBox(width: 6),
+              Flexible(child: child),
+            ],
+          ),
+        );
+      },
+    );
   }
+}
 
-  Widget _buildText(BuildContext context) {
-    final err = store.searchPatternError.value;
-    if (err != null) {
-      return Text(
-        err,
-        style: context.txt.bodyMuted.copyWith(color: AppColors.danger),
-      );
-    }
-    final recursive = store.searchRecursive.value;
-    final searching = store.isSearching.value;
-    final query = store.searchQuery.value.trim();
-    final count = store.visibleFiles.value.length;
-
-    String text;
-    if (!recursive) {
-      text = t.search.results(count: count);
-    } else if (query.isEmpty) {
-      text = t.search.placeholder;
-    } else if (searching && count == 0 && store.searchScannedDirs.value == 0) {
-      text = t.search.starting;
-    } else if (searching) {
-      text =
-          '${t.search.found(count: count)} · ${t.search.scanning(dirs: store.searchScannedDirs.value)}';
-    } else if (count == 0) {
-      text = t.search.noMatches;
-    } else {
-      text =
-          '${t.search.found(count: count)} · ${t.search.scanning(dirs: store.searchScannedDirs.value)}';
-    }
-    return Text(text, style: context.txt.bodyMuted);
+Widget? _statusText(BuildContext context, NavigationStore store) {
+  final err = store.searchPatternError.value;
+  if (err != null) {
+    return Text(
+      err,
+      style: context.txt.bodyMuted.copyWith(color: AppColors.danger),
+    );
   }
+  final walks = store.searchRecursive.value || store.searchContent.value;
+  final searching = store.isSearching.value;
+  final query = store.searchQuery.value.trim();
+  final count = store.visibleFiles.value.length;
+
+  String text;
+  if (!walks) {
+    text = t.search.results(count: count);
+  } else if (query.isEmpty) {
+    return null;
+  } else if (searching && count == 0 && store.searchScannedDirs.value == 0) {
+    text = t.search.starting;
+  } else if (searching || count > 0) {
+    text =
+        '${t.search.found(count: count)} · ${t.search.scanning(dirs: store.searchScannedDirs.value)}';
+  } else {
+    text = t.search.noMatches;
+  }
+  return Text(text, style: context.txt.bodyMuted);
 }
 
 class _RecursiveToggle extends StatefulWidget {
@@ -266,6 +284,74 @@ class _RecursiveToggleState extends State<_RecursiveToggle> {
   }
 }
 
+class _ContentToggle extends StatefulWidget {
+  final NavigationStore store;
+
+  const _ContentToggle({required this.store});
+
+  @override
+  State<_ContentToggle> createState() => _ContentToggleState();
+}
+
+class _ContentToggleState extends State<_ContentToggle> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return SignalBuilder(
+      builder: (context) {
+        final active = widget.store.searchContent.value;
+        return Tooltip(
+          message: t.search.contentSearch,
+          child: MouseRegion(
+            onEnter: (_) => setState(() => _hovered = true),
+            onExit: (_) => setState(() => _hovered = false),
+            child: GestureDetector(
+              onTap: widget.store.toggleContent,
+              child: Container(
+                height: 24,
+                margin: const EdgeInsets.only(right: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                decoration: BoxDecoration(
+                  color: active
+                      ? AppColors.accent.withValues(alpha: 0.15)
+                      : (_hovered ? AppColors.bgHover : Colors.transparent),
+                  borderRadius: BorderRadius.zero,
+                  border: active
+                      ? Border.all(
+                          color: AppColors.accent.withValues(alpha: 0.4),
+                        )
+                      : null,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      WaydirIconsRegular.fileTxt,
+                      size: 14,
+                      color: active ? AppColors.accent : AppColors.fgMuted,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      t.search.content,
+                      style: context.txt.row.copyWith(
+                        color: active ? AppColors.accent : AppColors.fgMuted,
+                        fontWeight: active
+                            ? FontWeight.w600
+                            : FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 class _ModeToggle extends StatelessWidget {
   final NavigationStore store;
 
@@ -276,6 +362,7 @@ class _ModeToggle extends StatelessWidget {
     return SignalBuilder(
       builder: (context) {
         final current = SettingsStore.instance.searchMode.value;
+        final content = store.searchContent.value;
         return Container(
           height: 24,
           margin: const EdgeInsets.only(right: 4),
@@ -299,6 +386,7 @@ class _ModeToggle extends StatelessWidget {
                 label: '*',
                 tooltip: t.search.modeGlob,
                 active: current == 'glob',
+                enabled: !content,
                 onTap: () => store.setSearchMode('glob'),
               ),
               Container(width: 1, height: 24, color: AppColors.bgDivider),
@@ -322,6 +410,7 @@ class _ModeSegment extends StatefulWidget {
   final String label;
   final String tooltip;
   final bool active;
+  final bool enabled;
   final VoidCallback onTap;
 
   const _ModeSegment({
@@ -329,6 +418,7 @@ class _ModeSegment extends StatefulWidget {
     required this.label,
     required this.tooltip,
     required this.active,
+    this.enabled = true,
     required this.onTap,
   });
 
@@ -342,25 +432,32 @@ class _ModeSegmentState extends State<_ModeSegment> {
   @override
   Widget build(BuildContext context) {
     final active = widget.active;
+    final enabled = widget.enabled;
+    final color = !enabled
+        ? AppColors.fgSubtle
+        : (active ? AppColors.accent : AppColors.fgMuted);
     return Tooltip(
       message: widget.tooltip,
       child: MouseRegion(
-        onEnter: (_) => setState(() => _hovered = true),
-        onExit: (_) => setState(() => _hovered = false),
+        cursor: enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
+        onEnter: enabled ? (_) => setState(() => _hovered = true) : null,
+        onExit: enabled ? (_) => setState(() => _hovered = false) : null,
         child: GestureDetector(
-          onTap: widget.onTap,
+          onTap: enabled ? widget.onTap : null,
           child: Container(
             height: 24,
             constraints: const BoxConstraints(minWidth: 26),
             padding: const EdgeInsets.symmetric(horizontal: 6),
             alignment: Alignment.center,
-            color: active
+            color: active && enabled
                 ? AppColors.accent.withValues(alpha: 0.15)
-                : (_hovered ? AppColors.bgHover : Colors.transparent),
+                : (_hovered && enabled
+                      ? AppColors.bgHover
+                      : Colors.transparent),
             child: Text(
               widget.label,
               style: context.txt.row.copyWith(
-                color: active ? AppColors.accent : AppColors.fgMuted,
+                color: color,
                 fontWeight: active ? FontWeight.w600 : FontWeight.normal,
               ),
             ),
