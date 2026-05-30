@@ -43,7 +43,6 @@ const _kScrollbarGutterWidth = _kScrollbarThumbWidth;
 const _kRowPaddingLeft = 8.0;
 const _kRowPaddingRight = 10.0;
 const _kNameMinWidth = 160.0;
-const _kIconSlotWidth = 22.0;
 const _kColumnGap = 16.0;
 const _kHeaderHeight = 24.0;
 
@@ -113,6 +112,7 @@ class _FileListState extends State<FileList> {
   double _rowG = _kRowGapComfortable;
   double _itemExt = _kRowHeightComfortable + _kRowGapComfortable;
   double _listHorizontalSpacing = _kRowGapComfortable;
+  double _scale = 1.0;
   double _viewportWidth = 0;
   String _dateFmt = 'locale';
   bool _recentDatesRelative = true;
@@ -127,7 +127,7 @@ class _FileListState extends State<FileList> {
       text: TextSpan(text: text, style: style),
       textDirection: TextDirection.ltr,
       maxLines: 1,
-      textScaler: MediaQuery.textScalerOf(context),
+      textScaler: TextScaler.linear(_scale),
     )..layout();
     return tp.width;
   }
@@ -268,9 +268,12 @@ class _FileListState extends State<FileList> {
             SettingsStore.instance.fileListVerticalSpacing.value;
         _dateFmt = SettingsStore.instance.dateFormat.value;
         _recentDatesRelative = SettingsStore.instance.recentDatesRelative.value;
-        _rowH = density == 'compact'
-            ? _kRowHeightCompact
-            : _kRowHeightComfortable;
+        _scale = SettingsStore.instance.fileListScale.value;
+        _rowH =
+            (density == 'compact'
+                ? _kRowHeightCompact
+                : _kRowHeightComfortable) *
+            _scale;
         _rowG = verticalSpacing.toDouble();
         _listHorizontalSpacing = horizontalSpacing.toDouble();
         _itemExt = _rowH + _rowG;
@@ -297,8 +300,9 @@ class _FileListState extends State<FileList> {
           builder: (context, constraints) {
             _viewportWidth = constraints.maxWidth;
 
+            final iconSlot = 16 * _scale + 6;
             final fixedCols =
-                _kIconSlotWidth +
+                iconSlot +
                 columnWidths.size +
                 columnWidths.date +
                 _kColumnGap +
@@ -339,6 +343,7 @@ class _FileListState extends State<FileList> {
                                 Expanded(
                                   child: _ListHeader(
                                     recursive: recursive,
+                                    leadingWidth: iconSlot,
                                     nameWidth: nameWidth,
                                     sizeWidth: columnWidths.size,
                                     dateWidth: columnWidths.date,
@@ -430,79 +435,89 @@ class _FileListState extends State<FileList> {
                                         }
                                       },
                                       behavior: HitTestBehavior.translucent,
-                                      child: ListView.builder(
-                                        controller: _scrollController,
-                                        padding: EdgeInsets.only(
-                                          left: _listHorizontalPadding,
-                                          top: _listTopPadding,
-                                          right:
-                                              _listHorizontalPadding +
-                                              _kScrollbarGutterWidth,
-                                        ),
-                                        itemCount: widget.files.length,
-                                        itemExtent: _itemExt,
-                                        addAutomaticKeepAlives: false,
-                                        addRepaintBoundaries: false,
-                                        addSemanticIndexes: false,
-                                        itemBuilder: (context, i) =>
-                                            RepaintBoundary(
-                                              child: Padding(
-                                                padding: EdgeInsets.only(
-                                                  bottom: _rowG,
-                                                ),
-                                                child: _ListRow(
-                                                  rowHeight: _rowH,
-                                                  dateFmt: _dateFmt,
-                                                  recentDatesRelative:
-                                                      _recentDatesRelative,
-                                                  entry: widget.files[i],
-                                                  index: i,
-                                                  nameWidth: nameWidth,
-                                                  selected: widget.selectedPaths
-                                                      .contains(
-                                                        widget.files[i].path,
-                                                      ),
-                                                  selectedPaths:
-                                                      widget.selectedPaths,
-                                                  isCut: widget.cutPaths
-                                                      .contains(
-                                                        widget.files[i].path,
-                                                      ),
-                                                  isDraggingSelected: widget
-                                                      .selectedPaths
-                                                      .isNotEmpty,
-                                                  isFolderDragOver:
-                                                      _hoveredFolderPath ==
-                                                      widget.files[i].path,
-                                                  isRenaming:
-                                                      widget.renamingPath ==
-                                                      widget.files[i].path,
-                                                  renameAttempt:
-                                                      widget.renameAttempt,
-                                                  onRenameSubmit:
-                                                      widget.onRenameSubmit,
-                                                  onRenameCancel:
-                                                      widget.onRenameCancel,
-                                                  onSelect: widget.onSelect,
-                                                  onOpen: widget.onOpen,
-                                                  onContextMenu:
-                                                      widget.onContextMenu,
-                                                  onMenuAction:
-                                                      widget.onMenuAction,
-                                                  recursive: recursive,
-                                                  sizeWidth: columnWidths.size,
-                                                  dateWidth: columnWidths.date,
-                                                  location: recursive
-                                                      ? _compactLocation(
+                                      child: MediaQuery.withClampedTextScaling(
+                                        minScaleFactor: _scale,
+                                        maxScaleFactor: _scale,
+                                        child: ListView.builder(
+                                          controller: _scrollController,
+                                          padding: EdgeInsets.only(
+                                            left: _listHorizontalPadding,
+                                            top: _listTopPadding,
+                                            right:
+                                                _listHorizontalPadding +
+                                                _kScrollbarGutterWidth,
+                                          ),
+                                          itemCount: widget.files.length,
+                                          itemExtent: _itemExt,
+                                          addAutomaticKeepAlives: false,
+                                          addRepaintBoundaries: false,
+                                          addSemanticIndexes: false,
+                                          itemBuilder: (context, i) =>
+                                              RepaintBoundary(
+                                                child: Padding(
+                                                  padding: EdgeInsets.only(
+                                                    bottom: _rowG,
+                                                  ),
+                                                  child: _ListRow(
+                                                    rowHeight: _rowH,
+                                                    iconSize: 16 * _scale,
+                                                    dateFmt: _dateFmt,
+                                                    recentDatesRelative:
+                                                        _recentDatesRelative,
+                                                    entry: widget.files[i],
+                                                    index: i,
+                                                    nameWidth: nameWidth,
+                                                    selected: widget
+                                                        .selectedPaths
+                                                        .contains(
                                                           widget.files[i].path,
-                                                          widget.currentPath,
-                                                        )
-                                                      : null,
-                                                  onOpenInNewTab:
-                                                      widget.onOpenInNewTab,
+                                                        ),
+                                                    selectedPaths:
+                                                        widget.selectedPaths,
+                                                    isCut: widget.cutPaths
+                                                        .contains(
+                                                          widget.files[i].path,
+                                                        ),
+                                                    isDraggingSelected: widget
+                                                        .selectedPaths
+                                                        .isNotEmpty,
+                                                    isFolderDragOver:
+                                                        _hoveredFolderPath ==
+                                                        widget.files[i].path,
+                                                    isRenaming:
+                                                        widget.renamingPath ==
+                                                        widget.files[i].path,
+                                                    renameAttempt:
+                                                        widget.renameAttempt,
+                                                    onRenameSubmit:
+                                                        widget.onRenameSubmit,
+                                                    onRenameCancel:
+                                                        widget.onRenameCancel,
+                                                    onSelect: widget.onSelect,
+                                                    onOpen: widget.onOpen,
+                                                    onContextMenu:
+                                                        widget.onContextMenu,
+                                                    onMenuAction:
+                                                        widget.onMenuAction,
+                                                    recursive: recursive,
+                                                    sizeWidth:
+                                                        columnWidths.size,
+                                                    dateWidth:
+                                                        columnWidths.date,
+                                                    location: recursive
+                                                        ? _compactLocation(
+                                                            widget
+                                                                .files[i]
+                                                                .path,
+                                                            widget.currentPath,
+                                                          )
+                                                        : null,
+                                                    onOpenInNewTab:
+                                                        widget.onOpenInNewTab,
+                                                  ),
                                                 ),
                                               ),
-                                            ),
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -549,6 +564,7 @@ class _FileListState extends State<FileList> {
 
 class _ListHeader extends StatelessWidget {
   final bool recursive;
+  final double leadingWidth;
   final double nameWidth;
   final double sizeWidth;
   final double dateWidth;
@@ -557,6 +573,7 @@ class _ListHeader extends StatelessWidget {
   final void Function(SortKey key)? onSortColumn;
   const _ListHeader({
     this.recursive = false,
+    this.leadingWidth = 22,
     this.nameWidth = 0,
     this.sizeWidth = 0,
     this.dateWidth = 0,
@@ -615,7 +632,7 @@ class _ListHeader extends StatelessWidget {
       decoration: BoxDecoration(color: AppColors.bg),
       child: Row(
         children: [
-          const SizedBox(width: 22),
+          SizedBox(width: leadingWidth),
           SizedBox(
             width: nameWidth,
             child: _sortable(
@@ -686,6 +703,7 @@ class _ListRow extends StatefulWidget {
   final double sizeWidth;
   final double dateWidth;
   final double rowHeight;
+  final double iconSize;
   final String dateFmt;
   final bool recentDatesRelative;
   final String? location;
@@ -712,6 +730,7 @@ class _ListRow extends StatefulWidget {
     this.sizeWidth = 0,
     this.dateWidth = 0,
     this.rowHeight = _kRowHeightComfortable,
+    this.iconSize = 16,
     this.dateFmt = 'locale',
     this.recentDatesRelative = true,
     this.location,
@@ -1022,7 +1041,7 @@ class _ListRowState extends State<_ListRow> {
                   name: e.name,
                   ext: e.extension,
                   isFolder: isFolder,
-                  size: 16,
+                  size: widget.iconSize,
                 ),
                 const SizedBox(width: 6),
                 SizedBox(
@@ -1153,7 +1172,7 @@ class _ListRowState extends State<_ListRow> {
                   name: e.name,
                   ext: e.extension,
                   isFolder: isFolder,
-                  size: 16,
+                  size: widget.iconSize,
                 ),
                 const SizedBox(width: 6),
                 SizedBox(

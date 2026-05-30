@@ -1342,6 +1342,15 @@ class Translations$statusBar$en {
 
 	/// en: '$count selected'
 	String selected({required Object count}) => '${count} selected';
+
+	/// en: 'Zoom out'
+	String get zoomOut => 'Zoom out';
+
+	/// en: 'Zoom in'
+	String get zoomIn => 'Zoom in';
+
+	/// en: 'Reset zoom'
+	String get zoomReset => 'Reset zoom';
 }
 
 // Path: dialog
@@ -3339,6 +3348,9 @@ extension on Translations {
 			'statusBar.folders' => ({required Object count}) => '${count} folders',
 			'statusBar.files' => ({required Object count}) => '${count} files',
 			'statusBar.selected' => ({required Object count}) => '${count} selected',
+			'statusBar.zoomOut' => 'Zoom out',
+			'statusBar.zoomIn' => 'Zoom in',
+			'statusBar.zoomReset' => 'Reset zoom',
 			'dialog.create' => 'Create',
 			'dialog.cancel' => 'Cancel',
 			'dialog.folderNameHint' => 'Folder name',

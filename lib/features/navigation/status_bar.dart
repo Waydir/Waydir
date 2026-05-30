@@ -5,6 +5,7 @@ import 'navigation_store.dart';
 import '../../app/app_info.dart';
 import '../../core/update/update_store.dart';
 import '../../features/update/update_dialog.dart';
+import '../../core/settings/settings_store.dart';
 import '../operations/operation_store.dart';
 import '../../ui/overlays/notification_store.dart';
 import '../../ui/overlays/notifications_panel.dart';
@@ -64,6 +65,8 @@ class StatusBar extends StatelessWidget {
             },
           ),
           const Spacer(),
+          const _StatusZoomControl(),
+          const SizedBox(width: 8),
           _StatusVersion(),
           const SizedBox(width: 8),
           _StatusNotificationsButton(notificationStore: notificationStore),
@@ -82,6 +85,111 @@ class StatusBar extends StatelessWidget {
       child: Text(
         '|',
         style: context.txt.row.copyWith(color: AppColors.fgSubtle),
+      ),
+    );
+  }
+}
+
+class _StatusZoomControl extends StatelessWidget {
+  const _StatusZoomControl();
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsStore.instance;
+    return SignalBuilder(
+      builder: (context) {
+        final scale = settings.fileListScale.value;
+        final percent = (scale * 100).round();
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _ZoomGlyphButton(
+              glyph: '−',
+              tooltip: t.statusBar.zoomOut,
+              enabled: scale > SettingsStore.fileListScaleMin,
+              onTap: settings.decreaseFileListScale,
+            ),
+            MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: GestureDetector(
+                onTap: settings.resetFileListScale,
+                behavior: HitTestBehavior.opaque,
+                child: Tooltip(
+                  message: t.statusBar.zoomReset,
+                  child: Container(
+                    width: 38,
+                    height: 20,
+                    alignment: Alignment.center,
+                    child: Text('$percent%', style: context.txt.muted),
+                  ),
+                ),
+              ),
+            ),
+            _ZoomGlyphButton(
+              glyph: '+',
+              tooltip: t.statusBar.zoomIn,
+              enabled: scale < SettingsStore.fileListScaleMax,
+              onTap: settings.increaseFileListScale,
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _ZoomGlyphButton extends StatefulWidget {
+  final String glyph;
+  final String tooltip;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  const _ZoomGlyphButton({
+    required this.glyph,
+    required this.tooltip,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  @override
+  State<_ZoomGlyphButton> createState() => _ZoomGlyphButtonState();
+}
+
+class _ZoomGlyphButtonState extends State<_ZoomGlyphButton> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = !widget.enabled
+        ? AppColors.fgSubtle
+        : (_hovered ? AppColors.fg : AppColors.fgMuted);
+    return Tooltip(
+      message: widget.tooltip,
+      child: MouseRegion(
+        cursor: widget.enabled
+            ? SystemMouseCursors.click
+            : SystemMouseCursors.basic,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(
+          onTap: widget.enabled ? widget.onTap : null,
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            width: 20,
+            height: 20,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: _hovered && widget.enabled
+                  ? AppColors.bgHover
+                  : Colors.transparent,
+              borderRadius: BorderRadius.zero,
+            ),
+            child: Text(
+              widget.glyph,
+              style: context.txt.rowEmphasis.copyWith(color: color),
+            ),
+          ),
+        ),
       ),
     );
   }

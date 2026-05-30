@@ -405,6 +405,18 @@ class $AppSettingsTable extends AppSettings
     ),
     defaultValue: const Constant(true),
   );
+  static const VerificationMeta _fileListScaleMeta = const VerificationMeta(
+    'fileListScale',
+  );
+  @override
+  late final GeneratedColumn<double> fileListScale = GeneratedColumn<double>(
+    'file_list_scale',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1.0),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -437,6 +449,7 @@ class $AppSettingsTable extends AppSettings
     searchMode,
     rememberFolderState,
     rememberFolderSort,
+    fileListScale,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -690,6 +703,15 @@ class $AppSettingsTable extends AppSettings
         ),
       );
     }
+    if (data.containsKey('file_list_scale')) {
+      context.handle(
+        _fileListScaleMeta,
+        fileListScale.isAcceptableOrUnknown(
+          data['file_list_scale']!,
+          _fileListScaleMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -819,6 +841,10 @@ class $AppSettingsTable extends AppSettings
         DriftSqlType.bool,
         data['${effectivePrefix}remember_folder_sort'],
       )!,
+      fileListScale: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}file_list_scale'],
+      )!,
     );
   }
 
@@ -859,6 +885,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
   final String searchMode;
   final bool rememberFolderState;
   final bool rememberFolderSort;
+  final double fileListScale;
   const AppSetting({
     required this.id,
     required this.themeMode,
@@ -890,6 +917,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     required this.searchMode,
     required this.rememberFolderState,
     required this.rememberFolderSort,
+    required this.fileListScale,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -926,6 +954,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     map['search_mode'] = Variable<String>(searchMode);
     map['remember_folder_state'] = Variable<bool>(rememberFolderState);
     map['remember_folder_sort'] = Variable<bool>(rememberFolderSort);
+    map['file_list_scale'] = Variable<double>(fileListScale);
     return map;
   }
 
@@ -961,6 +990,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       searchMode: Value(searchMode),
       rememberFolderState: Value(rememberFolderState),
       rememberFolderSort: Value(rememberFolderSort),
+      fileListScale: Value(fileListScale),
     );
   }
 
@@ -1018,6 +1048,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
         json['rememberFolderState'],
       ),
       rememberFolderSort: serializer.fromJson<bool>(json['rememberFolderSort']),
+      fileListScale: serializer.fromJson<double>(json['fileListScale']),
     );
   }
   @override
@@ -1058,6 +1089,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       'searchMode': serializer.toJson<String>(searchMode),
       'rememberFolderState': serializer.toJson<bool>(rememberFolderState),
       'rememberFolderSort': serializer.toJson<bool>(rememberFolderSort),
+      'fileListScale': serializer.toJson<double>(fileListScale),
     };
   }
 
@@ -1092,6 +1124,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     String? searchMode,
     bool? rememberFolderState,
     bool? rememberFolderSort,
+    double? fileListScale,
   }) => AppSetting(
     id: id ?? this.id,
     themeMode: themeMode ?? this.themeMode,
@@ -1125,6 +1158,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     searchMode: searchMode ?? this.searchMode,
     rememberFolderState: rememberFolderState ?? this.rememberFolderState,
     rememberFolderSort: rememberFolderSort ?? this.rememberFolderSort,
+    fileListScale: fileListScale ?? this.fileListScale,
   );
   AppSetting copyWithCompanion(AppSettingsCompanion data) {
     return AppSetting(
@@ -1208,6 +1242,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       rememberFolderSort: data.rememberFolderSort.present
           ? data.rememberFolderSort.value
           : this.rememberFolderSort,
+      fileListScale: data.fileListScale.present
+          ? data.fileListScale.value
+          : this.fileListScale,
     );
   }
 
@@ -1243,7 +1280,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           ..write('foldersFirst: $foldersFirst, ')
           ..write('searchMode: $searchMode, ')
           ..write('rememberFolderState: $rememberFolderState, ')
-          ..write('rememberFolderSort: $rememberFolderSort')
+          ..write('rememberFolderSort: $rememberFolderSort, ')
+          ..write('fileListScale: $fileListScale')
           ..write(')'))
         .toString();
   }
@@ -1280,6 +1318,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     searchMode,
     rememberFolderState,
     rememberFolderSort,
+    fileListScale,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -1314,7 +1353,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           other.foldersFirst == this.foldersFirst &&
           other.searchMode == this.searchMode &&
           other.rememberFolderState == this.rememberFolderState &&
-          other.rememberFolderSort == this.rememberFolderSort);
+          other.rememberFolderSort == this.rememberFolderSort &&
+          other.fileListScale == this.fileListScale);
 }
 
 class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
@@ -1348,6 +1388,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
   final Value<String> searchMode;
   final Value<bool> rememberFolderState;
   final Value<bool> rememberFolderSort;
+  final Value<double> fileListScale;
   const AppSettingsCompanion({
     this.id = const Value.absent(),
     this.themeMode = const Value.absent(),
@@ -1379,6 +1420,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.searchMode = const Value.absent(),
     this.rememberFolderState = const Value.absent(),
     this.rememberFolderSort = const Value.absent(),
+    this.fileListScale = const Value.absent(),
   });
   AppSettingsCompanion.insert({
     this.id = const Value.absent(),
@@ -1411,6 +1453,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.searchMode = const Value.absent(),
     this.rememberFolderState = const Value.absent(),
     this.rememberFolderSort = const Value.absent(),
+    this.fileListScale = const Value.absent(),
   });
   static Insertable<AppSetting> custom({
     Expression<int>? id,
@@ -1443,6 +1486,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Expression<String>? searchMode,
     Expression<bool>? rememberFolderState,
     Expression<bool>? rememberFolderSort,
+    Expression<double>? fileListScale,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1485,6 +1529,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
         'remember_folder_state': rememberFolderState,
       if (rememberFolderSort != null)
         'remember_folder_sort': rememberFolderSort,
+      if (fileListScale != null) 'file_list_scale': fileListScale,
     });
   }
 
@@ -1519,6 +1564,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Value<String>? searchMode,
     Value<bool>? rememberFolderState,
     Value<bool>? rememberFolderSort,
+    Value<double>? fileListScale,
   }) {
     return AppSettingsCompanion(
       id: id ?? this.id,
@@ -1555,6 +1601,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       searchMode: searchMode ?? this.searchMode,
       rememberFolderState: rememberFolderState ?? this.rememberFolderState,
       rememberFolderSort: rememberFolderSort ?? this.rememberFolderSort,
+      fileListScale: fileListScale ?? this.fileListScale,
     );
   }
 
@@ -1661,6 +1708,9 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     if (rememberFolderSort.present) {
       map['remember_folder_sort'] = Variable<bool>(rememberFolderSort.value);
     }
+    if (fileListScale.present) {
+      map['file_list_scale'] = Variable<double>(fileListScale.value);
+    }
     return map;
   }
 
@@ -1696,7 +1746,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
           ..write('foldersFirst: $foldersFirst, ')
           ..write('searchMode: $searchMode, ')
           ..write('rememberFolderState: $rememberFolderState, ')
-          ..write('rememberFolderSort: $rememberFolderSort')
+          ..write('rememberFolderSort: $rememberFolderSort, ')
+          ..write('fileListScale: $fileListScale')
           ..write(')'))
         .toString();
   }
@@ -3876,6 +3927,7 @@ typedef $$AppSettingsTableCreateCompanionBuilder =
       Value<String> searchMode,
       Value<bool> rememberFolderState,
       Value<bool> rememberFolderSort,
+      Value<double> fileListScale,
     });
 typedef $$AppSettingsTableUpdateCompanionBuilder =
     AppSettingsCompanion Function({
@@ -3909,6 +3961,7 @@ typedef $$AppSettingsTableUpdateCompanionBuilder =
       Value<String> searchMode,
       Value<bool> rememberFolderState,
       Value<bool> rememberFolderSort,
+      Value<double> fileListScale,
     });
 
 class $$AppSettingsTableFilterComposer
@@ -4067,6 +4120,11 @@ class $$AppSettingsTableFilterComposer
 
   ColumnFilters<bool> get rememberFolderSort => $composableBuilder(
     column: $table.rememberFolderSort,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get fileListScale => $composableBuilder(
+    column: $table.fileListScale,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -4229,6 +4287,11 @@ class $$AppSettingsTableOrderingComposer
     column: $table.rememberFolderSort,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<double> get fileListScale => $composableBuilder(
+    column: $table.fileListScale,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$AppSettingsTableAnnotationComposer
@@ -4379,6 +4442,11 @@ class $$AppSettingsTableAnnotationComposer
     column: $table.rememberFolderSort,
     builder: (column) => column,
   );
+
+  GeneratedColumn<double> get fileListScale => $composableBuilder(
+    column: $table.fileListScale,
+    builder: (column) => column,
+  );
 }
 
 class $$AppSettingsTableTableManager
@@ -4442,6 +4510,7 @@ class $$AppSettingsTableTableManager
                 Value<String> searchMode = const Value.absent(),
                 Value<bool> rememberFolderState = const Value.absent(),
                 Value<bool> rememberFolderSort = const Value.absent(),
+                Value<double> fileListScale = const Value.absent(),
               }) => AppSettingsCompanion(
                 id: id,
                 themeMode: themeMode,
@@ -4473,6 +4542,7 @@ class $$AppSettingsTableTableManager
                 searchMode: searchMode,
                 rememberFolderState: rememberFolderState,
                 rememberFolderSort: rememberFolderSort,
+                fileListScale: fileListScale,
               ),
           createCompanionCallback:
               ({
@@ -4506,6 +4576,7 @@ class $$AppSettingsTableTableManager
                 Value<String> searchMode = const Value.absent(),
                 Value<bool> rememberFolderState = const Value.absent(),
                 Value<bool> rememberFolderSort = const Value.absent(),
+                Value<double> fileListScale = const Value.absent(),
               }) => AppSettingsCompanion.insert(
                 id: id,
                 themeMode: themeMode,
@@ -4537,6 +4608,7 @@ class $$AppSettingsTableTableManager
                 searchMode: searchMode,
                 rememberFolderState: rememberFolderState,
                 rememberFolderSort: rememberFolderSort,
+                fileListScale: fileListScale,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

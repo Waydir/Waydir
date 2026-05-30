@@ -39,6 +39,7 @@ class SettingsStore {
   final searchMode = signal<String>('substring');
   final rememberFolderState = signal<bool>(true);
   final rememberFolderSort = signal<bool>(true);
+  final fileListScale = signal<double>(1.0);
 
   late final AppDatabase _db;
   bool _loaded = false;
@@ -87,6 +88,7 @@ class SettingsStore {
     searchMode.value = row.searchMode;
     rememberFolderState.value = row.rememberFolderState;
     rememberFolderSort.value = row.rememberFolderSort;
+    fileListScale.value = row.fileListScale;
   }
 
   void _wireAutoSave() {
@@ -121,6 +123,7 @@ class SettingsStore {
         searchMode.value;
         rememberFolderState.value;
         rememberFolderSort.value;
+        fileListScale.value;
         if (!_loaded) return;
         _scheduleSave();
       }),
@@ -165,6 +168,7 @@ class SettingsStore {
           searchMode: Value(searchMode.value),
           rememberFolderState: Value(rememberFolderState.value),
           rememberFolderSort: Value(rememberFolderSort.value),
+          fileListScale: Value(fileListScale.value),
         ),
       );
     } catch (_) {}
@@ -190,6 +194,23 @@ class SettingsStore {
     }
     final next = (index + direction).clamp(0, sizes.length - 1);
     terminalFontSize.value = sizes[next];
+  }
+
+  static const fileListScaleMin = 0.5;
+  static const fileListScaleMax = 2.0;
+  static const fileListScaleStep = 0.1;
+  static const defaultFileListScale = 1.0;
+
+  void increaseFileListScale() => _stepFileListScale(1);
+
+  void decreaseFileListScale() => _stepFileListScale(-1);
+
+  void resetFileListScale() => fileListScale.value = defaultFileListScale;
+
+  void _stepFileListScale(int direction) {
+    final steps = (fileListScale.value / fileListScaleStep).round();
+    final next = (steps + direction) * fileListScaleStep;
+    fileListScale.value = next.clamp(fileListScaleMin, fileListScaleMax);
   }
 
   void dispose() {

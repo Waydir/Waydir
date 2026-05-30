@@ -51,6 +51,7 @@ class AppSettings extends Table {
       boolean().withDefault(const Constant(true))();
   BoolColumn get rememberFolderSort =>
       boolean().withDefault(const Constant(true))();
+  RealColumn get fileListScale => real().withDefault(const Constant(1.0))();
 }
 
 class SessionTabs extends Table {
@@ -130,7 +131,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 19;
+  int get schemaVersion => 20;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -225,6 +226,9 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 19) {
         await addSettingColumn(appSettings.terminalUseSystemFont);
+      }
+      if (from < 20) {
+        await addSettingColumn(appSettings.fileListScale);
       }
     },
   );
