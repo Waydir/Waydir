@@ -58,7 +58,7 @@ class SwapInstaller {
 
     final aEsc = archive.path.replaceAll("'", "''");
     final sEsc = staging.path.replaceAll("'", "''");
-    final extract = await Process.run('powershell', [
+    final extract = await Process.run('powershell.exe', [
       '-NoProfile',
       '-NonInteractive',
       '-Command',
@@ -81,16 +81,26 @@ class SwapInstaller {
       staging: stagingRoot,
       exeName: exeName,
     );
-    await Process.start('powershell', [
-      '-NoProfile',
-      '-NonInteractive',
-      '-ExecutionPolicy',
-      'Bypass',
-      '-WindowStyle',
-      'Hidden',
-      '-File',
-      script.path,
-    ], mode: ProcessStartMode.detached);
+    await Process.start(
+      'cmd.exe',
+      [
+        '/c',
+        'start',
+        '',
+        '/min',
+        'powershell.exe',
+        '-NoProfile',
+        '-NonInteractive',
+        '-ExecutionPolicy',
+        'Bypass',
+        '-WindowStyle',
+        'Hidden',
+        '-File',
+        script.path,
+      ],
+      mode: ProcessStartMode.detached,
+      workingDirectory: bundleDir.parent.path,
+    );
     return true;
   }
 
@@ -166,6 +176,7 @@ rm -- "\$0" 2>/dev/null
     final script = File(p.join(bundle.parent.path, '.waydir-swap.ps1'));
     final old = '${bundle.path}.old';
     final exePath = p.join(bundle.path, exeName);
+    final logPath = p.join(bundle.parent.path, '.waydir-swap.log');
     String q(String s) => "'${s.replaceAll("'", "''")}'";
     script.writeAsStringSync('''
 \$ErrorActionPreference = 'Stop'
@@ -173,37 +184,59 @@ rm -- "\$0" 2>/dev/null
 \$staging = ${q(staging.path)}
 \$old = ${q(old)}
 \$exe = ${q(exePath)}
+\$log = ${q(logPath)}
 
-# Set-Location off the bundle dir; Windows cannot rename a directory that is
-# the working directory of a running process (this script's own cwd).
-Set-Location -LiteralPath ${q(bundle.parent.path)}
-
-if (Test-Path -LiteralPath \$old) { Remove-Item -LiteralPath \$old -Recurse -Force }
-
-# Wait for the parent app to release the bundle, then swap.
-\$moved = \$false
-for (\$i = 0; \$i -lt 30; \$i++) {
-  try {
-    Move-Item -LiteralPath \$bundle -Destination \$old -Force
-    \$moved = \$true
-    break
-  } catch {
-    Start-Sleep -Seconds 1
-  }
+function Write-SwapLog([string]\$message) {
+  \$line = "[\$(Get-Date -Format o)] \$message"
+  Add-Content -LiteralPath \$log -Value \$line -Encoding UTF8
 }
-if (-not \$moved) { exit 1 }
 
 try {
-  Move-Item -LiteralPath \$staging -Destination \$bundle -Force
+  Set-Location -LiteralPath ${q(bundle.parent.path)}
+  Write-SwapLog "start pid=\$PID cwd=\$(Get-Location)"
+  Write-SwapLog "bundle=\$bundle"
+  Write-SwapLog "staging=\$staging"
+
+  if (Test-Path -LiteralPath \$old) {
+    Write-SwapLog "remove old"
+    Remove-Item -LiteralPath \$old -Recurse -Force
+  }
+
+  \$moved = \$false
+  for (\$i = 0; \$i -lt 30; \$i++) {
+    try {
+      Move-Item -LiteralPath \$bundle -Destination \$old -Force
+      \$moved = \$true
+      Write-SwapLog "moved bundle to old on attempt \$i"
+      break
+    } catch {
+      Write-SwapLog "move bundle attempt \$i failed: \$(\$_.Exception.Message)"
+      Start-Sleep -Seconds 1
+    }
+  }
+  if (-not \$moved) {
+    throw "could not move bundle after 30 attempts"
+  }
+
+  try {
+    Move-Item -LiteralPath \$staging -Destination \$bundle -Force
+    Write-SwapLog "moved staging to bundle"
+  } catch {
+    Write-SwapLog "move staging failed: \$(\$_.Exception.Message)"
+    Move-Item -LiteralPath \$old -Destination \$bundle -Force
+    throw
+  }
+
+  Write-SwapLog "launch \$exe"
+  Start-Process -FilePath \$exe -WorkingDirectory \$bundle
+  Start-Sleep -Seconds 4
+  Remove-Item -LiteralPath \$old -Recurse -Force -ErrorAction SilentlyContinue
+  Write-SwapLog "done"
+  Remove-Item -LiteralPath \$PSCommandPath -Force -ErrorAction SilentlyContinue
 } catch {
-  Move-Item -LiteralPath \$old -Destination \$bundle -Force
+  Write-SwapLog "fatal: \$(\$_.Exception.Message)"
   exit 1
 }
-
-Start-Process -FilePath \$exe
-Start-Sleep -Seconds 4
-Remove-Item -LiteralPath \$old -Recurse -Force -ErrorAction SilentlyContinue
-Remove-Item -LiteralPath \$PSCommandPath -Force -ErrorAction SilentlyContinue
 ''');
     return script;
   }
