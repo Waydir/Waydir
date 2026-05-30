@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:signals/signals_flutter.dart';
 import 'package:waydir/ui/icons/waydir_icons.dart';
 
 import '../../core/keyboard/keyboard_shortcuts.dart';
+import '../../core/settings/settings_store.dart';
 import '../../i18n/strings.g.dart';
 import '../../ui/theme/app_theme.dart';
 import '../../ui/theme/app_text_styles.dart';
@@ -68,6 +71,9 @@ String _labelFor(ShortcutDef s) => switch (s.id) {
   'terminal_font_increase' => t.keybindings.terminalFontIncrease,
   'terminal_font_decrease' => t.keybindings.terminalFontDecrease,
   'terminal_font_reset' => t.keybindings.terminalFontReset,
+  'file_list_zoom_in' => t.keybindings.fileListZoomIn,
+  'file_list_zoom_out' => t.keybindings.fileListZoomOut,
+  'file_list_zoom_reset' => t.keybindings.fileListZoomReset,
   'toggle_sidebar' => t.keybindings.toggleSidebar,
   'copy' => t.keybindings.copy,
   'cut' => t.keybindings.cut,
@@ -328,44 +334,251 @@ class _ShortcutRowState extends State<_ShortcutRow> {
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: Container(
-        height: 30,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        color: _hovered ? AppColors.bgHover : Colors.transparent,
-        child: Row(
-          children: [
-            Expanded(
-              child: Row(
-                children: [
-                  Flexible(
-                    child: Text(
-                      _labelFor(widget.def),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: context.txt.row,
-                    ),
-                  ),
-                  if (widget.def.hint != null) ...[
-                    const SizedBox(width: 6),
-                    Text(
-                      widget.def.hint!() ?? '',
-                      style: context.txt.caption.copyWith(
-                        fontStyle: FontStyle.italic,
+    return SignalBuilder(
+      builder: (context) {
+        SettingsStore.instance.shortcutBindings.value;
+        return MouseRegion(
+          onEnter: (_) => setState(() => _hovered = true),
+          onExit: (_) => setState(() => _hovered = false),
+          child: Container(
+            height: 30,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            color: _hovered ? AppColors.bgHover : Colors.transparent,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          _labelFor(widget.def),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: context.txt.row,
+                        ),
                       ),
-                    ),
-                  ],
-                ],
+                      if (widget.def.hint != null) ...[
+                        const SizedBox(width: 6),
+                        Text(
+                          widget.def.hint!() ?? '',
+                          style: context.txt.caption.copyWith(
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                _KeyBadge(
+                  primary: widget.def.displayKeys,
+                  alternate: widget.def.displayAltKeys,
+                ),
+                const SizedBox(width: 8),
+                _ShortcutActions(def: widget.def),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ShortcutActions extends StatelessWidget {
+  final ShortcutDef def;
+
+  const _ShortcutActions({required this.def});
+
+  @override
+  Widget build(BuildContext context) {
+    final overridden = AppShortcuts.isOverridden(def.id);
+    if (!def.editable) {
+      return Tooltip(
+        message: t.keybindings.fixed,
+        child: Icon(
+          WaydirIconsRegular.prohibit,
+          size: 13,
+          color: AppColors.fgSubtle,
+        ),
+      );
+    }
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _ShortcutIconButton(
+          icon: WaydirIconsRegular.pencilSimple,
+          tooltip: t.keybindings.change,
+          onTap: () => _showShortcutCapture(context, def),
+        ),
+        const SizedBox(width: 4),
+        _ShortcutIconButton(
+          icon: WaydirIconsRegular.arrowCounterClockwise,
+          tooltip: t.keybindings.reset,
+          enabled: overridden,
+          onTap: () => SettingsStore.instance.resetShortcutBinding(def.id),
+        ),
+      ],
+    );
+  }
+}
+
+class _ShortcutIconButton extends StatefulWidget {
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
+  final bool enabled;
+
+  const _ShortcutIconButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+    this.enabled = true,
+  });
+
+  @override
+  State<_ShortcutIconButton> createState() => _ShortcutIconButtonState();
+}
+
+class _ShortcutIconButtonState extends State<_ShortcutIconButton> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = !widget.enabled
+        ? AppColors.fgSubtle.withValues(alpha: 0.45)
+        : (_hovered ? AppColors.fg : AppColors.fgMuted);
+    return Tooltip(
+      message: widget.tooltip,
+      child: MouseRegion(
+        cursor: widget.enabled
+            ? SystemMouseCursors.click
+            : SystemMouseCursors.basic,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(
+          onTap: widget.enabled ? widget.onTap : null,
+          child: SizedBox(
+            width: 22,
+            height: 22,
+            child: Center(child: Icon(widget.icon, size: 13, color: color)),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+Future<void> _showShortcutCapture(BuildContext context, ShortcutDef def) {
+  return showDialog<void>(
+    context: context,
+    barrierDismissible: true,
+    barrierColor: Colors.black.withValues(alpha: 0.55),
+    builder: (_) => _ShortcutCaptureDialog(def: def),
+  );
+}
+
+class _ShortcutCaptureDialog extends StatefulWidget {
+  final ShortcutDef def;
+
+  const _ShortcutCaptureDialog({required this.def});
+
+  @override
+  State<_ShortcutCaptureDialog> createState() => _ShortcutCaptureDialogState();
+}
+
+class _ShortcutCaptureDialogState extends State<_ShortcutCaptureDialog> {
+  final _focusNode = FocusNode();
+  KeyChord? _candidate;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _focusNode.requestFocus(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  KeyEventResult _onKey(FocusNode node, KeyEvent event) {
+    if (event is! KeyDownEvent) return KeyEventResult.handled;
+    final key = event.logicalKey;
+    if (key == LogicalKeyboardKey.escape) {
+      Navigator.of(context).pop();
+      return KeyEventResult.handled;
+    }
+    if (kModifierKeys.contains(key)) return KeyEventResult.handled;
+    final chord = KeyChord(
+      key: key,
+      ctrl: AppShortcuts.isControl,
+      shift: AppShortcuts.isShift,
+      alt: AppShortcuts.isAlt,
+    );
+    final conflict = AppShortcuts.conflictFor(chord, widget.def.id);
+    if (conflict != null) {
+      setState(() {
+        _candidate = chord;
+        _error = t.keybindings.conflict(action: _labelFor(conflict));
+      });
+      return KeyEventResult.handled;
+    }
+    SettingsStore.instance.setShortcutBinding(widget.def.id, chord).then((_) {
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    });
+    return KeyEventResult.handled;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AppModal(
+      icon: WaydirIconsRegular.keyboard,
+      title: t.keybindings.change,
+      width: 360,
+      height: 180,
+      onClose: () => Navigator.of(context).pop(),
+      child: Focus(
+        focusNode: _focusNode,
+        onKeyEvent: _onKey,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(_labelFor(widget.def), style: context.txt.rowEmphasis),
+              const SizedBox(height: 12),
+              Container(
+                height: 44,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: AppColors.bgInput,
+                  borderRadius: BorderRadius.zero,
+                  border: Border.all(color: AppColors.borderColor),
+                ),
+                child: _candidate == null
+                    ? Text(
+                        t.keybindings.pressShortcut,
+                        style: context.txt.muted,
+                      )
+                    : _KeyBadge(
+                        primary: ShortcutDef.formatBinding(_candidate!),
+                      ),
               ),
-            ),
-            const SizedBox(width: 12),
-            _KeyBadge(
-              primary: widget.def.displayKeys,
-              alternate: widget.def.displayAltKeys,
-            ),
-          ],
+              const SizedBox(height: 10),
+              Text(
+                _error ?? t.keybindings.escapeToCancel,
+                style: context.txt.caption.copyWith(
+                  color: _error == null ? AppColors.fgMuted : AppColors.danger,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -395,7 +608,23 @@ class _KeyBadge extends StatelessWidget {
   }
 
   List<Widget> _renderCombo(BuildContext context, String combo) {
-    final parts = combo.split(RegExp(r'\s*\+\s*'));
+    final knownModifiers = {'Ctrl', 'Shift', 'Alt', '⌘', '⇧', '⌥'};
+    final parts = <String>[];
+    final buf = StringBuffer();
+    for (int i = 0; i < combo.length; i++) {
+      if (combo[i] == '+') {
+        if (buf.isNotEmpty && knownModifiers.contains(buf.toString())) {
+          parts.add(buf.toString());
+          buf.clear();
+        } else {
+          buf.write('+');
+        }
+      } else {
+        buf.write(combo[i]);
+      }
+    }
+    if (buf.isNotEmpty) parts.add(buf.toString());
+
     final widgets = <Widget>[];
     for (int i = 0; i < parts.length; i++) {
       if (i > 0) {

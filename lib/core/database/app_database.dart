@@ -116,6 +116,17 @@ class DefaultApps extends Table {
   Set<Column> get primaryKey => {typeKey};
 }
 
+class ShortcutBindings extends Table {
+  TextColumn get actionId => text()();
+  IntColumn get keyId => integer()();
+  BoolColumn get ctrl => boolean().withDefault(const Constant(false))();
+  BoolColumn get shift => boolean().withDefault(const Constant(false))();
+  BoolColumn get alt => boolean().withDefault(const Constant(false))();
+
+  @override
+  Set<Column> get primaryKey => {actionId};
+}
+
 @DriftDatabase(
   tables: [
     AppSettings,
@@ -125,13 +136,14 @@ class DefaultApps extends Table {
     RecentApps,
     RecentEnteredPaths,
     DefaultApps,
+    ShortcutBindings,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 20;
+  int get schemaVersion => 21;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -230,8 +242,29 @@ class AppDatabase extends _$AppDatabase {
       if (from < 20) {
         await addSettingColumn(appSettings.fileListScale);
       }
+      if (from < 21) {
+        await m.createTable(shortcutBindings);
+      }
     },
   );
+
+  Future<List<ShortcutBinding>> getShortcutBindings() {
+    return select(shortcutBindings).get();
+  }
+
+  Future<void> setShortcutBinding(ShortcutBindingsCompanion companion) {
+    return into(shortcutBindings).insertOnConflictUpdate(companion);
+  }
+
+  Future<void> deleteShortcutBinding(String actionId) {
+    return (delete(
+      shortcutBindings,
+    )..where((t) => t.actionId.equals(actionId))).go();
+  }
+
+  Future<void> clearShortcutBindings() {
+    return delete(shortcutBindings).go();
+  }
 
   Future<DefaultApp?> getDefaultApp(String typeKey) {
     return (select(

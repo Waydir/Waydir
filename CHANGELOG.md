@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Content search: a "Content" toggle in the search bar matches inside file contents.
 
 ### Changed
+- Terminal keyboard shortcuts are now customizable.
 - Window title now follows the active folder.
 
 ### Fixed

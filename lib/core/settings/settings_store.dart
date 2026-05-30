@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:drift/drift.dart';
+import 'package:flutter/services.dart';
 import 'package:signals/signals.dart';
 
 import '../database/app_database.dart';
+import '../keyboard/keyboard_shortcuts.dart';
 
 class SettingsStore {
   static final SettingsStore instance = SettingsStore._();
@@ -40,6 +42,7 @@ class SettingsStore {
   final rememberFolderState = signal<bool>(true);
   final rememberFolderSort = signal<bool>(true);
   final fileListScale = signal<double>(1.0);
+  final shortcutBindings = signal<Map<String, KeyChord>>({});
 
   late final AppDatabase _db;
   bool _loaded = false;
@@ -89,6 +92,59 @@ class SettingsStore {
     rememberFolderState.value = row.rememberFolderState;
     rememberFolderSort.value = row.rememberFolderSort;
     fileListScale.value = row.fileListScale;
+    final shortcutRows = await _db.getShortcutBindings();
+    final bindings = <String, KeyChord>{};
+    for (final row in shortcutRows) {
+      final def = AppShortcuts.getById(row.actionId);
+      if (!def.editable) continue;
+      bindings[row.actionId] = KeyChord(
+        key: LogicalKeyboardKey(row.keyId),
+        ctrl: row.ctrl,
+        shift: row.shift,
+        alt: row.alt,
+      );
+    }
+    shortcutBindings.value = Map.unmodifiable(bindings);
+    AppShortcuts.applyOverrides(bindings);
+  }
+
+  Future<void> setShortcutBinding(String actionId, KeyChord chord) async {
+    final def = AppShortcuts.getById(actionId);
+    if (!def.editable) return;
+    final next = Map<String, KeyChord>.of(shortcutBindings.value);
+    if (chord.sameChord(def.defaultBinding)) {
+      next.remove(actionId);
+      await _db.deleteShortcutBinding(actionId);
+    } else {
+      next[actionId] = chord;
+      await _db.setShortcutBinding(
+        ShortcutBindingsCompanion.insert(
+          actionId: actionId,
+          keyId: chord.key.keyId,
+          ctrl: Value(chord.ctrl),
+          shift: Value(chord.shift),
+          alt: Value(chord.alt),
+        ),
+      );
+    }
+    shortcutBindings.value = Map.unmodifiable(next);
+    AppShortcuts.applyOverrides(next);
+  }
+
+  Future<void> resetShortcutBinding(String actionId) async {
+    final def = AppShortcuts.getById(actionId);
+    if (!def.editable) return;
+    final next = Map<String, KeyChord>.of(shortcutBindings.value)
+      ..remove(actionId);
+    await _db.deleteShortcutBinding(actionId);
+    shortcutBindings.value = Map.unmodifiable(next);
+    AppShortcuts.applyOverrides(next);
+  }
+
+  Future<void> resetShortcutBindings() async {
+    await _db.clearShortcutBindings();
+    shortcutBindings.value = const {};
+    AppShortcuts.applyOverrides(const {});
   }
 
   void _wireAutoSave() {
