@@ -8,6 +8,7 @@ import 'package:waydir/ui/icons/waydir_icons.dart';
 
 import '../../app/app_info.dart';
 import '../../app/waydir_app.dart';
+import '../../features/help/help_dialog.dart';
 import '../../features/settings/keybindings_help_view.dart';
 import '../../features/settings/preferences_view.dart';
 import '../../i18n/strings.g.dart';
@@ -23,6 +24,11 @@ void _openPreferences() {
 void _openKeybindingsHelp() {
   final ctx = waydirNavigatorKey.currentContext;
   if (ctx != null) showKeybindingsHelp(ctx);
+}
+
+void _openHelp() {
+  final ctx = waydirNavigatorKey.currentContext;
+  if (ctx != null) showHelpDialog(ctx);
 }
 
 class TitleBar extends StatelessWidget {
@@ -77,6 +83,15 @@ class TitleBar extends StatelessWidget {
           ),
           PlatformMenuItemGroup(
             members: [
+              PlatformMenuItem(
+                label: t.help.menuLabel,
+                shortcut: const SingleActivator(
+                  LogicalKeyboardKey.slash,
+                  meta: true,
+                  shift: true,
+                ),
+                onSelected: _openHelp,
+              ),
               PlatformMenuItem(
                 label: t.keybindings.menuLabel,
                 shortcut: const SingleActivator(
@@ -154,6 +169,12 @@ class _MenuBar extends StatelessWidget {
               action: 'preferences',
             ),
             ContextMenuItem(
+              icon: WaydirIconsRegular.info,
+              label: t.help.menuLabel,
+              action: 'help',
+              shortcut: '?',
+            ),
+            ContextMenuItem(
               icon: WaydirIconsRegular.keyboard,
               label: t.keybindings.menuLabel,
               action: 'keybindings',
@@ -169,6 +190,8 @@ class _MenuBar extends StatelessWidget {
             switch (action) {
               case 'preferences':
                 _openPreferences();
+              case 'help':
+                _openHelp();
               case 'keybindings':
                 _openKeybindingsHelp();
               case 'quit':

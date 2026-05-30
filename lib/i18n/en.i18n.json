@@ -330,7 +330,59 @@
     "terminalInstallFailed": "--- Install failed (exit $status). Press Enter to close ---"
   },
   "appMenu": {
+    "help": "Help",
     "quit": "Quit"
+  },
+  "help": {
+    "title": "Features",
+    "menuLabel": "Features",
+    "demoComingSoon": "Demo coming soon",
+    "pages": {
+      "navigation": {
+        "title": "Navigation",
+        "body": "Browse without reaching for the mouse. Waydir keeps the cursor, selection and history close to the main file list.\n\n- `↑` / `↓` move the cursor through visible files.\n- `Enter` opens the selected item; double-click does the same.\n- `Backspace` goes to the parent folder.\n- `Alt+←` / `Alt+→` step back and forward through folder history.\n- `Ctrl+R` refreshes the current folder.\n- `Ctrl+B` shows or hides the sidebar; `Ctrl+H` toggles hidden files.\n- Click a segment in the breadcrumb bar to jump straight to that folder."
+      },
+      "tabs": {
+        "title": "Tabs",
+        "body": "Keep several folders open at once and switch between them instantly. Each tab remembers its own folder, selection and history.\n\n- `Ctrl+T` opens a new tab.\n- `Ctrl+W` closes the current tab.\n- `Ctrl+Tab` / `Ctrl+Shift+Tab` cycle to the next or previous tab.\n- `Ctrl+1`…`Ctrl+9` jump straight to a tab by position.\n- The `+` button on the tab strip opens a new tab in the current folder."
+      },
+      "dualPane": {
+        "title": "Dual Pane",
+        "body": "Show a source and a destination side by side. The active pane owns keyboard focus, and the copy / move shortcuts target the opposite pane.\n\n- `F9` (or `Ctrl+D`) toggles dual pane mode.\n- `Tab` switches the active pane.\n- `F5` copies the selected files to the other pane.\n- `F6` moves the selected files to the other pane.\n- Drag the divider to change how the space is split."
+      },
+      "selection": {
+        "title": "Selection",
+        "body": "Build up exactly the set of files you want before acting on them.\n\n- `Ctrl+A` selects everything in the folder.\n- `Insert` toggles the current item and moves down.\n- `Ctrl+S` selects by pattern (wildcards like `*.png`).\n- `Esc` clears the selection.\n- Click, `Shift+Click` for a range and `Ctrl+Click` to add or remove single items.\n- `Ctrl+Shift+S` saves the current selection to a file; `Ctrl+Shift+L` loads it back."
+      },
+      "fileOps": {
+        "title": "File Operations",
+        "body": "Standard clipboard and file actions work everywhere, including across panes and tabs.\n\n- `Ctrl+C` / `Ctrl+X` / `Ctrl+V` copy, cut and paste.\n- `F2` renames the current item; `F7` creates a new folder.\n- `Delete` moves the selection to the Trash; use the context menu to delete permanently.\n- **Copy Path** is available from the context menu.\n- Long copies, moves and deletes run in the operations panel, and a conflict prompt appears when names collide."
+      },
+      "quickLook": {
+        "title": "Quick Look",
+        "body": "Inspect a file without opening another app. Quick Look handles images, text, code and other supported types.\n\n- `Space` opens Quick Look for the current selection.\n- `↑` / `↓` step to the previous or next file without leaving the preview.\n- `Esc` closes the preview.\n- Text and code previews are editable - `Ctrl+S` saves changes in place.\n- The info panel shows size, dates and permissions alongside the preview."
+      },
+      "search": {
+        "title": "Search",
+        "body": "Filter the current folder or sweep through everything beneath it.\n\n- `Ctrl+F` filters the current folder by name as you type.\n- `Ctrl+Shift+F` extends the search into all subfolders.\n- Turn on **Content** to search inside file contents (local folders only - not over SFTP).\n- Switch between **Substring**, **Glob** and **Regex** matching.\n- `Esc` closes the search and restores the full list."
+      },
+      "multiRename": {
+        "title": "Multi Rename",
+        "body": "Rename many files at once with a live before / after preview. Select several items, then choose **Multi Rename** from the context menu.\n\n- **Template** mode builds names from tokens: `{name}`, `{ext}`, `{n}` (sequence from 1), `{index}` (from 0) and `{date}`.\n- **Find & Replace** mode swaps text, with optional regular expressions and case sensitivity.\n- The preview lists every result before you commit, and *Show only changed* hides untouched rows."
+      },
+      "archives": {
+        "title": "Archives",
+        "body": "Archives behave like browsable folders, so you can look inside before extracting anything.\n\n- `Enter` opens a supported archive and lets you walk its contents.\n- The context menu can extract here, extract into a named folder, or extract each archive separately.\n- **Compress** builds a new archive from the selection - pick the format and compression level.\n- Extraction and compression run in the background, so the file list stays responsive."
+      },
+      "remote": {
+        "title": "Remote Locations",
+        "body": "Work with SFTP servers right next to your local folders.\n\n- Use **Connect to Server** from the sidebar to add a remote location.\n- Once connected, open and browse remote folders exactly like local ones.\n- Bookmark folders you visit often so they stay one click away.\n- Selection, the context menu and file operations all behave the same as locally - only content search is unavailable over SFTP."
+      },
+      "terminal": {
+        "title": "Terminal",
+        "body": "Each pane has its own embedded terminal that opens in the folder you are viewing.\n\n- `Ctrl` + backtick opens or focuses the terminal (`Ctrl+J` on macOS).\n- `Ctrl+Shift` + backtick shows or hides the terminal panel.\n- `Ctrl+Shift+T` opens a new terminal tab; `Ctrl+Shift+W` closes one.\n- `Ctrl++` / `Ctrl+-` adjust the font size and `Ctrl+0` resets it."
+      }
+    }
   },
   "keybindings": {
     "title": "Keyboard Shortcuts",
@@ -402,7 +454,7 @@
     "noSelection": "No file selected",
     "folder": "Folder",
     "noPreview": "No preview available",
-    "binaryFile": "Binary file — no preview",
+    "binaryFile": "Binary file - no preview",
     "tooLarge": "File too large to preview",
     "readError": "Could not read file",
     "save": "Save",
@@ -456,8 +508,8 @@
     "selectionLoadEmpty": "No visible items matched",
     "terminalUnavailable": "Terminal is unavailable: native core not loaded",
     "selectionFileError": "Selection file error: $message",
-    "taskErrors(one)": "$label — 1 error",
-    "taskErrors(other)": "$label — $count errors",
+    "taskErrors(one)": "$label - 1 error",
+    "taskErrors(other)": "$label - $count errors",
     "renameAlreadyExists": "An item named '$name' already exists",
     "renameInvalidName": "Invalid name",
     "renameError": "Could not rename: $message",
