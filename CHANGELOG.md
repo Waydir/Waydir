@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Window title now follows the active folder.
 
 ### Fixed
+- Portable updates on Windows now apply correctly.
 - Various small UI fixes and polish.
 
 ## [0.6.1] - 2026-05-28

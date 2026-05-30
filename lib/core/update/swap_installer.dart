@@ -76,16 +76,19 @@ class SwapInstaller {
     }
 
     final exeName = p.basename(_resolvedExe());
-    final script = _writeBatchScript(
+    final script = _writePowerShellScript(
       bundle: bundleDir,
       staging: stagingRoot,
       exeName: exeName,
     );
-    await Process.start('cmd', [
-      '/c',
-      'start',
-      '',
-      '/min',
+    await Process.start('powershell', [
+      '-NoProfile',
+      '-NonInteractive',
+      '-ExecutionPolicy',
+      'Bypass',
+      '-WindowStyle',
+      'Hidden',
+      '-File',
       script.path,
     ], mode: ProcessStartMode.detached);
     return true;
@@ -155,38 +158,52 @@ rm -- "\$0" 2>/dev/null
     return script;
   }
 
-  static File _writeBatchScript({
+  static File _writePowerShellScript({
     required Directory bundle,
     required Directory staging,
     required String exeName,
   }) {
-    final script = File(p.join(bundle.parent.path, '.waydir-swap.cmd'));
+    final script = File(p.join(bundle.parent.path, '.waydir-swap.ps1'));
     final old = '${bundle.path}.old';
+    final exePath = p.join(bundle.path, exeName);
+    String q(String s) => "'${s.replaceAll("'", "''")}'";
     script.writeAsStringSync('''
-@echo off
-setlocal
-set "BUNDLE=${bundle.path}"
-set "STAGING=${staging.path}"
-set "OLD=$old"
-if exist "%OLD%" rmdir /s /q "%OLD%"
-set /a TRIES=0
-:retry
-move "%BUNDLE%" "%OLD%" >nul 2>&1
-if not errorlevel 1 goto moved
-set /a TRIES+=1
-if %TRIES% GEQ 30 exit /b 1
-timeout /t 1 /nobreak >nul
-goto retry
-:moved
-move "%STAGING%" "%BUNDLE%" >nul
-if errorlevel 1 (
-  move "%OLD%" "%BUNDLE%" >nul
-  exit /b 1
-)
-start "" "%BUNDLE%\\$exeName"
-timeout /t 4 /nobreak >nul
-rmdir /s /q "%OLD%"
-del "%~f0"
+\$ErrorActionPreference = 'Stop'
+\$bundle = ${q(bundle.path)}
+\$staging = ${q(staging.path)}
+\$old = ${q(old)}
+\$exe = ${q(exePath)}
+
+# Set-Location off the bundle dir; Windows cannot rename a directory that is
+# the working directory of a running process (this script's own cwd).
+Set-Location -LiteralPath ${q(bundle.parent.path)}
+
+if (Test-Path -LiteralPath \$old) { Remove-Item -LiteralPath \$old -Recurse -Force }
+
+# Wait for the parent app to release the bundle, then swap.
+\$moved = \$false
+for (\$i = 0; \$i -lt 30; \$i++) {
+  try {
+    Move-Item -LiteralPath \$bundle -Destination \$old -Force
+    \$moved = \$true
+    break
+  } catch {
+    Start-Sleep -Seconds 1
+  }
+}
+if (-not \$moved) { exit 1 }
+
+try {
+  Move-Item -LiteralPath \$staging -Destination \$bundle -Force
+} catch {
+  Move-Item -LiteralPath \$old -Destination \$bundle -Force
+  exit 1
+}
+
+Start-Process -FilePath \$exe
+Start-Sleep -Seconds 4
+Remove-Item -LiteralPath \$old -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item -LiteralPath \$PSCommandPath -Force -ErrorAction SilentlyContinue
 ''');
     return script;
   }
