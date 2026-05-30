@@ -665,7 +665,10 @@
     "files(one)": "1 file",
     "files(other)": "$count files",
     "selected(one)": "1 selected",
-    "selected(other)": "$count selected"
+    "selected(other)": "$count selected",
+    "zoomOut": "Zoom out",
+    "zoomIn": "Zoom in",
+    "zoomReset": "Reset zoom"
   },
   "dialog": {
     "create": "Create",
