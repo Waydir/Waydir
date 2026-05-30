@@ -3869,6 +3869,362 @@ class DefaultAppsCompanion extends UpdateCompanion<DefaultApp> {
   }
 }
 
+class $ShortcutBindingsTable extends ShortcutBindings
+    with TableInfo<$ShortcutBindingsTable, ShortcutBinding> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ShortcutBindingsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _actionIdMeta = const VerificationMeta(
+    'actionId',
+  );
+  @override
+  late final GeneratedColumn<String> actionId = GeneratedColumn<String>(
+    'action_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _keyIdMeta = const VerificationMeta('keyId');
+  @override
+  late final GeneratedColumn<int> keyId = GeneratedColumn<int>(
+    'key_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _ctrlMeta = const VerificationMeta('ctrl');
+  @override
+  late final GeneratedColumn<bool> ctrl = GeneratedColumn<bool>(
+    'ctrl',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("ctrl" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _shiftMeta = const VerificationMeta('shift');
+  @override
+  late final GeneratedColumn<bool> shift = GeneratedColumn<bool>(
+    'shift',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("shift" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _altMeta = const VerificationMeta('alt');
+  @override
+  late final GeneratedColumn<bool> alt = GeneratedColumn<bool>(
+    'alt',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("alt" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [actionId, keyId, ctrl, shift, alt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'shortcut_bindings';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ShortcutBinding> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('action_id')) {
+      context.handle(
+        _actionIdMeta,
+        actionId.isAcceptableOrUnknown(data['action_id']!, _actionIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_actionIdMeta);
+    }
+    if (data.containsKey('key_id')) {
+      context.handle(
+        _keyIdMeta,
+        keyId.isAcceptableOrUnknown(data['key_id']!, _keyIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_keyIdMeta);
+    }
+    if (data.containsKey('ctrl')) {
+      context.handle(
+        _ctrlMeta,
+        ctrl.isAcceptableOrUnknown(data['ctrl']!, _ctrlMeta),
+      );
+    }
+    if (data.containsKey('shift')) {
+      context.handle(
+        _shiftMeta,
+        shift.isAcceptableOrUnknown(data['shift']!, _shiftMeta),
+      );
+    }
+    if (data.containsKey('alt')) {
+      context.handle(
+        _altMeta,
+        alt.isAcceptableOrUnknown(data['alt']!, _altMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {actionId};
+  @override
+  ShortcutBinding map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ShortcutBinding(
+      actionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}action_id'],
+      )!,
+      keyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}key_id'],
+      )!,
+      ctrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}ctrl'],
+      )!,
+      shift: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}shift'],
+      )!,
+      alt: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}alt'],
+      )!,
+    );
+  }
+
+  @override
+  $ShortcutBindingsTable createAlias(String alias) {
+    return $ShortcutBindingsTable(attachedDatabase, alias);
+  }
+}
+
+class ShortcutBinding extends DataClass implements Insertable<ShortcutBinding> {
+  final String actionId;
+  final int keyId;
+  final bool ctrl;
+  final bool shift;
+  final bool alt;
+  const ShortcutBinding({
+    required this.actionId,
+    required this.keyId,
+    required this.ctrl,
+    required this.shift,
+    required this.alt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['action_id'] = Variable<String>(actionId);
+    map['key_id'] = Variable<int>(keyId);
+    map['ctrl'] = Variable<bool>(ctrl);
+    map['shift'] = Variable<bool>(shift);
+    map['alt'] = Variable<bool>(alt);
+    return map;
+  }
+
+  ShortcutBindingsCompanion toCompanion(bool nullToAbsent) {
+    return ShortcutBindingsCompanion(
+      actionId: Value(actionId),
+      keyId: Value(keyId),
+      ctrl: Value(ctrl),
+      shift: Value(shift),
+      alt: Value(alt),
+    );
+  }
+
+  factory ShortcutBinding.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ShortcutBinding(
+      actionId: serializer.fromJson<String>(json['actionId']),
+      keyId: serializer.fromJson<int>(json['keyId']),
+      ctrl: serializer.fromJson<bool>(json['ctrl']),
+      shift: serializer.fromJson<bool>(json['shift']),
+      alt: serializer.fromJson<bool>(json['alt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'actionId': serializer.toJson<String>(actionId),
+      'keyId': serializer.toJson<int>(keyId),
+      'ctrl': serializer.toJson<bool>(ctrl),
+      'shift': serializer.toJson<bool>(shift),
+      'alt': serializer.toJson<bool>(alt),
+    };
+  }
+
+  ShortcutBinding copyWith({
+    String? actionId,
+    int? keyId,
+    bool? ctrl,
+    bool? shift,
+    bool? alt,
+  }) => ShortcutBinding(
+    actionId: actionId ?? this.actionId,
+    keyId: keyId ?? this.keyId,
+    ctrl: ctrl ?? this.ctrl,
+    shift: shift ?? this.shift,
+    alt: alt ?? this.alt,
+  );
+  ShortcutBinding copyWithCompanion(ShortcutBindingsCompanion data) {
+    return ShortcutBinding(
+      actionId: data.actionId.present ? data.actionId.value : this.actionId,
+      keyId: data.keyId.present ? data.keyId.value : this.keyId,
+      ctrl: data.ctrl.present ? data.ctrl.value : this.ctrl,
+      shift: data.shift.present ? data.shift.value : this.shift,
+      alt: data.alt.present ? data.alt.value : this.alt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ShortcutBinding(')
+          ..write('actionId: $actionId, ')
+          ..write('keyId: $keyId, ')
+          ..write('ctrl: $ctrl, ')
+          ..write('shift: $shift, ')
+          ..write('alt: $alt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(actionId, keyId, ctrl, shift, alt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ShortcutBinding &&
+          other.actionId == this.actionId &&
+          other.keyId == this.keyId &&
+          other.ctrl == this.ctrl &&
+          other.shift == this.shift &&
+          other.alt == this.alt);
+}
+
+class ShortcutBindingsCompanion extends UpdateCompanion<ShortcutBinding> {
+  final Value<String> actionId;
+  final Value<int> keyId;
+  final Value<bool> ctrl;
+  final Value<bool> shift;
+  final Value<bool> alt;
+  final Value<int> rowid;
+  const ShortcutBindingsCompanion({
+    this.actionId = const Value.absent(),
+    this.keyId = const Value.absent(),
+    this.ctrl = const Value.absent(),
+    this.shift = const Value.absent(),
+    this.alt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ShortcutBindingsCompanion.insert({
+    required String actionId,
+    required int keyId,
+    this.ctrl = const Value.absent(),
+    this.shift = const Value.absent(),
+    this.alt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : actionId = Value(actionId),
+       keyId = Value(keyId);
+  static Insertable<ShortcutBinding> custom({
+    Expression<String>? actionId,
+    Expression<int>? keyId,
+    Expression<bool>? ctrl,
+    Expression<bool>? shift,
+    Expression<bool>? alt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (actionId != null) 'action_id': actionId,
+      if (keyId != null) 'key_id': keyId,
+      if (ctrl != null) 'ctrl': ctrl,
+      if (shift != null) 'shift': shift,
+      if (alt != null) 'alt': alt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ShortcutBindingsCompanion copyWith({
+    Value<String>? actionId,
+    Value<int>? keyId,
+    Value<bool>? ctrl,
+    Value<bool>? shift,
+    Value<bool>? alt,
+    Value<int>? rowid,
+  }) {
+    return ShortcutBindingsCompanion(
+      actionId: actionId ?? this.actionId,
+      keyId: keyId ?? this.keyId,
+      ctrl: ctrl ?? this.ctrl,
+      shift: shift ?? this.shift,
+      alt: alt ?? this.alt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (actionId.present) {
+      map['action_id'] = Variable<String>(actionId.value);
+    }
+    if (keyId.present) {
+      map['key_id'] = Variable<int>(keyId.value);
+    }
+    if (ctrl.present) {
+      map['ctrl'] = Variable<bool>(ctrl.value);
+    }
+    if (shift.present) {
+      map['shift'] = Variable<bool>(shift.value);
+    }
+    if (alt.present) {
+      map['alt'] = Variable<bool>(alt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ShortcutBindingsCompanion(')
+          ..write('actionId: $actionId, ')
+          ..write('keyId: $keyId, ')
+          ..write('ctrl: $ctrl, ')
+          ..write('shift: $shift, ')
+          ..write('alt: $alt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3880,6 +4236,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $RecentEnteredPathsTable recentEnteredPaths =
       $RecentEnteredPathsTable(this);
   late final $DefaultAppsTable defaultApps = $DefaultAppsTable(this);
+  late final $ShortcutBindingsTable shortcutBindings = $ShortcutBindingsTable(
+    this,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3892,6 +4251,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     recentApps,
     recentEnteredPaths,
     defaultApps,
+    shortcutBindings,
   ];
 }
 
@@ -5818,6 +6178,212 @@ typedef $$DefaultAppsTableProcessedTableManager =
       DefaultApp,
       PrefetchHooks Function()
     >;
+typedef $$ShortcutBindingsTableCreateCompanionBuilder =
+    ShortcutBindingsCompanion Function({
+      required String actionId,
+      required int keyId,
+      Value<bool> ctrl,
+      Value<bool> shift,
+      Value<bool> alt,
+      Value<int> rowid,
+    });
+typedef $$ShortcutBindingsTableUpdateCompanionBuilder =
+    ShortcutBindingsCompanion Function({
+      Value<String> actionId,
+      Value<int> keyId,
+      Value<bool> ctrl,
+      Value<bool> shift,
+      Value<bool> alt,
+      Value<int> rowid,
+    });
+
+class $$ShortcutBindingsTableFilterComposer
+    extends Composer<_$AppDatabase, $ShortcutBindingsTable> {
+  $$ShortcutBindingsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get actionId => $composableBuilder(
+    column: $table.actionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get keyId => $composableBuilder(
+    column: $table.keyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get ctrl => $composableBuilder(
+    column: $table.ctrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get shift => $composableBuilder(
+    column: $table.shift,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get alt => $composableBuilder(
+    column: $table.alt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ShortcutBindingsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ShortcutBindingsTable> {
+  $$ShortcutBindingsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get actionId => $composableBuilder(
+    column: $table.actionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get keyId => $composableBuilder(
+    column: $table.keyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get ctrl => $composableBuilder(
+    column: $table.ctrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get shift => $composableBuilder(
+    column: $table.shift,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get alt => $composableBuilder(
+    column: $table.alt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ShortcutBindingsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ShortcutBindingsTable> {
+  $$ShortcutBindingsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get actionId =>
+      $composableBuilder(column: $table.actionId, builder: (column) => column);
+
+  GeneratedColumn<int> get keyId =>
+      $composableBuilder(column: $table.keyId, builder: (column) => column);
+
+  GeneratedColumn<bool> get ctrl =>
+      $composableBuilder(column: $table.ctrl, builder: (column) => column);
+
+  GeneratedColumn<bool> get shift =>
+      $composableBuilder(column: $table.shift, builder: (column) => column);
+
+  GeneratedColumn<bool> get alt =>
+      $composableBuilder(column: $table.alt, builder: (column) => column);
+}
+
+class $$ShortcutBindingsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ShortcutBindingsTable,
+          ShortcutBinding,
+          $$ShortcutBindingsTableFilterComposer,
+          $$ShortcutBindingsTableOrderingComposer,
+          $$ShortcutBindingsTableAnnotationComposer,
+          $$ShortcutBindingsTableCreateCompanionBuilder,
+          $$ShortcutBindingsTableUpdateCompanionBuilder,
+          (
+            ShortcutBinding,
+            BaseReferences<
+              _$AppDatabase,
+              $ShortcutBindingsTable,
+              ShortcutBinding
+            >,
+          ),
+          ShortcutBinding,
+          PrefetchHooks Function()
+        > {
+  $$ShortcutBindingsTableTableManager(
+    _$AppDatabase db,
+    $ShortcutBindingsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ShortcutBindingsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ShortcutBindingsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ShortcutBindingsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> actionId = const Value.absent(),
+                Value<int> keyId = const Value.absent(),
+                Value<bool> ctrl = const Value.absent(),
+                Value<bool> shift = const Value.absent(),
+                Value<bool> alt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ShortcutBindingsCompanion(
+                actionId: actionId,
+                keyId: keyId,
+                ctrl: ctrl,
+                shift: shift,
+                alt: alt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String actionId,
+                required int keyId,
+                Value<bool> ctrl = const Value.absent(),
+                Value<bool> shift = const Value.absent(),
+                Value<bool> alt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ShortcutBindingsCompanion.insert(
+                actionId: actionId,
+                keyId: keyId,
+                ctrl: ctrl,
+                shift: shift,
+                alt: alt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ShortcutBindingsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ShortcutBindingsTable,
+      ShortcutBinding,
+      $$ShortcutBindingsTableFilterComposer,
+      $$ShortcutBindingsTableOrderingComposer,
+      $$ShortcutBindingsTableAnnotationComposer,
+      $$ShortcutBindingsTableCreateCompanionBuilder,
+      $$ShortcutBindingsTableUpdateCompanionBuilder,
+      (
+        ShortcutBinding,
+        BaseReferences<_$AppDatabase, $ShortcutBindingsTable, ShortcutBinding>,
+      ),
+      ShortcutBinding,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -5836,4 +6402,6 @@ class $AppDatabaseManager {
       $$RecentEnteredPathsTableTableManager(_db, _db.recentEnteredPaths);
   $$DefaultAppsTableTableManager get defaultApps =>
       $$DefaultAppsTableTableManager(_db, _db.defaultApps);
+  $$ShortcutBindingsTableTableManager get shortcutBindings =>
+      $$ShortcutBindingsTableTableManager(_db, _db.shortcutBindings);
 }

@@ -6,6 +6,40 @@ import '../../i18n/strings.g.dart';
 
 enum ShortcutGroup { navigation, tabs, panes, fileOps, selection, search }
 
+class KeyChord {
+  final LogicalKeyboardKey key;
+  final bool ctrl;
+  final bool shift;
+  final bool alt;
+
+  const KeyChord({
+    required this.key,
+    this.ctrl = false,
+    this.shift = false,
+    this.alt = false,
+  });
+
+  bool sameChord(KeyChord other) =>
+      key == other.key &&
+      ctrl == other.ctrl &&
+      shift == other.shift &&
+      alt == other.alt;
+
+  Map<String, dynamic> toJson() => {
+    'key': key.keyId,
+    'ctrl': ctrl,
+    'shift': shift,
+    'alt': alt,
+  };
+
+  static KeyChord fromJson(Map<String, dynamic> json) => KeyChord(
+    key: LogicalKeyboardKey(json['key'] as int),
+    ctrl: json['ctrl'] as bool? ?? false,
+    shift: json['shift'] as bool? ?? false,
+    alt: json['alt'] as bool? ?? false,
+  );
+}
+
 class ShortcutDef {
   final String id;
   final String Function() label;
@@ -19,6 +53,7 @@ class ShortcutDef {
   final bool altCtrl;
   final bool altShift;
   final String? customKeyDisplay;
+  final bool editable;
 
   const ShortcutDef({
     required this.id,
@@ -33,19 +68,35 @@ class ShortcutDef {
     this.altCtrl = false,
     this.altShift = false,
     this.customKeyDisplay,
+    this.editable = true,
   });
 
-  String get displayKeys => _format(ctrl, shift, alt, key, customKeyDisplay);
+  KeyChord get defaultBinding =>
+      KeyChord(key: key, ctrl: ctrl, shift: shift, alt: alt);
+
+  KeyChord get binding => AppShortcuts.effectiveBinding(id);
+
+  String get displayKeys {
+    final b = binding;
+    return _format(
+      b.ctrl,
+      b.shift,
+      b.alt,
+      b.key,
+      AppShortcuts.isOverridden(id) ? null : customKeyDisplay,
+    );
+  }
 
   String? get displayAltKeys {
     if (altKey == null) return null;
+    if (AppShortcuts.isOverridden(id)) return null;
     return _format(altCtrl, altShift, false, altKey!);
   }
 
-  bool matchesKey(LogicalKeyboardKey eventKey) => eventKey == key;
+  bool matchesKey(LogicalKeyboardKey eventKey) => eventKey == binding.key;
 
   bool matchesAltKey(LogicalKeyboardKey eventKey) =>
-      altKey != null && eventKey == altKey;
+      altKey != null && !AppShortcuts.isOverridden(id) && eventKey == altKey;
 
   static String _format(
     bool c,
@@ -62,6 +113,9 @@ class ShortcutDef {
     return parts.join('+');
   }
 
+  static String formatBinding(KeyChord b) =>
+      _format(b.ctrl, b.shift, b.alt, b.key);
+
   static String _keyLabel(LogicalKeyboardKey key) {
     if (key == LogicalKeyboardKey.enter) return 'Enter';
     if (key == LogicalKeyboardKey.backspace) return 'Backspace';
@@ -69,15 +123,37 @@ class ShortcutDef {
     if (key == LogicalKeyboardKey.escape) return 'Esc';
     if (key == LogicalKeyboardKey.insert) return 'Insert';
     if (key == LogicalKeyboardKey.tab) return 'Tab';
+    if (key == LogicalKeyboardKey.space) return 'Space';
     if (key == LogicalKeyboardKey.arrowLeft) return '←';
     if (key == LogicalKeyboardKey.arrowRight) return '→';
     if (key == LogicalKeyboardKey.arrowUp) return '↑';
     if (key == LogicalKeyboardKey.arrowDown) return '↓';
-    return key.keyLabel;
+    final label = key.keyLabel;
+    if (label.isNotEmpty) {
+      return label.length == 1 ? label.toUpperCase() : label;
+    }
+    return key.debugName ?? 'Key';
   }
 }
 
+final Set<LogicalKeyboardKey> kModifierKeys = {
+  LogicalKeyboardKey.control,
+  LogicalKeyboardKey.controlLeft,
+  LogicalKeyboardKey.controlRight,
+  LogicalKeyboardKey.shift,
+  LogicalKeyboardKey.shiftLeft,
+  LogicalKeyboardKey.shiftRight,
+  LogicalKeyboardKey.alt,
+  LogicalKeyboardKey.altLeft,
+  LogicalKeyboardKey.altRight,
+  LogicalKeyboardKey.meta,
+  LogicalKeyboardKey.metaLeft,
+  LogicalKeyboardKey.metaRight,
+};
+
 class AppShortcuts {
+  static final Map<String, KeyChord> _overrides = {};
+
   static bool get isControl {
     final pressed = HardwareKeyboard.instance.logicalKeysPressed;
     if (Platform.isMacOS) {
@@ -100,12 +176,45 @@ class AppShortcuts {
         LogicalKeyboardKey.shiftRight,
       );
 
+  static bool get isAlt => HardwareKeyboard.instance.isAltPressed;
+
+  static void applyOverrides(Map<String, KeyChord> overrides) {
+    _overrides
+      ..clear()
+      ..addAll(overrides);
+  }
+
+  static bool isOverridden(String id) => _overrides.containsKey(id);
+
+  static KeyChord effectiveBinding(String id) {
+    final def = _byId[id]!;
+    return _overrides[id] ?? def.defaultBinding;
+  }
+
+  static ShortcutDef? conflictFor(KeyChord chord, String exceptId) {
+    for (final def in all) {
+      if (def.id == exceptId) continue;
+      if (effectiveBinding(def.id).sameChord(chord)) return def;
+      if (!isOverridden(def.id) &&
+          def.altKey != null &&
+          KeyChord(
+            key: def.altKey!,
+            ctrl: def.altCtrl,
+            shift: def.altShift,
+          ).sameChord(chord)) {
+        return def;
+      }
+    }
+    return null;
+  }
+
   static final all = <ShortcutDef>[
     ShortcutDef(
       id: 'open_item',
       label: () => '',
       group: ShortcutGroup.navigation,
       key: LogicalKeyboardKey.enter,
+      editable: false,
     ),
     ShortcutDef(
       id: 'go_up',
@@ -119,6 +228,7 @@ class AppShortcuts {
       group: ShortcutGroup.navigation,
       key: LogicalKeyboardKey.arrowLeft,
       alt: true,
+      editable: false,
     ),
     ShortcutDef(
       id: 'go_forward',
@@ -126,6 +236,7 @@ class AppShortcuts {
       group: ShortcutGroup.navigation,
       key: LogicalKeyboardKey.arrowRight,
       alt: true,
+      editable: false,
     ),
     ShortcutDef(
       id: 'refresh',
@@ -139,12 +250,14 @@ class AppShortcuts {
       label: () => '',
       group: ShortcutGroup.navigation,
       key: LogicalKeyboardKey.arrowUp,
+      editable: false,
     ),
     ShortcutDef(
       id: 'cursor_down',
       label: () => '',
       group: ShortcutGroup.navigation,
       key: LogicalKeyboardKey.arrowDown,
+      editable: false,
     ),
     ShortcutDef(
       id: 'quick_look',
@@ -189,6 +302,7 @@ class AppShortcuts {
       key: LogicalKeyboardKey.digit1,
       ctrl: true,
       customKeyDisplay: '1…9',
+      editable: false,
     ),
     ShortcutDef(
       id: 'toggle_dual',
@@ -210,6 +324,7 @@ class AppShortcuts {
       label: () => '',
       group: ShortcutGroup.panes,
       key: LogicalKeyboardKey.tab,
+      editable: false,
     ),
     ShortcutDef(
       id: 'focus_terminal',
@@ -273,11 +388,36 @@ class AppShortcuts {
       customKeyDisplay: '0',
     ),
     ShortcutDef(
+      id: 'file_list_zoom_in',
+      label: () => '',
+      group: ShortcutGroup.panes,
+      key: LogicalKeyboardKey.equal,
+      ctrl: true,
+      customKeyDisplay: '+',
+    ),
+    ShortcutDef(
+      id: 'file_list_zoom_out',
+      label: () => '',
+      group: ShortcutGroup.panes,
+      key: LogicalKeyboardKey.minus,
+      ctrl: true,
+      customKeyDisplay: '-',
+    ),
+    ShortcutDef(
+      id: 'file_list_zoom_reset',
+      label: () => '',
+      group: ShortcutGroup.panes,
+      key: LogicalKeyboardKey.digit0,
+      ctrl: true,
+      customKeyDisplay: '0',
+    ),
+    ShortcutDef(
       id: 'copy',
       label: () => '',
       group: ShortcutGroup.fileOps,
       key: LogicalKeyboardKey.keyC,
       ctrl: true,
+      editable: false,
     ),
     ShortcutDef(
       id: 'cut',
@@ -285,6 +425,7 @@ class AppShortcuts {
       group: ShortcutGroup.fileOps,
       key: LogicalKeyboardKey.keyX,
       ctrl: true,
+      editable: false,
     ),
     ShortcutDef(
       id: 'paste',
@@ -292,24 +433,28 @@ class AppShortcuts {
       group: ShortcutGroup.fileOps,
       key: LogicalKeyboardKey.keyV,
       ctrl: true,
+      editable: false,
     ),
     ShortcutDef(
       id: 'delete',
       label: () => '',
       group: ShortcutGroup.fileOps,
       key: LogicalKeyboardKey.delete,
+      editable: false,
     ),
     ShortcutDef(
       id: 'rename',
       label: () => '',
       group: ShortcutGroup.fileOps,
       key: LogicalKeyboardKey.f2,
+      editable: false,
     ),
     ShortcutDef(
       id: 'new_folder',
       label: () => '',
       group: ShortcutGroup.fileOps,
       key: LogicalKeyboardKey.f7,
+      editable: false,
     ),
     ShortcutDef(
       id: 'dual_copy',
@@ -317,6 +462,7 @@ class AppShortcuts {
       hint: () => t.keybindings.dualHint,
       group: ShortcutGroup.fileOps,
       key: LogicalKeyboardKey.f5,
+      editable: false,
     ),
     ShortcutDef(
       id: 'dual_move',
@@ -324,6 +470,7 @@ class AppShortcuts {
       hint: () => t.keybindings.dualHint,
       group: ShortcutGroup.fileOps,
       key: LogicalKeyboardKey.f6,
+      editable: false,
     ),
     ShortcutDef(
       id: 'select_all',
@@ -344,6 +491,7 @@ class AppShortcuts {
       label: () => '',
       group: ShortcutGroup.selection,
       key: LogicalKeyboardKey.escape,
+      editable: false,
     ),
     ShortcutDef(
       id: 'toggle_select',
@@ -403,12 +551,14 @@ class AppShortcuts {
       key: LogicalKeyboardKey.slash,
       shift: true,
       customKeyDisplay: '?',
+      editable: false,
     ),
     ShortcutDef(
       id: 'close_search',
       label: () => '',
       group: ShortcutGroup.search,
       key: LogicalKeyboardKey.escape,
+      editable: false,
     ),
   ];
 
@@ -416,7 +566,37 @@ class AppShortcuts {
 
   static ShortcutDef getById(String id) => _byId[id]!;
 
-  static bool isKey(String id, LogicalKeyboardKey key) =>
-      _byId[id]?.matchesKey(key) == true ||
-      _byId[id]?.matchesAltKey(key) == true;
+  static bool isKey(String id, LogicalKeyboardKey key) {
+    final def = _byId[id];
+    if (def == null) return false;
+    return def.matchesKey(key) || def.matchesAltKey(key);
+  }
+
+  static bool matches(String id, LogicalKeyboardKey key) {
+    final def = _byId[id];
+    if (def == null) return false;
+    final ctrl = isControl;
+    final shift = isShift;
+    final alt = isAlt;
+    final b = effectiveBinding(id);
+    if (key == b.key && ctrl == b.ctrl && shift == b.shift && alt == b.alt) {
+      return true;
+    }
+    if (!isOverridden(id) &&
+        def.altKey != null &&
+        key == def.altKey &&
+        ctrl == def.altCtrl &&
+        shift == def.altShift &&
+        !alt) {
+      return true;
+    }
+    return false;
+  }
+
+  static bool matchesIgnoreShift(String id, LogicalKeyboardKey key) {
+    final def = _byId[id];
+    if (def == null) return false;
+    final b = effectiveBinding(id);
+    return key == b.key && isControl == b.ctrl && isAlt == b.alt;
+  }
 }

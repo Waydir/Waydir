@@ -685,6 +685,24 @@ class Translations$keybindings$en {
 	/// en: 'or'
 	String get or => 'or';
 
+	/// en: 'Fixed shortcut'
+	String get fixed => 'Fixed shortcut';
+
+	/// en: 'Change shortcut'
+	String get change => 'Change shortcut';
+
+	/// en: 'Reset shortcut'
+	String get reset => 'Reset shortcut';
+
+	/// en: 'Press a shortcut'
+	String get pressShortcut => 'Press a shortcut';
+
+	/// en: 'Esc cancels'
+	String get escapeToCancel => 'Esc cancels';
+
+	/// en: 'Already used by $action'
+	String conflict({required Object action}) => 'Already used by ${action}';
+
 	/// en: 'dual'
 	String get dualHint => 'dual';
 
@@ -753,6 +771,15 @@ class Translations$keybindings$en {
 
 	/// en: 'Reset terminal font'
 	String get terminalFontReset => 'Reset terminal font';
+
+	/// en: 'Zoom in file list'
+	String get fileListZoomIn => 'Zoom in file list';
+
+	/// en: 'Zoom out file list'
+	String get fileListZoomOut => 'Zoom out file list';
+
+	/// en: 'Reset file list zoom'
+	String get fileListZoomReset => 'Reset file list zoom';
 
 	/// en: 'Toggle sidebar'
 	String get toggleSidebar => 'Toggle sidebar';
@@ -3132,6 +3159,12 @@ extension on Translations {
 			'keybindings.categories.selection' => 'Selection',
 			'keybindings.categories.search' => 'Search',
 			'keybindings.or' => 'or',
+			'keybindings.fixed' => 'Fixed shortcut',
+			'keybindings.change' => 'Change shortcut',
+			'keybindings.reset' => 'Reset shortcut',
+			'keybindings.pressShortcut' => 'Press a shortcut',
+			'keybindings.escapeToCancel' => 'Esc cancels',
+			'keybindings.conflict' => ({required Object action}) => 'Already used by ${action}',
 			'keybindings.dualHint' => 'dual',
 			'keybindings.openItem' => 'Open',
 			'keybindings.goUp' => 'Go up',
@@ -3155,6 +3188,9 @@ extension on Translations {
 			'keybindings.terminalFontIncrease' => 'Increase terminal font',
 			'keybindings.terminalFontDecrease' => 'Decrease terminal font',
 			'keybindings.terminalFontReset' => 'Reset terminal font',
+			'keybindings.fileListZoomIn' => 'Zoom in file list',
+			'keybindings.fileListZoomOut' => 'Zoom out file list',
+			'keybindings.fileListZoomReset' => 'Reset file list zoom',
 			'keybindings.toggleSidebar' => 'Toggle sidebar',
 			'keybindings.copy' => 'Copy',
 			'keybindings.cut' => 'Cut',
@@ -3311,6 +3347,8 @@ extension on Translations {
 			'toolbar.back' => 'Back',
 			'toolbar.forward' => 'Forward',
 			'toolbar.up' => 'Up',
+			_ => null,
+		} ?? switch (path) {
 			'toolbar.refresh' => 'Refresh',
 			'toolbar.viewOptions' => 'View Options',
 			'toolbar.newFolder' => 'New Folder',
@@ -3320,8 +3358,6 @@ extension on Translations {
 			'toolbar.more' => 'More',
 			'notifications.title' => 'Notifications',
 			'notifications.empty' => 'No notifications yet',
-			_ => null,
-		} ?? switch (path) {
 			'notifications.clear' => 'Clear',
 			'search.placeholder' => 'Filter…',
 			'search.subfolders' => 'Subfolders',
