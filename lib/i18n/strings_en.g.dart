@@ -50,6 +50,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$preferences$en preferences = Translations$preferences$en.internal(_root);
 	late final Translations$update$en update = Translations$update$en.internal(_root);
 	late final Translations$appMenu$en appMenu = Translations$appMenu$en.internal(_root);
+	late final Translations$help$en help = Translations$help$en.internal(_root);
 	late final Translations$keybindings$en keybindings = Translations$keybindings$en.internal(_root);
 	late final Translations$commandPalette$en commandPalette = Translations$commandPalette$en.internal(_root);
 	late final Translations$quickLook$en quickLook = Translations$quickLook$en.internal(_root);
@@ -638,8 +639,31 @@ class Translations$appMenu$en {
 
 	// Translations
 
+	/// en: 'Help'
+	String get help => 'Help';
+
 	/// en: 'Quit'
 	String get quit => 'Quit';
+}
+
+// Path: help
+class Translations$help$en {
+	Translations$help$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Features'
+	String get title => 'Features';
+
+	/// en: 'Features'
+	String get menuLabel => 'Features';
+
+	/// en: 'Demo coming soon'
+	String get demoComingSoon => 'Demo coming soon';
+
+	late final Translations$help$pages$en pages = Translations$help$pages$en.internal(_root);
 }
 
 // Path: keybindings
@@ -841,8 +865,8 @@ class Translations$quickLook$en {
 	/// en: 'No preview available'
 	String get noPreview => 'No preview available';
 
-	/// en: 'Binary file — no preview'
-	String get binaryFile => 'Binary file — no preview';
+	/// en: 'Binary file - no preview'
+	String get binaryFile => 'Binary file - no preview';
 
 	/// en: 'File too large to preview'
 	String get tooLarge => 'File too large to preview';
@@ -994,8 +1018,8 @@ class Translations$toast$en {
 	/// en: 'Selection file error: $message'
 	String selectionFileError({required Object message}) => 'Selection file error: ${message}';
 
-	/// en: '$label — $count errors'
-	String taskErrors({required Object label, required Object count}) => '${label} — ${count} errors';
+	/// en: '$label - $count errors'
+	String taskErrors({required Object label, required Object count}) => '${label} - ${count} errors';
 
 	/// en: 'An item named '$name' already exists'
 	String renameAlreadyExists({required Object name}) => 'An item named \'${name}\' already exists';
@@ -2375,6 +2399,26 @@ class Translations$preferences$about$en {
 	String get copy => 'Copy';
 }
 
+// Path: help.pages
+class Translations$help$pages$en {
+	Translations$help$pages$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+	late final Translations$help$pages$navigation$en navigation = Translations$help$pages$navigation$en.internal(_root);
+	late final Translations$help$pages$tabs$en tabs = Translations$help$pages$tabs$en.internal(_root);
+	late final Translations$help$pages$dualPane$en dualPane = Translations$help$pages$dualPane$en.internal(_root);
+	late final Translations$help$pages$selection$en selection = Translations$help$pages$selection$en.internal(_root);
+	late final Translations$help$pages$fileOps$en fileOps = Translations$help$pages$fileOps$en.internal(_root);
+	late final Translations$help$pages$quickLook$en quickLook = Translations$help$pages$quickLook$en.internal(_root);
+	late final Translations$help$pages$search$en search = Translations$help$pages$search$en.internal(_root);
+	late final Translations$help$pages$multiRename$en multiRename = Translations$help$pages$multiRename$en.internal(_root);
+	late final Translations$help$pages$archives$en archives = Translations$help$pages$archives$en.internal(_root);
+	late final Translations$help$pages$remote$en remote = Translations$help$pages$remote$en.internal(_root);
+	late final Translations$help$pages$terminal$en terminal = Translations$help$pages$terminal$en.internal(_root);
+}
+
 // Path: keybindings.categories
 class Translations$keybindings$categories$en {
 	Translations$keybindings$categories$en.internal(this._root);
@@ -2580,6 +2624,171 @@ class Translations$tasks$status$en {
 
 	/// en: 'Cancelled'
 	String get cancelled => 'Cancelled';
+}
+
+// Path: help.pages.navigation
+class Translations$help$pages$navigation$en {
+	Translations$help$pages$navigation$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Navigation'
+	String get title => 'Navigation';
+
+	/// en: 'Browse without reaching for the mouse. Waydir keeps the cursor, selection and history close to the main file list. - `↑` / `↓` move the cursor through visible files. - `Enter` opens the selected item; double-click does the same. - `Backspace` goes to the parent folder. - `Alt+←` / `Alt+→` step back and forward through folder history. - `Ctrl+R` refreshes the current folder. - `Ctrl+B` shows or hides the sidebar; `Ctrl+H` toggles hidden files. - Click a segment in the breadcrumb bar to jump straight to that folder.'
+	String get body => 'Browse without reaching for the mouse. Waydir keeps the cursor, selection and history close to the main file list.\n\n- `↑` / `↓` move the cursor through visible files.\n- `Enter` opens the selected item; double-click does the same.\n- `Backspace` goes to the parent folder.\n- `Alt+←` / `Alt+→` step back and forward through folder history.\n- `Ctrl+R` refreshes the current folder.\n- `Ctrl+B` shows or hides the sidebar; `Ctrl+H` toggles hidden files.\n- Click a segment in the breadcrumb bar to jump straight to that folder.';
+}
+
+// Path: help.pages.tabs
+class Translations$help$pages$tabs$en {
+	Translations$help$pages$tabs$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Tabs'
+	String get title => 'Tabs';
+
+	/// en: 'Keep several folders open at once and switch between them instantly. Each tab remembers its own folder, selection and history. - `Ctrl+T` opens a new tab. - `Ctrl+W` closes the current tab. - `Ctrl+Tab` / `Ctrl+Shift+Tab` cycle to the next or previous tab. - `Ctrl+1`…`Ctrl+9` jump straight to a tab by position. - The `+` button on the tab strip opens a new tab in the current folder.'
+	String get body => 'Keep several folders open at once and switch between them instantly. Each tab remembers its own folder, selection and history.\n\n- `Ctrl+T` opens a new tab.\n- `Ctrl+W` closes the current tab.\n- `Ctrl+Tab` / `Ctrl+Shift+Tab` cycle to the next or previous tab.\n- `Ctrl+1`…`Ctrl+9` jump straight to a tab by position.\n- The `+` button on the tab strip opens a new tab in the current folder.';
+}
+
+// Path: help.pages.dualPane
+class Translations$help$pages$dualPane$en {
+	Translations$help$pages$dualPane$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Dual Pane'
+	String get title => 'Dual Pane';
+
+	/// en: 'Show a source and a destination side by side. The active pane owns keyboard focus, and the copy / move shortcuts target the opposite pane. - `F9` (or `Ctrl+D`) toggles dual pane mode. - `Tab` switches the active pane. - `F5` copies the selected files to the other pane. - `F6` moves the selected files to the other pane. - Drag the divider to change how the space is split.'
+	String get body => 'Show a source and a destination side by side. The active pane owns keyboard focus, and the copy / move shortcuts target the opposite pane.\n\n- `F9` (or `Ctrl+D`) toggles dual pane mode.\n- `Tab` switches the active pane.\n- `F5` copies the selected files to the other pane.\n- `F6` moves the selected files to the other pane.\n- Drag the divider to change how the space is split.';
+}
+
+// Path: help.pages.selection
+class Translations$help$pages$selection$en {
+	Translations$help$pages$selection$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Selection'
+	String get title => 'Selection';
+
+	/// en: 'Build up exactly the set of files you want before acting on them. - `Ctrl+A` selects everything in the folder. - `Insert` toggles the current item and moves down. - `Ctrl+S` selects by pattern (wildcards like `*.png`). - `Esc` clears the selection. - Click, `Shift+Click` for a range and `Ctrl+Click` to add or remove single items. - `Ctrl+Shift+S` saves the current selection to a file; `Ctrl+Shift+L` loads it back.'
+	String get body => 'Build up exactly the set of files you want before acting on them.\n\n- `Ctrl+A` selects everything in the folder.\n- `Insert` toggles the current item and moves down.\n- `Ctrl+S` selects by pattern (wildcards like `*.png`).\n- `Esc` clears the selection.\n- Click, `Shift+Click` for a range and `Ctrl+Click` to add or remove single items.\n- `Ctrl+Shift+S` saves the current selection to a file; `Ctrl+Shift+L` loads it back.';
+}
+
+// Path: help.pages.fileOps
+class Translations$help$pages$fileOps$en {
+	Translations$help$pages$fileOps$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'File Operations'
+	String get title => 'File Operations';
+
+	/// en: 'Standard clipboard and file actions work everywhere, including across panes and tabs. - `Ctrl+C` / `Ctrl+X` / `Ctrl+V` copy, cut and paste. - `F2` renames the current item; `F7` creates a new folder. - `Delete` moves the selection to the Trash; use the context menu to delete permanently. - **Copy Path** is available from the context menu. - Long copies, moves and deletes run in the operations panel, and a conflict prompt appears when names collide.'
+	String get body => 'Standard clipboard and file actions work everywhere, including across panes and tabs.\n\n- `Ctrl+C` / `Ctrl+X` / `Ctrl+V` copy, cut and paste.\n- `F2` renames the current item; `F7` creates a new folder.\n- `Delete` moves the selection to the Trash; use the context menu to delete permanently.\n- **Copy Path** is available from the context menu.\n- Long copies, moves and deletes run in the operations panel, and a conflict prompt appears when names collide.';
+}
+
+// Path: help.pages.quickLook
+class Translations$help$pages$quickLook$en {
+	Translations$help$pages$quickLook$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Quick Look'
+	String get title => 'Quick Look';
+
+	/// en: 'Inspect a file without opening another app. Quick Look handles images, text, code and other supported types. - `Space` opens Quick Look for the current selection. - `↑` / `↓` step to the previous or next file without leaving the preview. - `Esc` closes the preview. - Text and code previews are editable - `Ctrl+S` saves changes in place. - The info panel shows size, dates and permissions alongside the preview.'
+	String get body => 'Inspect a file without opening another app. Quick Look handles images, text, code and other supported types.\n\n- `Space` opens Quick Look for the current selection.\n- `↑` / `↓` step to the previous or next file without leaving the preview.\n- `Esc` closes the preview.\n- Text and code previews are editable - `Ctrl+S` saves changes in place.\n- The info panel shows size, dates and permissions alongside the preview.';
+}
+
+// Path: help.pages.search
+class Translations$help$pages$search$en {
+	Translations$help$pages$search$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Search'
+	String get title => 'Search';
+
+	/// en: 'Filter the current folder or sweep through everything beneath it. - `Ctrl+F` filters the current folder by name as you type. - `Ctrl+Shift+F` extends the search into all subfolders. - Turn on **Content** to search inside file contents (local folders only - not over SFTP). - Switch between **Substring**, **Glob** and **Regex** matching. - `Esc` closes the search and restores the full list.'
+	String get body => 'Filter the current folder or sweep through everything beneath it.\n\n- `Ctrl+F` filters the current folder by name as you type.\n- `Ctrl+Shift+F` extends the search into all subfolders.\n- Turn on **Content** to search inside file contents (local folders only - not over SFTP).\n- Switch between **Substring**, **Glob** and **Regex** matching.\n- `Esc` closes the search and restores the full list.';
+}
+
+// Path: help.pages.multiRename
+class Translations$help$pages$multiRename$en {
+	Translations$help$pages$multiRename$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Multi Rename'
+	String get title => 'Multi Rename';
+
+	/// en: 'Rename many files at once with a live before / after preview. Select several items, then choose **Multi Rename** from the context menu. - **Template** mode builds names from tokens: `{name}`, `{ext}`, `{n}` (sequence from 1), `{index}` (from 0) and `{date}`. - **Find & Replace** mode swaps text, with optional regular expressions and case sensitivity. - The preview lists every result before you commit, and *Show only changed* hides untouched rows.'
+	String get body => 'Rename many files at once with a live before / after preview. Select several items, then choose **Multi Rename** from the context menu.\n\n- **Template** mode builds names from tokens: `{name}`, `{ext}`, `{n}` (sequence from 1), `{index}` (from 0) and `{date}`.\n- **Find & Replace** mode swaps text, with optional regular expressions and case sensitivity.\n- The preview lists every result before you commit, and *Show only changed* hides untouched rows.';
+}
+
+// Path: help.pages.archives
+class Translations$help$pages$archives$en {
+	Translations$help$pages$archives$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Archives'
+	String get title => 'Archives';
+
+	/// en: 'Archives behave like browsable folders, so you can look inside before extracting anything. - `Enter` opens a supported archive and lets you walk its contents. - The context menu can extract here, extract into a named folder, or extract each archive separately. - **Compress** builds a new archive from the selection - pick the format and compression level. - Extraction and compression run in the background, so the file list stays responsive.'
+	String get body => 'Archives behave like browsable folders, so you can look inside before extracting anything.\n\n- `Enter` opens a supported archive and lets you walk its contents.\n- The context menu can extract here, extract into a named folder, or extract each archive separately.\n- **Compress** builds a new archive from the selection - pick the format and compression level.\n- Extraction and compression run in the background, so the file list stays responsive.';
+}
+
+// Path: help.pages.remote
+class Translations$help$pages$remote$en {
+	Translations$help$pages$remote$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Remote Locations'
+	String get title => 'Remote Locations';
+
+	/// en: 'Work with SFTP servers right next to your local folders. - Use **Connect to Server** from the sidebar to add a remote location. - Once connected, open and browse remote folders exactly like local ones. - Bookmark folders you visit often so they stay one click away. - Selection, the context menu and file operations all behave the same as locally - only content search is unavailable over SFTP.'
+	String get body => 'Work with SFTP servers right next to your local folders.\n\n- Use **Connect to Server** from the sidebar to add a remote location.\n- Once connected, open and browse remote folders exactly like local ones.\n- Bookmark folders you visit often so they stay one click away.\n- Selection, the context menu and file operations all behave the same as locally - only content search is unavailable over SFTP.';
+}
+
+// Path: help.pages.terminal
+class Translations$help$pages$terminal$en {
+	Translations$help$pages$terminal$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Terminal'
+	String get title => 'Terminal';
+
+	/// en: 'Each pane has its own embedded terminal that opens in the folder you are viewing. - `Ctrl` + backtick opens or focuses the terminal (`Ctrl+J` on macOS). - `Ctrl+Shift` + backtick shows or hides the terminal panel. - `Ctrl+Shift+T` opens a new terminal tab; `Ctrl+Shift+W` closes one. - `Ctrl++` / `Ctrl+-` adjust the font size and `Ctrl+0` resets it.'
+	String get body => 'Each pane has its own embedded terminal that opens in the folder you are viewing.\n\n- `Ctrl` + backtick opens or focuses the terminal (`Ctrl+J` on macOS).\n- `Ctrl+Shift` + backtick shows or hides the terminal panel.\n- `Ctrl+Shift+T` opens a new terminal tab; `Ctrl+Shift+W` closes one.\n- `Ctrl++` / `Ctrl+-` adjust the font size and `Ctrl+0` resets it.';
 }
 
 /// The flat map containing all translations for locale <en>.
@@ -2878,7 +3087,33 @@ extension on Translations {
 			'update.relaunchFailed' => ({required Object error}) => 'Failed to relaunch: ${error}',
 			'update.terminalInstallOk' => '--- Install OK. Press Enter to close ---',
 			'update.terminalInstallFailed' => ({required Object status}) => '--- Install failed (exit ${status}). Press Enter to close ---',
+			'appMenu.help' => 'Help',
 			'appMenu.quit' => 'Quit',
+			'help.title' => 'Features',
+			'help.menuLabel' => 'Features',
+			'help.demoComingSoon' => 'Demo coming soon',
+			'help.pages.navigation.title' => 'Navigation',
+			'help.pages.navigation.body' => 'Browse without reaching for the mouse. Waydir keeps the cursor, selection and history close to the main file list.\n\n- `↑` / `↓` move the cursor through visible files.\n- `Enter` opens the selected item; double-click does the same.\n- `Backspace` goes to the parent folder.\n- `Alt+←` / `Alt+→` step back and forward through folder history.\n- `Ctrl+R` refreshes the current folder.\n- `Ctrl+B` shows or hides the sidebar; `Ctrl+H` toggles hidden files.\n- Click a segment in the breadcrumb bar to jump straight to that folder.',
+			'help.pages.tabs.title' => 'Tabs',
+			'help.pages.tabs.body' => 'Keep several folders open at once and switch between them instantly. Each tab remembers its own folder, selection and history.\n\n- `Ctrl+T` opens a new tab.\n- `Ctrl+W` closes the current tab.\n- `Ctrl+Tab` / `Ctrl+Shift+Tab` cycle to the next or previous tab.\n- `Ctrl+1`…`Ctrl+9` jump straight to a tab by position.\n- The `+` button on the tab strip opens a new tab in the current folder.',
+			'help.pages.dualPane.title' => 'Dual Pane',
+			'help.pages.dualPane.body' => 'Show a source and a destination side by side. The active pane owns keyboard focus, and the copy / move shortcuts target the opposite pane.\n\n- `F9` (or `Ctrl+D`) toggles dual pane mode.\n- `Tab` switches the active pane.\n- `F5` copies the selected files to the other pane.\n- `F6` moves the selected files to the other pane.\n- Drag the divider to change how the space is split.',
+			'help.pages.selection.title' => 'Selection',
+			'help.pages.selection.body' => 'Build up exactly the set of files you want before acting on them.\n\n- `Ctrl+A` selects everything in the folder.\n- `Insert` toggles the current item and moves down.\n- `Ctrl+S` selects by pattern (wildcards like `*.png`).\n- `Esc` clears the selection.\n- Click, `Shift+Click` for a range and `Ctrl+Click` to add or remove single items.\n- `Ctrl+Shift+S` saves the current selection to a file; `Ctrl+Shift+L` loads it back.',
+			'help.pages.fileOps.title' => 'File Operations',
+			'help.pages.fileOps.body' => 'Standard clipboard and file actions work everywhere, including across panes and tabs.\n\n- `Ctrl+C` / `Ctrl+X` / `Ctrl+V` copy, cut and paste.\n- `F2` renames the current item; `F7` creates a new folder.\n- `Delete` moves the selection to the Trash; use the context menu to delete permanently.\n- **Copy Path** is available from the context menu.\n- Long copies, moves and deletes run in the operations panel, and a conflict prompt appears when names collide.',
+			'help.pages.quickLook.title' => 'Quick Look',
+			'help.pages.quickLook.body' => 'Inspect a file without opening another app. Quick Look handles images, text, code and other supported types.\n\n- `Space` opens Quick Look for the current selection.\n- `↑` / `↓` step to the previous or next file without leaving the preview.\n- `Esc` closes the preview.\n- Text and code previews are editable - `Ctrl+S` saves changes in place.\n- The info panel shows size, dates and permissions alongside the preview.',
+			'help.pages.search.title' => 'Search',
+			'help.pages.search.body' => 'Filter the current folder or sweep through everything beneath it.\n\n- `Ctrl+F` filters the current folder by name as you type.\n- `Ctrl+Shift+F` extends the search into all subfolders.\n- Turn on **Content** to search inside file contents (local folders only - not over SFTP).\n- Switch between **Substring**, **Glob** and **Regex** matching.\n- `Esc` closes the search and restores the full list.',
+			'help.pages.multiRename.title' => 'Multi Rename',
+			'help.pages.multiRename.body' => 'Rename many files at once with a live before / after preview. Select several items, then choose **Multi Rename** from the context menu.\n\n- **Template** mode builds names from tokens: `{name}`, `{ext}`, `{n}` (sequence from 1), `{index}` (from 0) and `{date}`.\n- **Find & Replace** mode swaps text, with optional regular expressions and case sensitivity.\n- The preview lists every result before you commit, and *Show only changed* hides untouched rows.',
+			'help.pages.archives.title' => 'Archives',
+			'help.pages.archives.body' => 'Archives behave like browsable folders, so you can look inside before extracting anything.\n\n- `Enter` opens a supported archive and lets you walk its contents.\n- The context menu can extract here, extract into a named folder, or extract each archive separately.\n- **Compress** builds a new archive from the selection - pick the format and compression level.\n- Extraction and compression run in the background, so the file list stays responsive.',
+			'help.pages.remote.title' => 'Remote Locations',
+			'help.pages.remote.body' => 'Work with SFTP servers right next to your local folders.\n\n- Use **Connect to Server** from the sidebar to add a remote location.\n- Once connected, open and browse remote folders exactly like local ones.\n- Bookmark folders you visit often so they stay one click away.\n- Selection, the context menu and file operations all behave the same as locally - only content search is unavailable over SFTP.',
+			'help.pages.terminal.title' => 'Terminal',
+			'help.pages.terminal.body' => 'Each pane has its own embedded terminal that opens in the folder you are viewing.\n\n- `Ctrl` + backtick opens or focuses the terminal (`Ctrl+J` on macOS).\n- `Ctrl+Shift` + backtick shows or hides the terminal panel.\n- `Ctrl+Shift+T` opens a new terminal tab; `Ctrl+Shift+W` closes one.\n- `Ctrl++` / `Ctrl+-` adjust the font size and `Ctrl+0` resets it.',
 			'keybindings.title' => 'Keyboard Shortcuts',
 			'keybindings.menuLabel' => 'Shortcuts',
 			'keybindings.categories.navigation' => 'Navigation',
@@ -2942,7 +3177,7 @@ extension on Translations {
 			'quickLook.noSelection' => 'No file selected',
 			'quickLook.folder' => 'Folder',
 			'quickLook.noPreview' => 'No preview available',
-			'quickLook.binaryFile' => 'Binary file — no preview',
+			'quickLook.binaryFile' => 'Binary file - no preview',
 			'quickLook.tooLarge' => 'File too large to preview',
 			'quickLook.readError' => 'Could not read file',
 			'quickLook.save' => 'Save',
@@ -2990,7 +3225,7 @@ extension on Translations {
 			'toast.selectionLoadEmpty' => 'No visible items matched',
 			'toast.terminalUnavailable' => 'Terminal is unavailable: native core not loaded',
 			'toast.selectionFileError' => ({required Object message}) => 'Selection file error: ${message}',
-			'toast.taskErrors' => ({required Object label, required Object count}) => '${label} — ${count} errors',
+			'toast.taskErrors' => ({required Object label, required Object count}) => '${label} - ${count} errors',
 			'toast.renameAlreadyExists' => ({required Object name}) => 'An item named \'${name}\' already exists',
 			'toast.renameInvalidName' => 'Invalid name',
 			'toast.renameError' => ({required Object message}) => 'Could not rename: ${message}',
@@ -3076,6 +3311,8 @@ extension on Translations {
 			'toolbar.more' => 'More',
 			'notifications.title' => 'Notifications',
 			'notifications.empty' => 'No notifications yet',
+			_ => null,
+		} ?? switch (path) {
 			'notifications.clear' => 'Clear',
 			'search.placeholder' => 'Filter…',
 			'search.subfolders' => 'Subfolders',
@@ -3102,8 +3339,6 @@ extension on Translations {
 			'statusBar.folders' => ({required Object count}) => '${count} folders',
 			'statusBar.files' => ({required Object count}) => '${count} files',
 			'statusBar.selected' => ({required Object count}) => '${count} selected',
-			_ => null,
-		} ?? switch (path) {
 			'dialog.create' => 'Create',
 			'dialog.cancel' => 'Cancel',
 			'dialog.folderNameHint' => 'Folder name',

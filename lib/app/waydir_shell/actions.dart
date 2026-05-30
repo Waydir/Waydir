@@ -292,6 +292,13 @@ mixin _WaydirActionsMixin on State<WaydirShell>, _WaydirStateBase {
     });
   }
 
+  void _openHelp() {
+    showHelpDialog(context).then((_) {
+      if (!mounted) return;
+      _restoreFocus();
+    });
+  }
+
   void _openQuickLook() {
     if (_isModalRouteOnTop()) return;
     showQuickLook(

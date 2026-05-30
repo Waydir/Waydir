@@ -520,7 +520,9 @@ class _FileListState extends State<FileList> {
                   right: 0,
                   bottom: 0,
                   width: _kScrollbarGutterWidth,
-                  child: _PinnedVerticalScrollbar(controller: _scrollController),
+                  child: _PinnedVerticalScrollbar(
+                    controller: _scrollController,
+                  ),
                 ),
                 if (_isDragOver)
                   Positioned.fill(
@@ -1134,8 +1136,8 @@ class _ListRowState extends State<_ListRow> {
         },
         child: Container(
           height: widget.rowHeight,
-          padding: const EdgeInsets.only(
-            left: _kRowPaddingLeft,
+          padding: EdgeInsets.only(
+            left: widget.selected ? _kRowPaddingLeft - 2 : _kRowPaddingLeft,
             right: _kRowPaddingRight,
           ),
           decoration: BoxDecoration(

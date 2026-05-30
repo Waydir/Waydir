@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Features dialog with short guides and demo clips for the main features.
 - Embedded terminal in each pane with remote connections support.
 - Terminal preferences: font, size, line height and system font picker.
 - Content search: a "Content" toggle in the search bar matches inside file contents.

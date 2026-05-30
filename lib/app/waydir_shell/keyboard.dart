@@ -33,6 +33,11 @@ mixin _WaydirKeyboardMixin
       return KeyEventResult.handled;
     }
 
+    if (!_isModalRouteOnTop() && key == LogicalKeyboardKey.f1) {
+      _openHelp();
+      return KeyEventResult.handled;
+    }
+
     if (!_isModalRouteOnTop() &&
         ctrl &&
         !alt &&
@@ -149,6 +154,11 @@ mixin _WaydirKeyboardMixin
 
     if (!ctrl && !shift && !alt && AppShortcuts.isKey('quick_look', key)) {
       _openQuickLook();
+      return KeyEventResult.handled;
+    }
+
+    if (!ctrl && shift && !alt && AppShortcuts.isKey('help', key)) {
+      _openHelp();
       return KeyEventResult.handled;
     }
 

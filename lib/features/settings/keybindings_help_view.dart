@@ -87,6 +87,7 @@ String _labelFor(ShortcutDef s) => switch (s.id) {
   'recursive_search' => t.keybindings.recursiveSearch,
   'toggle_hidden' => t.menu.showHidden,
   'preferences' => t.keybindings.preferences,
+  'help' => t.help.menuLabel,
   'close_search' => t.keybindings.closeSearch,
   _ => s.id,
 };

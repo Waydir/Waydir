@@ -397,6 +397,14 @@ class AppShortcuts {
       ctrl: true,
     ),
     ShortcutDef(
+      id: 'help',
+      label: () => '',
+      group: ShortcutGroup.search,
+      key: LogicalKeyboardKey.slash,
+      shift: true,
+      customKeyDisplay: '?',
+    ),
+    ShortcutDef(
       id: 'close_search',
       label: () => '',
       group: ShortcutGroup.search,

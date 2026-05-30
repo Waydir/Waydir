@@ -62,6 +62,7 @@ flutter:
   assets:
     - assets/icons/material/
     - assets/
+    - docs/gifs/
   fonts:
     - family: PhosphorRegular
       fonts:
