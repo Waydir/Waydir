@@ -38,6 +38,18 @@ class IndexAwareCircularBuffer<T extends IndexedItem> {
   @pragma('vm:prefer-inline')
   void _adoptChild(int index, T child) {
     final cyclicIndex = _getCyclicIndex(index);
+    // If `child` already lives in this buffer (e.g. `list[i] = list[j]` while
+    // scrolling/inserting/deleting lines), vacate its previous slot. Otherwise
+    // the same item ends up referenced by two slots: detaching one alias later
+    // leaves a detached item — or a null hole — inside the active window, which
+    // crashes paint (`list[i]` returns null) and trips the `_move` assert.
+    if (identical(child._owner, this) && child._absoluteIndex != null) {
+      final oldCyclic =
+          _getCyclicIndex(child._absoluteIndex! - _absoluteStartIndex);
+      if (oldCyclic != cyclicIndex && identical(_array[oldCyclic], child)) {
+        _array[oldCyclic] = null;
+      }
+    }
     _array[cyclicIndex]?._detach();
     _array[cyclicIndex] = child.._attach(this, index);
   }
@@ -224,24 +236,35 @@ class IndexAwareCircularBuffer<T extends IndexedItem> {
   /// instead just adjusts the start index and length.
   void trimStart(int count) {
     if (count > _length) count = _length;
+    for (var i = 0; i < count; i++) {
+      _dropChild(i);
+    }
     _startIndex += count;
     _startIndex %= _array.length;
+    _absoluteStartIndex += count;
     _length -= count;
   }
 
   /// Replaces all elements in the list with [replacement].
   void replaceWith(List<T> replacement) {
+    // Detach everything currently stored. This uses the current [_startIndex],
+    // so it must run before the reset below.
     for (var i = 0; i < _length; i++) {
       _dropChild(i);
     }
 
+    // Reset the ring origin BEFORE adopting the replacement. _adoptChild maps
+    // logical indices through [_startIndex]; if we adopted first and reset
+    // after (as this used to), the new children would be written to slots
+    // [_startIndex, …) while later reads (with _startIndex == 0) look at slots
+    // [0, …), returning the nulls left by the drop loop. After enough output
+    // advanced _startIndex past 0, a reflow would then leave holes mid-buffer
+    // and crash paint.
+    _startIndex = 0;
+
     var copyStart = 0;
     if (replacement.length > maxLength) {
       copyStart = replacement.length - maxLength;
-    }
-
-    for (var i = 0; i < copyStart; i++) {
-      _dropChild(i);
     }
 
     final copyLength = replacement.length - copyStart;
@@ -249,7 +272,6 @@ class IndexAwareCircularBuffer<T extends IndexedItem> {
       _adoptChild(i, replacement[copyStart + i]);
     }
 
-    _startIndex = 0;
     _length = copyLength;
   }
 

@@ -5,8 +5,8 @@ import 'package:waydir_term/xterm.dart';
 
 import '../fs/waydir_core_loader.dart';
 
-const _minPollInterval = Duration(milliseconds: 16);
-const _maxPollInterval = Duration(milliseconds: 120);
+const _minPollInterval = Duration(milliseconds: 12);
+const _maxPollInterval = Duration(milliseconds: 32);
 
 /// Computes the next poll delay for a pty session. Resets to [min] whenever
 /// there is activity so input echo stays responsive, and backs off
@@ -28,7 +28,13 @@ Duration nextPollInterval({
 /// fed into the terminal; terminal input and resizes are forwarded to the pty.
 class PtySession {
   final Terminal terminal;
-  final _utf8 = const Utf8Decoder(allowMalformed: true);
+
+  // Streaming UTF-8 decoder: the native pty is drained in arbitrary-sized
+  // chunks, so a multibyte codepoint (box-drawing, spinners, emoji — common in
+  // TUIs like codex) can straddle two reads. A stateless decode would mangle
+  // those into replacement chars; the chunked decoder carries the partial
+  // bytes across ticks instead.
+  late final ByteConversionSink _decoder;
 
   int? _id;
   Timer? _poll;
@@ -36,7 +42,11 @@ class PtySession {
   bool _exited = false;
   void Function()? _onExit;
 
-  PtySession({int maxLines = 5000}) : terminal = Terminal(maxLines: maxLines);
+  PtySession({int maxLines = 5000}) : terminal = Terminal(maxLines: maxLines) {
+    _decoder = const Utf8Decoder(
+      allowMalformed: true,
+    ).startChunkedConversion(_TerminalSink(terminal));
+  }
 
   bool get isStarted => _id != null;
   bool get hasExited => _exited;
@@ -93,7 +103,7 @@ class PtySession {
     final data = WaydirCoreLoader.ptyRead(id);
     final hadData = data != null && data.isNotEmpty;
     if (hadData) {
-      terminal.write(_utf8.convert(data));
+      _decoder.add(data);
     }
     if (!WaydirCoreLoader.ptyAlive(id)) {
       _exited = true;
@@ -114,5 +124,21 @@ class PtySession {
     final id = _id;
     _id = null;
     if (id != null) WaydirCoreLoader.ptyClose(id);
+    _decoder.close();
   }
+}
+
+/// Sink that forwards decoded output straight into the terminal emulator.
+class _TerminalSink implements Sink<String> {
+  final Terminal terminal;
+
+  _TerminalSink(this.terminal);
+
+  @override
+  void add(String data) {
+    if (data.isNotEmpty) terminal.write(data);
+  }
+
+  @override
+  void close() {}
 }
