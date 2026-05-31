@@ -238,7 +238,12 @@ class _SidebarState extends State<Sidebar> {
                   final currentPath = widget.store.currentPath.value;
                   final currentDrives = driveStore.drives.value;
 
-                  final devices = <Drive>[...currentDrives];
+                  final networkDrives = currentDrives
+                      .where((d) => d.isNetwork)
+                      .toList();
+                  final devices = currentDrives
+                      .where((d) => !d.isNetwork)
+                      .toList();
                   final isUnix = PlatformPaths.isLinux || PlatformPaths.isMacOS;
                   if (isUnix && !devices.any((d) => d.mountPoint == '/')) {
                     devices.insert(
@@ -395,9 +400,11 @@ class _SidebarState extends State<Sidebar> {
                         );
                       }),
                       SizedBox(height: collapsed ? 12 : 8),
-                      if (networkLocations.isNotEmpty) ...[
+                      if (networkLocations.isNotEmpty ||
+                          networkDrives.isNotEmpty) ...[
                         _NetworkSection(
                           locations: networkLocations,
+                          drives: networkDrives,
                           currentPath: currentPath,
                           collapsed: collapsed,
                           onNavigate: widget.store.navigateTo,
@@ -409,6 +416,17 @@ class _SidebarState extends State<Sidebar> {
                                     destination,
                                     move: move,
                                   ),
+                          onUnmountDrive: (drive) async {
+                            final cur = widget.store.currentPath.value;
+                            final mountPoint = drive.mountPoint ?? drive.id;
+                            try {
+                              await driveStore.unmount(drive);
+                            } catch (_) {}
+                            if (cur == mountPoint ||
+                                cur.startsWith(mountPoint)) {
+                              widget.store.navigateTo(PlatformPaths.homePath);
+                            }
+                          },
                           onUnmount: (path) async {
                             final currentPath = widget.store.currentPath.value;
                             await LocationResolver.unmount(path);
@@ -720,6 +738,7 @@ class _BookmarksSection extends StatelessWidget {
 
 class _NetworkSection extends StatelessWidget {
   final List<String> locations;
+  final List<Drive> drives;
   final String currentPath;
   final bool collapsed;
   final ValueChanged<String> onNavigate;
@@ -727,15 +746,18 @@ class _NetworkSection extends StatelessWidget {
   final void Function(List<String> paths, String destination, {bool move})
   onDropFiles;
   final Future<void> Function(String path) onUnmount;
+  final Future<void> Function(Drive drive) onUnmountDrive;
 
   const _NetworkSection({
     required this.locations,
+    this.drives = const [],
     required this.currentPath,
     required this.collapsed,
     required this.onNavigate,
     required this.onOpenInNewTab,
     required this.onDropFiles,
     required this.onUnmount,
+    required this.onUnmountDrive,
   });
 
   @override
@@ -748,6 +770,26 @@ class _NetworkSection extends StatelessWidget {
           _SectionHeader(title: t.sidebar.network)
         else
           const _SectionRailDivider(),
+        ...drives.map((drive) {
+          final path = drive.mountPoint ?? drive.id;
+          return _ItemRow(
+            item: _SidebarItem(
+              drive.label,
+              WaydirIconsRegular.treeStructure,
+              path,
+            ),
+            isSelected: currentPath == path || currentPath.startsWith(path),
+            isMounted: true,
+            collapsed: collapsed,
+            onTap: onNavigate,
+            onMiddleTap: onOpenInNewTab != null
+                ? () => onOpenInNewTab!(path)
+                : null,
+            onDropFiles: (paths, {bool move = false}) =>
+                onDropFiles(paths, path, move: move),
+            onUnmount: () => unawaited(onUnmountDrive(drive)),
+          );
+        }),
         ...locations.map((path) {
           final uri = LocationUri.parse(path);
           return _ItemRow(

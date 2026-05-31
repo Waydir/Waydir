@@ -1,4 +1,6 @@
+import 'dart:ffi';
 import 'dart:io';
+import 'package:ffi/ffi.dart';
 import 'package:path/path.dart' as p;
 import 'package:xdg_directories/xdg_directories.dart' as xdg;
 
@@ -36,6 +38,52 @@ class PlatformPaths {
   static bool isSftpUri(String path) => path.startsWith('sftp://');
 
   static bool isRemoteUri(String path) => isSmbUri(path) || isSftpUri(path);
+
+  /// Whether [path] lives on a network/remote filesystem (logical remote URIs,
+  /// Windows UNC or mapped network drives, Linux gvfs mounts). Used to keep the
+  /// local-FS machinery (directory watcher, synchronous git probing) off slow
+  /// network paths so the UI doesn't stall during transfers.
+  static bool isNetworkPath(String path) {
+    if (path.isEmpty) return false;
+    if (isRemoteUri(path)) return true;
+    if (isWindows) return _windowsIsNetworkPath(path);
+    if (isLinux) return path.contains('/gvfs/');
+    return false;
+  }
+
+  static int Function(Pointer<Utf16>)? _getDriveType;
+  static bool _getDriveTypeResolved = false;
+
+  static bool _windowsIsNetworkPath(String path) {
+    final cleaned = _normalizeWindowsPath(path);
+    if (_isWindowsUncPath(cleaned)) return true;
+    if (!RegExp(r'^[A-Za-z]:').hasMatch(cleaned)) return false;
+    final fn = _resolveGetDriveType();
+    if (fn == null) return false;
+    final ptr = _windowsDriveRoot(cleaned).toNativeUtf16();
+    try {
+      return fn(ptr) == 4; // DRIVE_REMOTE
+    } catch (_) {
+      return false;
+    } finally {
+      malloc.free(ptr);
+    }
+  }
+
+  static int Function(Pointer<Utf16>)? _resolveGetDriveType() {
+    if (_getDriveTypeResolved) return _getDriveType;
+    _getDriveTypeResolved = true;
+    try {
+      _getDriveType = DynamicLibrary.open('kernel32.dll')
+          .lookupFunction<
+            Uint32 Function(Pointer<Utf16>),
+            int Function(Pointer<Utf16>)
+          >('GetDriveTypeW');
+    } catch (_) {
+      _getDriveType = null;
+    }
+    return _getDriveType;
+  }
 
   static bool isRoot(String path) {
     if (isSmbUri(path) || isSftpUri(path)) {

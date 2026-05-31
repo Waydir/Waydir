@@ -292,7 +292,7 @@ class NavigationStore {
   void _setupGitStatusEffect() {
     _gitStatusDisposer = effect(() {
       final path = currentPath.value;
-      if (!PlatformPaths.isRemoteUri(path)) gitStatus.watchPath(path);
+      if (!PlatformPaths.isNetworkPath(path)) gitStatus.watchPath(path);
     });
   }
 
@@ -1151,7 +1151,7 @@ class NavigationStore {
         isLoading.value = false;
       });
       _restoreFolderStateIfMatches(path);
-      if (isTrashPath(path) || PlatformPaths.isRemoteUri(path)) {
+      if (isTrashPath(path) || PlatformPaths.isNetworkPath(path)) {
         _watcher.stop();
       } else {
         _watcher.watch(

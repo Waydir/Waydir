@@ -25,7 +25,17 @@ abstract class DriveService {
   }
 }
 
+typedef _WNetGetConnectionNative =
+    Uint32 Function(Pointer<Utf16>, Pointer<Utf16>, Pointer<Uint32>);
+typedef _WNetGetConnectionDart =
+    int Function(Pointer<Utf16>, Pointer<Utf16>, Pointer<Uint32>);
+
 class _WindowsDriveService implements DriveService {
+  static final _wNetGetConnection = DynamicLibrary.open('mpr.dll')
+      .lookupFunction<_WNetGetConnectionNative, _WNetGetConnectionDart>(
+        'WNetGetConnectionW',
+      );
+
   @override
   Future<List<Drive>> getDrives() async {
     final drives = <Drive>[];
@@ -41,7 +51,23 @@ class _WindowsDriveService implements DriveService {
 
         try {
           final driveType = GetDriveType(rootPathPtr);
-          if (driveType == DRIVE_REMOVABLE || driveType == DRIVE_FIXED) {
+          if (driveType == DRIVE_REMOTE) {
+            final target = _networkDriveTarget(letter);
+            drives.add(
+              Drive(
+                id: rootPath,
+                label: t.sidebar.drives.windowsDriveLabel(
+                  name: target ?? t.sidebar.drives.networkDrive,
+                  letter: letter,
+                ),
+                mountPoint: rootPath,
+                isRemovable: false,
+                isNetwork: true,
+                remoteTarget: target,
+                fsType: null,
+              ),
+            );
+          } else if (driveType == DRIVE_REMOVABLE || driveType == DRIVE_FIXED) {
             final volumeNameBuffer = wsalloc(MAX_PATH + 1);
             try {
               final result = GetVolumeInformation(
@@ -99,11 +125,35 @@ class _WindowsDriveService implements DriveService {
 
   @override
   Future<void> unmount(Drive drive) async {
-    if (!drive.isRemovable) return;
     final letter = drive.id.replaceAll(r'\', '');
+    if (drive.isNetwork) {
+      await Process.run('net', ['use', letter, '/delete', '/y']);
+      return;
+    }
+    if (!drive.isRemovable) return;
     final script =
         '\$driveEject = New-Object -comObject Shell.Application; \$driveEject.Namespace(17).ParseName("$letter").InvokeVerb("Eject")';
     await Process.run('powershell', ['-NoProfile', '-Command', script]);
+  }
+
+  /// Resolves the UNC path (e.g. `\\server\share`) backing a mapped network
+  /// drive letter via WNetGetConnectionW. Returns null if it can't be read.
+  String? _networkDriveTarget(String letter) {
+    final local = '$letter:'.toNativeUtf16();
+    final length = calloc<Uint32>()..value = MAX_PATH + 1;
+    final remote = wsalloc(MAX_PATH + 1);
+    try {
+      final result = _wNetGetConnection(local, remote, length);
+      if (result != 0) return null;
+      final unc = remote.toDartString();
+      return unc.isEmpty ? null : unc;
+    } catch (_) {
+      return null;
+    } finally {
+      free(local);
+      free(remote);
+      calloc.free(length);
+    }
   }
 
   DriveSpace? _windowsSpace(String rootPath) {

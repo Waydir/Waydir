@@ -27,6 +27,8 @@ class Drive {
   final String label;
   final String? mountPoint;
   final bool isRemovable;
+  final bool isNetwork;
+  final String? remoteTarget;
   final String? fsType;
   final DriveSpace? space;
 
@@ -35,6 +37,8 @@ class Drive {
     required this.label,
     this.mountPoint,
     required this.isRemovable,
+    this.isNetwork = false,
+    this.remoteTarget,
     this.fsType,
     this.space,
   });
@@ -50,6 +54,8 @@ class Drive {
           label == other.label &&
           mountPoint == other.mountPoint &&
           isRemovable == other.isRemovable &&
+          isNetwork == other.isNetwork &&
+          remoteTarget == other.remoteTarget &&
           fsType == other.fsType &&
           space == other.space;
 
@@ -59,6 +65,8 @@ class Drive {
       label.hashCode ^
       mountPoint.hashCode ^
       isRemovable.hashCode ^
+      isNetwork.hashCode ^
+      remoteTarget.hashCode ^
       fsType.hashCode ^
       space.hashCode;
 }
