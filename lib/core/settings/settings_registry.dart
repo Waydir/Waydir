@@ -273,7 +273,15 @@ class SettingsRegistry {
       category: SettingsCategory.appearance,
       label: () => t.preferences.appearance.theme,
       hint: () => t.preferences.appearance.themeHint,
-      searchTerms: const ['theme', 'dark', 'light', 'nord', 'appearance'],
+      searchTerms: const [
+        'theme',
+        'dark',
+        'light',
+        'nord',
+        'tokyo',
+        'gruvbox',
+        'appearance',
+      ],
       signal: SettingsStore.instance.themeId,
       choices: [
         for (final theme in AppThemeRegistry.instance.themes)

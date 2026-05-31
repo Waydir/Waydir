@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Terminal preferences: font, size, line height and system font picker.
 - Content search: a "Content" toggle in the search bar matches inside file contents.
 - Keyboard shortcut (Ctrl+L) to focus the path bar.
+- Tokyo Night built-in theme.
+- Gruvbox built-in theme (dark and light).
 
 ### Changed
 - Terminal keyboard shortcuts are now customizable.
