@@ -38,6 +38,7 @@ class SettingsStore {
   final sortKey = signal<String>('name');
   final sortAscending = signal<bool>(true);
   final foldersFirst = signal<bool>(true);
+  final naturalSort = signal<bool>(true);
   final searchMode = signal<String>('substring');
   final rememberFolderState = signal<bool>(true);
   final rememberFolderSort = signal<bool>(true);
@@ -88,6 +89,7 @@ class SettingsStore {
     sortKey.value = row.sortKey;
     sortAscending.value = row.sortAscending;
     foldersFirst.value = row.foldersFirst;
+    naturalSort.value = row.naturalSort;
     searchMode.value = row.searchMode;
     rememberFolderState.value = row.rememberFolderState;
     rememberFolderSort.value = row.rememberFolderSort;
@@ -176,6 +178,7 @@ class SettingsStore {
         sortKey.value;
         sortAscending.value;
         foldersFirst.value;
+        naturalSort.value;
         searchMode.value;
         rememberFolderState.value;
         rememberFolderSort.value;
@@ -221,6 +224,7 @@ class SettingsStore {
           sortKey: Value(sortKey.value),
           sortAscending: Value(sortAscending.value),
           foldersFirst: Value(foldersFirst.value),
+          naturalSort: Value(naturalSort.value),
           searchMode: Value(searchMode.value),
           rememberFolderState: Value(rememberFolderState.value),
           rememberFolderSort: Value(rememberFolderSort.value),

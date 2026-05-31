@@ -230,6 +230,7 @@ class NavigationStore {
         key: sortKey.value,
         ascending: sortAscending.value,
         foldersFirst: foldersFirst.value,
+        naturalSort: SettingsStore.instance.naturalSort.value,
       );
       return pending != null ? [pending, ...sorted] : sorted;
     }
@@ -250,6 +251,7 @@ class NavigationStore {
       key: sortKey.value,
       ascending: sortAscending.value,
       foldersFirst: foldersFirst.value,
+      naturalSort: SettingsStore.instance.naturalSort.value,
     );
     return pending != null ? [pending, ...list] : list;
   });
@@ -1317,6 +1319,7 @@ class NavigationStore {
     key: sortKey.value,
     ascending: sortAscending.value,
     foldersFirst: foldersFirst.value,
+    naturalSort: SettingsStore.instance.naturalSort.value,
   );
 
   void _onExternalChange(String path) async {

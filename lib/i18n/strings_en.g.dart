@@ -2317,6 +2317,12 @@ class Translations$preferences$appearance$en {
 	/// en: 'Group folders ahead of files regardless of the sort order.'
 	String get foldersFirstHint => 'Group folders ahead of files regardless of the sort order.';
 
+	/// en: 'Natural sort order'
+	String get naturalSort => 'Natural sort order';
+
+	/// en: 'Sort numbers in names by value, so "file2" comes before "file10".'
+	String get naturalSortHint => 'Sort numbers in names by value, so "file2" comes before "file10".';
+
 	/// en: 'Sort files by'
 	String get sortKey => 'Sort files by';
 
@@ -3056,6 +3062,8 @@ extension on Translations {
 			'preferences.appearance.recentDatesRelativeHint' => 'When System locale is selected, files modified in the last 24 hours show as relative.',
 			'preferences.appearance.foldersFirst' => 'Show folders before files',
 			'preferences.appearance.foldersFirstHint' => 'Group folders ahead of files regardless of the sort order.',
+			'preferences.appearance.naturalSort' => 'Natural sort order',
+			'preferences.appearance.naturalSortHint' => 'Sort numbers in names by value, so "file2" comes before "file10".',
 			'preferences.appearance.sortKey' => 'Sort files by',
 			'preferences.appearance.sortKeyName' => 'Name',
 			'preferences.appearance.sortKeySize' => 'Size',
@@ -3351,10 +3359,10 @@ extension on Translations {
 			'sidebar.expand' => 'Expand sidebar',
 			'trash.accessDeniedTitle' => 'Trash needs Full Disk Access',
 			'trash.accessDeniedBody' => 'macOS protects the Trash folder. Grant Waydir Full Disk Access in System Settings, then relaunch the app.',
-			'trash.openSystemSettings' => 'Open System Settings',
-			'toolbar.back' => 'Back',
 			_ => null,
 		} ?? switch (path) {
+			'trash.openSystemSettings' => 'Open System Settings',
+			'toolbar.back' => 'Back',
 			'toolbar.forward' => 'Forward',
 			'toolbar.up' => 'Up',
 			'toolbar.refresh' => 'Refresh',

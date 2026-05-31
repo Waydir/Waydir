@@ -25,9 +25,12 @@ List<FileEntry> sortEntries(
   required SortKey key,
   required bool ascending,
   required bool foldersFirst,
+  bool naturalSort = false,
 }) {
   final out = List<FileEntry>.of(entries);
-  int byName(FileEntry a, FileEntry b) => a.nameLower.compareTo(b.nameLower);
+  int byName(FileEntry a, FileEntry b) => naturalSort
+      ? compareNatural(a.nameLower, b.nameLower)
+      : a.nameLower.compareTo(b.nameLower);
 
   out.sort((a, b) {
     if (foldersFirst && a.type != b.type) {
@@ -46,4 +49,58 @@ List<FileEntry> sortEntries(
     return ascending ? cmp : -cmp;
   });
   return out;
+}
+
+/// Compares two strings the way a human reads them: runs of digits are
+/// compared by numeric value rather than character by character, so "file2"
+/// sorts before "file10". Inputs are expected to already be case-folded.
+int compareNatural(String a, String b) {
+  const zero = 0x30;
+  const nine = 0x39;
+  final la = a.length;
+  final lb = b.length;
+  var i = 0;
+  var j = 0;
+  while (i < la && j < lb) {
+    final ca = a.codeUnitAt(i);
+    final cb = b.codeUnitAt(j);
+    final aDigit = ca >= zero && ca <= nine;
+    final bDigit = cb >= zero && cb <= nine;
+    if (aDigit && bDigit) {
+      var si = i;
+      var sj = j;
+      while (si < la && a.codeUnitAt(si) == zero) {
+        si++;
+      }
+      while (sj < lb && b.codeUnitAt(sj) == zero) {
+        sj++;
+      }
+      var ei = si;
+      var ej = sj;
+      while (ei < la && a.codeUnitAt(ei) >= zero && a.codeUnitAt(ei) <= nine) {
+        ei++;
+      }
+      while (ej < lb && b.codeUnitAt(ej) >= zero && b.codeUnitAt(ej) <= nine) {
+        ej++;
+      }
+      final lenA = ei - si;
+      final lenB = ej - sj;
+      if (lenA != lenB) return lenA < lenB ? -1 : 1;
+      for (var k = 0; k < lenA; k++) {
+        final d = a.codeUnitAt(si + k) - b.codeUnitAt(sj + k);
+        if (d != 0) return d < 0 ? -1 : 1;
+      }
+      final zerosA = si - i;
+      final zerosB = sj - j;
+      if (zerosA != zerosB) return zerosA < zerosB ? -1 : 1;
+      i = ei;
+      j = ej;
+    } else {
+      if (ca != cb) return ca < cb ? -1 : 1;
+      i++;
+      j++;
+    }
+  }
+  final rest = (la - i) - (lb - j);
+  return rest < 0 ? -1 : (rest > 0 ? 1 : 0);
 }

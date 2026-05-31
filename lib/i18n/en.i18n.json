@@ -246,6 +246,8 @@
       "recentDatesRelativeHint": "When System locale is selected, files modified in the last 24 hours show as relative.",
       "foldersFirst": "Show folders before files",
       "foldersFirstHint": "Group folders ahead of files regardless of the sort order.",
+      "naturalSort": "Natural sort order",
+      "naturalSortHint": "Sort numbers in names by value, so \"file2\" comes before \"file10\".",
       "sortKey": "Sort files by",
       "sortKeyName": "Name",
       "sortKeySize": "Size",

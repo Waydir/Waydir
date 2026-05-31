@@ -365,6 +365,21 @@ class $AppSettingsTable extends AppSettings
     ),
     defaultValue: const Constant(true),
   );
+  static const VerificationMeta _naturalSortMeta = const VerificationMeta(
+    'naturalSort',
+  );
+  @override
+  late final GeneratedColumn<bool> naturalSort = GeneratedColumn<bool>(
+    'natural_sort',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("natural_sort" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
   static const VerificationMeta _searchModeMeta = const VerificationMeta(
     'searchMode',
   );
@@ -446,6 +461,7 @@ class $AppSettingsTable extends AppSettings
     sortKey,
     sortAscending,
     foldersFirst,
+    naturalSort,
     searchMode,
     rememberFolderState,
     rememberFolderSort,
@@ -679,6 +695,15 @@ class $AppSettingsTable extends AppSettings
         ),
       );
     }
+    if (data.containsKey('natural_sort')) {
+      context.handle(
+        _naturalSortMeta,
+        naturalSort.isAcceptableOrUnknown(
+          data['natural_sort']!,
+          _naturalSortMeta,
+        ),
+      );
+    }
     if (data.containsKey('search_mode')) {
       context.handle(
         _searchModeMeta,
@@ -829,6 +854,10 @@ class $AppSettingsTable extends AppSettings
         DriftSqlType.bool,
         data['${effectivePrefix}folders_first'],
       )!,
+      naturalSort: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}natural_sort'],
+      )!,
       searchMode: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}search_mode'],
@@ -882,6 +911,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
   final String sortKey;
   final bool sortAscending;
   final bool foldersFirst;
+  final bool naturalSort;
   final String searchMode;
   final bool rememberFolderState;
   final bool rememberFolderSort;
@@ -914,6 +944,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     required this.sortKey,
     required this.sortAscending,
     required this.foldersFirst,
+    required this.naturalSort,
     required this.searchMode,
     required this.rememberFolderState,
     required this.rememberFolderSort,
@@ -951,6 +982,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     map['sort_key'] = Variable<String>(sortKey);
     map['sort_ascending'] = Variable<bool>(sortAscending);
     map['folders_first'] = Variable<bool>(foldersFirst);
+    map['natural_sort'] = Variable<bool>(naturalSort);
     map['search_mode'] = Variable<String>(searchMode);
     map['remember_folder_state'] = Variable<bool>(rememberFolderState);
     map['remember_folder_sort'] = Variable<bool>(rememberFolderSort);
@@ -987,6 +1019,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       sortKey: Value(sortKey),
       sortAscending: Value(sortAscending),
       foldersFirst: Value(foldersFirst),
+      naturalSort: Value(naturalSort),
       searchMode: Value(searchMode),
       rememberFolderState: Value(rememberFolderState),
       rememberFolderSort: Value(rememberFolderSort),
@@ -1043,6 +1076,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       sortKey: serializer.fromJson<String>(json['sortKey']),
       sortAscending: serializer.fromJson<bool>(json['sortAscending']),
       foldersFirst: serializer.fromJson<bool>(json['foldersFirst']),
+      naturalSort: serializer.fromJson<bool>(json['naturalSort']),
       searchMode: serializer.fromJson<String>(json['searchMode']),
       rememberFolderState: serializer.fromJson<bool>(
         json['rememberFolderState'],
@@ -1086,6 +1120,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       'sortKey': serializer.toJson<String>(sortKey),
       'sortAscending': serializer.toJson<bool>(sortAscending),
       'foldersFirst': serializer.toJson<bool>(foldersFirst),
+      'naturalSort': serializer.toJson<bool>(naturalSort),
       'searchMode': serializer.toJson<String>(searchMode),
       'rememberFolderState': serializer.toJson<bool>(rememberFolderState),
       'rememberFolderSort': serializer.toJson<bool>(rememberFolderSort),
@@ -1121,6 +1156,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     String? sortKey,
     bool? sortAscending,
     bool? foldersFirst,
+    bool? naturalSort,
     String? searchMode,
     bool? rememberFolderState,
     bool? rememberFolderSort,
@@ -1155,6 +1191,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     sortKey: sortKey ?? this.sortKey,
     sortAscending: sortAscending ?? this.sortAscending,
     foldersFirst: foldersFirst ?? this.foldersFirst,
+    naturalSort: naturalSort ?? this.naturalSort,
     searchMode: searchMode ?? this.searchMode,
     rememberFolderState: rememberFolderState ?? this.rememberFolderState,
     rememberFolderSort: rememberFolderSort ?? this.rememberFolderSort,
@@ -1233,6 +1270,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       foldersFirst: data.foldersFirst.present
           ? data.foldersFirst.value
           : this.foldersFirst,
+      naturalSort: data.naturalSort.present
+          ? data.naturalSort.value
+          : this.naturalSort,
       searchMode: data.searchMode.present
           ? data.searchMode.value
           : this.searchMode,
@@ -1278,6 +1318,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           ..write('sortKey: $sortKey, ')
           ..write('sortAscending: $sortAscending, ')
           ..write('foldersFirst: $foldersFirst, ')
+          ..write('naturalSort: $naturalSort, ')
           ..write('searchMode: $searchMode, ')
           ..write('rememberFolderState: $rememberFolderState, ')
           ..write('rememberFolderSort: $rememberFolderSort, ')
@@ -1315,6 +1356,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     sortKey,
     sortAscending,
     foldersFirst,
+    naturalSort,
     searchMode,
     rememberFolderState,
     rememberFolderSort,
@@ -1351,6 +1393,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           other.sortKey == this.sortKey &&
           other.sortAscending == this.sortAscending &&
           other.foldersFirst == this.foldersFirst &&
+          other.naturalSort == this.naturalSort &&
           other.searchMode == this.searchMode &&
           other.rememberFolderState == this.rememberFolderState &&
           other.rememberFolderSort == this.rememberFolderSort &&
@@ -1385,6 +1428,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
   final Value<String> sortKey;
   final Value<bool> sortAscending;
   final Value<bool> foldersFirst;
+  final Value<bool> naturalSort;
   final Value<String> searchMode;
   final Value<bool> rememberFolderState;
   final Value<bool> rememberFolderSort;
@@ -1417,6 +1461,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.sortKey = const Value.absent(),
     this.sortAscending = const Value.absent(),
     this.foldersFirst = const Value.absent(),
+    this.naturalSort = const Value.absent(),
     this.searchMode = const Value.absent(),
     this.rememberFolderState = const Value.absent(),
     this.rememberFolderSort = const Value.absent(),
@@ -1450,6 +1495,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.sortKey = const Value.absent(),
     this.sortAscending = const Value.absent(),
     this.foldersFirst = const Value.absent(),
+    this.naturalSort = const Value.absent(),
     this.searchMode = const Value.absent(),
     this.rememberFolderState = const Value.absent(),
     this.rememberFolderSort = const Value.absent(),
@@ -1483,6 +1529,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Expression<String>? sortKey,
     Expression<bool>? sortAscending,
     Expression<bool>? foldersFirst,
+    Expression<bool>? naturalSort,
     Expression<String>? searchMode,
     Expression<bool>? rememberFolderState,
     Expression<bool>? rememberFolderSort,
@@ -1524,6 +1571,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       if (sortKey != null) 'sort_key': sortKey,
       if (sortAscending != null) 'sort_ascending': sortAscending,
       if (foldersFirst != null) 'folders_first': foldersFirst,
+      if (naturalSort != null) 'natural_sort': naturalSort,
       if (searchMode != null) 'search_mode': searchMode,
       if (rememberFolderState != null)
         'remember_folder_state': rememberFolderState,
@@ -1561,6 +1609,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Value<String>? sortKey,
     Value<bool>? sortAscending,
     Value<bool>? foldersFirst,
+    Value<bool>? naturalSort,
     Value<String>? searchMode,
     Value<bool>? rememberFolderState,
     Value<bool>? rememberFolderSort,
@@ -1598,6 +1647,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       sortKey: sortKey ?? this.sortKey,
       sortAscending: sortAscending ?? this.sortAscending,
       foldersFirst: foldersFirst ?? this.foldersFirst,
+      naturalSort: naturalSort ?? this.naturalSort,
       searchMode: searchMode ?? this.searchMode,
       rememberFolderState: rememberFolderState ?? this.rememberFolderState,
       rememberFolderSort: rememberFolderSort ?? this.rememberFolderSort,
@@ -1699,6 +1749,9 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     if (foldersFirst.present) {
       map['folders_first'] = Variable<bool>(foldersFirst.value);
     }
+    if (naturalSort.present) {
+      map['natural_sort'] = Variable<bool>(naturalSort.value);
+    }
     if (searchMode.present) {
       map['search_mode'] = Variable<String>(searchMode.value);
     }
@@ -1744,6 +1797,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
           ..write('sortKey: $sortKey, ')
           ..write('sortAscending: $sortAscending, ')
           ..write('foldersFirst: $foldersFirst, ')
+          ..write('naturalSort: $naturalSort, ')
           ..write('searchMode: $searchMode, ')
           ..write('rememberFolderState: $rememberFolderState, ')
           ..write('rememberFolderSort: $rememberFolderSort, ')
@@ -4284,6 +4338,7 @@ typedef $$AppSettingsTableCreateCompanionBuilder =
       Value<String> sortKey,
       Value<bool> sortAscending,
       Value<bool> foldersFirst,
+      Value<bool> naturalSort,
       Value<String> searchMode,
       Value<bool> rememberFolderState,
       Value<bool> rememberFolderSort,
@@ -4318,6 +4373,7 @@ typedef $$AppSettingsTableUpdateCompanionBuilder =
       Value<String> sortKey,
       Value<bool> sortAscending,
       Value<bool> foldersFirst,
+      Value<bool> naturalSort,
       Value<String> searchMode,
       Value<bool> rememberFolderState,
       Value<bool> rememberFolderSort,
@@ -4465,6 +4521,11 @@ class $$AppSettingsTableFilterComposer
 
   ColumnFilters<bool> get foldersFirst => $composableBuilder(
     column: $table.foldersFirst,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get naturalSort => $composableBuilder(
+    column: $table.naturalSort,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4633,6 +4694,11 @@ class $$AppSettingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get naturalSort => $composableBuilder(
+    column: $table.naturalSort,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get searchMode => $composableBuilder(
     column: $table.searchMode,
     builder: (column) => ColumnOrderings(column),
@@ -4788,6 +4854,11 @@ class $$AppSettingsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<bool> get naturalSort => $composableBuilder(
+    column: $table.naturalSort,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get searchMode => $composableBuilder(
     column: $table.searchMode,
     builder: (column) => column,
@@ -4867,6 +4938,7 @@ class $$AppSettingsTableTableManager
                 Value<String> sortKey = const Value.absent(),
                 Value<bool> sortAscending = const Value.absent(),
                 Value<bool> foldersFirst = const Value.absent(),
+                Value<bool> naturalSort = const Value.absent(),
                 Value<String> searchMode = const Value.absent(),
                 Value<bool> rememberFolderState = const Value.absent(),
                 Value<bool> rememberFolderSort = const Value.absent(),
@@ -4899,6 +4971,7 @@ class $$AppSettingsTableTableManager
                 sortKey: sortKey,
                 sortAscending: sortAscending,
                 foldersFirst: foldersFirst,
+                naturalSort: naturalSort,
                 searchMode: searchMode,
                 rememberFolderState: rememberFolderState,
                 rememberFolderSort: rememberFolderSort,
@@ -4933,6 +5006,7 @@ class $$AppSettingsTableTableManager
                 Value<String> sortKey = const Value.absent(),
                 Value<bool> sortAscending = const Value.absent(),
                 Value<bool> foldersFirst = const Value.absent(),
+                Value<bool> naturalSort = const Value.absent(),
                 Value<String> searchMode = const Value.absent(),
                 Value<bool> rememberFolderState = const Value.absent(),
                 Value<bool> rememberFolderSort = const Value.absent(),
@@ -4965,6 +5039,7 @@ class $$AppSettingsTableTableManager
                 sortKey: sortKey,
                 sortAscending: sortAscending,
                 foldersFirst: foldersFirst,
+                naturalSort: naturalSort,
                 searchMode: searchMode,
                 rememberFolderState: rememberFolderState,
                 rememberFolderSort: rememberFolderSort,
