@@ -38,6 +38,18 @@ class IndexAwareCircularBuffer<T extends IndexedItem> {
   @pragma('vm:prefer-inline')
   void _adoptChild(int index, T child) {
     final cyclicIndex = _getCyclicIndex(index);
+    // If `child` already lives in this buffer (e.g. `list[i] = list[j]` while
+    // scrolling/inserting/deleting lines), vacate its previous slot. Otherwise
+    // the same item ends up referenced by two slots: detaching one alias later
+    // leaves a detached item — or a null hole — inside the active window, which
+    // crashes paint (`list[i]` returns null) and trips the `_move` assert.
+    if (identical(child._owner, this) && child._absoluteIndex != null) {
+      final oldCyclic =
+          _getCyclicIndex(child._absoluteIndex! - _absoluteStartIndex);
+      if (oldCyclic != cyclicIndex && identical(_array[oldCyclic], child)) {
+        _array[oldCyclic] = null;
+      }
+    }
     _array[cyclicIndex]?._detach();
     _array[cyclicIndex] = child.._attach(this, index);
   }
@@ -224,8 +236,12 @@ class IndexAwareCircularBuffer<T extends IndexedItem> {
   /// instead just adjusts the start index and length.
   void trimStart(int count) {
     if (count > _length) count = _length;
+    for (var i = 0; i < count; i++) {
+      _dropChild(i);
+    }
     _startIndex += count;
     _startIndex %= _array.length;
+    _absoluteStartIndex += count;
     _length -= count;
   }
 
