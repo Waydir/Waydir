@@ -1161,13 +1161,22 @@ class WaydirCoreLoader {
     }
   }
 
+  // Resolved once and reused: the pty hot path runs on a timer many times a
+  // second per terminal, so a dlsym per call is pure overhead.
+  static _PtyReadDart? _ptyReadFn;
+  static _PtyWriteDart? _ptyWriteFn;
+  static _PtyAliveDart? _ptyAliveFn;
+  static _FreeDart? _freeFn;
+
   /// Drains pending shell output, or null if nothing is buffered.
   static Uint8List? ptyRead(int id) {
     final lib = requireLib();
-    final fn = lib.lookupFunction<_PtyReadNative, _PtyReadDart>(
+    final fn = _ptyReadFn ??= lib.lookupFunction<_PtyReadNative, _PtyReadDart>(
       'waydir_pty_read',
     );
-    final free = lib.lookupFunction<_FreeNative, _FreeDart>('waydir_free');
+    final free = _freeFn ??= lib.lookupFunction<_FreeNative, _FreeDart>(
+      'waydir_free',
+    );
     final outLen = calloc<IntPtr>();
     try {
       final buf = fn(id, outLen);
@@ -1186,9 +1195,8 @@ class WaydirCoreLoader {
   static void ptyWrite(int id, Uint8List data) {
     if (data.isEmpty) return;
     final lib = requireLib();
-    final fn = lib.lookupFunction<_PtyWriteNative, _PtyWriteDart>(
-      'waydir_pty_write',
-    );
+    final fn = _ptyWriteFn ??= lib
+        .lookupFunction<_PtyWriteNative, _PtyWriteDart>('waydir_pty_write');
     final dataPtr = calloc<Uint8>(data.length);
     try {
       dataPtr.asTypedList(data.length).setRange(0, data.length, data);
@@ -1208,9 +1216,8 @@ class WaydirCoreLoader {
 
   static bool ptyAlive(int id) {
     final lib = requireLib();
-    final fn = lib.lookupFunction<_PtyAliveNative, _PtyAliveDart>(
-      'waydir_pty_alive',
-    );
+    final fn = _ptyAliveFn ??= lib
+        .lookupFunction<_PtyAliveNative, _PtyAliveDart>('waydir_pty_alive');
     return fn(id) != 0;
   }
 
