@@ -231,17 +231,24 @@ class IndexAwareCircularBuffer<T extends IndexedItem> {
 
   /// Replaces all elements in the list with [replacement].
   void replaceWith(List<T> replacement) {
+    // Detach everything currently stored. This uses the current [_startIndex],
+    // so it must run before the reset below.
     for (var i = 0; i < _length; i++) {
       _dropChild(i);
     }
 
+    // Reset the ring origin BEFORE adopting the replacement. _adoptChild maps
+    // logical indices through [_startIndex]; if we adopted first and reset
+    // after (as this used to), the new children would be written to slots
+    // [_startIndex, …) while later reads (with _startIndex == 0) look at slots
+    // [0, …), returning the nulls left by the drop loop. After enough output
+    // advanced _startIndex past 0, a reflow would then leave holes mid-buffer
+    // and crash paint.
+    _startIndex = 0;
+
     var copyStart = 0;
     if (replacement.length > maxLength) {
       copyStart = replacement.length - maxLength;
-    }
-
-    for (var i = 0; i < copyStart; i++) {
-      _dropChild(i);
     }
 
     final copyLength = replacement.length - copyStart;
@@ -249,7 +256,6 @@ class IndexAwareCircularBuffer<T extends IndexedItem> {
       _adoptChild(i, replacement[copyStart + i]);
     }
 
-    _startIndex = 0;
     _length = copyLength;
   }
 
