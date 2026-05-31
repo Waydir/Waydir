@@ -54,6 +54,7 @@ String _labelFor(ShortcutDef s) => switch (s.id) {
   'go_back' => t.keybindings.goBack,
   'go_forward' => t.keybindings.goForward,
   'refresh' => t.keybindings.refresh,
+  'focus_path' => t.keybindings.focusPath,
   'quick_look' => t.keybindings.quickLook,
   'cursor_up' => t.keybindings.cursorUp,
   'cursor_down' => t.keybindings.cursorDown,

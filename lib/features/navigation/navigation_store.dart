@@ -206,6 +206,7 @@ class NavigationStore {
   final searchScannedDirs = signal(0);
   final searchCurrentDir = signal<String?>(null);
   final searchFocusRequest = signal(0);
+  final pathBarFocusRequest = signal(0);
   final searchPatternError = signal<String?>(null);
   final renameAttempt = signal(0);
 
@@ -382,6 +383,10 @@ class NavigationStore {
         _restartRecursiveSearch();
       }
     });
+  }
+
+  void focusPathBar() {
+    pathBarFocusRequest.value = pathBarFocusRequest.value + 1;
   }
 
   void openSearch({bool recursive = false}) {

@@ -327,6 +327,8 @@ class _PathBarState extends State<_PathBar> {
   int _suggestionToken = 0;
   bool _choosingSuggestion = false;
   void Function()? _disposePathListener;
+  void Function()? _disposeFocusListener;
+  int _lastFocusRequest = 0;
 
   static const int _maxSuggestions = 8;
 
@@ -337,6 +339,7 @@ class _PathBarState extends State<_PathBar> {
     _controller.addListener(_handleControllerChanged);
     _focusNode.addListener(_handleFocusChanged);
     _initPathEffect();
+    _initFocusEffect();
   }
 
   @override
@@ -344,7 +347,9 @@ class _PathBarState extends State<_PathBar> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.store != widget.store) {
       _disposePathListener?.call();
+      _disposeFocusListener?.call();
       _initPathEffect();
+      _initFocusEffect();
     }
   }
 
@@ -357,10 +362,21 @@ class _PathBarState extends State<_PathBar> {
     });
   }
 
+  void _initFocusEffect() {
+    _lastFocusRequest = widget.store.pathBarFocusRequest.value;
+    _disposeFocusListener = effect(() {
+      final request = widget.store.pathBarFocusRequest.value;
+      if (request == _lastFocusRequest) return;
+      _lastFocusRequest = request;
+      if (!_editing) _startEditing();
+    });
+  }
+
   @override
   void dispose() {
     _hideSuggestions();
     _disposePathListener?.call();
+    _disposeFocusListener?.call();
     _controller.removeListener(_handleControllerChanged);
     _focusNode.removeListener(_handleFocusChanged);
     _controller.dispose();

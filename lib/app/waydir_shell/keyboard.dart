@@ -67,6 +67,11 @@ mixin _WaydirKeyboardMixin
       return KeyEventResult.handled;
     }
 
+    if (AppShortcuts.matches('focus_path', key)) {
+      _active.focusPathBar();
+      return KeyEventResult.handled;
+    }
+
     final settings = SettingsStore.instance;
     if (AppShortcuts.matches('file_list_zoom_in', key)) {
       settings.increaseFileListScale();

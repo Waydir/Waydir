@@ -721,6 +721,9 @@ class Translations$keybindings$en {
 	/// en: 'Refresh'
 	String get refresh => 'Refresh';
 
+	/// en: 'Focus path bar'
+	String get focusPath => 'Focus path bar';
+
 	/// en: 'Quick look'
 	String get quickLook => 'Quick look';
 
@@ -3171,6 +3174,7 @@ extension on Translations {
 			'keybindings.goBack' => 'Go back',
 			'keybindings.goForward' => 'Go forward',
 			'keybindings.refresh' => 'Refresh',
+			'keybindings.focusPath' => 'Focus path bar',
 			'keybindings.quickLook' => 'Quick look',
 			'keybindings.cursorUp' => 'Move up',
 			'keybindings.cursorDown' => 'Move down',
@@ -3346,9 +3350,9 @@ extension on Translations {
 			'trash.openSystemSettings' => 'Open System Settings',
 			'toolbar.back' => 'Back',
 			'toolbar.forward' => 'Forward',
-			'toolbar.up' => 'Up',
 			_ => null,
 		} ?? switch (path) {
+			'toolbar.up' => 'Up',
 			'toolbar.refresh' => 'Refresh',
 			'toolbar.viewOptions' => 'View Options',
 			'toolbar.newFolder' => 'New Folder',

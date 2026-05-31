@@ -246,6 +246,13 @@ class AppShortcuts {
       ctrl: true,
     ),
     ShortcutDef(
+      id: 'focus_path',
+      label: () => '',
+      group: ShortcutGroup.navigation,
+      key: LogicalKeyboardKey.keyL,
+      ctrl: true,
+    ),
+    ShortcutDef(
       id: 'cursor_up',
       label: () => '',
       group: ShortcutGroup.navigation,

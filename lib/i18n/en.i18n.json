@@ -408,6 +408,7 @@
     "goBack": "Go back",
     "goForward": "Go forward",
     "refresh": "Refresh",
+    "focusPath": "Focus path bar",
     "quickLook": "Quick look",
     "cursorUp": "Move up",
     "cursorDown": "Move down",
