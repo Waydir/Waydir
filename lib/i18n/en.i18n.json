@@ -613,6 +613,7 @@
       "localDisk": "Local Disk",
       "usbDrive": "USB Drive",
       "unknownDrive": "Unknown Drive",
+      "networkDrive": "Network Drive",
       "macintoshHd": "Macintosh HD",
       "windowsDriveLabel": "$name ($letter:)",
       "mountTitle": "Mount $name"

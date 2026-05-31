@@ -2619,6 +2619,9 @@ class Translations$sidebar$drives$en {
 	/// en: 'Unknown Drive'
 	String get unknownDrive => 'Unknown Drive';
 
+	/// en: 'Network Drive'
+	String get networkDrive => 'Network Drive';
+
 	/// en: 'Macintosh HD'
 	String get macintoshHd => 'Macintosh HD';
 
@@ -3340,6 +3343,7 @@ extension on Translations {
 			'sidebar.drives.localDisk' => 'Local Disk',
 			'sidebar.drives.usbDrive' => 'USB Drive',
 			'sidebar.drives.unknownDrive' => 'Unknown Drive',
+			'sidebar.drives.networkDrive' => 'Network Drive',
 			'sidebar.drives.macintoshHd' => 'Macintosh HD',
 			'sidebar.drives.windowsDriveLabel' => ({required Object name, required Object letter}) => '${name} (${letter}:)',
 			'sidebar.drives.mountTitle' => ({required Object name}) => 'Mount ${name}',
@@ -3349,9 +3353,9 @@ extension on Translations {
 			'trash.accessDeniedBody' => 'macOS protects the Trash folder. Grant Waydir Full Disk Access in System Settings, then relaunch the app.',
 			'trash.openSystemSettings' => 'Open System Settings',
 			'toolbar.back' => 'Back',
-			'toolbar.forward' => 'Forward',
 			_ => null,
 		} ?? switch (path) {
+			'toolbar.forward' => 'Forward',
 			'toolbar.up' => 'Up',
 			'toolbar.refresh' => 'Refresh',
 			'toolbar.viewOptions' => 'View Options',
