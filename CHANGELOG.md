@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-05-31
+
 ### Added
 - Features dialog with short guides and demo clips for the main features.
 - Embedded terminal in each pane with remote connections support.
