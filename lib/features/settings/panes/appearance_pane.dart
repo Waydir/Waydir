@@ -204,6 +204,9 @@ class _AppearancePaneState extends State<AppearancePane> {
             RegistrySettingRow(
               setting: registry.byId('appearance.recentDatesRelative'),
             ),
+            RegistrySettingRow(
+              setting: registry.byId('appearance.naturalSort'),
+            ),
           ],
         ),
       ],

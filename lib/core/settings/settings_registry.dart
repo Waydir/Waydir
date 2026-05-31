@@ -378,6 +378,14 @@ class SettingsRegistry {
       searchTerms: const ['sort', 'folders', 'order'],
       signal: SettingsStore.instance.foldersFirst,
     ),
+    ToggleSetting(
+      id: 'appearance.naturalSort',
+      category: SettingsCategory.appearance,
+      label: () => t.preferences.appearance.naturalSort,
+      hint: () => t.preferences.appearance.naturalSortHint,
+      searchTerms: const ['sort', 'natural', 'numeric', 'number', 'order'],
+      signal: SettingsStore.instance.naturalSort,
+    ),
     ChoiceSetting<String>(
       id: 'appearance.sortKey',
       category: SettingsCategory.appearance,

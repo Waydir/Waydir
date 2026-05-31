@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Natural sort order (enabled by default): numbers in file names sort by value, so "file2" comes before "file10". Can be toggled in Preferences → Appearance.
+
 ## [0.7.0] - 2026-05-31
 
 ### Added

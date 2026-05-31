@@ -45,6 +45,7 @@ class AppSettings extends Table {
   TextColumn get sortKey => text().withDefault(const Constant('name'))();
   BoolColumn get sortAscending => boolean().withDefault(const Constant(true))();
   BoolColumn get foldersFirst => boolean().withDefault(const Constant(true))();
+  BoolColumn get naturalSort => boolean().withDefault(const Constant(true))();
   TextColumn get searchMode =>
       text().withDefault(const Constant('substring'))();
   BoolColumn get rememberFolderState =>
@@ -143,7 +144,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 21;
+  int get schemaVersion => 22;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -244,6 +245,9 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 21) {
         await m.createTable(shortcutBindings);
+      }
+      if (from < 22) {
+        await addSettingColumn(appSettings.naturalSort);
       }
     },
   );
