@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-06-01
+
 ### Added
 - Natural sort order (enabled by default): numbers in file names sort by value, so "file2" comes before "file10". Can be toggled in Preferences → Appearance.
 - Sidebar network entries now show a tooltip with the full name (and remote target) when the label is truncated.
