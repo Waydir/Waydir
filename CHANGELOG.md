@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Natural sort order (enabled by default): numbers in file names sort by value, so "file2" comes before "file10". Can be toggled in Preferences → Appearance.
+- Sidebar network entries now show a tooltip with the full name (and remote target) when the label is truncated.
+
+### Fixed
+- New folders no longer briefly appear twice before a refresh.
+- After creating a folder you can open it with Enter right away, without clicking the list first.
+- Windows network drives now show the drive letter first in the label.
+- Windows: listing a bare network share root (`\\server\share`) now works.
+
+### Changed
+- Network drives no longer show an eject button (SFTP/SMB connections keep their disconnect action).
 
 ## [0.7.0] - 2026-05-31
 

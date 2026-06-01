@@ -175,6 +175,10 @@ class _WaydirShellState extends State<WaydirShell>
       d();
     }
     _renameErrorDisposers.clear();
+    for (final d in _renameFocusDisposers.values) {
+      d();
+    }
+    _renameFocusDisposers.clear();
     _focusNode.dispose();
     _notificationStore.dispose();
     _shell.dispose();

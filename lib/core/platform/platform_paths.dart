@@ -301,6 +301,21 @@ class PlatformPaths {
     return drives;
   }
 
+  /// Normalises a path for native directory listing. On Windows a bare UNC
+  /// share root (e.g. `\\server\share`) must carry a trailing separator or
+  /// `read_dir` rejects it, so the share root lists empty. No-op elsewhere.
+  static String listablePath(String path) {
+    if (!isWindows || isRemoteUri(path)) return path;
+    final cleaned = _normalizeWindowsPath(path);
+    final uncRoot = _windowsUncRoot(cleaned);
+    if (uncRoot != null &&
+        _stripTrailingWindowsSeparator(cleaned) ==
+            _stripTrailingWindowsSeparator(uncRoot)) {
+      return _ensureTrailingWindowsSeparator(cleaned);
+    }
+    return path;
+  }
+
   static String _windowsDriveRoot(String path) {
     if (path.length >= 2 && path[1] == ':') {
       return '${path[0].toUpperCase()}:\\';

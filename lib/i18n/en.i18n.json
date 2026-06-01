@@ -617,7 +617,7 @@
       "unknownDrive": "Unknown Drive",
       "networkDrive": "Network Drive",
       "macintoshHd": "Macintosh HD",
-      "windowsDriveLabel": "$name ($letter:)",
+      "windowsDriveLabel": "$letter: $name",
       "mountTitle": "Mount $name"
     },
     "collapse": "Collapse sidebar",

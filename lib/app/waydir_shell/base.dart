@@ -12,7 +12,7 @@ mixin _WaydirStateBase on State<WaydirShell> {
     operationStore: _operationStore,
     notificationStore: _notificationStore,
   );
-  final _focusNode = FocusNode();
+  final _focusNode = FocusNode(debugLabel: 'shell-keys');
   final _effectDisposers = <void Function()>[];
 
   /// The file the "Open With…" chooser was opened on.
@@ -22,7 +22,8 @@ mixin _WaydirStateBase on State<WaydirShell> {
   /// extension, plus the set of extensions currently being resolved.
   final Map<String, List<ContextMenuItem>> _openWithCache = {};
   final Set<String> _openWithWarming = {};
-  final _renameErrorDisposers = <String, void Function()>{};
+  final _renameErrorDisposers = <NavigationStore, void Function()>{};
+  final _renameFocusDisposers = <NavigationStore, void Function()>{};
   DateTime? _lastCursorRepeatAt;
   DateTime? _terminalInteractionAt;
 
@@ -65,13 +66,13 @@ mixin _WaydirStateBase on State<WaydirShell> {
   }
 
   void _installRenameErrorEffects() {
-    final currentIds = <String>{};
+    final currentStores = <NavigationStore>{};
     for (final pane in _shell.panes.value) {
       for (final tab in pane.tabs.tabs.value) {
-        currentIds.add(tab.id);
-        if (!_renameErrorDisposers.containsKey(tab.id)) {
-          final store = tab.store;
-          _renameErrorDisposers[tab.id] = effect(() {
+        final store = tab.store;
+        currentStores.add(store);
+        if (!_renameErrorDisposers.containsKey(store)) {
+          _renameErrorDisposers[store] = effect(() {
             final error = store.renameError.value;
             if (error != null) {
               store.renameError.value = null;
@@ -87,12 +88,49 @@ mixin _WaydirStateBase on State<WaydirShell> {
             }
           });
         }
+        if (!_renameFocusDisposers.containsKey(store)) {
+          String? previousRenaming = store.renamingPath.peek();
+          int previousFocusRequest = store.fileListFocusRequest.peek();
+          _renameFocusDisposers[store] = effect(() {
+            final current = store.renamingPath.value;
+            final focusRequest = store.fileListFocusRequest.value;
+            final closed = previousRenaming != null && current == null;
+            final requested = focusRequest != previousFocusRequest;
+            previousRenaming = current;
+            previousFocusRequest = focusRequest;
+            if (closed || requested) {
+              _scheduleListRefocus(store);
+            }
+          });
+        }
       }
     }
-    final existingIds = _renameErrorDisposers.keys.toSet();
-    for (final id in existingIds.difference(currentIds)) {
-      _renameErrorDisposers.remove(id)?.call();
+    final existingStores = _renameErrorDisposers.keys.toSet();
+    for (final store in existingStores.difference(currentStores)) {
+      _renameErrorDisposers.remove(store)?.call();
+      _renameFocusDisposers.remove(store)?.call();
     }
+  }
+
+  void _scheduleListRefocus(NavigationStore store, [int attempt = 0]) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final panes = _shell.panes.peek();
+      var paneIndex = -1;
+      for (var i = 0; i < panes.length; i++) {
+        if (panes[i].tabs.activeTab.peek().store == store) {
+          paneIndex = i;
+          break;
+        }
+      }
+      if (paneIndex < 0) return;
+      if (_shell.activePaneIndex.peek() != paneIndex) {
+        _shell.setActivePane(paneIndex);
+      }
+      if (store.searchActive.peek()) return;
+      _focusNode.requestFocus();
+      if (attempt < 8) _scheduleListRefocus(store, attempt + 1);
+    });
   }
 
   bool _isEditableFocused() {

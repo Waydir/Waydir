@@ -49,6 +49,7 @@ class NavigationStore {
   final renamingPath = signal<String?>(null);
   final renameError = signal<String?>(null);
   final pendingCreate = signal<FileEntry?>(null);
+  final fileListFocusRequest = signal(0);
   final _trashEntries = <String, TrashEntry>{};
   int _loadToken = 0;
 
@@ -1298,7 +1299,7 @@ class NavigationStore {
       }
       if (!mutated) return;
       patched.removeWhere(identical0);
-      _applyExternalChanges(sortCurrent(patched));
+      _applyExternalChanges(sortCurrent(_dedupeByName(patched)));
     } catch (_) {
       _onExternalChange(path);
     }
@@ -1321,6 +1322,17 @@ class NavigationStore {
     foldersFirst: foldersFirst.value,
     naturalSort: SettingsStore.instance.naturalSort.value,
   );
+
+  static List<FileEntry> _dedupeByName(List<FileEntry> entries) {
+    final seen = <String>{};
+    final out = <FileEntry>[];
+    for (final e in entries) {
+      final name = PlatformPaths.fileName(e.path);
+      final key = PlatformPaths.isWindows ? name.toLowerCase() : name;
+      if (seen.add(key)) out.add(e);
+    }
+    return out;
+  }
 
   void _onExternalChange(String path) async {
     if (path != currentPath.value) return;
@@ -1393,6 +1405,7 @@ class NavigationStore {
       renameError.value = null;
       pendingCreate.value = null;
     });
+    fileListFocusRequest.value++;
   }
 
   void commitRename(String newName) async {
@@ -1472,6 +1485,7 @@ class NavigationStore {
             });
           }
         }
+        fileListFocusRequest.value++;
       case RenameAlreadyExists():
         renameError.value = t.toast.renameAlreadyExists(name: trimmed);
         renameAttempt.value = renameAttempt.value + 1;
@@ -1823,6 +1837,7 @@ class NavigationStore {
         anchorIndex.value = idx;
       });
     }
+    fileListFocusRequest.value++;
   }
 
   void dispose() {
