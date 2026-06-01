@@ -49,6 +49,7 @@ class NavigationStore {
   final renamingPath = signal<String?>(null);
   final renameError = signal<String?>(null);
   final pendingCreate = signal<FileEntry?>(null);
+  final fileListFocusRequest = signal(0);
   final _trashEntries = <String, TrashEntry>{};
   int _loadToken = 0;
 
@@ -1404,6 +1405,7 @@ class NavigationStore {
       renameError.value = null;
       pendingCreate.value = null;
     });
+    fileListFocusRequest.value++;
   }
 
   void commitRename(String newName) async {
@@ -1483,6 +1485,7 @@ class NavigationStore {
             });
           }
         }
+        fileListFocusRequest.value++;
       case RenameAlreadyExists():
         renameError.value = t.toast.renameAlreadyExists(name: trimmed);
         renameAttempt.value = renameAttempt.value + 1;
@@ -1834,6 +1837,7 @@ class NavigationStore {
         anchorIndex.value = idx;
       });
     }
+    fileListFocusRequest.value++;
   }
 
   void dispose() {

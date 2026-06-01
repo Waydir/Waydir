@@ -19,6 +19,9 @@ mixin _WaydirKeyboardMixin
   KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
     final isRepeat = event is KeyRepeatEvent;
     if (event is! KeyDownEvent && !isRepeat) return KeyEventResult.ignored;
+    if (!_shell.ready.value || _shell.activeStore.value == null) {
+      return KeyEventResult.ignored;
+    }
 
     final key = event.logicalKey;
     final ctrl = AppShortcuts.isControl;
