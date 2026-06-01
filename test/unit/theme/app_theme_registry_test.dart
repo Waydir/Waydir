@@ -9,6 +9,8 @@ void main() {
   group('AppThemeRegistry', () {
     late Directory dir;
 
+    final builtInIds = builtInThemes.map((theme) => theme.id).toList();
+
     setUp(() {
       dir = Directory.systemTemp.createTempSync('waydir_theme_registry_');
       log.clear();
@@ -22,11 +24,7 @@ void main() {
     test('starts with built-in themes', () {
       final registry = AppThemeRegistry();
 
-      expect(registry.themes.map((theme) => theme.id), [
-        'dark',
-        'light',
-        'nord',
-      ]);
+      expect(registry.themes.map((theme) => theme.id), builtInIds);
     });
 
     test('loads valid custom themes after built-ins', () async {
@@ -39,9 +37,7 @@ void main() {
       await registry.load(customThemesPath: dir.path);
 
       expect(registry.themes.map((theme) => theme.id), [
-        'dark',
-        'light',
-        'nord',
+        ...builtInIds,
         'midnight',
       ]);
       expect(registry.resolve('midnight').name, 'Midnight');
@@ -53,11 +49,7 @@ void main() {
       final registry = AppThemeRegistry();
       await registry.load(customThemesPath: dir.path);
 
-      expect(registry.themes.map((theme) => theme.id), [
-        'dark',
-        'light',
-        'nord',
-      ]);
+      expect(registry.themes.map((theme) => theme.id), builtInIds);
       expect(log.entries.value, isNotEmpty);
       expect(log.entries.value.last.tag, 'theme');
     });
@@ -72,7 +64,7 @@ void main() {
       await registry.load(customThemesPath: dir.path);
 
       expect(registry.resolve('dark').name, 'Dark');
-      expect(registry.themes.length, 3);
+      expect(registry.themes.length, builtInThemes.length);
       expect(log.entries.value.last.message, contains('duplicate id'));
     });
 

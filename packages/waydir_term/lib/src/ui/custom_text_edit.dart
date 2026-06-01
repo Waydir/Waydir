@@ -14,7 +14,6 @@ class CustomTextEdit extends StatefulWidget {
     required this.focusNode,
     this.autofocus = false,
     this.readOnly = false,
-    // this.initEditingState = TextEditingValue.empty,
     this.inputType = TextInputType.text,
     this.inputAction = TextInputAction.newline,
     this.keyboardAppearance = Brightness.light,
@@ -172,8 +171,6 @@ class CustomTextEditState extends State<CustomTextEdit> with TextInputClient {
 
       _connection!.show();
 
-      // setEditableRect(Rect.zero, Rect.zero);
-
       _connection!.setEditingState(_initEditingState);
     }
   }
@@ -240,42 +237,27 @@ class CustomTextEditState extends State<CustomTextEdit> with TextInputClient {
 
   @override
   void performAction(TextInputAction action) {
-    // print('performAction $action');
     widget.onAction(action);
   }
 
   @override
-  void updateFloatingCursor(RawFloatingCursorPoint point) {
-    // print('updateFloatingCursor $point');
-  }
+  void updateFloatingCursor(RawFloatingCursorPoint point) {}
 
   @override
-  void showAutocorrectionPromptRect(int start, int end) {
-    // print('showAutocorrectionPromptRect');
-  }
+  void showAutocorrectionPromptRect(int start, int end) {}
 
   @override
-  void connectionClosed() {
-    // print('connectionClosed');
-  }
+  void connectionClosed() {}
 
   @override
-  void performPrivateCommand(String action, Map<String, dynamic> data) {
-    // print('performPrivateCommand $action');
-  }
+  void performPrivateCommand(String action, Map<String, dynamic> data) {}
 
   @override
-  void insertTextPlaceholder(Size size) {
-    // print('insertTextPlaceholder');
-  }
+  void insertTextPlaceholder(Size size) {}
 
   @override
-  void removeTextPlaceholder() {
-    // print('removeTextPlaceholder');
-  }
+  void removeTextPlaceholder() {}
 
   @override
-  void showToolbar() {
-    // print('showToolbar');
-  }
+  void showToolbar() {}
 }

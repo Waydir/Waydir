@@ -231,17 +231,9 @@ class _ReleaseNotes extends StatelessWidget {
         ),
       );
     }
-    final baseFont = TextStyle(
-      fontSize: 13.5,
-      height: 1.5,
-      color: AppColors.fg,
-    );
+    final baseFont = context.txt.row.copyWith(height: 1.5, color: AppColors.fg);
     final mutedFont = baseFont.copyWith(color: AppColors.fgMuted);
-    final monoFont = TextStyle(
-      fontFamily: 'monospace',
-      fontSize: 12.5,
-      color: AppColors.fg,
-    );
+    final monoFont = context.txt.code.copyWith(color: AppColors.fg);
     return Markdown(
       data: text,
       padding: const EdgeInsets.fromLTRB(18, 4, 18, 14),
@@ -262,21 +254,9 @@ class _ReleaseNotes extends StatelessWidget {
       },
       styleSheet: MarkdownStyleSheet(
         p: baseFont,
-        h1: baseFont.copyWith(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          height: 1.3,
-        ),
-        h2: baseFont.copyWith(
-          fontSize: 15.5,
-          fontWeight: FontWeight.w600,
-          height: 1.3,
-        ),
-        h3: baseFont.copyWith(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: AppColors.fgMuted,
-        ),
+        h1: context.txt.heading.copyWith(height: 1.3),
+        h2: context.txt.dialogTitle.copyWith(height: 1.3),
+        h3: context.txt.bodyEmphasis.copyWith(color: AppColors.fgMuted),
         listBullet: baseFont,
         em: baseFont.copyWith(fontStyle: FontStyle.italic),
         strong: baseFont.copyWith(fontWeight: FontWeight.w600),
