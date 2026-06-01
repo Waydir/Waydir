@@ -416,17 +416,6 @@ class _SidebarState extends State<Sidebar> {
                                     destination,
                                     move: move,
                                   ),
-                          onUnmountDrive: (drive) async {
-                            final cur = widget.store.currentPath.value;
-                            final mountPoint = drive.mountPoint ?? drive.id;
-                            try {
-                              await driveStore.unmount(drive);
-                            } catch (_) {}
-                            if (cur == mountPoint ||
-                                cur.startsWith(mountPoint)) {
-                              widget.store.navigateTo(PlatformPaths.homePath);
-                            }
-                          },
                           onUnmount: (path) async {
                             final currentPath = widget.store.currentPath.value;
                             await LocationResolver.unmount(path);
@@ -746,7 +735,6 @@ class _NetworkSection extends StatelessWidget {
   final void Function(List<String> paths, String destination, {bool move})
   onDropFiles;
   final Future<void> Function(String path) onUnmount;
-  final Future<void> Function(Drive drive) onUnmountDrive;
 
   const _NetworkSection({
     required this.locations,
@@ -757,7 +745,6 @@ class _NetworkSection extends StatelessWidget {
     required this.onOpenInNewTab,
     required this.onDropFiles,
     required this.onUnmount,
-    required this.onUnmountDrive,
   });
 
   @override
@@ -781,13 +768,15 @@ class _NetworkSection extends StatelessWidget {
             isSelected: currentPath == path || currentPath.startsWith(path),
             isMounted: true,
             collapsed: collapsed,
+            tooltip: drive.remoteTarget == null
+                ? drive.label
+                : '${drive.label}\n${drive.remoteTarget}',
             onTap: onNavigate,
             onMiddleTap: onOpenInNewTab != null
                 ? () => onOpenInNewTab!(path)
                 : null,
             onDropFiles: (paths, {bool move = false}) =>
                 onDropFiles(paths, path, move: move),
-            onUnmount: () => unawaited(onUnmountDrive(drive)),
           );
         }),
         ...locations.map((path) {
@@ -801,6 +790,9 @@ class _NetworkSection extends StatelessWidget {
             isSelected: currentPath == path || currentPath.startsWith('$path/'),
             isMounted: true,
             collapsed: collapsed,
+            tooltip: uri.displayLabel == path
+                ? uri.displayLabel
+                : '${uri.displayLabel}\n$path',
             onTap: onNavigate,
             onMiddleTap: onOpenInNewTab != null
                 ? () => onOpenInNewTab!(path)
@@ -1162,6 +1154,7 @@ class _ItemRow extends StatefulWidget {
   final void Function(List<String> paths, {bool move}) onDropFiles;
   final VoidCallback? onUnmount;
   final void Function(Offset position)? onContextMenu;
+  final String? tooltip;
 
   const _ItemRow({
     required this.item,
@@ -1174,6 +1167,7 @@ class _ItemRow extends StatefulWidget {
     required this.onDropFiles,
     this.onUnmount,
     this.onContextMenu,
+    this.tooltip,
   });
 
   @override
@@ -1344,7 +1338,10 @@ class _ItemRowState extends State<_ItemRow> {
 
   String? _tooltipMessage() {
     final space = widget.space;
-    if (space == null) return widget.collapsed ? widget.item.label : null;
+    if (space == null) {
+      if (widget.collapsed) return widget.item.label;
+      return widget.tooltip;
+    }
 
     final usedPercent = (space.usedFraction * 100).toStringAsFixed(1);
     return [

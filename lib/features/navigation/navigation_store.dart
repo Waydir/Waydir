@@ -1298,7 +1298,7 @@ class NavigationStore {
       }
       if (!mutated) return;
       patched.removeWhere(identical0);
-      _applyExternalChanges(sortCurrent(patched));
+      _applyExternalChanges(sortCurrent(_dedupeByName(patched)));
     } catch (_) {
       _onExternalChange(path);
     }
@@ -1321,6 +1321,17 @@ class NavigationStore {
     foldersFirst: foldersFirst.value,
     naturalSort: SettingsStore.instance.naturalSort.value,
   );
+
+  static List<FileEntry> _dedupeByName(List<FileEntry> entries) {
+    final seen = <String>{};
+    final out = <FileEntry>[];
+    for (final e in entries) {
+      final name = PlatformPaths.fileName(e.path);
+      final key = PlatformPaths.isWindows ? name.toLowerCase() : name;
+      if (seen.add(key)) out.add(e);
+    }
+    return out;
+  }
 
   void _onExternalChange(String path) async {
     if (path != currentPath.value) return;

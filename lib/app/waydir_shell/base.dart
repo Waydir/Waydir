@@ -23,6 +23,7 @@ mixin _WaydirStateBase on State<WaydirShell> {
   final Map<String, List<ContextMenuItem>> _openWithCache = {};
   final Set<String> _openWithWarming = {};
   final _renameErrorDisposers = <String, void Function()>{};
+  final _renameFocusDisposers = <String, void Function()>{};
   DateTime? _lastCursorRepeatAt;
   DateTime? _terminalInteractionAt;
 
@@ -87,11 +88,28 @@ mixin _WaydirStateBase on State<WaydirShell> {
             }
           });
         }
+        if (!_renameFocusDisposers.containsKey(tab.id)) {
+          final store = tab.store;
+          String? previous = store.renamingPath.peek();
+          _renameFocusDisposers[tab.id] = effect(() {
+            final current = store.renamingPath.value;
+            final closed = previous != null && current == null;
+            previous = current;
+            if (closed && store == _active) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (!mounted) return;
+                if (_isEditableFocused()) return;
+                _focusNode.requestFocus();
+              });
+            }
+          });
+        }
       }
     }
     final existingIds = _renameErrorDisposers.keys.toSet();
     for (final id in existingIds.difference(currentIds)) {
       _renameErrorDisposers.remove(id)?.call();
+      _renameFocusDisposers.remove(id)?.call();
     }
   }
 

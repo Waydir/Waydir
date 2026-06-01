@@ -202,7 +202,7 @@ class FsWorkerPool {
     if (PlatformPaths.isSftpUri(path)) {
       return const SftpFs().listDirectory(path);
     }
-    final r = await _run<dynamic>(_Op.list, [path]);
+    final r = await _run<dynamic>(_Op.list, [PlatformPaths.listablePath(path)]);
     if (r is Uint8List) return FileEntryCodec.decode(r);
     return r as List<FileEntry>;
   }
