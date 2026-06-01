@@ -83,25 +83,3 @@ class ByteConsumer {
     _length = 0;
   }
 }
-
-// void main() {
-//   final consumer = ByteConsumer();
-//   consumer.add(Uint8List.fromList([1, 2, 3]));
-//   consumer.add(Uint8List.fromList([4, 5, 6]));
-
-//   while (consumer.isNotEmpty) {
-//     print(consumer.consume());
-//   }
-
-//   consumer.rollback(5);
-
-//   while (consumer.isNotEmpty) {
-//     print(consumer.consume());
-//   }
-
-//   consumer.rollbackTo(3);
-
-//   while (consumer.isNotEmpty) {
-//     print(consumer.consume());
-//   }
-// }

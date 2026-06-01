@@ -100,15 +100,10 @@ class EscapeParser {
     'E'.charCode: _escHandleNextLine,
     'H'.charCode: _escHandleTabSet,
     'M'.charCode: _escHandleReverseIndex,
-    // 'P'.charCode: _unsupportedHandler, // Sixel
-    // 'c'.charCode: _unsupportedHandler,
-    // '#'.charCode: _unsupportedHandler,
     '('.charCode: _escHandleDesignateCharset0, //  SCS - G0
     ')'.charCode: _escHandleDesignateCharset1, //  SCS - G1
-    // '*'.charCode: _voidHandler(1), // TODO: G2 (vt220)
-    // '+'.charCode: _voidHandler(1), // TODO: G3 (vt220)
-    '>'.charCode: _escHandleResetAppKeypadMode, // TODO: Normal Keypad
-    '='.charCode: _escHandleSetAppKeypadMode, // TODO: Application Keypad
+    '>'.charCode: _escHandleResetAppKeypadMode,
+    '='.charCode: _escHandleSetAppKeypadMode,
   });
 
   /// `ESC 7` Save Cursor (DECSC)
@@ -253,7 +248,6 @@ class EscapeParser {
       }
 
       if (char > Ascii.NULL && char < Ascii.num0) {
-        // intermediates.add(char);
         continue;
       }
 
@@ -299,17 +293,6 @@ class EscapeParser {
     'X'.codeUnitAt(0): _csiHandleEraseCharacters,
     '@'.codeUnitAt(0): _csiHandleInsertBlankCharacters,
   });
-
-  /// `ESC [ Ps a` Cursor Horizontal Position Relative (HPR)
-  ///
-  /// https://terminalguide.namepad.de/seq/csi_sa/
-  // void _csiHandleCursorHorizontalRelative() {
-  //   if (_csi.params.isEmpty) {
-  //     handler.cursorHorizontal(1);
-  //   } else {
-  //     handler.cursorHorizontal(_csi.params[0]);
-  //   }
-  // }
 
   /// `ESC [ Ps b` Repeat Previous Character (REP)
   ///
@@ -1130,7 +1113,6 @@ class _Csi {
   _Csi({
     required this.params,
     required this.finalByte,
-    // required this.intermediates,
   });
 
   int? prefix;
@@ -1138,7 +1120,6 @@ class _Csi {
   List<int> params;
 
   int finalByte;
-  // final List<int> intermediates;
 
   @override
   String toString() {

@@ -128,7 +128,6 @@ class _TerminalGestureDetectorState extends State<TerminalGestureDetector> {
         debugOwner: this,
         supportedDevices: {
           PointerDeviceKind.touch,
-          // PointerDeviceKind.mouse, // for debugging purposes only
         },
       ),
       (LongPressGestureRecognizer instance) {
