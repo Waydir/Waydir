@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Shift + arrow keys now extend the selection in the file list.
 - Terminal tabs and the new-tab/close buttons now show hover feedback.
 - Resizing the terminal panel is now smooth (the drag no longer rebuilds the whole pane on every frame).
+- The split between dual panes is easier to grab (wider, reliable drag target).
 
 ## [0.8.0] - 2026-06-01
 

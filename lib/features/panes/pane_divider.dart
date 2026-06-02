@@ -18,38 +18,31 @@ class _PaneDividerState extends State<PaneDivider> {
   double _startRatio = 0.5;
 
   static const double _lineWidth = 1;
-  static const double _hitWidth = 8;
+  static const double _hitWidth = 10;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: _lineWidth,
-      child: OverflowBox(
-        maxWidth: _hitWidth,
-        alignment: Alignment.center,
-        child: MouseRegion(
-          cursor: SystemMouseCursors.resizeColumn,
-          hitTestBehavior: HitTestBehavior.opaque,
-          onEnter: (_) => setState(() => _hovered = true),
-          onExit: (_) => setState(() => _hovered = false),
-          child: GestureDetector(
-            onPanStart: (details) {
-              _startX = details.globalPosition.dx;
-              _startRatio = widget.shell.splitRatio.value;
-            },
-            onPanUpdate: (details) {
-              final dx = details.globalPosition.dx - _startX;
-              final available = widget.totalWidth - _lineWidth;
-              widget.shell.setSplitRatio(_startRatio + dx / available);
-            },
-            child: SizedBox(
-              width: _hitWidth,
-              child: Center(
-                child: Container(
-                  width: _hovered ? 3 : _lineWidth,
-                  color: _hovered ? AppColors.accent : AppColors.bgDivider,
-                ),
-              ),
+    return MouseRegion(
+      cursor: SystemMouseCursors.resizeColumn,
+      hitTestBehavior: HitTestBehavior.opaque,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        onPanStart: (details) {
+          _startX = details.globalPosition.dx;
+          _startRatio = widget.shell.splitRatio.value;
+        },
+        onPanUpdate: (details) {
+          final dx = details.globalPosition.dx - _startX;
+          final available = widget.totalWidth - _hitWidth;
+          widget.shell.setSplitRatio(_startRatio + dx / available);
+        },
+        child: SizedBox(
+          width: _hitWidth,
+          child: Center(
+            child: Container(
+              width: _hovered ? 3 : _lineWidth,
+              color: _hovered ? AppColors.accent : AppColors.bgDivider,
             ),
           ),
         ),
