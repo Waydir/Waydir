@@ -267,6 +267,20 @@ class AppShortcuts {
       editable: false,
     ),
     ShortcutDef(
+      id: 'page_up',
+      label: () => '',
+      group: ShortcutGroup.navigation,
+      key: LogicalKeyboardKey.pageUp,
+      editable: false,
+    ),
+    ShortcutDef(
+      id: 'page_down',
+      label: () => '',
+      group: ShortcutGroup.navigation,
+      key: LogicalKeyboardKey.pageDown,
+      editable: false,
+    ),
+    ShortcutDef(
       id: 'quick_look',
       label: () => '',
       group: ShortcutGroup.navigation,

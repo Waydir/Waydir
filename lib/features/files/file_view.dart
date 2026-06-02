@@ -70,6 +70,7 @@ class FileList extends StatefulWidget {
   final SortKey sortColumn;
   final bool sortAscending;
   final void Function(SortKey key)? onSortColumn;
+  final ValueChanged<int>? onPageRows;
 
   const FileList({
     super.key,
@@ -96,6 +97,7 @@ class FileList extends StatefulWidget {
     this.onCloseSearch,
     this.onOpenInNewTab,
     this.onRectSelect,
+    this.onPageRows,
   });
 
   @override
@@ -117,6 +119,7 @@ class _FileListState extends State<FileList> {
   String _dateFmt = 'locale';
   bool _recentDatesRelative = true;
   String? _lastRevealedKey;
+  int _lastReportedRows = -1;
 
   double get _listTopPadding => _rowG;
   double get _listHorizontalPadding => _listHorizontalSpacing;
@@ -250,6 +253,16 @@ class _FileListState extends State<FileList> {
     });
   }
 
+  void _reportPageRows() {
+    if (widget.onPageRows == null || !_scrollController.hasClients) return;
+    final viewport = _scrollController.position.viewportDimension;
+    if (viewport <= 0 || _itemExt <= 0) return;
+    final rows = (viewport / _itemExt).floor().clamp(1, 1 << 20);
+    if (rows == _lastReportedRows) return;
+    _lastReportedRows = rows;
+    widget.onPageRows!(rows);
+  }
+
   @override
   void dispose() {
     _scrollController.dispose();
@@ -278,6 +291,9 @@ class _FileListState extends State<FileList> {
         _listHorizontalSpacing = horizontalSpacing.toDouble();
         _itemExt = _rowH + _rowG;
         _revealSelectedRow();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _reportPageRows();
+        });
 
         if (widget.files.isEmpty) {
           return GestureDetector(
