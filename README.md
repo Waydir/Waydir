@@ -107,7 +107,7 @@ Grab the latest build from the [Releases](https://github.com/Waydir/Waydir/relea
 
 #### Linux
 
-Available as `.deb`, `.rpm`, and `.tar.gz`.
+Available as `.deb`, `.rpm`, `.AppImage`, and `.tar.gz`.
 
 ```bash
 # Debian / Ubuntu
@@ -116,7 +116,10 @@ sudo dpkg -i waydir-*.deb
 # Fedora / RHEL
 sudo rpm -i waydir-*.rpm
 
-# Portable
+# AppImage (portable, no install)
+chmod +x waydir-*.AppImage && ./waydir-*.AppImage
+
+# Portable tarball
 tar -xzf waydir-*-linux-x64.tar.gz && ./waydir
 ```
 

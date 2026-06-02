@@ -46,6 +46,12 @@ jobs:
       - name: Install fastforge
         run: dart pub global activate fastforge
 
+      - name: Install appimagetool
+        run: |
+          curl -sSL -o /usr/local/bin/appimagetool \
+            https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+          sudo chmod +x /usr/local/bin/appimagetool
+
       - name: Read version
         id: version
         run: echo "version=$(grep '^version:' pubspec.yaml | sed -E 's/version:\s*([0-9]+\.[0-9]+\.[0-9]+).*/\1/')" >> $GITHUB_OUTPUT
@@ -60,12 +66,15 @@ jobs:
           tar -czf "$GITHUB_WORKSPACE/dist/waydir-${{ steps.version.outputs.version }}-linux-x64.tar.gz" .
 
       - name: Package deb / rpm / appimage via fastforge
+        env:
+          # Runner has no FUSE for the appimagetool AppImage itself; extract and run.
+          APPIMAGE_EXTRACT_AND_RUN: "1"
         run: |
           export PATH="$PATH":"$HOME/.pub-cache/bin"
           # Bundled libraries (Flutter engine) ship inside the package;
           # do not let rpmbuild emit host-soname Requires for them.
           echo '%__requires_exclude_from ^/usr/share/[^/]+/lib/' > "$HOME/.rpmmacros"
-          fastforge package --platform linux --targets deb,rpm
+          fastforge package --platform linux --targets deb,rpm,appimage
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v7

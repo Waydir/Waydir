@@ -1,2 +1,10 @@
 display_name: Waydir
+generic_name: File Manager
 icon: linux/packaging/appimage/Waydir.png
+categories:
+  - Utility
+  - FileTools
+keywords:
+  - files
+  - file manager
+  - explorer
