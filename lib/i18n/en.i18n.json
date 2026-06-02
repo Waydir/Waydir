@@ -175,7 +175,8 @@
       "terminalSection": "Terminal",
       "terminalLabel": "Default terminal",
       "terminalHint": "Used by \"Open in Terminal\".",
-      "terminalAuto": "Auto-detect",
+      "terminalBuiltin": "Built-in terminal",
+      "terminalAuto": "External (auto-detect)",
       "terminalCustom": "Custom command…",
       "terminalCustomLabel": "Command",
       "terminalCustomHint": "e.g. kitty --working-directory={dir}",
@@ -193,7 +194,7 @@
       "fontSizeHint": "Adjust on the fly with Ctrl++, Ctrl+- and Ctrl+0.",
       "lineHeight": "Line height",
       "lineHeightHint": "Vertical spacing between terminal rows.",
-      "externalSection": "External terminal"
+      "externalSection": "Open in Terminal"
     },
     "appearance": {
       "title": "Appearance",

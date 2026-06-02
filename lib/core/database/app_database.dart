@@ -8,7 +8,7 @@ part 'app_database.g.dart';
 class AppSettings extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get themeMode => text().withDefault(const Constant('dark'))();
-  TextColumn get terminal => text().withDefault(const Constant('auto'))();
+  TextColumn get terminal => text().withDefault(const Constant('builtin'))();
   TextColumn get terminalCustomCommand =>
       text().withDefault(const Constant(''))();
   BoolColumn get terminalUseSystemFont =>

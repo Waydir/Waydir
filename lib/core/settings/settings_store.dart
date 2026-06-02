@@ -13,7 +13,7 @@ class SettingsStore {
   SettingsStore._();
 
   final themeId = signal<String>('dark');
-  final terminal = signal<String>('auto');
+  final terminal = signal<String>('builtin');
   final terminalCustomCommand = signal<String>('');
   final terminalUseSystemFont = signal<bool>(true);
   final terminalFontFamily = signal<String>('');

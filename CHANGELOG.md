@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Page Up / Page Down move the cursor by a page in the file list (Shift extends the selection).
 
+### Changed
+- "Open in Terminal" now opens the built-in terminal by default; the external terminal stays available in Preferences.
+
 ## [0.8.0] - 2026-06-01
 
 ### Added

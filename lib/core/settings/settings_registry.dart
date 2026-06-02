@@ -199,6 +199,11 @@ class SettingsRegistry {
       signal: SettingsStore.instance.terminal,
       choices: [
         SettingChoice(
+          value: 'builtin',
+          label: () => t.preferences.general.terminalBuiltin,
+          icon: WaydirIconsRegular.terminal,
+        ),
+        SettingChoice(
           value: 'auto',
           label: () => t.preferences.general.terminalAuto,
           icon: WaydirIconsRegular.magicWand,

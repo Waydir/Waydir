@@ -44,7 +44,7 @@ class $AppSettingsTable extends AppSettings
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultValue: const Constant('auto'),
+    defaultValue: const Constant('builtin'),
   );
   static const VerificationMeta _terminalCustomCommandMeta =
       const VerificationMeta('terminalCustomCommand');

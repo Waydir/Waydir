@@ -1,7 +1,11 @@
 part of '../waydir_shell.dart';
 
 mixin _WaydirMenuMixin
-    on State<WaydirShell>, _WaydirStateBase, _WaydirActionsMixin {
+    on
+        State<WaydirShell>,
+        _WaydirStateBase,
+        _WaydirActionsMixin,
+        _WaydirTerminalMixin {
   void _handleBackgroundContextMenu(Offset position) {
     final store = _active;
     if (store.isTrashView) {
@@ -82,7 +86,7 @@ mixin _WaydirMenuMixin
       case 'select_all':
         store.selectAll();
       case 'open_in_terminal':
-        FileSystemService.openInTerminal(store.currentPath.value);
+        _openInTerminal(store.currentPath.value);
       case 'properties':
         _openFolderProperties(store.currentPath.value);
     }
@@ -455,7 +459,7 @@ mixin _WaydirMenuMixin
       case 'open_in_terminal':
         final entries = store.selectedEntries;
         if (entries.length == 1 && entries.first.type == FileItemType.folder) {
-          FileSystemService.openInTerminal(entries.first.path);
+          _openInTerminal(entries.first.path);
         }
       case 'open_location':
         final entries = store.selectedEntries;

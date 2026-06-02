@@ -2098,8 +2098,11 @@ class Translations$preferences$general$en {
 	/// en: 'Used by "Open in Terminal".'
 	String get terminalHint => 'Used by "Open in Terminal".';
 
-	/// en: 'Auto-detect'
-	String get terminalAuto => 'Auto-detect';
+	/// en: 'Built-in terminal'
+	String get terminalBuiltin => 'Built-in terminal';
+
+	/// en: 'External (auto-detect)'
+	String get terminalAuto => 'External (auto-detect)';
 
 	/// en: 'Custom command…'
 	String get terminalCustom => 'Custom command…';
@@ -2155,8 +2158,8 @@ class Translations$preferences$terminal$en {
 	/// en: 'Vertical spacing between terminal rows.'
 	String get lineHeightHint => 'Vertical spacing between terminal rows.';
 
-	/// en: 'External terminal'
-	String get externalSection => 'External terminal';
+	/// en: 'Open in Terminal'
+	String get externalSection => 'Open in Terminal';
 }
 
 // Path: preferences.appearance
@@ -2995,7 +2998,8 @@ extension on Translations {
 			'preferences.general.terminalSection' => 'Terminal',
 			'preferences.general.terminalLabel' => 'Default terminal',
 			'preferences.general.terminalHint' => 'Used by "Open in Terminal".',
-			'preferences.general.terminalAuto' => 'Auto-detect',
+			'preferences.general.terminalBuiltin' => 'Built-in terminal',
+			'preferences.general.terminalAuto' => 'External (auto-detect)',
 			'preferences.general.terminalCustom' => 'Custom command…',
 			'preferences.general.terminalCustomLabel' => 'Command',
 			'preferences.general.terminalCustomHint' => 'e.g. kitty --working-directory={dir}',
@@ -3011,7 +3015,7 @@ extension on Translations {
 			'preferences.terminal.fontSizeHint' => 'Adjust on the fly with Ctrl++, Ctrl+- and Ctrl+0.',
 			'preferences.terminal.lineHeight' => 'Line height',
 			'preferences.terminal.lineHeightHint' => 'Vertical spacing between terminal rows.',
-			'preferences.terminal.externalSection' => 'External terminal',
+			'preferences.terminal.externalSection' => 'Open in Terminal',
 			'preferences.appearance.title' => 'Appearance',
 			'preferences.appearance.subtitle' => 'Defaults for how files and the sidebar are displayed.',
 			'preferences.appearance.themeSection' => 'Theme',
@@ -3358,9 +3362,9 @@ extension on Translations {
 			'sidebar.collapse' => 'Collapse sidebar',
 			'sidebar.expand' => 'Expand sidebar',
 			'trash.accessDeniedTitle' => 'Trash needs Full Disk Access',
-			'trash.accessDeniedBody' => 'macOS protects the Trash folder. Grant Waydir Full Disk Access in System Settings, then relaunch the app.',
 			_ => null,
 		} ?? switch (path) {
+			'trash.accessDeniedBody' => 'macOS protects the Trash folder. Grant Waydir Full Disk Access in System Settings, then relaunch the app.',
 			'trash.openSystemSettings' => 'Open System Settings',
 			'toolbar.back' => 'Back',
 			'toolbar.forward' => 'Forward',
