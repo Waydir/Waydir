@@ -535,7 +535,7 @@ class _TerminalHeader extends StatelessWidget {
   }
 }
 
-class _TerminalTabChip extends StatelessWidget {
+class _TerminalTabChip extends StatefulWidget {
   final TerminalTab tab;
   final bool active;
   final bool foreign;
@@ -551,57 +551,72 @@ class _TerminalTabChip extends StatelessWidget {
   });
 
   @override
+  State<_TerminalTabChip> createState() => _TerminalTabChipState();
+}
+
+class _TerminalTabChipState extends State<_TerminalTabChip> {
+  bool _hovered = false;
+
+  @override
   Widget build(BuildContext context) {
+    final tab = widget.tab;
+    final active = widget.active;
+    final foreign = widget.foreign;
     final fg = active ? AppColors.fg : AppColors.fgMuted;
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onSelect,
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 220),
-        padding: const EdgeInsets.only(left: 8, right: 4),
-        decoration: BoxDecoration(
-          color: active ? AppColors.bgHover : Colors.transparent,
-          borderRadius: BorderRadius.zero,
-          border: Border.all(
-            color: active ? AppColors.bgDivider : Colors.transparent,
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onSelect,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 220),
+          padding: const EdgeInsets.only(left: 8, right: 4),
+          decoration: BoxDecoration(
+            color: active || _hovered ? AppColors.bgHover : Colors.transparent,
+            borderRadius: BorderRadius.zero,
+            border: Border.all(
+              color: active ? AppColors.bgDivider : Colors.transparent,
+            ),
           ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (foreign) ...[
-              Container(
-                width: 6,
-                height: 6,
-                decoration: BoxDecoration(
-                  color: AppColors.accent,
-                  shape: BoxShape.circle,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (foreign) ...[
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: AppColors.accent,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 6),
+              ],
+              Flexible(
+                child: Text(
+                  tab.label,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.txt.row.copyWith(color: fg),
                 ),
               ),
-              const SizedBox(width: 6),
-            ],
-            Flexible(
-              child: Text(
-                tab.label,
-                overflow: TextOverflow.ellipsis,
-                style: context.txt.row.copyWith(color: fg),
+              const SizedBox(width: 4),
+              _TerminalIconButton(
+                icon: WaydirIconsRegular.x,
+                onTap: widget.onClose,
+                size: 18,
+                iconSize: 11,
               ),
-            ),
-            const SizedBox(width: 4),
-            _TerminalIconButton(
-              icon: WaydirIconsRegular.x,
-              onTap: onClose,
-              size: 18,
-              iconSize: 11,
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _TerminalIconButton extends StatelessWidget {
+class _TerminalIconButton extends StatefulWidget {
   final IconData icon;
   final VoidCallback onTap;
   final double size;
@@ -615,15 +630,34 @@ class _TerminalIconButton extends StatelessWidget {
   });
 
   @override
+  State<_TerminalIconButton> createState() => _TerminalIconButtonState();
+}
+
+class _TerminalIconButtonState extends State<_TerminalIconButton> {
+  bool _hovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: SizedBox(
-        width: size,
-        height: size,
-        child: Center(
-          child: Icon(icon, size: iconSize, color: AppColors.fgMuted),
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onTap,
+        child: Container(
+          width: widget.size,
+          height: widget.size,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: _hovered ? AppColors.bgHover : Colors.transparent,
+            borderRadius: BorderRadius.zero,
+          ),
+          child: Icon(
+            widget.icon,
+            size: widget.iconSize,
+            color: _hovered ? AppColors.fg : AppColors.fgMuted,
+          ),
         ),
       ),
     );
