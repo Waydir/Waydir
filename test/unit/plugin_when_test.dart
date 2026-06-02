@@ -1,0 +1,94 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:waydir/core/models/file_entry.dart';
+import 'package:waydir/features/plugins/plugin_models.dart';
+
+FileEntry _file(String name) => FileEntry(
+  name: name,
+  path: '/tmp/$name',
+  type: FileItemType.file,
+  size: 0,
+  modified: DateTime(2026),
+);
+
+FileEntry _folder(String name) => FileEntry(
+  name: name,
+  path: '/tmp/$name',
+  type: FileItemType.folder,
+  size: 0,
+  modified: DateTime(2026),
+);
+
+bool _never(FileEntry _) => false;
+
+void main() {
+  group('PluginWhen.matches', () {
+    test('empty selection never matches', () {
+      expect(const PluginWhen().matches([], _never), isFalse);
+    });
+
+    test('extension filter matches only listed types', () {
+      const when = PluginWhen(extensions: {'png', 'jpg'});
+      expect(when.matches([_file('a.png'), _file('b.jpg')], _never), isTrue);
+      expect(when.matches([_file('a.png'), _file('c.gif')], _never), isFalse);
+    });
+
+    test('extension filter rejects folders', () {
+      const when = PluginWhen(extensions: {'png'});
+      expect(when.matches([_folder('photos')], _never), isFalse);
+    });
+
+    test('types filter restricts to folders', () {
+      const when = PluginWhen(types: {'folder'});
+      expect(when.matches([_folder('x')], _never), isTrue);
+      expect(when.matches([_file('x.txt')], _never), isFalse);
+    });
+
+    test('min and max bound the selection count', () {
+      const when = PluginWhen(min: 2, max: 3);
+      expect(when.matches([_file('a')], _never), isFalse);
+      expect(when.matches([_file('a'), _file('b')], _never), isTrue);
+      expect(
+        when.matches([_file('a'), _file('b'), _file('c'), _file('d')], _never),
+        isFalse,
+      );
+    });
+
+    test('in_archive=false rejects entries reported as inside an archive', () {
+      const when = PluginWhen(inArchive: false);
+      expect(when.matches([_file('a.txt')], _never), isTrue);
+      expect(when.matches([_file('a.txt')], (_) => true), isFalse);
+    });
+
+    test('fromJson parses the declarative filter', () {
+      final when = PluginWhen.fromJson({
+        'types': ['file'],
+        'extensions': ['PNG', 'Jpg'],
+        'min': 1,
+        'max': 5,
+        'in_archive': false,
+      });
+      expect(when.types, {'file'});
+      expect(when.extensions, {'png', 'jpg'});
+      expect(when.min, 1);
+      expect(when.max, 5);
+      expect(when.inArchive, isFalse);
+    });
+  });
+
+  group('PluginContribution', () {
+    test('fullActionId namespaces plugin and action', () {
+      const c = PluginContribution(
+        pluginId: 'webp',
+        actionId: 'to_webp',
+        menu: 'context',
+        title: 'Convert',
+        icon: null,
+        when: PluginWhen(),
+        initLuaPath: '/x/init.lua',
+        pluginDir: '/x',
+        allowExec: true,
+      );
+      expect(c.fullActionId, 'plugin:webp:to_webp');
+    });
+  });
+}

@@ -12,6 +12,7 @@ import 'core/fs/sftp_fs.dart';
 import 'core/logging/app_logger.dart';
 import 'core/settings/settings_store.dart';
 import 'core/update/update_store.dart';
+import 'features/plugins/plugin_store.dart';
 import 'i18n/strings.g.dart';
 import 'ui/theme/app_theme_registry.dart';
 
@@ -49,6 +50,7 @@ void main(List<String> args) async {
             : AppInfo.version.value,
       );
       unawaited(UpdateStore.instance.checkOnStartup());
+      unawaited(PluginStore.instance.loadAll());
       runApp(TranslationProvider(child: const WaydirApp()));
 
       if (isWindowChromeSupported) {

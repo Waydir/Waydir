@@ -315,12 +315,67 @@ mixin _WaydirMenuMixin
       ),
     ];
 
+    final pluginItems = _pluginContextItems(entries);
+    if (pluginItems.isNotEmpty) {
+      items.add(ContextMenuItem.divider);
+      items.addAll(pluginItems);
+    }
+
     showContextMenu(
       context: context,
       position: position,
       items: items,
       onSelect: _handleMenuAction,
     );
+  }
+
+  List<ContextMenuItem> _pluginContextItems(List<FileEntry> entries) {
+    final contributions = PluginStore.instance.contextContributionsFor(entries);
+    return [
+      for (final c in contributions)
+        ContextMenuItem(
+          icon: WaydirIconsRegular.gearSix,
+          label: c.title,
+          action: c.fullActionId,
+          iconPath: _pluginIconPath(c),
+        ),
+    ];
+  }
+
+  String? _pluginIconPath(PluginContribution c) {
+    final icon = c.icon;
+    if (icon == null) return null;
+    if (icon.contains('/') || icon.endsWith('.svg') || icon.endsWith('.png')) {
+      return p.isAbsolute(icon) ? icon : p.join(c.pluginDir, icon);
+    }
+    return null;
+  }
+
+  Future<void> _runPluginAction(String fullActionId) async {
+    final contribution = PluginStore.instance.contributionByFullId(
+      fullActionId,
+    );
+    if (contribution == null) return;
+    final store = _active;
+    final paths = store.selectedEntries.map((e) => e.realPath).toList();
+    final effects = await PluginStore.instance.invoke(
+      contribution,
+      paths: paths,
+      dir: store.currentPath.value,
+    );
+    if (!mounted) return;
+    for (final effect in effects) {
+      switch (effect.type) {
+        case 'toast':
+          if (effect.message != null) {
+            showToast(context: context, message: effect.message!);
+          }
+        case 'refresh':
+          _active.refresh();
+        case 'log':
+          log.warn('plugins', effect.message ?? '');
+      }
+    }
   }
 
   ContextMenuItem get _openItem => ContextMenuItem(
@@ -473,6 +528,8 @@ mixin _WaydirMenuMixin
         }
       case 'properties':
         _openPropertiesFromMenu(store);
+      default:
+        if (action.startsWith('plugin:')) _runPluginAction(action);
     }
   }
 

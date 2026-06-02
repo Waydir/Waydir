@@ -143,8 +143,21 @@
       "appearance": "Appearance",
       "terminal": "Terminal",
       "bookmarks": "Bookmarks",
+      "plugins": "Plugins",
       "diagnostics": "Diagnostics",
       "about": "About"
+    },
+    "plugins": {
+      "title": "Plugins",
+      "subtitle": "Extend Waydir with Lua plugins. Each plugin is a folder with manifest.json and init.lua.",
+      "installedSection": "Installed",
+      "openFolder": "Open plugins folder",
+      "reload": "Reload plugins",
+      "empty": "No plugins installed yet.",
+      "disabled": "Disabled",
+      "loadError": "Load error: $message",
+      "actionsCount": "$count action(s)",
+      "reloaded": "Reloaded $count plugin(s)"
     },
     "general": {
       "title": "General",

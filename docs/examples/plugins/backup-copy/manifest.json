@@ -1,0 +1,9 @@
+{
+  "id": "backup-copy",
+  "name": "Backup Copy",
+  "version": "1.0.0",
+  "author": "waydir",
+  "description": "Makes a .bak copy of each selected file.",
+  "api_version": 1,
+  "permissions": ["exec"]
+}

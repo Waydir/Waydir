@@ -488,6 +488,7 @@ class Translations$preferences$en {
 	String get comingSoon => 'Coming soon';
 
 	late final Translations$preferences$categories$en categories = Translations$preferences$categories$en.internal(_root);
+	late final Translations$preferences$plugins$en plugins = Translations$preferences$plugins$en.internal(_root);
 	late final Translations$preferences$general$en general = Translations$preferences$general$en.internal(_root);
 	late final Translations$preferences$terminal$en terminal = Translations$preferences$terminal$en.internal(_root);
 	late final Translations$preferences$appearance$en appearance = Translations$preferences$appearance$en.internal(_root);
@@ -2008,11 +2009,53 @@ class Translations$preferences$categories$en {
 	/// en: 'Bookmarks'
 	String get bookmarks => 'Bookmarks';
 
+	/// en: 'Plugins'
+	String get plugins => 'Plugins';
+
 	/// en: 'Diagnostics'
 	String get diagnostics => 'Diagnostics';
 
 	/// en: 'About'
 	String get about => 'About';
+}
+
+// Path: preferences.plugins
+class Translations$preferences$plugins$en {
+	Translations$preferences$plugins$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Plugins'
+	String get title => 'Plugins';
+
+	/// en: 'Extend Waydir with Lua plugins. Each plugin is a folder with manifest.json and init.lua.'
+	String get subtitle => 'Extend Waydir with Lua plugins. Each plugin is a folder with manifest.json and init.lua.';
+
+	/// en: 'Installed'
+	String get installedSection => 'Installed';
+
+	/// en: 'Open plugins folder'
+	String get openFolder => 'Open plugins folder';
+
+	/// en: 'Reload plugins'
+	String get reload => 'Reload plugins';
+
+	/// en: 'No plugins installed yet.'
+	String get empty => 'No plugins installed yet.';
+
+	/// en: 'Disabled'
+	String get disabled => 'Disabled';
+
+	/// en: 'Load error: $message'
+	String loadError({required Object message}) => 'Load error: ${message}';
+
+	/// en: '$count action(s)'
+	String actionsCount({required Object count}) => '${count} action(s)';
+
+	/// en: 'Reloaded $count plugin(s)'
+	String reloaded({required Object count}) => 'Reloaded ${count} plugin(s)';
 }
 
 // Path: preferences.general
@@ -2989,8 +3032,19 @@ extension on Translations {
 			'preferences.categories.appearance' => 'Appearance',
 			'preferences.categories.terminal' => 'Terminal',
 			'preferences.categories.bookmarks' => 'Bookmarks',
+			'preferences.categories.plugins' => 'Plugins',
 			'preferences.categories.diagnostics' => 'Diagnostics',
 			'preferences.categories.about' => 'About',
+			'preferences.plugins.title' => 'Plugins',
+			'preferences.plugins.subtitle' => 'Extend Waydir with Lua plugins. Each plugin is a folder with manifest.json and init.lua.',
+			'preferences.plugins.installedSection' => 'Installed',
+			'preferences.plugins.openFolder' => 'Open plugins folder',
+			'preferences.plugins.reload' => 'Reload plugins',
+			'preferences.plugins.empty' => 'No plugins installed yet.',
+			'preferences.plugins.disabled' => 'Disabled',
+			'preferences.plugins.loadError' => ({required Object message}) => 'Load error: ${message}',
+			'preferences.plugins.actionsCount' => ({required Object count}) => '${count} action(s)',
+			'preferences.plugins.reloaded' => ({required Object count}) => 'Reloaded ${count} plugin(s)',
 			'preferences.general.title' => 'General',
 			'preferences.general.subtitle' => 'Startup, file operations and terminal integration.',
 			'preferences.general.startupSection' => 'Startup',
@@ -3372,6 +3426,8 @@ extension on Translations {
 			'sidebar.connectDialog.usernameHint' => 'optional',
 			'sidebar.connectDialog.share' => 'Share',
 			'sidebar.connectDialog.shareHint' => 'optional',
+			_ => null,
+		} ?? switch (path) {
 			'sidebar.connectDialog.pathLabel' => 'Path',
 			'sidebar.connectDialog.pathHint' => 'optional',
 			'sidebar.connectDialog.addBookmark' => 'Add bookmark',
@@ -3383,8 +3439,6 @@ extension on Translations {
 			'sidebar.drives.localDisk' => 'Local Disk',
 			'sidebar.drives.usbDrive' => 'USB Drive',
 			'sidebar.drives.unknownDrive' => 'Unknown Drive',
-			_ => null,
-		} ?? switch (path) {
 			'sidebar.drives.networkDrive' => 'Network Drive',
 			'sidebar.drives.macintoshHd' => 'Macintosh HD',
 			'sidebar.drives.windowsDriveLabel' => ({required Object letter, required Object name}) => '${letter}: ${name}',

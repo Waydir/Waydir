@@ -21,6 +21,10 @@ import 'terminal_layout.dart';
 import 'terminal_tab.dart';
 
 class ShellStore {
+  /// The single live shell. Set on construction so detached UI (e.g. the
+  /// preferences dialog) can open a tab without threading the store through.
+  static ShellStore? current;
+
   final isDual = signal(false);
   final panes = signal<List<PaneStore>>([]);
   final activePaneIndex = signal(0);
@@ -50,8 +54,11 @@ class ShellStore {
   int _nextTerminalId = 1;
 
   ShellStore({required this.operationStore, required this.notificationStore}) {
+    current = this;
     _restoreSession();
   }
+
+  void openInNewTab(String path) => activePane.value?.tabs.addTab(path);
 
   Future<void> _restoreSession() async {
     final s = SettingsStore.instance;
