@@ -173,6 +173,18 @@ class $AppSettingsTable extends AppSettings
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _sidebarWidthMeta = const VerificationMeta(
+    'sidebarWidth',
+  );
+  @override
+  late final GeneratedColumn<double> sidebarWidth = GeneratedColumn<double>(
+    'sidebar_width',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(200.0),
+  );
   static const VerificationMeta _restoreSessionMeta = const VerificationMeta(
     'restoreSession',
   );
@@ -459,6 +471,7 @@ class $AppSettingsTable extends AppSettings
     splitRatio,
     activePaneIndex,
     sidebarCollapsed,
+    sidebarWidth,
     restoreSession,
     defaultStartingPath,
     confirmDelete,
@@ -588,6 +601,15 @@ class $AppSettingsTable extends AppSettings
         sidebarCollapsed.isAcceptableOrUnknown(
           data['sidebar_collapsed']!,
           _sidebarCollapsedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sidebar_width')) {
+      context.handle(
+        _sidebarWidthMeta,
+        sidebarWidth.isAcceptableOrUnknown(
+          data['sidebar_width']!,
+          _sidebarWidthMeta,
         ),
       );
     }
@@ -820,6 +842,10 @@ class $AppSettingsTable extends AppSettings
         DriftSqlType.bool,
         data['${effectivePrefix}sidebar_collapsed'],
       )!,
+      sidebarWidth: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}sidebar_width'],
+      )!,
       restoreSession: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}restore_session'],
@@ -923,6 +949,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
   final double splitRatio;
   final int activePaneIndex;
   final bool sidebarCollapsed;
+  final double sidebarWidth;
   final bool restoreSession;
   final String defaultStartingPath;
   final bool confirmDelete;
@@ -957,6 +984,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     required this.splitRatio,
     required this.activePaneIndex,
     required this.sidebarCollapsed,
+    required this.sidebarWidth,
     required this.restoreSession,
     required this.defaultStartingPath,
     required this.confirmDelete,
@@ -994,6 +1022,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     map['split_ratio'] = Variable<double>(splitRatio);
     map['active_pane_index'] = Variable<int>(activePaneIndex);
     map['sidebar_collapsed'] = Variable<bool>(sidebarCollapsed);
+    map['sidebar_width'] = Variable<double>(sidebarWidth);
     map['restore_session'] = Variable<bool>(restoreSession);
     map['default_starting_path'] = Variable<String>(defaultStartingPath);
     map['confirm_delete'] = Variable<bool>(confirmDelete);
@@ -1034,6 +1063,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       splitRatio: Value(splitRatio),
       activePaneIndex: Value(activePaneIndex),
       sidebarCollapsed: Value(sidebarCollapsed),
+      sidebarWidth: Value(sidebarWidth),
       restoreSession: Value(restoreSession),
       defaultStartingPath: Value(defaultStartingPath),
       confirmDelete: Value(confirmDelete),
@@ -1084,6 +1114,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       splitRatio: serializer.fromJson<double>(json['splitRatio']),
       activePaneIndex: serializer.fromJson<int>(json['activePaneIndex']),
       sidebarCollapsed: serializer.fromJson<bool>(json['sidebarCollapsed']),
+      sidebarWidth: serializer.fromJson<double>(json['sidebarWidth']),
       restoreSession: serializer.fromJson<bool>(json['restoreSession']),
       defaultStartingPath: serializer.fromJson<String>(
         json['defaultStartingPath'],
@@ -1133,6 +1164,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       'splitRatio': serializer.toJson<double>(splitRatio),
       'activePaneIndex': serializer.toJson<int>(activePaneIndex),
       'sidebarCollapsed': serializer.toJson<bool>(sidebarCollapsed),
+      'sidebarWidth': serializer.toJson<double>(sidebarWidth),
       'restoreSession': serializer.toJson<bool>(restoreSession),
       'defaultStartingPath': serializer.toJson<String>(defaultStartingPath),
       'confirmDelete': serializer.toJson<bool>(confirmDelete),
@@ -1174,6 +1206,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     double? splitRatio,
     int? activePaneIndex,
     bool? sidebarCollapsed,
+    double? sidebarWidth,
     bool? restoreSession,
     String? defaultStartingPath,
     bool? confirmDelete,
@@ -1208,6 +1241,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     splitRatio: splitRatio ?? this.splitRatio,
     activePaneIndex: activePaneIndex ?? this.activePaneIndex,
     sidebarCollapsed: sidebarCollapsed ?? this.sidebarCollapsed,
+    sidebarWidth: sidebarWidth ?? this.sidebarWidth,
     restoreSession: restoreSession ?? this.restoreSession,
     defaultStartingPath: defaultStartingPath ?? this.defaultStartingPath,
     confirmDelete: confirmDelete ?? this.confirmDelete,
@@ -1264,6 +1298,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       sidebarCollapsed: data.sidebarCollapsed.present
           ? data.sidebarCollapsed.value
           : this.sidebarCollapsed,
+      sidebarWidth: data.sidebarWidth.present
+          ? data.sidebarWidth.value
+          : this.sidebarWidth,
       restoreSession: data.restoreSession.present
           ? data.restoreSession.value
           : this.restoreSession,
@@ -1341,6 +1378,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           ..write('splitRatio: $splitRatio, ')
           ..write('activePaneIndex: $activePaneIndex, ')
           ..write('sidebarCollapsed: $sidebarCollapsed, ')
+          ..write('sidebarWidth: $sidebarWidth, ')
           ..write('restoreSession: $restoreSession, ')
           ..write('defaultStartingPath: $defaultStartingPath, ')
           ..write('confirmDelete: $confirmDelete, ')
@@ -1380,6 +1418,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     splitRatio,
     activePaneIndex,
     sidebarCollapsed,
+    sidebarWidth,
     restoreSession,
     defaultStartingPath,
     confirmDelete,
@@ -1418,6 +1457,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           other.splitRatio == this.splitRatio &&
           other.activePaneIndex == this.activePaneIndex &&
           other.sidebarCollapsed == this.sidebarCollapsed &&
+          other.sidebarWidth == this.sidebarWidth &&
           other.restoreSession == this.restoreSession &&
           other.defaultStartingPath == this.defaultStartingPath &&
           other.confirmDelete == this.confirmDelete &&
@@ -1454,6 +1494,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
   final Value<double> splitRatio;
   final Value<int> activePaneIndex;
   final Value<bool> sidebarCollapsed;
+  final Value<double> sidebarWidth;
   final Value<bool> restoreSession;
   final Value<String> defaultStartingPath;
   final Value<bool> confirmDelete;
@@ -1488,6 +1529,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.splitRatio = const Value.absent(),
     this.activePaneIndex = const Value.absent(),
     this.sidebarCollapsed = const Value.absent(),
+    this.sidebarWidth = const Value.absent(),
     this.restoreSession = const Value.absent(),
     this.defaultStartingPath = const Value.absent(),
     this.confirmDelete = const Value.absent(),
@@ -1523,6 +1565,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.splitRatio = const Value.absent(),
     this.activePaneIndex = const Value.absent(),
     this.sidebarCollapsed = const Value.absent(),
+    this.sidebarWidth = const Value.absent(),
     this.restoreSession = const Value.absent(),
     this.defaultStartingPath = const Value.absent(),
     this.confirmDelete = const Value.absent(),
@@ -1558,6 +1601,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Expression<double>? splitRatio,
     Expression<int>? activePaneIndex,
     Expression<bool>? sidebarCollapsed,
+    Expression<double>? sidebarWidth,
     Expression<bool>? restoreSession,
     Expression<String>? defaultStartingPath,
     Expression<bool>? confirmDelete,
@@ -1597,6 +1641,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       if (splitRatio != null) 'split_ratio': splitRatio,
       if (activePaneIndex != null) 'active_pane_index': activePaneIndex,
       if (sidebarCollapsed != null) 'sidebar_collapsed': sidebarCollapsed,
+      if (sidebarWidth != null) 'sidebar_width': sidebarWidth,
       if (restoreSession != null) 'restore_session': restoreSession,
       if (defaultStartingPath != null)
         'default_starting_path': defaultStartingPath,
@@ -1640,6 +1685,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Value<double>? splitRatio,
     Value<int>? activePaneIndex,
     Value<bool>? sidebarCollapsed,
+    Value<double>? sidebarWidth,
     Value<bool>? restoreSession,
     Value<String>? defaultStartingPath,
     Value<bool>? confirmDelete,
@@ -1677,6 +1723,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       splitRatio: splitRatio ?? this.splitRatio,
       activePaneIndex: activePaneIndex ?? this.activePaneIndex,
       sidebarCollapsed: sidebarCollapsed ?? this.sidebarCollapsed,
+      sidebarWidth: sidebarWidth ?? this.sidebarWidth,
       restoreSession: restoreSession ?? this.restoreSession,
       defaultStartingPath: defaultStartingPath ?? this.defaultStartingPath,
       confirmDelete: confirmDelete ?? this.confirmDelete,
@@ -1747,6 +1794,9 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     }
     if (sidebarCollapsed.present) {
       map['sidebar_collapsed'] = Variable<bool>(sidebarCollapsed.value);
+    }
+    if (sidebarWidth.present) {
+      map['sidebar_width'] = Variable<double>(sidebarWidth.value);
     }
     if (restoreSession.present) {
       map['restore_session'] = Variable<bool>(restoreSession.value);
@@ -1833,6 +1883,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
           ..write('splitRatio: $splitRatio, ')
           ..write('activePaneIndex: $activePaneIndex, ')
           ..write('sidebarCollapsed: $sidebarCollapsed, ')
+          ..write('sidebarWidth: $sidebarWidth, ')
           ..write('restoreSession: $restoreSession, ')
           ..write('defaultStartingPath: $defaultStartingPath, ')
           ..write('confirmDelete: $confirmDelete, ')
@@ -4375,6 +4426,7 @@ typedef $$AppSettingsTableCreateCompanionBuilder =
       Value<double> splitRatio,
       Value<int> activePaneIndex,
       Value<bool> sidebarCollapsed,
+      Value<double> sidebarWidth,
       Value<bool> restoreSession,
       Value<String> defaultStartingPath,
       Value<bool> confirmDelete,
@@ -4411,6 +4463,7 @@ typedef $$AppSettingsTableUpdateCompanionBuilder =
       Value<double> splitRatio,
       Value<int> activePaneIndex,
       Value<bool> sidebarCollapsed,
+      Value<double> sidebarWidth,
       Value<bool> restoreSession,
       Value<String> defaultStartingPath,
       Value<bool> confirmDelete,
@@ -4504,6 +4557,11 @@ class $$AppSettingsTableFilterComposer
 
   ColumnFilters<bool> get sidebarCollapsed => $composableBuilder(
     column: $table.sidebarCollapsed,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get sidebarWidth => $composableBuilder(
+    column: $table.sidebarWidth,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4682,6 +4740,11 @@ class $$AppSettingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get sidebarWidth => $composableBuilder(
+    column: $table.sidebarWidth,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get restoreSession => $composableBuilder(
     column: $table.restoreSession,
     builder: (column) => ColumnOrderings(column),
@@ -4849,6 +4912,11 @@ class $$AppSettingsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<double> get sidebarWidth => $composableBuilder(
+    column: $table.sidebarWidth,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<bool> get restoreSession => $composableBuilder(
     column: $table.restoreSession,
     builder: (column) => column,
@@ -4992,6 +5060,7 @@ class $$AppSettingsTableTableManager
                 Value<double> splitRatio = const Value.absent(),
                 Value<int> activePaneIndex = const Value.absent(),
                 Value<bool> sidebarCollapsed = const Value.absent(),
+                Value<double> sidebarWidth = const Value.absent(),
                 Value<bool> restoreSession = const Value.absent(),
                 Value<String> defaultStartingPath = const Value.absent(),
                 Value<bool> confirmDelete = const Value.absent(),
@@ -5026,6 +5095,7 @@ class $$AppSettingsTableTableManager
                 splitRatio: splitRatio,
                 activePaneIndex: activePaneIndex,
                 sidebarCollapsed: sidebarCollapsed,
+                sidebarWidth: sidebarWidth,
                 restoreSession: restoreSession,
                 defaultStartingPath: defaultStartingPath,
                 confirmDelete: confirmDelete,
@@ -5062,6 +5132,7 @@ class $$AppSettingsTableTableManager
                 Value<double> splitRatio = const Value.absent(),
                 Value<int> activePaneIndex = const Value.absent(),
                 Value<bool> sidebarCollapsed = const Value.absent(),
+                Value<double> sidebarWidth = const Value.absent(),
                 Value<bool> restoreSession = const Value.absent(),
                 Value<String> defaultStartingPath = const Value.absent(),
                 Value<bool> confirmDelete = const Value.absent(),
@@ -5096,6 +5167,7 @@ class $$AppSettingsTableTableManager
                 splitRatio: splitRatio,
                 activePaneIndex: activePaneIndex,
                 sidebarCollapsed: sidebarCollapsed,
+                sidebarWidth: sidebarWidth,
                 restoreSession: restoreSession,
                 defaultStartingPath: defaultStartingPath,
                 confirmDelete: confirmDelete,

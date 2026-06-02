@@ -354,35 +354,147 @@ class _SidebarHost extends StatefulWidget {
 
 class _SidebarHostState extends State<_SidebarHost> {
   static const _railWidth = 52.0;
-  static const _expandedWidth = 200.0;
+  static const _minExpanded = 160.0;
+  static const _maxExpanded = 400.0;
+  // Drag the expanded sidebar narrower than this and it snaps to the icon rail.
+  static const _collapseThreshold = 120.0;
   static const _animDuration = Duration(milliseconds: 140);
+
+  double? _dragWidth;
+  bool _dragging = false;
 
   void _toggleUserCollapsed() {
     final s = SettingsStore.instance.sidebarCollapsed;
     s.value = !s.value;
   }
 
+  void _onDragStart(DragStartDetails _) {
+    final settings = SettingsStore.instance;
+    // Seed the live width from whatever is currently on screen so the handle
+    // tracks the pointer continuously in both directions.
+    _dragWidth = settings.sidebarCollapsed.value
+        ? _railWidth
+        : settings.sidebarWidth.value.clamp(_minExpanded, _maxExpanded);
+    setState(() => _dragging = true);
+  }
+
+  void _onDragUpdate(DragUpdateDetails details) {
+    final settings = SettingsStore.instance;
+    final next = ((_dragWidth ?? _railWidth) + details.delta.dx).clamp(
+      _railWidth,
+      _maxExpanded,
+    );
+
+    // Collapsed state is derived purely from the live width crossing the
+    // threshold, so collapse and expand are symmetric and repeatable.
+    final shouldCollapse = next < _collapseThreshold;
+    if (settings.sidebarCollapsed.value != shouldCollapse) {
+      settings.sidebarCollapsed.value = shouldCollapse;
+    }
+    if (!shouldCollapse) {
+      settings.sidebarWidth.value = next.clamp(_minExpanded, _maxExpanded);
+    }
+    setState(() => _dragWidth = next);
+  }
+
+  void _onDragEnd() {
+    setState(() {
+      _dragging = false;
+      _dragWidth = null;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return SignalBuilder(
       builder: (context) {
-        final collapsed = SettingsStore.instance.sidebarCollapsed.value;
+        final settings = SettingsStore.instance;
+        final collapsed = settings.sidebarCollapsed.value;
+        final width =
+            _dragWidth ??
+            (collapsed
+                ? _railWidth
+                : settings.sidebarWidth.value.clamp(
+                    _minExpanded,
+                    _maxExpanded,
+                  ));
 
         return AnimatedContainer(
-          duration: _animDuration,
+          duration: _dragging ? Duration.zero : _animDuration,
           curve: Curves.easeOut,
-          width: collapsed ? _railWidth : _expandedWidth,
-          child: ClipRect(
-            child: Sidebar(
-              store: widget.active,
-              operationStore: widget.operationStore,
-              onOpenInNewTab: widget.onOpenInNewTab,
-              collapsed: collapsed,
-              onToggleCollapsed: _toggleUserCollapsed,
-            ),
+          width: width,
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: ClipRect(
+                  child: Sidebar(
+                    store: widget.active,
+                    operationStore: widget.operationStore,
+                    onOpenInNewTab: widget.onOpenInNewTab,
+                    collapsed: collapsed,
+                    onToggleCollapsed: _toggleUserCollapsed,
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 0,
+                bottom: 0,
+                right: 0,
+                child: _SidebarResizeHandle(
+                  onDragStart: _onDragStart,
+                  onDragUpdate: _onDragUpdate,
+                  onDragEnd: _onDragEnd,
+                ),
+              ),
+            ],
           ),
         );
       },
+    );
+  }
+}
+
+class _SidebarResizeHandle extends StatefulWidget {
+  final GestureDragStartCallback onDragStart;
+  final GestureDragUpdateCallback onDragUpdate;
+  final VoidCallback onDragEnd;
+
+  const _SidebarResizeHandle({
+    required this.onDragStart,
+    required this.onDragUpdate,
+    required this.onDragEnd,
+  });
+
+  @override
+  State<_SidebarResizeHandle> createState() => _SidebarResizeHandleState();
+}
+
+class _SidebarResizeHandleState extends State<_SidebarResizeHandle> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.resizeLeftRight,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onHorizontalDragStart: widget.onDragStart,
+        onHorizontalDragUpdate: widget.onDragUpdate,
+        onHorizontalDragEnd: (_) => widget.onDragEnd(),
+        onHorizontalDragCancel: widget.onDragEnd,
+        child: SizedBox(
+          width: 8,
+          child: Center(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 120),
+              width: _hovered ? 2 : 1,
+              color: _hovered ? AppColors.accent : AppColors.bgDivider,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

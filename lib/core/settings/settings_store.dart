@@ -24,6 +24,7 @@ class SettingsStore {
   final sessionSplitRatio = signal<double>(0.5);
   final sessionActivePaneIndex = signal<int>(0);
   final sidebarCollapsed = signal<bool>(false);
+  final sidebarWidth = signal<double>(200.0);
   final restoreSession = signal<bool>(true);
   final defaultStartingPath = signal<String>('');
   final confirmDelete = signal<bool>(true);
@@ -76,6 +77,7 @@ class SettingsStore {
     sessionSplitRatio.value = row.splitRatio;
     sessionActivePaneIndex.value = row.activePaneIndex;
     sidebarCollapsed.value = row.sidebarCollapsed;
+    sidebarWidth.value = row.sidebarWidth;
     restoreSession.value = row.restoreSession;
     defaultStartingPath.value = row.defaultStartingPath;
     confirmDelete.value = row.confirmDelete;
@@ -166,6 +168,7 @@ class SettingsStore {
         sessionSplitRatio.value;
         sessionActivePaneIndex.value;
         sidebarCollapsed.value;
+        sidebarWidth.value;
         restoreSession.value;
         defaultStartingPath.value;
         confirmDelete.value;
@@ -213,6 +216,7 @@ class SettingsStore {
           splitRatio: Value(sessionSplitRatio.value),
           activePaneIndex: Value(sessionActivePaneIndex.value),
           sidebarCollapsed: Value(sidebarCollapsed.value),
+          sidebarWidth: Value(sidebarWidth.value),
           restoreSession: Value(restoreSession.value),
           defaultStartingPath: Value(defaultStartingPath.value),
           confirmDelete: Value(confirmDelete.value),
