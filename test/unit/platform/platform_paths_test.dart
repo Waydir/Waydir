@@ -34,10 +34,7 @@ void main() {
         PlatformPaths.parentOf(r'\\192.168.32.12\adssad'),
         r'\\192.168.32.12',
       );
-      expect(
-        PlatformPaths.parentOf(r'\\192.168.32.12'),
-        r'\\192.168.32.12\',
-      );
+      expect(PlatformPaths.parentOf(r'\\192.168.32.12'), r'\\192.168.32.12\');
     });
 
     test('builds breadcrumb segments and partial paths', () {
@@ -46,10 +43,7 @@ void main() {
       );
 
       expect(segments, [r'\\192.168.32.12', 'adssad', 'folder', 'child']);
-      expect(
-        PlatformPaths.buildPartialPath(segments, 0),
-        r'\\192.168.32.12\',
-      );
+      expect(PlatformPaths.buildPartialPath(segments, 0), r'\\192.168.32.12\');
       expect(
         PlatformPaths.buildPartialPath(segments, 1),
         r'\\192.168.32.12\adssad',
