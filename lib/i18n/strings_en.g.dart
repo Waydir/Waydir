@@ -648,6 +648,9 @@ class Translations$appMenu$en {
 	/// en: 'Help'
 	String get help => 'Help';
 
+	/// en: 'Star on GitHub'
+	String get starOnGithub => 'Star on GitHub';
+
 	/// en: 'Quit'
 	String get quit => 'Quit';
 }
@@ -3166,6 +3169,7 @@ extension on Translations {
 			'update.terminalInstallOk' => '--- Install OK. Press Enter to close ---',
 			'update.terminalInstallFailed' => ({required Object status}) => '--- Install failed (exit ${status}). Press Enter to close ---',
 			'appMenu.help' => 'Help',
+			'appMenu.starOnGithub' => 'Star on GitHub',
 			'appMenu.quit' => 'Quit',
 			'help.title' => 'Features',
 			'help.menuLabel' => 'Features',
@@ -3379,9 +3383,9 @@ extension on Translations {
 			'sidebar.drives.localDisk' => 'Local Disk',
 			'sidebar.drives.usbDrive' => 'USB Drive',
 			'sidebar.drives.unknownDrive' => 'Unknown Drive',
-			'sidebar.drives.networkDrive' => 'Network Drive',
 			_ => null,
 		} ?? switch (path) {
+			'sidebar.drives.networkDrive' => 'Network Drive',
 			'sidebar.drives.macintoshHd' => 'Macintosh HD',
 			'sidebar.drives.windowsDriveLabel' => ({required Object letter, required Object name}) => '${letter}: ${name}',
 			'sidebar.drives.mountTitle' => ({required Object name}) => 'Mount ${name}',

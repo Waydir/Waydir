@@ -340,6 +340,7 @@
   },
   "appMenu": {
     "help": "Help",
+    "starOnGithub": "Star on GitHub",
     "quit": "Quit"
   },
   "help": {

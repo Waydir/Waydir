@@ -1,4 +1,4 @@
-import 'dart:io' show Platform;
+import 'dart:io' show Platform, Process, ProcessStartMode;
 
 import '../window/move_window.dart';
 import '../window/window_buttons.dart';
@@ -29,6 +29,17 @@ void _openKeybindingsHelp() {
 void _openHelp() {
   final ctx = waydirNavigatorKey.currentContext;
   if (ctx != null) showHelpDialog(ctx);
+}
+
+void _openGithub() {
+  final cmd = Platform.isWindows
+      ? 'explorer'
+      : Platform.isMacOS
+      ? 'open'
+      : 'xdg-open';
+  Process.start(cmd, [
+    'https://github.com/Waydir/Waydir',
+  ], mode: ProcessStartMode.detached);
 }
 
 class TitleBar extends StatelessWidget {
@@ -105,6 +116,14 @@ class TitleBar extends StatelessWidget {
           PlatformMenuItemGroup(
             members: [
               PlatformMenuItem(
+                label: t.appMenu.starOnGithub,
+                onSelected: _openGithub,
+              ),
+            ],
+          ),
+          PlatformMenuItemGroup(
+            members: [
+              PlatformMenuItem(
                 label: t.appMenu.quit,
                 shortcut: const SingleActivator(
                   LogicalKeyboardKey.keyQ,
@@ -140,8 +159,8 @@ class _TitleBarRow extends StatelessWidget {
           if (!Platform.isMacOS) ...[
             Image.asset(AppInfo.iconAsset, width: 13, height: 13),
             const SizedBox(width: 12),
+            _MenuBar(trailing: menuTrailing),
           ],
-          _MenuBar(trailing: menuTrailing),
           const Expanded(child: MoveWindow()),
           if (!Platform.isMacOS) const _WindowButtons(),
         ],
@@ -181,6 +200,12 @@ class _MenuBar extends StatelessWidget {
             ),
             ContextMenuItem.divider,
             ContextMenuItem(
+              icon: WaydirIconsRegular.gitBranch,
+              label: t.appMenu.starOnGithub,
+              action: 'star',
+            ),
+            ContextMenuItem.divider,
+            ContextMenuItem(
               icon: WaydirIconsRegular.signOut,
               label: t.appMenu.quit,
               action: 'quit',
@@ -194,6 +219,8 @@ class _MenuBar extends StatelessWidget {
                 _openHelp();
               case 'keybindings':
                 _openKeybindingsHelp();
+              case 'star':
+                _openGithub();
               case 'quit':
                 SystemNavigator.pop();
             }
