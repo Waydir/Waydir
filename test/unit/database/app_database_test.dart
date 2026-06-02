@@ -19,7 +19,7 @@ void main() {
       final settings = await db.getSettings();
 
       expect(settings.themeMode, 'dark');
-      expect(settings.terminal, 'auto');
+      expect(settings.terminal, 'builtin');
       expect(settings.terminalCustomCommand, '');
       expect(settings.isDual, false);
       expect(settings.splitRatio, 0.5);
