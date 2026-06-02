@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-06-02
+
+### Changed
+- macOS: menus moved to the native menu bar.
+
+### Fixed
+- AppImage now links to the download instead of failing an in-place update.
+
 ## [0.9.0] - 2026-06-02
 
 ### Added
