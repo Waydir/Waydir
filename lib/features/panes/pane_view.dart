@@ -238,6 +238,7 @@ class _TabContent extends StatelessWidget {
               sortColumn: store.sortKey.value,
               sortAscending: store.sortAscending.value,
               onSortColumn: store.cycleSortColumn,
+              onPageRows: store.setPageRows,
             );
           },
         );
@@ -283,6 +284,19 @@ class _TerminalPanel extends StatefulWidget {
 
 class _TerminalPanelState extends State<_TerminalPanel> {
   bool _focused = false;
+  double? _dragHeight;
+
+  double get _effectiveHeight => _dragHeight ?? widget.height;
+
+  void _onResizeDrag(double dy) {
+    final base = _dragHeight ?? widget.height;
+    setState(() => _dragHeight = (base - dy).clamp(80.0, 900.0));
+  }
+
+  void _onResizeEnd() {
+    final h = _dragHeight;
+    if (h != null) widget.onHeightChanged?.call(widget.slot, h);
+  }
 
   @override
   void initState() {
@@ -294,6 +308,9 @@ class _TerminalPanelState extends State<_TerminalPanel> {
   @override
   void didUpdateWidget(covariant _TerminalPanel oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (_dragHeight != null && widget.height == _dragHeight) {
+      _dragHeight = null;
+    }
     if (oldWidget.active.id == widget.active.id) return;
     oldWidget.active.focusNode.removeListener(_onFocusChange);
     _focused = widget.active.focusNode.hasFocus;
@@ -381,11 +398,7 @@ class _TerminalPanelState extends State<_TerminalPanel> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _TerminalResizeHandle(
-          slot: widget.slot,
-          height: widget.height,
-          onHeightChanged: widget.onHeightChanged,
-        ),
+        _TerminalResizeHandle(onDrag: _onResizeDrag, onDragEnd: _onResizeEnd),
         _TerminalHeader(
           focused: _focused,
           slot: widget.slot,
@@ -398,7 +411,7 @@ class _TerminalPanelState extends State<_TerminalPanel> {
           onClose: widget.onToggleTerminal,
         ),
         SizedBox(
-          height: widget.height,
+          height: _effectiveHeight,
           child: Listener(
             onPointerDown: (_) =>
                 widget.onActivate?.call(widget.slot, widget.active.id),
@@ -535,7 +548,7 @@ class _TerminalHeader extends StatelessWidget {
   }
 }
 
-class _TerminalTabChip extends StatelessWidget {
+class _TerminalTabChip extends StatefulWidget {
   final TerminalTab tab;
   final bool active;
   final bool foreign;
@@ -551,57 +564,72 @@ class _TerminalTabChip extends StatelessWidget {
   });
 
   @override
+  State<_TerminalTabChip> createState() => _TerminalTabChipState();
+}
+
+class _TerminalTabChipState extends State<_TerminalTabChip> {
+  bool _hovered = false;
+
+  @override
   Widget build(BuildContext context) {
+    final tab = widget.tab;
+    final active = widget.active;
+    final foreign = widget.foreign;
     final fg = active ? AppColors.fg : AppColors.fgMuted;
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onSelect,
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 220),
-        padding: const EdgeInsets.only(left: 8, right: 4),
-        decoration: BoxDecoration(
-          color: active ? AppColors.bgHover : Colors.transparent,
-          borderRadius: BorderRadius.zero,
-          border: Border.all(
-            color: active ? AppColors.bgDivider : Colors.transparent,
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onSelect,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 220),
+          padding: const EdgeInsets.only(left: 8, right: 4),
+          decoration: BoxDecoration(
+            color: active || _hovered ? AppColors.bgHover : Colors.transparent,
+            borderRadius: BorderRadius.zero,
+            border: Border.all(
+              color: active ? AppColors.bgDivider : Colors.transparent,
+            ),
           ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (foreign) ...[
-              Container(
-                width: 6,
-                height: 6,
-                decoration: BoxDecoration(
-                  color: AppColors.accent,
-                  shape: BoxShape.circle,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (foreign) ...[
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: AppColors.accent,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 6),
+              ],
+              Flexible(
+                child: Text(
+                  tab.label,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.txt.row.copyWith(color: fg),
                 ),
               ),
-              const SizedBox(width: 6),
-            ],
-            Flexible(
-              child: Text(
-                tab.label,
-                overflow: TextOverflow.ellipsis,
-                style: context.txt.row.copyWith(color: fg),
+              const SizedBox(width: 4),
+              _TerminalIconButton(
+                icon: WaydirIconsRegular.x,
+                onTap: widget.onClose,
+                size: 18,
+                iconSize: 11,
               ),
-            ),
-            const SizedBox(width: 4),
-            _TerminalIconButton(
-              icon: WaydirIconsRegular.x,
-              onTap: onClose,
-              size: 18,
-              iconSize: 11,
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _TerminalIconButton extends StatelessWidget {
+class _TerminalIconButton extends StatefulWidget {
   final IconData icon;
   final VoidCallback onTap;
   final double size;
@@ -615,15 +643,34 @@ class _TerminalIconButton extends StatelessWidget {
   });
 
   @override
+  State<_TerminalIconButton> createState() => _TerminalIconButtonState();
+}
+
+class _TerminalIconButtonState extends State<_TerminalIconButton> {
+  bool _hovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: SizedBox(
-        width: size,
-        height: size,
-        child: Center(
-          child: Icon(icon, size: iconSize, color: AppColors.fgMuted),
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onTap,
+        child: Container(
+          width: widget.size,
+          height: widget.size,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: _hovered ? AppColors.bgHover : Colors.transparent,
+            borderRadius: BorderRadius.zero,
+          ),
+          child: Icon(
+            widget.icon,
+            size: widget.iconSize,
+            color: _hovered ? AppColors.fg : AppColors.fgMuted,
+          ),
         ),
       ),
     );
@@ -631,15 +678,10 @@ class _TerminalIconButton extends StatelessWidget {
 }
 
 class _TerminalResizeHandle extends StatefulWidget {
-  final int slot;
-  final double height;
-  final void Function(int slot, double height)? onHeightChanged;
+  final ValueChanged<double> onDrag;
+  final VoidCallback onDragEnd;
 
-  const _TerminalResizeHandle({
-    required this.slot,
-    required this.height,
-    this.onHeightChanged,
-  });
+  const _TerminalResizeHandle({required this.onDrag, required this.onDragEnd});
 
   @override
   State<_TerminalResizeHandle> createState() => _TerminalResizeHandleState();
@@ -656,10 +698,8 @@ class _TerminalResizeHandleState extends State<_TerminalResizeHandle> {
       onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onVerticalDragUpdate: (details) {
-          final next = (widget.height - details.delta.dy).clamp(80.0, 900.0);
-          widget.onHeightChanged?.call(widget.slot, next);
-        },
+        onVerticalDragUpdate: (details) => widget.onDrag(details.delta.dy),
+        onVerticalDragEnd: (_) => widget.onDragEnd(),
         child: Container(
           height: 5,
           color: _hovered ? AppColors.accent : AppColors.bgDivider,

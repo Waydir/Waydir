@@ -35,6 +35,7 @@ class NavigationStore {
   final selectedPaths = signal<Set<String>>({});
   final cursorIndex = signal(-1);
   final anchorIndex = signal(-1);
+  int _pageRows = 10;
   final history = signal<List<String>>([]);
   final historyIndex = signal(0);
   final isLoading = signal(false);
@@ -2292,22 +2293,44 @@ class NavigationStore {
     });
   }
 
+  void setPageRows(int rows) {
+    if (rows > 0) _pageRows = rows;
+  }
+
   void moveCursor(int delta) {
+    if (_vf.isEmpty) return;
+    if (cursorIndex.value < 0) {
+      _initCursor(delta > 0 ? 0 : _vf.length - 1);
+      return;
+    }
+    final next = cursorIndex.value + delta;
+    if (next < 0 || next >= _vf.length) return;
+    _applyCursorMove(next);
+  }
+
+  void moveCursorByPage(int dir) {
+    if (_vf.isEmpty) return;
+    if (cursorIndex.value < 0) {
+      _initCursor(dir > 0 ? 0 : _vf.length - 1);
+      return;
+    }
+    final step = (_pageRows * 0.8).floor().clamp(1, _pageRows);
+    final next = (cursorIndex.value + dir * step).clamp(0, _vf.length - 1);
+    if (next == cursorIndex.value) return;
+    _applyCursorMove(next);
+  }
+
+  void _initCursor(int index) {
     batch(() {
-      if (_vf.isEmpty) return;
+      cursorIndex.value = index;
+      anchorIndex.value = index;
+      selectedPaths.value = {_vf[index].path};
+    });
+  }
 
-      final shift = HardwareKeyboard.instance.isShiftPressed;
-
-      if (cursorIndex.value < 0) {
-        cursorIndex.value = delta > 0 ? 0 : _vf.length - 1;
-        anchorIndex.value = cursorIndex.value;
-        selectedPaths.value = {_vf[cursorIndex.value].path};
-        return;
-      }
-
-      final next = cursorIndex.value + delta;
-      if (next < 0 || next >= _vf.length) return;
-
+  void _applyCursorMove(int next) {
+    final shift = HardwareKeyboard.instance.isShiftPressed;
+    batch(() {
       if (shift) {
         final anchor = anchorIndex.value >= 0 && anchorIndex.value < _vf.length
             ? anchorIndex.value
