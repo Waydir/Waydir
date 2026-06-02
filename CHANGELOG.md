@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The split between dual panes is easier to grab (wider, reliable drag target).
 
 ### Added
-- Page Up / Page Down move the cursor by a full page in the file list (hold Shift to extend the selection).
+- Page Up / Page Down move the cursor by a page in the file list (Shift extends the selection).
 
 ## [0.8.0] - 2026-06-01
 

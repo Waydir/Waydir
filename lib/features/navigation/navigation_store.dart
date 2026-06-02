@@ -2314,7 +2314,8 @@ class NavigationStore {
       _initCursor(dir > 0 ? 0 : _vf.length - 1);
       return;
     }
-    final next = (cursorIndex.value + dir * _pageRows).clamp(0, _vf.length - 1);
+    final step = (_pageRows * 0.8).floor().clamp(1, _pageRows);
+    final next = (cursorIndex.value + dir * step).clamp(0, _vf.length - 1);
     if (next == cursorIndex.value) return;
     _applyCursorMove(next);
   }
