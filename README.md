@@ -50,6 +50,16 @@ Native Rust core • Flutter UI • Keyboard-first
       <img src="docs/gifs/archive_browsing.gif" alt="Archiving and browsing archives">
     </td>
   </tr>
+  <tr>
+    <td width="50%" align="center">
+      <b>Built-in terminal per pane</b><br>
+      <img src="docs/gifs/terminal.gif" alt="Built-in terminal">
+    </td>
+    <td width="50%" align="center">
+      <b>Tabs per pane</b><br>
+      <img src="docs/gifs/tabs.gif" alt="Tabs">
+    </td>
+  </tr>
 </table>
 
 ## ✨ Highlights
@@ -142,11 +152,15 @@ tar -xzf waydir-*-linux-x64.tar.gz && ./waydir
 - Quick Look on `Space` for images, text and code
 - Per-type default apps and "Open with" picker
 
+#### Terminal
+- Embedded terminal per pane, opening in the current directory
+- Toggle with `Ctrl+\`` without leaving the keyboard
+- Real PTY backed by Rust, runs your usual shell
+
 #### Customization & integrations
 - Light, Dark and Nord themes; custom themes via JSON
 - Configurable density, sort, hidden files and date format
 - Git status bar with branch switching and stash management
-- Terminal integration
 
 ## 🔧 Build from source
 
