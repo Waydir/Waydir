@@ -283,6 +283,19 @@ class _TerminalPanel extends StatefulWidget {
 
 class _TerminalPanelState extends State<_TerminalPanel> {
   bool _focused = false;
+  double? _dragHeight;
+
+  double get _effectiveHeight => _dragHeight ?? widget.height;
+
+  void _onResizeDrag(double dy) {
+    final base = _dragHeight ?? widget.height;
+    setState(() => _dragHeight = (base - dy).clamp(80.0, 900.0));
+  }
+
+  void _onResizeEnd() {
+    final h = _dragHeight;
+    if (h != null) widget.onHeightChanged?.call(widget.slot, h);
+  }
 
   @override
   void initState() {
@@ -294,6 +307,9 @@ class _TerminalPanelState extends State<_TerminalPanel> {
   @override
   void didUpdateWidget(covariant _TerminalPanel oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (_dragHeight != null && widget.height == _dragHeight) {
+      _dragHeight = null;
+    }
     if (oldWidget.active.id == widget.active.id) return;
     oldWidget.active.focusNode.removeListener(_onFocusChange);
     _focused = widget.active.focusNode.hasFocus;
@@ -381,11 +397,7 @@ class _TerminalPanelState extends State<_TerminalPanel> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _TerminalResizeHandle(
-          slot: widget.slot,
-          height: widget.height,
-          onHeightChanged: widget.onHeightChanged,
-        ),
+        _TerminalResizeHandle(onDrag: _onResizeDrag, onDragEnd: _onResizeEnd),
         _TerminalHeader(
           focused: _focused,
           slot: widget.slot,
@@ -398,7 +410,7 @@ class _TerminalPanelState extends State<_TerminalPanel> {
           onClose: widget.onToggleTerminal,
         ),
         SizedBox(
-          height: widget.height,
+          height: _effectiveHeight,
           child: Listener(
             onPointerDown: (_) =>
                 widget.onActivate?.call(widget.slot, widget.active.id),
@@ -665,15 +677,10 @@ class _TerminalIconButtonState extends State<_TerminalIconButton> {
 }
 
 class _TerminalResizeHandle extends StatefulWidget {
-  final int slot;
-  final double height;
-  final void Function(int slot, double height)? onHeightChanged;
+  final ValueChanged<double> onDrag;
+  final VoidCallback onDragEnd;
 
-  const _TerminalResizeHandle({
-    required this.slot,
-    required this.height,
-    this.onHeightChanged,
-  });
+  const _TerminalResizeHandle({required this.onDrag, required this.onDragEnd});
 
   @override
   State<_TerminalResizeHandle> createState() => _TerminalResizeHandleState();
@@ -690,10 +697,8 @@ class _TerminalResizeHandleState extends State<_TerminalResizeHandle> {
       onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onVerticalDragUpdate: (details) {
-          final next = (widget.height - details.delta.dy).clamp(80.0, 900.0);
-          widget.onHeightChanged?.call(widget.slot, next);
-        },
+        onVerticalDragUpdate: (details) => widget.onDrag(details.delta.dy),
+        onVerticalDragEnd: (_) => widget.onDragEnd(),
         child: Container(
           height: 5,
           color: _hovered ? AppColors.accent : AppColors.bgDivider,
