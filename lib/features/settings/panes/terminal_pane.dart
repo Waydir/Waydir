@@ -19,6 +19,7 @@ class _TerminalPaneState extends State<TerminalPane> {
     super.initState();
     SettingsRegistry.instance.refreshShellChoices();
     _loadFonts();
+    _loadTerminals();
   }
 
   Future<void> _loadFonts() async {
@@ -27,6 +28,12 @@ class _TerminalPaneState extends State<TerminalPane> {
     setState(
       () => SettingsRegistry.instance.refreshTerminalFontChoices(families),
     );
+  }
+
+  Future<void> _loadTerminals() async {
+    await SettingsRegistry.instance.refreshExternalTerminalChoices();
+    if (!mounted) return;
+    setState(() {});
   }
 
   @override

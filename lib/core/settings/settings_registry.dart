@@ -6,6 +6,7 @@ import '../../i18n/strings.g.dart';
 import '../../ui/theme/app_theme_definition.dart';
 import '../../ui/theme/app_theme_registry.dart';
 import '../terminal/shell_detector.dart';
+import '../terminal/terminal.dart';
 import 'settings_store.dart';
 
 enum SettingsCategory { general, appearance, terminal }
@@ -207,23 +208,7 @@ class SettingsRegistry {
       hint: () => t.preferences.general.terminalHint,
       searchTerms: const ['terminal', 'open in terminal'],
       signal: SettingsStore.instance.terminal,
-      choices: [
-        SettingChoice(
-          value: 'builtin',
-          label: () => t.preferences.general.terminalBuiltin,
-          icon: WaydirIconsRegular.terminal,
-        ),
-        SettingChoice(
-          value: 'auto',
-          label: () => t.preferences.general.terminalAuto,
-          icon: WaydirIconsRegular.magicWand,
-        ),
-        SettingChoice(
-          value: 'custom',
-          label: () => t.preferences.general.terminalCustom,
-          icon: WaydirIconsRegular.code,
-        ),
-      ],
+      choices: _externalTerminalChoices(const []),
     ),
     TextSetting(
       id: 'terminal.externalCustomCommand',
@@ -453,6 +438,12 @@ class SettingsRegistry {
     setting.choices = _fontChoices(names);
   }
 
+  Future<void> refreshExternalTerminalChoices() async {
+    final terminals = await TerminalService.availableTerminals();
+    final setting = byId('terminal.external') as ChoiceSetting<String>;
+    setting.choices = _externalTerminalChoices(terminals);
+  }
+
   void refreshShellChoices() {
     final setting = byId('terminal.shell') as ChoiceSetting<String>;
     final detected = ShellDetector.detect();
@@ -477,6 +468,34 @@ class SettingsRegistry {
         ),
     ];
   }
+}
+
+List<SettingChoice<String>> _externalTerminalChoices(
+  List<ExternalTerminal> terminals,
+) {
+  return [
+    SettingChoice(
+      value: 'builtin',
+      label: () => t.preferences.general.terminalBuiltin,
+      icon: WaydirIconsRegular.terminal,
+    ),
+    SettingChoice(
+      value: 'auto',
+      label: () => t.preferences.general.terminalAuto,
+      icon: WaydirIconsRegular.magicWand,
+    ),
+    for (final term in terminals)
+      SettingChoice(
+        value: term.id,
+        label: () => term.displayName,
+        icon: WaydirIconsRegular.appWindow,
+      ),
+    SettingChoice(
+      value: 'custom',
+      label: () => t.preferences.general.terminalCustom,
+      icon: WaydirIconsRegular.code,
+    ),
+  ];
 }
 
 List<SettingChoice<String>> _shellChoices(

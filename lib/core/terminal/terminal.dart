@@ -288,8 +288,31 @@ class _TerminalRegistry {
   }
 }
 
+class ExternalTerminal {
+  final String id;
+  final String displayName;
+
+  const ExternalTerminal({required this.id, required this.displayName});
+}
+
 class TerminalService {
   static final _detectionCache = <String, bool>{};
+
+  static Future<List<ExternalTerminal>> availableTerminals() async {
+    final specs = _TerminalRegistry.all()
+        .where((s) => s.id != 'x-terminal-emulator')
+        .toList();
+    final needsProbe = Platform.isLinux || Platform.isWindows;
+    final available = await Future.wait([
+      for (final spec in specs)
+        needsProbe ? _isAvailable(spec.executable) : Future.value(true),
+    ]);
+    return [
+      for (var i = 0; i < specs.length; i++)
+        if (available[i])
+          ExternalTerminal(id: specs[i].id, displayName: specs[i].displayName),
+    ];
+  }
 
   static Future<bool> _isAvailable(String executable) async {
     final cached = _detectionCache[executable];
