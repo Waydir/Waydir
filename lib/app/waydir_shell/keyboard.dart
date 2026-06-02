@@ -148,13 +148,13 @@ mixin _WaydirKeyboardMixin
     final store = _active;
 
     if (isRepeat) {
-      if (AppShortcuts.matches('cursor_down', key)) {
+      if (AppShortcuts.matchesIgnoreShift('cursor_down', key)) {
         if (!_acceptCursorRepeat()) return KeyEventResult.handled;
         store.moveCursor(1);
         return KeyEventResult.handled;
       }
 
-      if (AppShortcuts.matches('cursor_up', key)) {
+      if (AppShortcuts.matchesIgnoreShift('cursor_up', key)) {
         if (!_acceptCursorRepeat()) return KeyEventResult.handled;
         store.moveCursor(-1);
         return KeyEventResult.handled;
@@ -297,13 +297,13 @@ mixin _WaydirKeyboardMixin
       return KeyEventResult.handled;
     }
 
-    if (AppShortcuts.matches('cursor_down', key)) {
+    if (AppShortcuts.matchesIgnoreShift('cursor_down', key)) {
       _lastCursorRepeatAt = null;
       store.moveCursor(1);
       return KeyEventResult.handled;
     }
 
-    if (AppShortcuts.matches('cursor_up', key)) {
+    if (AppShortcuts.matchesIgnoreShift('cursor_up', key)) {
       _lastCursorRepeatAt = null;
       store.moveCursor(-1);
       return KeyEventResult.handled;

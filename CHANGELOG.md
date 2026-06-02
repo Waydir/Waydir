@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Windows network breadcrumbs split the server and share, so you can click the server to browse its shares.
+- Shift + arrow keys now extend the selection in the file list.
 
 ## [0.8.0] - 2026-06-01
 
