@@ -564,6 +564,12 @@ class Translations$update$en {
 	/// en: 'Download'
 	String get btnDownload => 'Download';
 
+	/// en: 'Get the update'
+	String get btnGetUpdate => 'Get the update';
+
+	/// en: 'AppImages don't update themselves. Download the new version and replace this file.'
+	String get appImageManual => 'AppImages don\'t update themselves. Download the new version and replace this file.';
+
 	/// en: 'Downloading...'
 	String get btnDownloading => 'Downloading...';
 
@@ -3135,6 +3141,8 @@ extension on Translations {
 			'update.releasePage' => 'Release page',
 			'update.downloaded' => 'Downloaded',
 			'update.btnDownload' => 'Download',
+			'update.btnGetUpdate' => 'Get the update',
+			'update.appImageManual' => 'AppImages don\'t update themselves. Download the new version and replace this file.',
 			'update.btnDownloading' => 'Downloading...',
 			'update.btnCheckNow' => 'Check now',
 			'update.btnRetry' => 'Retry',
@@ -3372,10 +3380,10 @@ extension on Translations {
 			'sidebar.drives.usbDrive' => 'USB Drive',
 			'sidebar.drives.unknownDrive' => 'Unknown Drive',
 			'sidebar.drives.networkDrive' => 'Network Drive',
-			'sidebar.drives.macintoshHd' => 'Macintosh HD',
-			'sidebar.drives.windowsDriveLabel' => ({required Object letter, required Object name}) => '${letter}: ${name}',
 			_ => null,
 		} ?? switch (path) {
+			'sidebar.drives.macintoshHd' => 'Macintosh HD',
+			'sidebar.drives.windowsDriveLabel' => ({required Object letter, required Object name}) => '${letter}: ${name}',
 			'sidebar.drives.mountTitle' => ({required Object name}) => 'Mount ${name}',
 			'sidebar.collapse' => 'Collapse sidebar',
 			'sidebar.expand' => 'Expand sidebar',

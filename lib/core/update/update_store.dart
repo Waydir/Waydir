@@ -67,6 +67,11 @@ class UpdateStore {
   UpdateStore({required this.currentVersion, GithubReleasesClient? client})
     : _gh = client ?? GithubReleasesClient(owner: _owner, repo: _repo);
 
+  static bool canSelfInstall(InstallFormat? fmt) =>
+      fmt != null &&
+      fmt != InstallFormat.linuxAppImage &&
+      fmt != InstallFormat.unknown;
+
   Future<void> checkOnStartup() async {
     await _loadPendingRestart();
     if (status.value == UpdateStatus.installed) return;
@@ -256,6 +261,7 @@ class UpdateStore {
             file.path,
           ], mode: ProcessStartMode.detached);
           return true;
+        case InstallFormat.linuxAppImage:
         case InstallFormat.unknown:
           return false;
       }
@@ -326,6 +332,8 @@ class UpdateStore {
       case InstallFormat.linuxRpm:
         return match((n) => n.endsWith('.rpm')) ??
             match((n) => n.endsWith('.tar.gz') && n.contains('linux'));
+      case InstallFormat.linuxAppImage:
+        return match((n) => n.endsWith('.appimage'));
       case InstallFormat.linuxPortable:
         return match((n) => n.endsWith('.tar.gz') && n.contains('linux'));
       case InstallFormat.windowsInstaller:

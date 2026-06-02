@@ -4,6 +4,7 @@ import 'dart:io';
 enum InstallFormat {
   linuxDeb,
   linuxRpm,
+  linuxAppImage,
   linuxPortable,
   windowsInstaller,
   windowsPortable,
@@ -34,6 +35,9 @@ class InstallFormatDetector {
   }
 
   static Future<InstallFormat> _detectLinux(String exe) async {
+    if (Platform.environment.containsKey('APPIMAGE')) {
+      return InstallFormat.linuxAppImage;
+    }
     if (await _ownedByDpkg(exe)) return InstallFormat.linuxDeb;
     if (await _ownedByRpm(exe)) return InstallFormat.linuxRpm;
     return InstallFormat.linuxPortable;

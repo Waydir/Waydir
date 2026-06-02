@@ -302,6 +302,15 @@ class _AssetRow extends StatelessWidget {
         ),
       );
     }
+    if (!UpdateStore.canSelfInstall(fmt)) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
+        child: Text(
+          t.update.appImageManual,
+          style: context.txt.muted.copyWith(color: AppColors.fgMuted),
+        ),
+      );
+    }
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 10, 18, 10),
       child: Row(
@@ -362,6 +371,7 @@ class _AssetRow extends StatelessWidget {
   static String _formatLabel(InstallFormat fmt) => switch (fmt) {
     InstallFormat.linuxDeb => 'deb',
     InstallFormat.linuxRpm => 'rpm',
+    InstallFormat.linuxAppImage => 'AppImage',
     InstallFormat.linuxPortable => 'tar.gz',
     InstallFormat.windowsInstaller => t.update.formatInstaller,
     InstallFormat.windowsPortable => t.update.formatPortable,
@@ -494,7 +504,11 @@ class _PrimaryButtonState extends State<_PrimaryButton> {
     final store = widget.store;
     switch (store.status.value) {
       case UpdateStatus.available:
-        await store.download();
+        if (UpdateStore.canSelfInstall(store.installFormat.value)) {
+          await store.download();
+        } else {
+          store.openReleasePage();
+        }
       case UpdateStatus.ready:
         final shouldExit = await store.launchInstaller();
         if (shouldExit) {
@@ -520,7 +534,11 @@ class _PrimaryButtonState extends State<_PrimaryButton> {
   }
 
   String _label(UpdateStatus status, InstallFormat? fmt) {
-    if (status == UpdateStatus.available) return t.update.btnDownload;
+    if (status == UpdateStatus.available) {
+      return UpdateStore.canSelfInstall(fmt)
+          ? t.update.btnDownload
+          : t.update.btnGetUpdate;
+    }
     if (status == UpdateStatus.downloading) return t.update.btnDownloading;
     if (status == UpdateStatus.ready) {
       return switch (fmt) {

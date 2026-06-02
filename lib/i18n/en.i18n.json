@@ -313,6 +313,8 @@
     "releasePage": "Release page",
     "downloaded": "Downloaded",
     "btnDownload": "Download",
+    "btnGetUpdate": "Get the update",
+    "appImageManual": "AppImages don't update themselves. Download the new version and replace this file.",
     "btnDownloading": "Downloading...",
     "btnCheckNow": "Check now",
     "btnRetry": "Retry",
