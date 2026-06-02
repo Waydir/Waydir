@@ -94,10 +94,13 @@ class PlatformPaths {
     }
     if (isWindows) {
       final cleaned = _normalizeWindowsPath(path);
-      final uncRoot = _windowsUncRoot(cleaned);
-      if (uncRoot != null) {
-        final trimmed = _stripTrailingWindowsSeparator(cleaned);
-        return trimmed == _stripTrailingWindowsSeparator(uncRoot);
+      if (_isWindowsUncPath(cleaned)) {
+        final parts = _stripTrailingWindowsSeparator(cleaned)
+            .substring(2)
+            .split(r'\')
+            .where((s) => s.isNotEmpty)
+            .toList();
+        return parts.length <= 1;
       }
       return RegExp(r'^[A-Za-z]:\\?$').hasMatch(cleaned);
     }
@@ -114,6 +117,16 @@ class PlatformPaths {
     }
     if (isWindows) {
       final cleaned = _normalizeWindowsPath(path);
+      if (_isWindowsUncPath(cleaned)) {
+        final trimmed = _stripTrailingWindowsSeparator(cleaned);
+        final parts = trimmed
+            .substring(2)
+            .split(r'\')
+            .where((s) => s.isNotEmpty)
+            .toList();
+        if (parts.length <= 1) return _ensureTrailingWindowsSeparator(trimmed);
+        return '\\\\${parts.sublist(0, parts.length - 1).join('\\')}';
+      }
       final root = _windowsRoot(cleaned);
       final cleanedTrimmed = _stripTrailingWindowsSeparator(cleaned);
       final rootTrimmed = _stripTrailingWindowsSeparator(root);
@@ -159,14 +172,21 @@ class PlatformPaths {
     }
     if (isWindows) {
       final cleaned = _normalizeWindowsPath(path);
-      final root = _windowsRoot(cleaned);
+      if (_isWindowsUncPath(cleaned)) {
+        final parts = _stripTrailingWindowsSeparator(cleaned)
+            .substring(2)
+            .split(r'\')
+            .where((s) => s.isNotEmpty)
+            .toList();
+        if (parts.isEmpty) return [_stripTrailingWindowsSeparator(cleaned)];
+        return ['\\\\${parts.first}', ...parts.sublist(1)];
+      }
+      final root = _windowsDriveRoot(cleaned);
       final rest = cleaned.length > root.length
           ? cleaned.substring(root.length)
           : '';
       final parts = rest.split(r'\').where((s) => s.isNotEmpty).toList();
-      final rootLabel = _isWindowsUncPath(root)
-          ? _stripTrailingWindowsSeparator(root)
-          : root.replaceAll(r'\', '').replaceAll('/', '');
+      final rootLabel = root.replaceAll(r'\', '').replaceAll('/', '');
       return [rootLabel, ...parts];
     }
     final parts = path.split('/').where((s) => s.isNotEmpty).toList();

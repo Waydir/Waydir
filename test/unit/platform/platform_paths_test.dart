@@ -18,20 +18,25 @@ void main() {
       );
     });
 
-    test('detects share roots', () {
-      expect(PlatformPaths.isRoot(r'\\192.168.32.12\adssad'), isTrue);
-      expect(PlatformPaths.isRoot(r'\\192.168.32.12\adssad\'), isTrue);
+    test('treats the server as root, not the share', () {
+      expect(PlatformPaths.isRoot(r'\\192.168.32.12'), isTrue);
+      expect(PlatformPaths.isRoot(r'\\192.168.32.12\'), isTrue);
+      expect(PlatformPaths.isRoot(r'\\192.168.32.12\adssad'), isFalse);
       expect(PlatformPaths.isRoot(r'\\192.168.32.12\adssad\folder'), isFalse);
     });
 
-    test('returns the share root as parent boundary', () {
+    test('walks up from share to server as parent boundary', () {
       expect(
         PlatformPaths.parentOf(r'\\192.168.32.12\adssad\folder'),
         r'\\192.168.32.12\adssad',
       );
       expect(
         PlatformPaths.parentOf(r'\\192.168.32.12\adssad'),
-        r'\\192.168.32.12\adssad\',
+        r'\\192.168.32.12',
+      );
+      expect(
+        PlatformPaths.parentOf(r'\\192.168.32.12'),
+        r'\\192.168.32.12\',
       );
     });
 
@@ -40,17 +45,21 @@ void main() {
         r'\\192.168.32.12\adssad\folder\child',
       );
 
-      expect(segments, [r'\\192.168.32.12\adssad', 'folder', 'child']);
+      expect(segments, [r'\\192.168.32.12', 'adssad', 'folder', 'child']);
       expect(
         PlatformPaths.buildPartialPath(segments, 0),
-        r'\\192.168.32.12\adssad\',
+        r'\\192.168.32.12\',
       );
       expect(
         PlatformPaths.buildPartialPath(segments, 1),
-        r'\\192.168.32.12\adssad\folder',
+        r'\\192.168.32.12\adssad',
       );
       expect(
         PlatformPaths.buildPartialPath(segments, 2),
+        r'\\192.168.32.12\adssad\folder',
+      );
+      expect(
+        PlatformPaths.buildPartialPath(segments, 3),
         r'\\192.168.32.12\adssad\folder\child',
       );
     });
