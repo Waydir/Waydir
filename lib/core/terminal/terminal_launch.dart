@@ -1,7 +1,9 @@
 import '../../features/locations/location_resolver.dart';
 import '../../features/locations/location_uri.dart';
 import '../platform/platform_paths.dart';
+import '../settings/settings_store.dart';
 import 'sftp_terminal.dart';
+import 'shell_detector.dart';
 
 class TerminalLaunchSpec {
   final String shell;
@@ -33,8 +35,21 @@ class TerminalLaunch {
     }
     if (PlatformPaths.isSmbUri(path)) {
       final physical = LocationResolver.logicalToPhysical(path);
-      return TerminalLaunchSpec(cwd: physical ?? PlatformPaths.homePath);
+      return TerminalLaunchSpec(
+        cwd: physical ?? PlatformPaths.homePath,
+        shell: _localShell(),
+      );
     }
-    return TerminalLaunchSpec(cwd: path);
+    return TerminalLaunchSpec(cwd: path, shell: _localShell());
+  }
+
+  /// The shell to launch for a local session, from the user's preference.
+  /// An empty string lets the native pty fall back to the platform default
+  /// (`$SHELL` on Unix); `'system'` resolves to the platform's sensible
+  /// default (PowerShell on Windows, `$SHELL` on Unix).
+  static String _localShell() {
+    final pref = SettingsStore.instance.terminalShell.value;
+    if (pref.isNotEmpty && pref != 'system') return pref;
+    return ShellDetector.defaultShellPath();
   }
 }

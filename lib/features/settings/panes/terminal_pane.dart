@@ -17,6 +17,7 @@ class _TerminalPaneState extends State<TerminalPane> {
   @override
   void initState() {
     super.initState();
+    SettingsRegistry.instance.refreshShellChoices();
     _loadFonts();
   }
 
@@ -35,6 +36,7 @@ class _TerminalPaneState extends State<TerminalPane> {
     final fontFamily = registry.byId('terminal.fontFamily');
     final fontSize = registry.byId('terminal.fontSize');
     final lineHeight = registry.byId('terminal.lineHeight');
+    final shell = registry.byId('terminal.shell');
     final external = registry.byId('terminal.external');
     final externalCustom = registry.byId('terminal.externalCustomCommand');
 
@@ -53,6 +55,10 @@ class _TerminalPaneState extends State<TerminalPane> {
             RegistrySettingRow(setting: fontSize),
             RegistrySettingRow(setting: lineHeight),
           ],
+        ),
+        SettingsSection(
+          title: t.preferences.terminal.shellSection,
+          children: [RegistrySettingRow(setting: shell)],
         ),
         SettingsSection(
           title: t.preferences.terminal.externalSection,

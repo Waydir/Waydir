@@ -9,6 +9,8 @@ class AppSettings extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get themeMode => text().withDefault(const Constant('dark'))();
   TextColumn get terminal => text().withDefault(const Constant('builtin'))();
+  TextColumn get terminalShell =>
+      text().withDefault(const Constant('system'))();
   TextColumn get terminalCustomCommand =>
       text().withDefault(const Constant(''))();
   BoolColumn get terminalUseSystemFont =>
@@ -144,7 +146,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 22;
+  int get schemaVersion => 23;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -248,6 +250,9 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 22) {
         await addSettingColumn(appSettings.naturalSort);
+      }
+      if (from < 23) {
+        await addSettingColumn(appSettings.terminalShell);
       }
     },
   );

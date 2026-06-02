@@ -194,6 +194,10 @@
       "fontSizeHint": "Adjust on the fly with Ctrl++, Ctrl+- and Ctrl+0.",
       "lineHeight": "Line height",
       "lineHeightHint": "Vertical spacing between terminal rows.",
+      "shellSection": "Shell",
+      "shellLabel": "Shell",
+      "shellHint": "Program the built-in terminal launches.",
+      "shellSystem": "System default",
       "externalSection": "Open in Terminal"
     },
     "appearance": {

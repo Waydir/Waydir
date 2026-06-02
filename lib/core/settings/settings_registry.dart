@@ -5,6 +5,7 @@ import 'package:signals/signals.dart';
 import '../../i18n/strings.g.dart';
 import '../../ui/theme/app_theme_definition.dart';
 import '../../ui/theme/app_theme_registry.dart';
+import '../terminal/shell_detector.dart';
 import 'settings_store.dart';
 
 enum SettingsCategory { general, appearance, terminal }
@@ -189,6 +190,15 @@ class SettingsRegistry {
           icon: WaydirIconsRegular.trash,
         ),
       ],
+    ),
+    ChoiceSetting<String>(
+      id: 'terminal.shell',
+      category: SettingsCategory.terminal,
+      label: () => t.preferences.terminal.shellLabel,
+      hint: () => t.preferences.terminal.shellHint,
+      searchTerms: const ['terminal', 'shell', 'bash', 'zsh', 'powershell'],
+      signal: SettingsStore.instance.terminalShell,
+      choices: _shellChoices(const []),
     ),
     ChoiceSetting<String>(
       id: 'terminal.external',
@@ -443,6 +453,19 @@ class SettingsRegistry {
     setting.choices = _fontChoices(names);
   }
 
+  void refreshShellChoices() {
+    final setting = byId('terminal.shell') as ChoiceSetting<String>;
+    final detected = ShellDetector.detect();
+    final current = setting.value;
+    final extra =
+        current.isNotEmpty &&
+            current != 'system' &&
+            !detected.any((s) => s.path == current)
+        ? current
+        : null;
+    setting.choices = _shellChoices(detected, extra: extra);
+  }
+
   void refreshThemeChoices() {
     final setting = byId('appearance.theme') as ChoiceSetting<String>;
     setting.choices = [
@@ -454,6 +477,31 @@ class SettingsRegistry {
         ),
     ];
   }
+}
+
+List<SettingChoice<String>> _shellChoices(
+  List<ShellOption> shells, {
+  String? extra,
+}) {
+  return [
+    SettingChoice(
+      value: 'system',
+      label: () => t.preferences.terminal.shellSystem,
+      icon: WaydirIconsRegular.magicWand,
+    ),
+    for (final shell in shells)
+      SettingChoice(
+        value: shell.path,
+        label: () => shell.label,
+        icon: WaydirIconsRegular.terminal,
+      ),
+    if (extra != null)
+      SettingChoice(
+        value: extra,
+        label: () => extra,
+        icon: WaydirIconsRegular.terminal,
+      ),
+  ];
 }
 
 List<SettingChoice<String>> _fontChoices(List<String> families) {

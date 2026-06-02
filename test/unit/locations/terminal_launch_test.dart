@@ -2,7 +2,9 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:waydir/core/platform/platform_paths.dart';
+import 'package:waydir/core/settings/settings_store.dart';
 import 'package:waydir/core/terminal/sftp_terminal.dart';
+import 'package:waydir/core/terminal/shell_detector.dart';
 import 'package:waydir/core/terminal/terminal_launch.dart';
 import 'package:waydir/features/locations/location_resolver.dart';
 import 'package:waydir/features/locations/location_uri.dart';
@@ -48,12 +50,22 @@ void main() {
   });
 
   group('TerminalLaunch.resolve', () {
-    test('local path launches default shell in that directory', () {
+    tearDown(() => SettingsStore.instance.terminalShell.value = 'system');
+
+    test('local path launches the configured shell in that directory', () {
+      SettingsStore.instance.terminalShell.value = '/usr/bin/fish';
       final spec = TerminalLaunch.resolve('/home/user/projects');
 
-      expect(spec.shell, '');
+      expect(spec.shell, '/usr/bin/fish');
       expect(spec.args, isEmpty);
       expect(spec.cwd, '/home/user/projects');
+    });
+
+    test('system default resolves to the platform default shell', () {
+      SettingsStore.instance.terminalShell.value = 'system';
+      final spec = TerminalLaunch.resolve('/home/user/projects');
+
+      expect(spec.shell, ShellDetector.defaultShellPath());
     });
 
     test('sftp path launches ssh from home', () {
@@ -76,9 +88,10 @@ void main() {
         mount.deleteSync(recursive: true);
       });
 
+      SettingsStore.instance.terminalShell.value = '/bin/bash';
       final spec = TerminalLaunch.resolve('smb://server/share/docs');
 
-      expect(spec.shell, '');
+      expect(spec.shell, '/bin/bash');
       expect(spec.cwd, '${mount.path}/docs');
     });
 

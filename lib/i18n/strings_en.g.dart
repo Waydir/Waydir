@@ -2158,6 +2158,18 @@ class Translations$preferences$terminal$en {
 	/// en: 'Vertical spacing between terminal rows.'
 	String get lineHeightHint => 'Vertical spacing between terminal rows.';
 
+	/// en: 'Shell'
+	String get shellSection => 'Shell';
+
+	/// en: 'Shell'
+	String get shellLabel => 'Shell';
+
+	/// en: 'Program the built-in terminal launches.'
+	String get shellHint => 'Program the built-in terminal launches.';
+
+	/// en: 'System default'
+	String get shellSystem => 'System default';
+
 	/// en: 'Open in Terminal'
 	String get externalSection => 'Open in Terminal';
 }
@@ -3015,6 +3027,10 @@ extension on Translations {
 			'preferences.terminal.fontSizeHint' => 'Adjust on the fly with Ctrl++, Ctrl+- and Ctrl+0.',
 			'preferences.terminal.lineHeight' => 'Line height',
 			'preferences.terminal.lineHeightHint' => 'Vertical spacing between terminal rows.',
+			'preferences.terminal.shellSection' => 'Shell',
+			'preferences.terminal.shellLabel' => 'Shell',
+			'preferences.terminal.shellHint' => 'Program the built-in terminal launches.',
+			'preferences.terminal.shellSystem' => 'System default',
 			'preferences.terminal.externalSection' => 'Open in Terminal',
 			'preferences.appearance.title' => 'Appearance',
 			'preferences.appearance.subtitle' => 'Defaults for how files and the sidebar are displayed.',
@@ -3358,12 +3374,12 @@ extension on Translations {
 			'sidebar.drives.networkDrive' => 'Network Drive',
 			'sidebar.drives.macintoshHd' => 'Macintosh HD',
 			'sidebar.drives.windowsDriveLabel' => ({required Object letter, required Object name}) => '${letter}: ${name}',
+			_ => null,
+		} ?? switch (path) {
 			'sidebar.drives.mountTitle' => ({required Object name}) => 'Mount ${name}',
 			'sidebar.collapse' => 'Collapse sidebar',
 			'sidebar.expand' => 'Expand sidebar',
 			'trash.accessDeniedTitle' => 'Trash needs Full Disk Access',
-			_ => null,
-		} ?? switch (path) {
 			'trash.accessDeniedBody' => 'macOS protects the Trash folder. Grant Waydir Full Disk Access in System Settings, then relaunch the app.',
 			'trash.openSystemSettings' => 'Open System Settings',
 			'toolbar.back' => 'Back',
