@@ -13,7 +13,8 @@ class SettingsStore {
   SettingsStore._();
 
   final themeId = signal<String>('dark');
-  final terminal = signal<String>('auto');
+  final terminal = signal<String>('builtin');
+  final terminalShell = signal<String>('system');
   final terminalCustomCommand = signal<String>('');
   final terminalUseSystemFont = signal<bool>(true);
   final terminalFontFamily = signal<String>('');
@@ -65,6 +66,7 @@ class SettingsStore {
     final row = await _db.getSettings();
     themeId.value = row.themeMode == 'system' ? 'dark' : row.themeMode;
     terminal.value = row.terminal;
+    terminalShell.value = row.terminalShell;
     terminalCustomCommand.value = row.terminalCustomCommand;
     terminalUseSystemFont.value = row.terminalUseSystemFont;
     terminalFontFamily.value = row.terminalFontFamily;
@@ -154,6 +156,7 @@ class SettingsStore {
       effect(() {
         themeId.value;
         terminal.value;
+        terminalShell.value;
         terminalCustomCommand.value;
         terminalUseSystemFont.value;
         terminalFontFamily.value;
@@ -200,6 +203,7 @@ class SettingsStore {
         AppSettingsCompanion(
           themeMode: Value(themeId.value),
           terminal: Value(terminal.value),
+          terminalShell: Value(terminalShell.value),
           terminalCustomCommand: Value(terminalCustomCommand.value),
           terminalUseSystemFont: Value(terminalUseSystemFont.value),
           terminalFontFamily: Value(terminalFontFamily.value),

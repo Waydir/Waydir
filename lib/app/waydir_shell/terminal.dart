@@ -23,6 +23,33 @@ mixin _WaydirTerminalMixin on State<WaydirShell>, _WaydirStateBase {
     });
   }
 
+  void _openInTerminal(String directory) {
+    if (SettingsStore.instance.terminal.value == 'builtin') {
+      _openBuiltinTerminalAt(directory);
+    } else {
+      FileSystemService.openInTerminal(directory);
+    }
+  }
+
+  void _openBuiltinTerminalAt(String directory) {
+    final slot = _terminalSlotForActivePane();
+    _terminalInteractionAt = DateTime.now();
+    if (_shell.isDual.value) _shell.setActivePane(slot);
+    final tab = _shell.openTerminal(slot, directory);
+    if (tab == null) {
+      showToast(context: context, message: t.toast.terminalUnavailable);
+      return;
+    }
+    if (!_shell.terminalVisible.value[slot]) {
+      _shell.setTerminalVisible(slot, true);
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _shell.setActiveTerminal(slot, tab.id);
+      tab.focusNode.requestFocus();
+    });
+  }
+
   void _toggleTerminal() {
     final slot = _terminalSlotForActivePane();
     _toggleTerminalSlot(slot);

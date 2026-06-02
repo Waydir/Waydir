@@ -44,7 +44,19 @@ class $AppSettingsTable extends AppSettings
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultValue: const Constant('auto'),
+    defaultValue: const Constant('builtin'),
+  );
+  static const VerificationMeta _terminalShellMeta = const VerificationMeta(
+    'terminalShell',
+  );
+  @override
+  late final GeneratedColumn<String> terminalShell = GeneratedColumn<String>(
+    'terminal_shell',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('system'),
   );
   static const VerificationMeta _terminalCustomCommandMeta =
       const VerificationMeta('terminalCustomCommand');
@@ -437,6 +449,7 @@ class $AppSettingsTable extends AppSettings
     id,
     themeMode,
     terminal,
+    terminalShell,
     terminalCustomCommand,
     terminalUseSystemFont,
     terminalFontFamily,
@@ -492,6 +505,15 @@ class $AppSettingsTable extends AppSettings
       context.handle(
         _terminalMeta,
         terminal.isAcceptableOrUnknown(data['terminal']!, _terminalMeta),
+      );
+    }
+    if (data.containsKey('terminal_shell')) {
+      context.handle(
+        _terminalShellMeta,
+        terminalShell.isAcceptableOrUnknown(
+          data['terminal_shell']!,
+          _terminalShellMeta,
+        ),
       );
     }
     if (data.containsKey('terminal_custom_command')) {
@@ -758,6 +780,10 @@ class $AppSettingsTable extends AppSettings
         DriftSqlType.string,
         data['${effectivePrefix}terminal'],
       )!,
+      terminalShell: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}terminal_shell'],
+      )!,
       terminalCustomCommand: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}terminal_custom_command'],
@@ -887,6 +913,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
   final int id;
   final String themeMode;
   final String terminal;
+  final String terminalShell;
   final String terminalCustomCommand;
   final bool terminalUseSystemFont;
   final String terminalFontFamily;
@@ -920,6 +947,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     required this.id,
     required this.themeMode,
     required this.terminal,
+    required this.terminalShell,
     required this.terminalCustomCommand,
     required this.terminalUseSystemFont,
     required this.terminalFontFamily,
@@ -956,6 +984,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     map['id'] = Variable<int>(id);
     map['theme_mode'] = Variable<String>(themeMode);
     map['terminal'] = Variable<String>(terminal);
+    map['terminal_shell'] = Variable<String>(terminalShell);
     map['terminal_custom_command'] = Variable<String>(terminalCustomCommand);
     map['terminal_use_system_font'] = Variable<bool>(terminalUseSystemFont);
     map['terminal_font_family'] = Variable<String>(terminalFontFamily);
@@ -995,6 +1024,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       id: Value(id),
       themeMode: Value(themeMode),
       terminal: Value(terminal),
+      terminalShell: Value(terminalShell),
       terminalCustomCommand: Value(terminalCustomCommand),
       terminalUseSystemFont: Value(terminalUseSystemFont),
       terminalFontFamily: Value(terminalFontFamily),
@@ -1036,6 +1066,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       id: serializer.fromJson<int>(json['id']),
       themeMode: serializer.fromJson<String>(json['themeMode']),
       terminal: serializer.fromJson<String>(json['terminal']),
+      terminalShell: serializer.fromJson<String>(json['terminalShell']),
       terminalCustomCommand: serializer.fromJson<String>(
         json['terminalCustomCommand'],
       ),
@@ -1092,6 +1123,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       'id': serializer.toJson<int>(id),
       'themeMode': serializer.toJson<String>(themeMode),
       'terminal': serializer.toJson<String>(terminal),
+      'terminalShell': serializer.toJson<String>(terminalShell),
       'terminalCustomCommand': serializer.toJson<String>(terminalCustomCommand),
       'terminalUseSystemFont': serializer.toJson<bool>(terminalUseSystemFont),
       'terminalFontFamily': serializer.toJson<String>(terminalFontFamily),
@@ -1132,6 +1164,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     int? id,
     String? themeMode,
     String? terminal,
+    String? terminalShell,
     String? terminalCustomCommand,
     bool? terminalUseSystemFont,
     String? terminalFontFamily,
@@ -1165,6 +1198,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     id: id ?? this.id,
     themeMode: themeMode ?? this.themeMode,
     terminal: terminal ?? this.terminal,
+    terminalShell: terminalShell ?? this.terminalShell,
     terminalCustomCommand: terminalCustomCommand ?? this.terminalCustomCommand,
     terminalUseSystemFont: terminalUseSystemFont ?? this.terminalUseSystemFont,
     terminalFontFamily: terminalFontFamily ?? this.terminalFontFamily,
@@ -1202,6 +1236,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       id: data.id.present ? data.id.value : this.id,
       themeMode: data.themeMode.present ? data.themeMode.value : this.themeMode,
       terminal: data.terminal.present ? data.terminal.value : this.terminal,
+      terminalShell: data.terminalShell.present
+          ? data.terminalShell.value
+          : this.terminalShell,
       terminalCustomCommand: data.terminalCustomCommand.present
           ? data.terminalCustomCommand.value
           : this.terminalCustomCommand,
@@ -1294,6 +1331,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           ..write('id: $id, ')
           ..write('themeMode: $themeMode, ')
           ..write('terminal: $terminal, ')
+          ..write('terminalShell: $terminalShell, ')
           ..write('terminalCustomCommand: $terminalCustomCommand, ')
           ..write('terminalUseSystemFont: $terminalUseSystemFont, ')
           ..write('terminalFontFamily: $terminalFontFamily, ')
@@ -1332,6 +1370,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     id,
     themeMode,
     terminal,
+    terminalShell,
     terminalCustomCommand,
     terminalUseSystemFont,
     terminalFontFamily,
@@ -1369,6 +1408,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           other.id == this.id &&
           other.themeMode == this.themeMode &&
           other.terminal == this.terminal &&
+          other.terminalShell == this.terminalShell &&
           other.terminalCustomCommand == this.terminalCustomCommand &&
           other.terminalUseSystemFont == this.terminalUseSystemFont &&
           other.terminalFontFamily == this.terminalFontFamily &&
@@ -1404,6 +1444,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
   final Value<int> id;
   final Value<String> themeMode;
   final Value<String> terminal;
+  final Value<String> terminalShell;
   final Value<String> terminalCustomCommand;
   final Value<bool> terminalUseSystemFont;
   final Value<String> terminalFontFamily;
@@ -1437,6 +1478,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.id = const Value.absent(),
     this.themeMode = const Value.absent(),
     this.terminal = const Value.absent(),
+    this.terminalShell = const Value.absent(),
     this.terminalCustomCommand = const Value.absent(),
     this.terminalUseSystemFont = const Value.absent(),
     this.terminalFontFamily = const Value.absent(),
@@ -1471,6 +1513,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.id = const Value.absent(),
     this.themeMode = const Value.absent(),
     this.terminal = const Value.absent(),
+    this.terminalShell = const Value.absent(),
     this.terminalCustomCommand = const Value.absent(),
     this.terminalUseSystemFont = const Value.absent(),
     this.terminalFontFamily = const Value.absent(),
@@ -1505,6 +1548,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Expression<int>? id,
     Expression<String>? themeMode,
     Expression<String>? terminal,
+    Expression<String>? terminalShell,
     Expression<String>? terminalCustomCommand,
     Expression<bool>? terminalUseSystemFont,
     Expression<String>? terminalFontFamily,
@@ -1539,6 +1583,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       if (id != null) 'id': id,
       if (themeMode != null) 'theme_mode': themeMode,
       if (terminal != null) 'terminal': terminal,
+      if (terminalShell != null) 'terminal_shell': terminalShell,
       if (terminalCustomCommand != null)
         'terminal_custom_command': terminalCustomCommand,
       if (terminalUseSystemFont != null)
@@ -1585,6 +1630,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Value<int>? id,
     Value<String>? themeMode,
     Value<String>? terminal,
+    Value<String>? terminalShell,
     Value<String>? terminalCustomCommand,
     Value<bool>? terminalUseSystemFont,
     Value<String>? terminalFontFamily,
@@ -1619,6 +1665,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       id: id ?? this.id,
       themeMode: themeMode ?? this.themeMode,
       terminal: terminal ?? this.terminal,
+      terminalShell: terminalShell ?? this.terminalShell,
       terminalCustomCommand:
           terminalCustomCommand ?? this.terminalCustomCommand,
       terminalUseSystemFont:
@@ -1666,6 +1713,9 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     }
     if (terminal.present) {
       map['terminal'] = Variable<String>(terminal.value);
+    }
+    if (terminalShell.present) {
+      map['terminal_shell'] = Variable<String>(terminalShell.value);
     }
     if (terminalCustomCommand.present) {
       map['terminal_custom_command'] = Variable<String>(
@@ -1773,6 +1823,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
           ..write('id: $id, ')
           ..write('themeMode: $themeMode, ')
           ..write('terminal: $terminal, ')
+          ..write('terminalShell: $terminalShell, ')
           ..write('terminalCustomCommand: $terminalCustomCommand, ')
           ..write('terminalUseSystemFont: $terminalUseSystemFont, ')
           ..write('terminalFontFamily: $terminalFontFamily, ')
@@ -4314,6 +4365,7 @@ typedef $$AppSettingsTableCreateCompanionBuilder =
       Value<int> id,
       Value<String> themeMode,
       Value<String> terminal,
+      Value<String> terminalShell,
       Value<String> terminalCustomCommand,
       Value<bool> terminalUseSystemFont,
       Value<String> terminalFontFamily,
@@ -4349,6 +4401,7 @@ typedef $$AppSettingsTableUpdateCompanionBuilder =
       Value<int> id,
       Value<String> themeMode,
       Value<String> terminal,
+      Value<String> terminalShell,
       Value<String> terminalCustomCommand,
       Value<bool> terminalUseSystemFont,
       Value<String> terminalFontFamily,
@@ -4401,6 +4454,11 @@ class $$AppSettingsTableFilterComposer
 
   ColumnFilters<String> get terminal => $composableBuilder(
     column: $table.terminal,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get terminalShell => $composableBuilder(
+    column: $table.terminalShell,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4574,6 +4632,11 @@ class $$AppSettingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get terminalShell => $composableBuilder(
+    column: $table.terminalShell,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get terminalCustomCommand => $composableBuilder(
     column: $table.terminalCustomCommand,
     builder: (column) => ColumnOrderings(column),
@@ -4737,6 +4800,11 @@ class $$AppSettingsTableAnnotationComposer
 
   GeneratedColumn<String> get terminal =>
       $composableBuilder(column: $table.terminal, builder: (column) => column);
+
+  GeneratedColumn<String> get terminalShell => $composableBuilder(
+    column: $table.terminalShell,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get terminalCustomCommand => $composableBuilder(
     column: $table.terminalCustomCommand,
@@ -4914,6 +4982,7 @@ class $$AppSettingsTableTableManager
                 Value<int> id = const Value.absent(),
                 Value<String> themeMode = const Value.absent(),
                 Value<String> terminal = const Value.absent(),
+                Value<String> terminalShell = const Value.absent(),
                 Value<String> terminalCustomCommand = const Value.absent(),
                 Value<bool> terminalUseSystemFont = const Value.absent(),
                 Value<String> terminalFontFamily = const Value.absent(),
@@ -4947,6 +5016,7 @@ class $$AppSettingsTableTableManager
                 id: id,
                 themeMode: themeMode,
                 terminal: terminal,
+                terminalShell: terminalShell,
                 terminalCustomCommand: terminalCustomCommand,
                 terminalUseSystemFont: terminalUseSystemFont,
                 terminalFontFamily: terminalFontFamily,
@@ -4982,6 +5052,7 @@ class $$AppSettingsTableTableManager
                 Value<int> id = const Value.absent(),
                 Value<String> themeMode = const Value.absent(),
                 Value<String> terminal = const Value.absent(),
+                Value<String> terminalShell = const Value.absent(),
                 Value<String> terminalCustomCommand = const Value.absent(),
                 Value<bool> terminalUseSystemFont = const Value.absent(),
                 Value<String> terminalFontFamily = const Value.absent(),
@@ -5015,6 +5086,7 @@ class $$AppSettingsTableTableManager
                 id: id,
                 themeMode: themeMode,
                 terminal: terminal,
+                terminalShell: terminalShell,
                 terminalCustomCommand: terminalCustomCommand,
                 terminalUseSystemFont: terminalUseSystemFont,
                 terminalFontFamily: terminalFontFamily,
