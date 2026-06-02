@@ -24,6 +24,7 @@ class AppSettings extends Table {
   IntColumn get activePaneIndex => integer().withDefault(const Constant(0))();
   BoolColumn get sidebarCollapsed =>
       boolean().withDefault(const Constant(false))();
+  RealColumn get sidebarWidth => real().withDefault(const Constant(200.0))();
   BoolColumn get restoreSession =>
       boolean().withDefault(const Constant(true))();
   TextColumn get defaultStartingPath =>
@@ -146,7 +147,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 23;
+  int get schemaVersion => 24;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -253,6 +254,9 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 23) {
         await addSettingColumn(appSettings.terminalShell);
+      }
+      if (from < 24) {
+        await addSettingColumn(appSettings.sidebarWidth);
       }
     },
   );
