@@ -92,6 +92,7 @@ void main() {
         actionId: 'to_webp',
         menu: 'context',
         title: 'Convert',
+        group: null,
         icon: null,
         when: PluginWhen(),
         surfaces: {'selection'},

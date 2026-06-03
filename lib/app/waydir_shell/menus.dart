@@ -107,7 +107,7 @@ mixin _WaydirMenuMixin
     return [
       for (final c in contributions)
         ContextMenuItem(
-          icon: WaydirIconsRegular.gearSix,
+          icon: pluginGlyph(c.icon),
           label: c.title,
           action: c.fullActionId,
           iconPath: _pluginIconPath(c),
@@ -354,25 +354,48 @@ mixin _WaydirMenuMixin
 
   List<ContextMenuItem> _pluginContextItems(List<FileEntry> entries) {
     final contributions = PluginStore.instance.contextContributionsFor(entries);
-    return [
-      for (final c in contributions)
-        ContextMenuItem(
-          icon: WaydirIconsRegular.gearSix,
-          label: c.title,
-          action: c.fullActionId,
-          iconPath: _pluginIconPath(c),
-        ),
-    ];
+    ContextMenuItem leaf(PluginContribution c) => ContextMenuItem(
+      icon: pluginGlyph(c.icon),
+      label: c.title,
+      action: c.fullActionId,
+      iconPath: _pluginIconPath(c),
+    );
+
+    final items = <ContextMenuItem>[];
+    final groupIndex = <String, int>{};
+    for (final c in contributions) {
+      final group = c.group;
+      if (group == null) {
+        items.add(leaf(c));
+        continue;
+      }
+      final at = groupIndex[group];
+      if (at == null) {
+        groupIndex[group] = items.length;
+        items.add(
+          ContextMenuItem(
+            icon: pluginGlyph(c.icon),
+            label: group,
+            action: 'plugin-group:$group',
+            iconPath: _pluginIconPath(c),
+            children: [leaf(c)],
+          ),
+        );
+      } else {
+        final parent = items[at];
+        items[at] = ContextMenuItem(
+          icon: parent.icon,
+          label: parent.label,
+          action: parent.action,
+          iconPath: parent.iconPath,
+          children: [...parent.children!, leaf(c)],
+        );
+      }
+    }
+    return items;
   }
 
-  String? _pluginIconPath(PluginContribution c) {
-    final icon = c.icon;
-    if (icon == null) return null;
-    if (icon.contains('/') || icon.endsWith('.svg') || icon.endsWith('.png')) {
-      return p.isAbsolute(icon) ? icon : p.join(c.pluginDir, icon);
-    }
-    return null;
-  }
+  String? _pluginIconPath(PluginContribution c) => c.iconPath;
 
   /// Guards against a plugin that re-emits `dialog` on every pass, which would
   /// otherwise loop modals forever.
@@ -530,10 +553,7 @@ mixin _WaydirMenuMixin
     return result == actionLabel;
   }
 
-  Future<void> _runPluginTask(
-    PluginContribution c,
-    PluginEffect effect,
-  ) async {
+  Future<void> _runPluginTask(PluginContribution c, PluginEffect effect) async {
     if (!c.allowExec) return;
     final cmd = effect.data['cmd'] as String?;
     if (cmd == null) return;
@@ -609,7 +629,9 @@ mixin _WaydirMenuMixin
     final secs = (effect.data['timeout'] as num?)?.toInt();
     if (secs == null || secs <= 0) return _pluginTaskTimeout;
     final requested = Duration(seconds: secs);
-    return requested > _pluginTaskTimeoutMax ? _pluginTaskTimeoutMax : requested;
+    return requested > _pluginTaskTimeoutMax
+        ? _pluginTaskTimeoutMax
+        : requested;
   }
 
   Future<void> _showPluginDialog(
@@ -889,7 +911,7 @@ mixin _WaydirMenuMixin
       items: [
         for (final c in contributions)
           ContextMenuItem(
-            icon: WaydirIconsRegular.gearSix,
+            icon: pluginGlyph(c.icon),
             label: c.title,
             action: c.fullActionId,
             iconPath: _pluginIconPath(c),

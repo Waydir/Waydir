@@ -88,7 +88,8 @@ fn install_api(
     waydir.set(
         "toast",
         lua.create_function(move |_, msg: String| {
-            e.borrow_mut().push(json!({ "type": "toast", "message": msg }));
+            e.borrow_mut()
+                .push(json!({ "type": "toast", "message": msg }));
             Ok(())
         })?,
     )?;
@@ -126,7 +127,8 @@ fn install_api(
     waydir.set(
         "log",
         lua.create_function(move |_, msg: String| {
-            e.borrow_mut().push(json!({ "type": "log", "message": msg }));
+            e.borrow_mut()
+                .push(json!({ "type": "log", "message": msg }));
             Ok(())
         })?,
     )?;
@@ -150,7 +152,8 @@ fn install_api(
         "dialog",
         lua.create_function(move |lua, spec: Table| {
             let json = table_to_json(lua, spec)?;
-            e.borrow_mut().push(json!({ "type": "dialog", "dialog": json }));
+            e.borrow_mut()
+                .push(json!({ "type": "dialog", "dialog": json }));
             Ok(())
         })?,
     )?;
@@ -211,8 +214,8 @@ fn install_api(
             if !allow_fs {
                 return Err(err("fs permission not granted"));
             }
-            let meta = std::fs::metadata(&path)
-                .map_err(|er| err(format!("read_text {path}: {er}")))?;
+            let meta =
+                std::fs::metadata(&path).map_err(|er| err(format!("read_text {path}: {er}")))?;
             if meta.len() > READ_TEXT_CAP {
                 return Err(err(format!(
                     "read_text {path}: file exceeds {READ_TEXT_CAP} byte cap"
@@ -274,10 +277,7 @@ fn install_api(
         })?,
     )?;
 
-    for (name, op) in [
-        ("copy", "copy"),
-        ("move", "move"),
-    ] {
+    for (name, op) in [("copy", "copy"), ("move", "move")] {
         let e = effects.clone();
         let op = op.to_string();
         waydir.set(
@@ -320,8 +320,7 @@ fn install_api(
 }
 
 fn load_impl(path: &str) -> mlua::Result<Json> {
-    let code = std::fs::read_to_string(path)
-        .map_err(|e| err(format!("read {path}: {e}")))?;
+    let code = std::fs::read_to_string(path).map_err(|e| err(format!("read {path}: {e}")))?;
     let lua = new_sandbox()?;
     let effects: Effects = Rc::new(RefCell::new(Vec::new()));
     let waydir = install_api(&lua, &effects, false, false)?;
@@ -336,6 +335,7 @@ fn load_impl(path: &str) -> mlua::Result<Json> {
                 .get::<Option<String>>("menu")?
                 .unwrap_or_else(|| "context".into());
             let title: String = spec.get("title")?;
+            let group: Option<String> = spec.get("group")?;
             let icon: Option<String> = spec.get("icon")?;
             let when = match spec.get::<Option<Table>>("when")? {
                 Some(w) => when_to_json(&w)?,
@@ -351,6 +351,7 @@ fn load_impl(path: &str) -> mlua::Result<Json> {
                 "id": id,
                 "menu": menu,
                 "title": title,
+                "group": group,
                 "icon": icon,
                 "when": when,
                 "where": where_,
@@ -368,18 +369,11 @@ fn load_impl(path: &str) -> mlua::Result<Json> {
     Ok(json!({ "ok": true, "contributions": list }))
 }
 
-fn invoke_impl(
-    path: &str,
-    action_id: &str,
-    ctx_json: &str,
-    perms: i32,
-) -> mlua::Result<Json> {
+fn invoke_impl(path: &str, action_id: &str, ctx_json: &str, perms: i32) -> mlua::Result<Json> {
     let allow_exec = perms & PERM_EXEC != 0;
     let allow_fs = perms & PERM_FS != 0;
-    let code = std::fs::read_to_string(path)
-        .map_err(|e| err(format!("read {path}: {e}")))?;
-    let ctx: Json = serde_json::from_str(ctx_json)
-        .map_err(|e| err(format!("ctx json: {e}")))?;
+    let code = std::fs::read_to_string(path).map_err(|e| err(format!("read {path}: {e}")))?;
+    let ctx: Json = serde_json::from_str(ctx_json).map_err(|e| err(format!("ctx json: {e}")))?;
 
     let lua = new_sandbox()?;
     let effects: Effects = Rc::new(RefCell::new(Vec::new()));

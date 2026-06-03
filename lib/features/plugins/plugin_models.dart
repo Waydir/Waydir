@@ -1,3 +1,5 @@
+import 'package:path/path.dart' as p;
+
 import '../../core/models/file_entry.dart';
 
 class PluginManifest {
@@ -19,7 +21,10 @@ class PluginManifest {
     required this.permissions,
   });
 
-  factory PluginManifest.fromJson(Map<String, dynamic> json, String fallbackId) {
+  factory PluginManifest.fromJson(
+    Map<String, dynamic> json,
+    String fallbackId,
+  ) {
     final perms = json['permissions'];
     return PluginManifest(
       id: (json['id'] as String?)?.trim().isNotEmpty == true
@@ -63,8 +68,9 @@ class PluginWhen {
 
   factory PluginWhen.fromJson(Map<String, dynamic>? json) {
     if (json == null) return const PluginWhen();
-    Set<String> strSet(dynamic v) =>
-        v is List ? v.whereType<String>().map((e) => e.toLowerCase()).toSet() : {};
+    Set<String> strSet(dynamic v) => v is List
+        ? v.whereType<String>().map((e) => e.toLowerCase()).toSet()
+        : {};
     return PluginWhen(
       types: strSet(json['types']),
       extensions: strSet(json['extensions']),
@@ -74,10 +80,7 @@ class PluginWhen {
     );
   }
 
-  bool matches(
-    List<FileEntry> entries,
-    bool Function(FileEntry) inArchiveOf,
-  ) {
+  bool matches(List<FileEntry> entries, bool Function(FileEntry) inArchiveOf) {
     if (entries.isEmpty || entries.length < min) return false;
     if (max != null && entries.length > max!) return false;
     for (final e in entries) {
@@ -163,6 +166,7 @@ class PluginContribution {
   final String actionId;
   final String menu;
   final String title;
+  final String? group;
   final String? icon;
   final PluginWhen when;
   final Set<String> surfaces;
@@ -177,6 +181,7 @@ class PluginContribution {
     required this.actionId,
     required this.menu,
     required this.title,
+    required this.group,
     required this.icon,
     required this.when,
     required this.surfaces,
@@ -188,6 +193,17 @@ class PluginContribution {
   });
 
   String get fullActionId => 'plugin:$pluginId:$actionId';
+
+  /// Resolves [icon] to an absolute file path when it points at an image
+  /// (PNG/SVG) bundled in the plugin, or null for the default glyph.
+  String? get iconPath {
+    final ic = icon;
+    if (ic == null) return null;
+    if (ic.contains('/') || ic.endsWith('.svg') || ic.endsWith('.png')) {
+      return p.isAbsolute(ic) ? ic : p.join(pluginDir, ic);
+    }
+    return null;
+  }
 
   bool get allowExec => manifest.permissions.contains('exec');
 

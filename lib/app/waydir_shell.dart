@@ -32,6 +32,7 @@ import '../features/panes/pane_divider.dart';
 import '../features/panes/shell_store.dart';
 import '../features/panes/terminal_tab.dart';
 import '../features/plugins/plugin_form_dialog.dart';
+import '../features/plugins/plugin_icons.dart';
 import '../features/plugins/plugin_models.dart';
 import '../features/plugins/plugin_settings_store.dart';
 import '../features/plugins/plugin_store.dart';
@@ -206,6 +207,7 @@ class _WaydirShellState extends State<WaydirShell>
       onMenuAction: _handleMenuAction,
       onOpenInNewTab: _openInNewTab,
       onMultiRename: _multiRename,
+      onPluginToolbarAction: (id) => _runPluginAction(id, background: true),
       terminalSlot: slot,
       terminalTabs: _shell.terminalsForSlot(slot),
       activeTerminal: _shell.activeTerminalForSlot(slot),

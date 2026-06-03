@@ -94,7 +94,11 @@ void main() {
     final raw = await PluginFfi.invoke(
       initLuaPath: path,
       actionId: 'danger',
-      ctxJson: jsonEncode({'paths': <String>[], 'dir': '/', 'plugin_dir': tmp.path}),
+      ctxJson: jsonEncode({
+        'paths': <String>[],
+        'dir': '/',
+        'plugin_dir': tmp.path,
+      }),
       perms: 0,
     );
     final json = jsonDecode(raw!) as Map<String, dynamic>;
@@ -189,7 +193,11 @@ void main() {
     final raw = await PluginFfi.invoke(
       initLuaPath: path,
       actionId: 'ui',
-      ctxJson: jsonEncode({'paths': <String>[], 'dir': '/', 'plugin_dir': tmp.path}),
+      ctxJson: jsonEncode({
+        'paths': <String>[],
+        'dir': '/',
+        'plugin_dir': tmp.path,
+      }),
       perms: 0,
     );
     final json = jsonDecode(raw!) as Map<String, dynamic>;
@@ -277,7 +285,11 @@ void main() {
     final raw = await PluginFfi.invoke(
       initLuaPath: path,
       actionId: 'job',
-      ctxJson: jsonEncode({'paths': <String>[], 'dir': '/', 'plugin_dir': tmp.path}),
+      ctxJson: jsonEncode({
+        'paths': <String>[],
+        'dir': '/',
+        'plugin_dir': tmp.path,
+      }),
       perms: 1,
     );
     final json = jsonDecode(raw!) as Map<String, dynamic>;
@@ -304,6 +316,31 @@ void main() {
       );
       expect((json['contributions'] as List), isNotEmpty);
     }
+  });
+
+  test('toolbar menu and icon round-trip through load', () {
+    final path = writePlugin('''
+      waydir.register({
+        id = "bar",
+        title = "Bar",
+        menu = "toolbar",
+        icon = "icon.svg",
+        run = function() end,
+      })
+    ''');
+    final json = jsonDecode(PluginFfi.load(path)!) as Map<String, dynamic>;
+    final c = (json['contributions'] as List).first as Map<String, dynamic>;
+    expect(c['menu'], 'toolbar');
+    expect(c['icon'], 'icon.svg');
+  });
+
+  test('templates example surfaces toolbar and menubar entries', () {
+    final raw = PluginFfi.load('docs/examples/plugins/templates/init.lua');
+    final json = jsonDecode(raw!) as Map<String, dynamic>;
+    final menus = (json['contributions'] as List)
+        .map((e) => (e as Map<String, dynamic>)['menu'])
+        .toSet();
+    expect(menus, containsAll(<String>['toolbar', 'menubar']));
   });
 
   test('sandbox blocks os and io access', () {

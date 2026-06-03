@@ -64,15 +64,24 @@ class PluginStore {
     for (final c in shortcutContributions()) {
       final chord = AppShortcuts.parseChord(c.shortcut!);
       if (chord == null) {
-        log.warn('plugins', 'unparseable shortcut "${c.shortcut}" for ${c.fullActionId}');
+        log.warn(
+          'plugins',
+          'unparseable shortcut "${c.shortcut}" for ${c.fullActionId}',
+        );
         continue;
       }
       if (AppShortcuts.isChordUsedByBuiltin(chord)) {
-        log.warn('plugins', 'shortcut "${c.shortcut}" for ${c.fullActionId} conflicts with a built-in; ignored');
+        log.warn(
+          'plugins',
+          'shortcut "${c.shortcut}" for ${c.fullActionId} conflicts with a built-in; ignored',
+        );
         continue;
       }
       if (taken.any((t) => t.sameChord(chord))) {
-        log.warn('plugins', 'shortcut "${c.shortcut}" for ${c.fullActionId} conflicts with another plugin; ignored');
+        log.warn(
+          'plugins',
+          'shortcut "${c.shortcut}" for ${c.fullActionId} conflicts with another plugin; ignored',
+        );
         continue;
       }
       taken.add(chord);
@@ -186,6 +195,9 @@ class PluginStore {
           actionId: actionId,
           menu: c['menu'] as String? ?? 'context',
           title: title,
+          group: (c['group'] as String?)?.trim().isNotEmpty == true
+              ? c['group'] as String
+              : null,
           icon: c['icon'] as String?,
           when: PluginWhen.fromJson(c['when'] as Map<String, dynamic>?),
           surfaces: surfaces,
@@ -239,6 +251,13 @@ class PluginStore {
     return [
       for (final c in _activeContributions)
         if (c.menu == 'menubar') c,
+    ];
+  }
+
+  List<PluginContribution> toolbarContributions() {
+    return [
+      for (final c in _activeContributions)
+        if (c.menu == 'toolbar') c,
     ];
   }
 
