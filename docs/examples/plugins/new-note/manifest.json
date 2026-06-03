@@ -1,9 +1,0 @@
-{
-  "id": "new-note",
-  "name": "New Note",
-  "version": "1.0.0",
-  "author": "waydir",
-  "description": "Creates a text note in the current folder from a small dialog.",
-  "api_version": 2,
-  "permissions": ["fs"]
-}
