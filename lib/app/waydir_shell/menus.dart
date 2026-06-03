@@ -900,6 +900,22 @@ mixin _WaydirMenuMixin
           ),
         ],
       ),
+      ?_platformPluginMenu(),
     ];
+  }
+
+  PlatformMenu? _platformPluginMenu() {
+    final contributions = PluginStore.instance.menubarContributions();
+    if (contributions.isEmpty) return null;
+    return PlatformMenu(
+      label: t.preferences.plugins.title,
+      menus: [
+        for (final c in contributions)
+          PlatformMenuItem(
+            label: c.title,
+            onSelected: () => _runPluginAction(c.fullActionId),
+          ),
+      ],
+    );
   }
 }
