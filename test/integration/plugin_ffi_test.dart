@@ -230,6 +230,40 @@ void main() {
     });
   });
 
+  test(
+    'absent form and settings arrive as nil, not a truthy sentinel',
+    () async {
+      final path = writePlugin('''
+      waydir.register({
+        id = "guard",
+        title = "Guard",
+        run = function(ctx)
+          if not ctx.form then
+            waydir.toast("no-form")
+            return
+          end
+          waydir.toast("has-form")
+        end,
+      })
+    ''');
+      final raw = await PluginFfi.invoke(
+        initLuaPath: path,
+        actionId: 'guard',
+        ctxJson: jsonEncode({
+          'paths': <String>[],
+          'dir': '/',
+          'plugin_dir': tmp.path,
+        }),
+        perms: 0,
+      );
+      final json = jsonDecode(raw!) as Map<String, dynamic>;
+      expect((json['effects'] as List).first, {
+        'type': 'toast',
+        'message': 'no-form',
+      });
+    },
+  );
+
   test('run_task emits a task effect with timeout (needs exec)', () async {
     final path = writePlugin('''
       waydir.register({

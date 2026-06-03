@@ -426,10 +426,13 @@ fn invoke_impl(
         "plugin_dir",
         ctx.get("plugin_dir").and_then(|v| v.as_str()).unwrap_or(""),
     )?;
+    let nil_opts = mlua::SerializeOptions::new()
+        .serialize_none_to_null(false)
+        .serialize_unit_to_null(false);
     let settings = ctx.get("settings").cloned().unwrap_or(Json::Null);
-    ctx_tbl.set("settings", lua.to_value(&settings)?)?;
+    ctx_tbl.set("settings", lua.to_value_with(&settings, nil_opts)?)?;
     let form = ctx.get("form").cloned().unwrap_or(Json::Null);
-    ctx_tbl.set("form", lua.to_value(&form)?)?;
+    ctx_tbl.set("form", lua.to_value_with(&form, nil_opts)?)?;
 
     run.call::<Value>(ctx_tbl)?;
 
