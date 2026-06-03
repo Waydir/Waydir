@@ -2069,6 +2069,15 @@ class Translations$preferences$plugins$en {
 	/// en: 'Failed: $error'
 	String taskFailedError({required Object error}) => 'Failed: ${error}';
 
+	/// en: 'Timed out'
+	String get taskTimeout => 'Timed out';
+
+	/// en: 'Enable'
+	String get enable => 'Enable';
+
+	/// en: 'Disable'
+	String get disable => 'Disable';
+
 	/// en: 'Configure'
 	String get configure => 'Configure';
 
@@ -3076,6 +3085,9 @@ extension on Translations {
 			'preferences.plugins.taskDone' => 'Done',
 			'preferences.plugins.taskFailed' => ({required Object code}) => 'Failed (exit ${code})',
 			'preferences.plugins.taskFailedError' => ({required Object error}) => 'Failed: ${error}',
+			'preferences.plugins.taskTimeout' => 'Timed out',
+			'preferences.plugins.enable' => 'Enable',
+			'preferences.plugins.disable' => 'Disable',
 			'preferences.plugins.configure' => 'Configure',
 			'preferences.plugins.configureTitle' => ({required Object name}) => '${name} settings',
 			'preferences.plugins.noSettings' => 'This plugin has no settings.',
@@ -3450,11 +3462,11 @@ extension on Translations {
 			'sidebar.videos' => 'Videos',
 			'sidebar.trash' => 'Trash',
 			'sidebar.root' => 'Root',
+			_ => null,
+		} ?? switch (path) {
 			'sidebar.network' => 'Network',
 			'sidebar.bookmarks' => 'Bookmarks',
 			'sidebar.dropBookmark' => 'Drop folder to bookmark',
-			_ => null,
-		} ?? switch (path) {
 			'sidebar.connectToServer' => 'Connect to server',
 			'sidebar.connectDialog.title' => 'Connect to server',
 			'sidebar.connectDialog.host' => 'Server',

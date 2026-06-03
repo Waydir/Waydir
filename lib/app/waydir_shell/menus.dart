@@ -374,10 +374,15 @@ mixin _WaydirMenuMixin
     return null;
   }
 
+  /// Guards against a plugin that re-emits `dialog` on every pass, which would
+  /// otherwise loop modals forever.
+  static const int _maxPluginDialogDepth = 8;
+
   Future<void> _runPluginAction(
     String fullActionId, {
     bool background = false,
     Map<String, dynamic>? form,
+    int depth = 0,
   }) async {
     final contribution = PluginStore.instance.contributionByFullId(
       fullActionId,
@@ -394,13 +399,19 @@ mixin _WaydirMenuMixin
       form: form,
     );
     if (!mounted) return;
-    await _applyPluginEffects(effects, contribution, background: background);
+    await _applyPluginEffects(
+      effects,
+      contribution,
+      background: background,
+      depth: depth,
+    );
   }
 
   Future<void> _applyPluginEffects(
     List<PluginEffect> effects,
     PluginContribution contribution, {
     required bool background,
+    int depth = 0,
   }) async {
     for (final effect in effects) {
       switch (effect.type) {
@@ -424,11 +435,16 @@ mixin _WaydirMenuMixin
             );
           }
         case 'operation':
-          _runPluginOperation(effect);
+          await _runPluginOperation(effect);
         case 'task':
           _runPluginTask(contribution, effect);
         case 'dialog':
-          await _showPluginDialog(contribution, effect, background: background);
+          await _showPluginDialog(
+            contribution,
+            effect,
+            background: background,
+            depth: depth,
+          );
       }
       if (!mounted) return;
     }
@@ -460,7 +476,7 @@ mixin _WaydirMenuMixin
     );
   }
 
-  void _runPluginOperation(PluginEffect effect) {
+  Future<void> _runPluginOperation(PluginEffect effect) async {
     final op = effect.data['op'] as String?;
     final src = effect.data['src'] as String?;
     final dst = effect.data['dst'] as String?;
@@ -471,10 +487,47 @@ mixin _WaydirMenuMixin
       case 'move':
         if (dst != null) _operationStore.enqueueMove([src], dst);
       case 'delete':
-        _operationStore.enqueueDelete([src]);
+        if (await _confirmPluginDelete(src, permanent: true)) {
+          _operationStore.enqueueDelete([src]);
+        }
       case 'trash':
-        _operationStore.enqueueTrash([src]);
+        if (await _confirmPluginDelete(src, permanent: false)) {
+          _operationStore.enqueueTrash([src]);
+        }
     }
+  }
+
+  /// Plugins can request destructive ops; gate them behind the same confirm
+  /// the UI uses. Permanent deletes always confirm; trash respects the
+  /// confirmDelete setting.
+  Future<bool> _confirmPluginDelete(
+    String path, {
+    required bool permanent,
+  }) async {
+    if (!permanent && !SettingsStore.instance.confirmDelete.value) return true;
+    final name = p.basename(path);
+    final actionLabel = permanent ? t.dialog.delete : t.dialog.moveToTrash;
+    final result = await showCustomDialog<String>(
+      context: context,
+      title: permanent
+          ? t.dialog.confirmDeleteTitle
+          : t.dialog.confirmTrashTitle,
+      icon: permanent
+          ? WaydirIconsRegular.trash
+          : WaydirIconsRegular.trashSimple,
+      iconColor: AppColors.danger,
+      body: Text(
+        permanent
+            ? t.dialog.confirmDeleteSingle(name: name)
+            : t.dialog.confirmTrashSingle(name: name),
+        style: context.txt.body.copyWith(height: 1.4),
+      ),
+      actions: [
+        DialogAction(label: t.dialog.cancel, color: AppColors.fgMuted),
+        DialogAction(label: actionLabel, color: AppColors.danger),
+      ],
+    );
+    return result == actionLabel;
   }
 
   Future<void> _runPluginTask(
@@ -489,7 +542,8 @@ mixin _WaydirMenuMixin
         .whereType<String>()
         .toList();
     final cwd = effect.data['cwd'] as String?;
-    final notifId = 'plugin-task-${c.pluginId}-${DateTime.now().microsecondsSinceEpoch}';
+    final notifId =
+        'plugin-task-${c.pluginId}-${DateTime.now().microsecondsSinceEpoch}';
     _notificationStore.add(
       AppNotification(
         id: notifId,
@@ -497,24 +551,34 @@ mixin _WaydirMenuMixin
         message: t.preferences.plugins.taskRunning,
         type: NotificationType.persistent,
         icon: WaydirIconsRegular.gearSix,
-        dismissible: false,
       ),
     );
     try {
-      final result = await Process.run(
+      final process = await Process.start(
         cmd,
         args,
         workingDirectory: cwd != null && cwd.isNotEmpty ? cwd : null,
       );
+      var timedOut = false;
+      final exitCode = await process.exitCode.timeout(
+        _pluginTaskTimeout,
+        onTimeout: () {
+          timedOut = true;
+          process.kill();
+          return -1;
+        },
+      );
       if (!mounted) return;
-      final ok = result.exitCode == 0;
+      final ok = !timedOut && exitCode == 0;
       _notificationStore.add(
         AppNotification(
           id: notifId,
           title: title,
-          message: ok
+          message: timedOut
+              ? t.preferences.plugins.taskTimeout
+              : ok
               ? t.preferences.plugins.taskDone
-              : t.preferences.plugins.taskFailed(code: result.exitCode),
+              : t.preferences.plugins.taskFailed(code: exitCode),
           type: NotificationType.autoDismiss,
           icon: WaydirIconsRegular.gearSix,
           accentColor: ok ? AppColors.success : AppColors.danger,
@@ -536,11 +600,18 @@ mixin _WaydirMenuMixin
     }
   }
 
+  static const Duration _pluginTaskTimeout = Duration(minutes: 10);
+
   Future<void> _showPluginDialog(
     PluginContribution c,
     PluginEffect effect, {
     required bool background,
+    required int depth,
   }) async {
+    if (depth >= _maxPluginDialogDepth) {
+      log.warn('plugins', 'dialog depth limit reached for ${c.fullActionId}');
+      return;
+    }
     final spec = (effect.data['dialog'] as Map?)?.cast<String, dynamic>();
     if (spec == null) return;
     final fields = PluginFormField.listFromJson(spec['fields']);
@@ -550,7 +621,12 @@ mixin _WaydirMenuMixin
       fields: fields,
     );
     if (result == null || !mounted) return;
-    await _runPluginAction(c.fullActionId, background: background, form: result);
+    await _runPluginAction(
+      c.fullActionId,
+      background: background,
+      form: result,
+      depth: depth + 1,
+    );
   }
 
   ContextMenuItem get _openItem => ContextMenuItem(

@@ -60,9 +60,22 @@ class PluginStore {
 
   void _syncShortcuts() {
     final defs = <ShortcutDef>[];
+    final taken = <KeyChord>[];
     for (final c in shortcutContributions()) {
       final chord = AppShortcuts.parseChord(c.shortcut!);
-      if (chord == null) continue;
+      if (chord == null) {
+        log.warn('plugins', 'unparseable shortcut "${c.shortcut}" for ${c.fullActionId}');
+        continue;
+      }
+      if (AppShortcuts.isChordUsedByBuiltin(chord)) {
+        log.warn('plugins', 'shortcut "${c.shortcut}" for ${c.fullActionId} conflicts with a built-in; ignored');
+        continue;
+      }
+      if (taken.any((t) => t.sameChord(chord))) {
+        log.warn('plugins', 'shortcut "${c.shortcut}" for ${c.fullActionId} conflicts with another plugin; ignored');
+        continue;
+      }
+      taken.add(chord);
       final title = c.title;
       defs.add(
         ShortcutDef(
@@ -196,9 +209,14 @@ class PluginStore {
   Iterable<PluginContribution> get _activeContributions sync* {
     for (final plugin in plugins.value) {
       if (!plugin.enabled || plugin.error != null) continue;
+      if (PluginSettingsStore.instance.isDisabled(plugin.manifest.id)) continue;
       yield* plugin.contributions;
     }
   }
+
+  /// Re-derives state that depends on which plugins are active (e.g. after the
+  /// user enables/disables one). Call when the disabled set changes.
+  void applyEnablement() => _syncShortcuts();
 
   List<PluginContribution> contextContributionsFor(List<FileEntry> entries) {
     final out = <PluginContribution>[];

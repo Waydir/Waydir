@@ -122,9 +122,11 @@ class _PluginRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final m = plugin.manifest;
     final hasError = plugin.error != null;
-    final dim = hasError || !plugin.enabled;
+    final loadable = plugin.enabled && !hasError;
+    final userDisabled = PluginSettingsStore.instance.isDisabled(m.id);
+    final dim = hasError || !plugin.enabled || userDisabled;
     final canConfigure =
-        plugin.enabled && !hasError && plugin.settingsSchema.isNotEmpty;
+        loadable && !userDisabled && plugin.settingsSchema.isNotEmpty;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: Opacity(
@@ -156,7 +158,7 @@ class _PluginRow extends StatelessWidget {
                       if (hasError) ...[
                         const SizedBox(width: 6),
                         _Pill(label: 'error', color: AppColors.danger),
-                      ] else if (!plugin.enabled) ...[
+                      ] else if (!plugin.enabled || userDisabled) ...[
                         const SizedBox(width: 6),
                         _Pill(
                           label: t.preferences.plugins.disabled,
@@ -196,6 +198,24 @@ class _PluginRow extends StatelessWidget {
                 icon: WaydirIconsRegular.slidersHorizontal,
                 label: t.preferences.plugins.configure,
                 onTap: () => _configure(context),
+              ),
+            ],
+            if (loadable) ...[
+              const SizedBox(width: 8),
+              _Btn(
+                icon: userDisabled
+                    ? WaydirIconsRegular.check
+                    : WaydirIconsRegular.prohibit,
+                label: userDisabled
+                    ? t.preferences.plugins.enable
+                    : t.preferences.plugins.disable,
+                onTap: () async {
+                  await PluginSettingsStore.instance.setDisabled(
+                    m.id,
+                    !userDisabled,
+                  );
+                  PluginStore.instance.applyEnablement();
+                },
               ),
             ],
           ],

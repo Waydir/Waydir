@@ -32,4 +32,16 @@ void main() {
       expect(AppShortcuts.parseChord(''), isNull);
     });
   });
+
+  group('AppShortcuts.isChordUsedByBuiltin', () {
+    test('flags a chord bound by a built-in shortcut', () {
+      final selectAll = AppShortcuts.getById('select_all').defaultBinding;
+      expect(AppShortcuts.isChordUsedByBuiltin(selectAll), isTrue);
+    });
+
+    test('clears a chord no built-in uses', () {
+      final free = AppShortcuts.parseChord('ctrl+alt+f9')!;
+      expect(AppShortcuts.isChordUsedByBuiltin(free), isFalse);
+    });
+  });
 }

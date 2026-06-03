@@ -17,6 +17,9 @@ class PluginSettingsStore {
   /// react to writes from plugin actions.
   final values = signal<Map<String, Map<String, dynamic>>>(const {});
 
+  /// Plugin ids the user has turned off.
+  final disabled = signal<Set<String>>(const {});
+
   Future<void> load(AppDatabase db) async {
     _db = db;
     final rows = await db.getAllPluginSettings();
@@ -25,6 +28,20 @@ class PluginSettingsStore {
       out.putIfAbsent(r.pluginId, () => {})[r.key] = _decode(r.value);
     }
     values.value = out;
+    disabled.value = (await db.getDisabledPlugins()).toSet();
+  }
+
+  bool isDisabled(String pluginId) => disabled.value.contains(pluginId);
+
+  Future<void> setDisabled(String pluginId, bool value) async {
+    final next = {...disabled.value};
+    if (value) {
+      next.add(pluginId);
+    } else {
+      next.remove(pluginId);
+    }
+    disabled.value = next;
+    await _db?.setPluginDisabled(pluginId, value);
   }
 
   Map<String, dynamic> valuesFor(String pluginId) =>

@@ -4643,6 +4643,173 @@ class PluginSettingsCompanion extends UpdateCompanion<PluginSetting> {
   }
 }
 
+class $DisabledPluginsTable extends DisabledPlugins
+    with TableInfo<$DisabledPluginsTable, DisabledPlugin> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DisabledPluginsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _pluginIdMeta = const VerificationMeta(
+    'pluginId',
+  );
+  @override
+  late final GeneratedColumn<String> pluginId = GeneratedColumn<String>(
+    'plugin_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [pluginId];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'disabled_plugins';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DisabledPlugin> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('plugin_id')) {
+      context.handle(
+        _pluginIdMeta,
+        pluginId.isAcceptableOrUnknown(data['plugin_id']!, _pluginIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_pluginIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {pluginId};
+  @override
+  DisabledPlugin map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DisabledPlugin(
+      pluginId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}plugin_id'],
+      )!,
+    );
+  }
+
+  @override
+  $DisabledPluginsTable createAlias(String alias) {
+    return $DisabledPluginsTable(attachedDatabase, alias);
+  }
+}
+
+class DisabledPlugin extends DataClass implements Insertable<DisabledPlugin> {
+  final String pluginId;
+  const DisabledPlugin({required this.pluginId});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['plugin_id'] = Variable<String>(pluginId);
+    return map;
+  }
+
+  DisabledPluginsCompanion toCompanion(bool nullToAbsent) {
+    return DisabledPluginsCompanion(pluginId: Value(pluginId));
+  }
+
+  factory DisabledPlugin.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DisabledPlugin(
+      pluginId: serializer.fromJson<String>(json['pluginId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{'pluginId': serializer.toJson<String>(pluginId)};
+  }
+
+  DisabledPlugin copyWith({String? pluginId}) =>
+      DisabledPlugin(pluginId: pluginId ?? this.pluginId);
+  DisabledPlugin copyWithCompanion(DisabledPluginsCompanion data) {
+    return DisabledPlugin(
+      pluginId: data.pluginId.present ? data.pluginId.value : this.pluginId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DisabledPlugin(')
+          ..write('pluginId: $pluginId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => pluginId.hashCode;
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DisabledPlugin && other.pluginId == this.pluginId);
+}
+
+class DisabledPluginsCompanion extends UpdateCompanion<DisabledPlugin> {
+  final Value<String> pluginId;
+  final Value<int> rowid;
+  const DisabledPluginsCompanion({
+    this.pluginId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DisabledPluginsCompanion.insert({
+    required String pluginId,
+    this.rowid = const Value.absent(),
+  }) : pluginId = Value(pluginId);
+  static Insertable<DisabledPlugin> custom({
+    Expression<String>? pluginId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (pluginId != null) 'plugin_id': pluginId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DisabledPluginsCompanion copyWith({
+    Value<String>? pluginId,
+    Value<int>? rowid,
+  }) {
+    return DisabledPluginsCompanion(
+      pluginId: pluginId ?? this.pluginId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (pluginId.present) {
+      map['plugin_id'] = Variable<String>(pluginId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DisabledPluginsCompanion(')
+          ..write('pluginId: $pluginId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -4658,6 +4825,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     this,
   );
   late final $PluginSettingsTable pluginSettings = $PluginSettingsTable(this);
+  late final $DisabledPluginsTable disabledPlugins = $DisabledPluginsTable(
+    this,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4672,6 +4842,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     defaultApps,
     shortcutBindings,
     pluginSettings,
+    disabledPlugins,
   ];
 }
 
@@ -7031,6 +7202,133 @@ typedef $$PluginSettingsTableProcessedTableManager =
       PluginSetting,
       PrefetchHooks Function()
     >;
+typedef $$DisabledPluginsTableCreateCompanionBuilder =
+    DisabledPluginsCompanion Function({
+      required String pluginId,
+      Value<int> rowid,
+    });
+typedef $$DisabledPluginsTableUpdateCompanionBuilder =
+    DisabledPluginsCompanion Function({
+      Value<String> pluginId,
+      Value<int> rowid,
+    });
+
+class $$DisabledPluginsTableFilterComposer
+    extends Composer<_$AppDatabase, $DisabledPluginsTable> {
+  $$DisabledPluginsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get pluginId => $composableBuilder(
+    column: $table.pluginId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$DisabledPluginsTableOrderingComposer
+    extends Composer<_$AppDatabase, $DisabledPluginsTable> {
+  $$DisabledPluginsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get pluginId => $composableBuilder(
+    column: $table.pluginId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$DisabledPluginsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DisabledPluginsTable> {
+  $$DisabledPluginsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get pluginId =>
+      $composableBuilder(column: $table.pluginId, builder: (column) => column);
+}
+
+class $$DisabledPluginsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $DisabledPluginsTable,
+          DisabledPlugin,
+          $$DisabledPluginsTableFilterComposer,
+          $$DisabledPluginsTableOrderingComposer,
+          $$DisabledPluginsTableAnnotationComposer,
+          $$DisabledPluginsTableCreateCompanionBuilder,
+          $$DisabledPluginsTableUpdateCompanionBuilder,
+          (
+            DisabledPlugin,
+            BaseReferences<
+              _$AppDatabase,
+              $DisabledPluginsTable,
+              DisabledPlugin
+            >,
+          ),
+          DisabledPlugin,
+          PrefetchHooks Function()
+        > {
+  $$DisabledPluginsTableTableManager(
+    _$AppDatabase db,
+    $DisabledPluginsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DisabledPluginsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DisabledPluginsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$DisabledPluginsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> pluginId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DisabledPluginsCompanion(pluginId: pluginId, rowid: rowid),
+          createCompanionCallback:
+              ({
+                required String pluginId,
+                Value<int> rowid = const Value.absent(),
+              }) => DisabledPluginsCompanion.insert(
+                pluginId: pluginId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$DisabledPluginsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $DisabledPluginsTable,
+      DisabledPlugin,
+      $$DisabledPluginsTableFilterComposer,
+      $$DisabledPluginsTableOrderingComposer,
+      $$DisabledPluginsTableAnnotationComposer,
+      $$DisabledPluginsTableCreateCompanionBuilder,
+      $$DisabledPluginsTableUpdateCompanionBuilder,
+      (
+        DisabledPlugin,
+        BaseReferences<_$AppDatabase, $DisabledPluginsTable, DisabledPlugin>,
+      ),
+      DisabledPlugin,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -7053,4 +7351,6 @@ class $AppDatabaseManager {
       $$ShortcutBindingsTableTableManager(_db, _db.shortcutBindings);
   $$PluginSettingsTableTableManager get pluginSettings =>
       $$PluginSettingsTableTableManager(_db, _db.pluginSettings);
+  $$DisabledPluginsTableTableManager get disabledPlugins =>
+      $$DisabledPluginsTableTableManager(_db, _db.disabledPlugins);
 }

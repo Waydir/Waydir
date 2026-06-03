@@ -599,6 +599,24 @@ class AppShortcuts {
   static ShortcutDef getById(String id) => _byId[id]!;
   static ShortcutDef? tryGetById(String id) => _byId[id];
 
+  /// True if [chord] is already bound by a built-in shortcut. Used to stop
+  /// plugins from shadowing core keys.
+  static bool isChordUsedByBuiltin(KeyChord chord) {
+    for (final def in _builtin) {
+      if (effectiveBinding(def.id).sameChord(chord)) return true;
+      if (!isOverridden(def.id) &&
+          def.altKey != null &&
+          KeyChord(
+            key: def.altKey!,
+            ctrl: def.altCtrl,
+            shift: def.altShift,
+          ).sameChord(chord)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   static const Map<String, LogicalKeyboardKey> _namedKeys = {
     'space': LogicalKeyboardKey.space,
     'enter': LogicalKeyboardKey.enter,

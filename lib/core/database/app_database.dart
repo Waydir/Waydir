@@ -142,6 +142,14 @@ class PluginSettings extends Table {
   Set<Column> get primaryKey => {pluginId, key};
 }
 
+/// Plugins the user has explicitly turned off. Presence means disabled.
+class DisabledPlugins extends Table {
+  TextColumn get pluginId => text()();
+
+  @override
+  Set<Column> get primaryKey => {pluginId};
+}
+
 @DriftDatabase(
   tables: [
     AppSettings,
@@ -153,13 +161,14 @@ class PluginSettings extends Table {
     DefaultApps,
     ShortcutBindings,
     PluginSettings,
+    DisabledPlugins,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 25;
+  int get schemaVersion => 26;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -273,8 +282,27 @@ class AppDatabase extends _$AppDatabase {
       if (from < 25) {
         await m.createTable(pluginSettings);
       }
+      if (from < 26) {
+        await m.createTable(disabledPlugins);
+      }
     },
   );
+
+  Future<List<String>> getDisabledPlugins() {
+    return select(disabledPlugins).map((r) => r.pluginId).get();
+  }
+
+  Future<void> setPluginDisabled(String pluginId, bool disabled) async {
+    if (disabled) {
+      await into(disabledPlugins).insertOnConflictUpdate(
+        DisabledPluginsCompanion.insert(pluginId: pluginId),
+      );
+    } else {
+      await (delete(
+        disabledPlugins,
+      )..where((t) => t.pluginId.equals(pluginId))).go();
+    }
+  }
 
   Future<List<PluginSetting>> getPluginSettings(String pluginId) {
     return (select(
