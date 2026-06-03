@@ -70,13 +70,25 @@ waydir.register({
 
 | Field | Meaning |
 |-------|---------|
-| `menu` | `"context"` (right-click, default) or `"menubar"` (top Plugins menu) |
+| `menu` | `"context"` (right-click, default), `"menubar"` (top Plugins menu), or `"toolbar"` (icon button in the location bar) |
 | `where` | for context menus: `{ "selection" }` (default), `{ "background" }`, or both |
+| `group` | label of a context submenu; entries sharing a `group` nest under one cascading entry that opens on hover |
+| `icon` | shown on context, menubar and toolbar entries. Either a `.svg`/`.png` file relative to the plugin folder, or a named builtin glyph (see below). Unset/unknown falls back to a generic glyph |
 | `shortcut` | a key chord like `"ctrl+shift+x"` or `"alt+f5"` - listed under Keybindings |
 
 `"selection"` entries appear when files/folders are selected and the `when`
 filter matches. `"background"` entries appear on the empty-area right-click and
-act on the current folder (`ctx.dir`, with an empty `ctx.paths`).
+act on the current folder (`ctx.dir`, with an empty `ctx.paths`). `"toolbar"`
+entries sit next to New Folder, are always visible, and also act on the current
+folder (`ctx.dir`); the `title` is their tooltip.
+
+Named builtin glyphs for `icon` (no image file needed): `archive`, `bell`,
+`bookmark`, `bug`, `calendar`, `check`, `clipboard`, `clock`, `code`, `copy`,
+`desktop`, `download`, `eye`, `file`, `file-audio`, `file-code`, `file-image`,
+`file-pdf`, `file-text`, `file-zip`, `folder`, `folder-open`, `folder-plus`,
+`gear`, `git-branch`, `hard-drive`, `image`, `info`, `keyboard`, `list`,
+`magic-wand`, `music`, `note`, `palette`, `pencil`, `plus`, `ruler`, `scissors`,
+`search`, `sliders`, `terminal`, `trash`, `tree`, `usb`, `video`, `warning`.
 
 ### `when` - filter the selection
 
@@ -190,11 +202,15 @@ Ready to copy from [examples/plugins/](examples/plugins/):
 
 - **selection-count** - shows how many items you selected. No permissions.
 - **backup-copy** - makes a `.bak` copy of each selected file. Uses `exec`.
-- **new-note** - background-menu entry with a dialog, a setting, a shortcut,
-  and an `fs` write. A tour of the v2 API.
+- **templates** - "New from template" surfaced as a toolbar button, a
+  background entry, two menubar actions and a shortcut. Uses a `select` dialog,
+  persists an author via `set_setting`, and writes boilerplate with `fs`. A full
+  tour of the v2 API.
+- **open-vscode** - toolbar button (and folder right-click entry) that opens the
+  current folder in VS Code. Uses `exec` and a `command` setting.
 - **sevenzip** - compress the selection or extract archives with `7z`. Uses
-  `exec` + `run_task`, a settings schema (format/level), a `when` filter, and a
-  dialog for the archive name.
+  `exec` + `run_task`, a `group` submenu (quick .zip / .tar.gz + "Add to
+  archive…"), a `when` filter, and a dialog for custom name/format/level.
 
 ## Notes
 
