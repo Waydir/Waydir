@@ -12,6 +12,7 @@ import 'core/fs/sftp_fs.dart';
 import 'core/logging/app_logger.dart';
 import 'core/settings/settings_store.dart';
 import 'core/update/update_store.dart';
+import 'features/plugins/plugin_settings_store.dart';
 import 'features/plugins/plugin_store.dart';
 import 'i18n/strings.g.dart';
 import 'ui/theme/app_theme_registry.dart';
@@ -42,6 +43,7 @@ void main(List<String> args) async {
       unawaited(FsWorkerPool.instance.ensureStarted());
       await AppThemeRegistry.instance.load();
       await SettingsStore.instance.load();
+      await PluginSettingsStore.instance.load(SettingsStore.instance.db);
       await AppInfo.init();
       const fakeVersion = String.fromEnvironment('WAYDIR_FAKE_VERSION');
       UpdateStore.init(

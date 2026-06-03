@@ -1,6 +1,6 @@
 # Writing Waydir plugins
 
-A plugin adds entries to Waydir's right-click menu that run your own logic.
+A plugin adds entries to Waydir's menus and shortcuts that run your own logic.
 Plugins are written in Lua. No build step - drop a folder in, reload, done.
 
 ## Quick start
@@ -33,15 +33,19 @@ button there - it opens it in a new tab.
   "version": "1.0.0",
   "author": "you",
   "description": "What it does, in one line.",
-  "api_version": 1,
+  "api_version": 2,
   "permissions": []
 }
 ```
 
 - `id` - unique, lowercase.
-- `permissions` - what the plugin is allowed to do. Add `"exec"` to run external
-  programs. Leave empty if you only show toasts. Users see this before they trust
-  the plugin, so ask for the least you need.
+- `api_version` - must be `2` for this build.
+- `permissions` - what the plugin is allowed to do. Users see this before they
+  trust the plugin, so ask for the least you need:
+  - `"exec"` - run external programs (`waydir.exec`, `waydir.run_task`).
+  - `"fs"` - read/write/list files and queue file operations.
+
+  Leave empty if you only show toasts, notifications, or dialogs.
 
 ## init.lua
 
@@ -62,10 +66,22 @@ waydir.register({
 })
 ```
 
-### `when` - when the entry shows
+### Where an entry shows up
+
+| Field | Meaning |
+|-------|---------|
+| `menu` | `"context"` (right-click, default) or `"menubar"` (top Plugins menu) |
+| `where` | for context menus: `{ "selection" }` (default), `{ "background" }`, or both |
+| `shortcut` | a key chord like `"ctrl+shift+x"` or `"alt+f5"` - listed under Keybindings |
+
+`"selection"` entries appear when files/folders are selected and the `when`
+filter matches. `"background"` entries appear on the empty-area right-click and
+act on the current folder (`ctx.dir`, with an empty `ctx.paths`).
+
+### `when` - filter the selection
 
 A simple filter, all fields optional. The entry appears only when every
-condition holds for the selection.
+condition holds for the selection (selection surface only).
 
 | Field | Meaning |
 |-------|---------|
@@ -76,25 +92,82 @@ condition holds for the selection.
 
 Omit `when` entirely to show the entry for any selection.
 
+### `settings` - user-editable config
+
+Declare a schema; Waydir renders it under **Preferences -> Plugins ->
+Configure** and persists the values. They arrive as `ctx.settings`.
+
+```lua
+settings = {
+  { id = "quality", type = "text",   label = "JPEG quality", default = "85" },
+  { id = "keep",    type = "checkbox", label = "Keep original", default = true },
+  { id = "mode",    type = "select", label = "Mode",
+    options = { "fast", "best" }, default = "fast" },
+},
+```
+
+Field `type` is one of `text`, `input`, `password`, `checkbox`, `select`. A
+`select` takes `options` (a list of strings, or `{value=, label=}` tables).
+
 ### `run(ctx)` - what it does
 
-`ctx` is what the user selected:
+`ctx` is the invocation context:
 
 | Field | Meaning |
 |-------|---------|
-| `ctx.paths` | list of selected paths |
+| `ctx.paths` | list of selected paths (empty on the background surface) |
 | `ctx.count` | how many |
 | `ctx.dir` | the current folder |
 | `ctx.plugin_dir` | your plugin's folder (to call bundled scripts) |
+| `ctx.settings` | your stored settings (schema defaults overlaid with saved values) |
+| `ctx.form` | dialog results, present only after a `waydir.dialog` round-trip |
 
-### `waydir` functions
+## `waydir` functions
 
-| Call | Effect |
-|------|--------|
-| `waydir.exec(cmd, args)` | run a program (needs `"exec"` permission) |
-| `waydir.toast(msg)` | show a message |
-| `waydir.refresh()` | refresh the file list |
-| `waydir.log(msg)` | write to Waydir's log |
+| Call | Permission | Effect |
+|------|------------|--------|
+| `waydir.toast(msg)` | - | brief message |
+| `waydir.notify({title, message, level, persistent})` | - | notification; `level` = info/success/warn/error |
+| `waydir.dialog({title, fields, submit_action})` | - | show a form, then re-run the action with `ctx.form` filled |
+| `waydir.set_setting(key, value)` | - | persist one of your settings |
+| `waydir.refresh()` | - | refresh the file list |
+| `waydir.log(msg)` | - | write to Waydir's log |
+| `waydir.exec(cmd, args)` | `exec` | run a program and wait (short jobs; capped at 5s) |
+| `waydir.run_task({title, cmd, args, cwd})` | `exec` | run a long program off the UI; progress via notification |
+| `waydir.read_text(path)` | `fs` | return a file's contents (capped at 4 MiB) |
+| `waydir.write_text(path, text)` | `fs` | write a file |
+| `waydir.mkdir(path)` | `fs` | create a directory (and parents) |
+| `waydir.exists(path)` | `fs` | true if the path exists |
+| `waydir.list(path)` | `fs` | list a directory: `{ {name, path, is_dir}, ... }` |
+| `waydir.copy(src, destDir)` | `fs` | queue a copy into `destDir` (uses Waydir's operations) |
+| `waydir.move(src, destDir)` | `fs` | queue a move into `destDir` |
+| `waydir.delete(path)` | `fs` | queue a permanent delete |
+| `waydir.trash(path)` | `fs` | queue a move to trash |
+
+### Dialogs (the `ctx.form` round-trip)
+
+`waydir.dialog` doesn't return a value - it shows a modal and, on submit,
+re-invokes the same action with `ctx.form` set. Branch on `ctx.form`:
+
+```lua
+run = function(ctx)
+  if not ctx.form then
+    waydir.dialog({
+      title = "Rename",
+      fields = { { id = "name", type = "input", label = "New name" } },
+      submit_action = "rename",
+    })
+    return
+  end
+  waydir.write_text(ctx.dir .. "/" .. ctx.form.name, "")
+end,
+```
+
+### Long jobs vs. quick commands
+
+`waydir.exec` runs inside the 5-second sandbox - fine for quick commands.
+For anything slow, use `waydir.run_task`: it runs the process outside the
+sandbox and reports completion as a notification, without freezing the action.
 
 ## Use any language for the heavy lifting
 
@@ -103,7 +176,11 @@ Bundle a script next to `init.lua` and run it:
 
 ```lua
 run = function(ctx)
-  waydir.exec("python3", { ctx.plugin_dir .. "/process.py", table.unpack(ctx.paths) })
+  waydir.run_task({
+    title = "Processing",
+    cmd = "python3",
+    args = { ctx.plugin_dir .. "/process.py", table.unpack(ctx.paths) },
+  })
 end
 ```
 
@@ -113,11 +190,13 @@ Ready to copy from [examples/plugins/](examples/plugins/):
 
 - **selection-count** - shows how many items you selected. No permissions.
 - **backup-copy** - makes a `.bak` copy of each selected file. Uses `exec`.
+- **new-note** - background-menu entry with a dialog, a setting, a shortcut,
+  and an `fs` write. A tour of the v2 API.
 
 ## Notes
 
 - Each run starts fresh - don't rely on Lua globals persisting between clicks.
-- A long-running `run` won't freeze Waydir, but it is capped at 5 seconds.
-- The sandbox has no `os`, `io`, or `require`. Use `waydir.exec` for anything
-  that touches the system.
-</content>
+- A long-running `run` won't freeze Waydir, but it is capped at 5 seconds. Use
+  `waydir.run_task` for slow work.
+- The sandbox has no `os`, `io`, or `require`. Use `waydir.read_text` /
+  `waydir.write_text` / `waydir.exec` for anything that touches the system.

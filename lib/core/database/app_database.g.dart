@@ -4381,6 +4381,268 @@ class ShortcutBindingsCompanion extends UpdateCompanion<ShortcutBinding> {
   }
 }
 
+class $PluginSettingsTable extends PluginSettings
+    with TableInfo<$PluginSettingsTable, PluginSetting> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PluginSettingsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _pluginIdMeta = const VerificationMeta(
+    'pluginId',
+  );
+  @override
+  late final GeneratedColumn<String> pluginId = GeneratedColumn<String>(
+    'plugin_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _keyMeta = const VerificationMeta('key');
+  @override
+  late final GeneratedColumn<String> key = GeneratedColumn<String>(
+    'key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _valueMeta = const VerificationMeta('value');
+  @override
+  late final GeneratedColumn<String> value = GeneratedColumn<String>(
+    'value',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [pluginId, key, value];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'plugin_settings';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PluginSetting> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('plugin_id')) {
+      context.handle(
+        _pluginIdMeta,
+        pluginId.isAcceptableOrUnknown(data['plugin_id']!, _pluginIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_pluginIdMeta);
+    }
+    if (data.containsKey('key')) {
+      context.handle(
+        _keyMeta,
+        key.isAcceptableOrUnknown(data['key']!, _keyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_keyMeta);
+    }
+    if (data.containsKey('value')) {
+      context.handle(
+        _valueMeta,
+        value.isAcceptableOrUnknown(data['value']!, _valueMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_valueMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {pluginId, key};
+  @override
+  PluginSetting map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PluginSetting(
+      pluginId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}plugin_id'],
+      )!,
+      key: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}key'],
+      )!,
+      value: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}value'],
+      )!,
+    );
+  }
+
+  @override
+  $PluginSettingsTable createAlias(String alias) {
+    return $PluginSettingsTable(attachedDatabase, alias);
+  }
+}
+
+class PluginSetting extends DataClass implements Insertable<PluginSetting> {
+  final String pluginId;
+  final String key;
+  final String value;
+  const PluginSetting({
+    required this.pluginId,
+    required this.key,
+    required this.value,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['plugin_id'] = Variable<String>(pluginId);
+    map['key'] = Variable<String>(key);
+    map['value'] = Variable<String>(value);
+    return map;
+  }
+
+  PluginSettingsCompanion toCompanion(bool nullToAbsent) {
+    return PluginSettingsCompanion(
+      pluginId: Value(pluginId),
+      key: Value(key),
+      value: Value(value),
+    );
+  }
+
+  factory PluginSetting.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PluginSetting(
+      pluginId: serializer.fromJson<String>(json['pluginId']),
+      key: serializer.fromJson<String>(json['key']),
+      value: serializer.fromJson<String>(json['value']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'pluginId': serializer.toJson<String>(pluginId),
+      'key': serializer.toJson<String>(key),
+      'value': serializer.toJson<String>(value),
+    };
+  }
+
+  PluginSetting copyWith({String? pluginId, String? key, String? value}) =>
+      PluginSetting(
+        pluginId: pluginId ?? this.pluginId,
+        key: key ?? this.key,
+        value: value ?? this.value,
+      );
+  PluginSetting copyWithCompanion(PluginSettingsCompanion data) {
+    return PluginSetting(
+      pluginId: data.pluginId.present ? data.pluginId.value : this.pluginId,
+      key: data.key.present ? data.key.value : this.key,
+      value: data.value.present ? data.value.value : this.value,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PluginSetting(')
+          ..write('pluginId: $pluginId, ')
+          ..write('key: $key, ')
+          ..write('value: $value')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(pluginId, key, value);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PluginSetting &&
+          other.pluginId == this.pluginId &&
+          other.key == this.key &&
+          other.value == this.value);
+}
+
+class PluginSettingsCompanion extends UpdateCompanion<PluginSetting> {
+  final Value<String> pluginId;
+  final Value<String> key;
+  final Value<String> value;
+  final Value<int> rowid;
+  const PluginSettingsCompanion({
+    this.pluginId = const Value.absent(),
+    this.key = const Value.absent(),
+    this.value = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PluginSettingsCompanion.insert({
+    required String pluginId,
+    required String key,
+    required String value,
+    this.rowid = const Value.absent(),
+  }) : pluginId = Value(pluginId),
+       key = Value(key),
+       value = Value(value);
+  static Insertable<PluginSetting> custom({
+    Expression<String>? pluginId,
+    Expression<String>? key,
+    Expression<String>? value,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (pluginId != null) 'plugin_id': pluginId,
+      if (key != null) 'key': key,
+      if (value != null) 'value': value,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PluginSettingsCompanion copyWith({
+    Value<String>? pluginId,
+    Value<String>? key,
+    Value<String>? value,
+    Value<int>? rowid,
+  }) {
+    return PluginSettingsCompanion(
+      pluginId: pluginId ?? this.pluginId,
+      key: key ?? this.key,
+      value: value ?? this.value,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (pluginId.present) {
+      map['plugin_id'] = Variable<String>(pluginId.value);
+    }
+    if (key.present) {
+      map['key'] = Variable<String>(key.value);
+    }
+    if (value.present) {
+      map['value'] = Variable<String>(value.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PluginSettingsCompanion(')
+          ..write('pluginId: $pluginId, ')
+          ..write('key: $key, ')
+          ..write('value: $value, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -4395,6 +4657,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ShortcutBindingsTable shortcutBindings = $ShortcutBindingsTable(
     this,
   );
+  late final $PluginSettingsTable pluginSettings = $PluginSettingsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4408,6 +4671,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     recentEnteredPaths,
     defaultApps,
     shortcutBindings,
+    pluginSettings,
   ];
 }
 
@@ -6603,6 +6867,170 @@ typedef $$ShortcutBindingsTableProcessedTableManager =
       ShortcutBinding,
       PrefetchHooks Function()
     >;
+typedef $$PluginSettingsTableCreateCompanionBuilder =
+    PluginSettingsCompanion Function({
+      required String pluginId,
+      required String key,
+      required String value,
+      Value<int> rowid,
+    });
+typedef $$PluginSettingsTableUpdateCompanionBuilder =
+    PluginSettingsCompanion Function({
+      Value<String> pluginId,
+      Value<String> key,
+      Value<String> value,
+      Value<int> rowid,
+    });
+
+class $$PluginSettingsTableFilterComposer
+    extends Composer<_$AppDatabase, $PluginSettingsTable> {
+  $$PluginSettingsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get pluginId => $composableBuilder(
+    column: $table.pluginId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get key => $composableBuilder(
+    column: $table.key,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get value => $composableBuilder(
+    column: $table.value,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PluginSettingsTableOrderingComposer
+    extends Composer<_$AppDatabase, $PluginSettingsTable> {
+  $$PluginSettingsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get pluginId => $composableBuilder(
+    column: $table.pluginId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get key => $composableBuilder(
+    column: $table.key,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get value => $composableBuilder(
+    column: $table.value,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PluginSettingsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PluginSettingsTable> {
+  $$PluginSettingsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get pluginId =>
+      $composableBuilder(column: $table.pluginId, builder: (column) => column);
+
+  GeneratedColumn<String> get key =>
+      $composableBuilder(column: $table.key, builder: (column) => column);
+
+  GeneratedColumn<String> get value =>
+      $composableBuilder(column: $table.value, builder: (column) => column);
+}
+
+class $$PluginSettingsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PluginSettingsTable,
+          PluginSetting,
+          $$PluginSettingsTableFilterComposer,
+          $$PluginSettingsTableOrderingComposer,
+          $$PluginSettingsTableAnnotationComposer,
+          $$PluginSettingsTableCreateCompanionBuilder,
+          $$PluginSettingsTableUpdateCompanionBuilder,
+          (
+            PluginSetting,
+            BaseReferences<_$AppDatabase, $PluginSettingsTable, PluginSetting>,
+          ),
+          PluginSetting,
+          PrefetchHooks Function()
+        > {
+  $$PluginSettingsTableTableManager(
+    _$AppDatabase db,
+    $PluginSettingsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PluginSettingsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PluginSettingsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PluginSettingsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> pluginId = const Value.absent(),
+                Value<String> key = const Value.absent(),
+                Value<String> value = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PluginSettingsCompanion(
+                pluginId: pluginId,
+                key: key,
+                value: value,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String pluginId,
+                required String key,
+                required String value,
+                Value<int> rowid = const Value.absent(),
+              }) => PluginSettingsCompanion.insert(
+                pluginId: pluginId,
+                key: key,
+                value: value,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PluginSettingsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PluginSettingsTable,
+      PluginSetting,
+      $$PluginSettingsTableFilterComposer,
+      $$PluginSettingsTableOrderingComposer,
+      $$PluginSettingsTableAnnotationComposer,
+      $$PluginSettingsTableCreateCompanionBuilder,
+      $$PluginSettingsTableUpdateCompanionBuilder,
+      (
+        PluginSetting,
+        BaseReferences<_$AppDatabase, $PluginSettingsTable, PluginSetting>,
+      ),
+      PluginSetting,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -6623,4 +7051,6 @@ class $AppDatabaseManager {
       $$DefaultAppsTableTableManager(_db, _db.defaultApps);
   $$ShortcutBindingsTableTableManager get shortcutBindings =>
       $$ShortcutBindingsTableTableManager(_db, _db.shortcutBindings);
+  $$PluginSettingsTableTableManager get pluginSettings =>
+      $$PluginSettingsTableTableManager(_db, _db.pluginSettings);
 }

@@ -43,14 +43,15 @@ class PluginFfi {
   }
 
   /// Runs a plugin action off the UI isolate. Returns the raw effects JSON.
+  /// `perms` is a bitmask matching `PluginManifest.permsBitmask`.
   static Future<String?> invoke({
     required String initLuaPath,
     required String actionId,
     required String ctxJson,
-    required bool allowExec,
+    required int perms,
   }) {
     return Isolate.run(
-      () => _invokeSync(initLuaPath, actionId, ctxJson, allowExec),
+      () => _invokeSync(initLuaPath, actionId, ctxJson, perms),
     );
   }
 
@@ -58,7 +59,7 @@ class PluginFfi {
     String initLuaPath,
     String actionId,
     String ctxJson,
-    bool allowExec,
+    int perms,
   ) {
     final lib = WaydirCoreLoader.load();
     if (lib == null) return null;
@@ -72,7 +73,7 @@ class PluginFfi {
     final actionPtr = actionId.toNativeUtf8();
     final ctxPtr = ctxJson.toNativeUtf8();
     try {
-      final res = fn(pathPtr, actionPtr, ctxPtr, allowExec ? 1 : 0);
+      final res = fn(pathPtr, actionPtr, ctxPtr, perms);
       if (res == nullptr) return null;
       final out = res.toDartString();
       free(res);

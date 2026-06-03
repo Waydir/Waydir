@@ -2056,6 +2056,33 @@ class Translations$preferences$plugins$en {
 
 	/// en: 'Reloaded $count plugin(s)'
 	String reloaded({required Object count}) => 'Reloaded ${count} plugin(s)';
+
+	/// en: 'Running…'
+	String get taskRunning => 'Running…';
+
+	/// en: 'Done'
+	String get taskDone => 'Done';
+
+	/// en: 'Failed (exit $code)'
+	String taskFailed({required Object code}) => 'Failed (exit ${code})';
+
+	/// en: 'Failed: $error'
+	String taskFailedError({required Object error}) => 'Failed: ${error}';
+
+	/// en: 'Configure'
+	String get configure => 'Configure';
+
+	/// en: '$name settings'
+	String configureTitle({required Object name}) => '${name} settings';
+
+	/// en: 'This plugin has no settings.'
+	String get noSettings => 'This plugin has no settings.';
+
+	/// en: 'Permissions'
+	String get permissionsLabel => 'Permissions';
+
+	/// en: 'Plugin: $name'
+	String shortcutPrefix({required Object name}) => 'Plugin: ${name}';
 }
 
 // Path: preferences.general
@@ -3045,6 +3072,15 @@ extension on Translations {
 			'preferences.plugins.loadError' => ({required Object message}) => 'Load error: ${message}',
 			'preferences.plugins.actionsCount' => ({required Object count}) => '${count} action(s)',
 			'preferences.plugins.reloaded' => ({required Object count}) => 'Reloaded ${count} plugin(s)',
+			'preferences.plugins.taskRunning' => 'Running…',
+			'preferences.plugins.taskDone' => 'Done',
+			'preferences.plugins.taskFailed' => ({required Object code}) => 'Failed (exit ${code})',
+			'preferences.plugins.taskFailedError' => ({required Object error}) => 'Failed: ${error}',
+			'preferences.plugins.configure' => 'Configure',
+			'preferences.plugins.configureTitle' => ({required Object name}) => '${name} settings',
+			'preferences.plugins.noSettings' => 'This plugin has no settings.',
+			'preferences.plugins.permissionsLabel' => 'Permissions',
+			'preferences.plugins.shortcutPrefix' => ({required Object name}) => 'Plugin: ${name}',
 			'preferences.general.title' => 'General',
 			'preferences.general.subtitle' => 'Startup, file operations and terminal integration.',
 			'preferences.general.startupSection' => 'Startup',
@@ -3417,6 +3453,8 @@ extension on Translations {
 			'sidebar.network' => 'Network',
 			'sidebar.bookmarks' => 'Bookmarks',
 			'sidebar.dropBookmark' => 'Drop folder to bookmark',
+			_ => null,
+		} ?? switch (path) {
 			'sidebar.connectToServer' => 'Connect to server',
 			'sidebar.connectDialog.title' => 'Connect to server',
 			'sidebar.connectDialog.host' => 'Server',
@@ -3426,8 +3464,6 @@ extension on Translations {
 			'sidebar.connectDialog.usernameHint' => 'optional',
 			'sidebar.connectDialog.share' => 'Share',
 			'sidebar.connectDialog.shareHint' => 'optional',
-			_ => null,
-		} ?? switch (path) {
 			'sidebar.connectDialog.pathLabel' => 'Path',
 			'sidebar.connectDialog.pathHint' => 'optional',
 			'sidebar.connectDialog.addBookmark' => 'Add bookmark',

@@ -157,7 +157,16 @@
       "disabled": "Disabled",
       "loadError": "Load error: $message",
       "actionsCount": "$count action(s)",
-      "reloaded": "Reloaded $count plugin(s)"
+      "reloaded": "Reloaded $count plugin(s)",
+      "taskRunning": "Running…",
+      "taskDone": "Done",
+      "taskFailed": "Failed (exit $code)",
+      "taskFailedError": "Failed: $error",
+      "configure": "Configure",
+      "configureTitle": "$name settings",
+      "noSettings": "This plugin has no settings.",
+      "permissionsLabel": "Permissions",
+      "shortcutPrefix": "Plugin: $name"
     },
     "general": {
       "title": "General",

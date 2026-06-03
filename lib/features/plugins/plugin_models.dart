@@ -35,6 +35,15 @@ class PluginManifest {
           : const <String>{},
     );
   }
+
+  /// Permission bitmask passed to the native invoke call. Keep in sync with
+  /// the `PERM_*` constants in `rust/waydir_core/src/plugin.rs`.
+  int get permsBitmask {
+    var bits = 0;
+    if (permissions.contains('exec')) bits |= 1 << 0;
+    if (permissions.contains('fs')) bits |= 1 << 1;
+    return bits;
+  }
 }
 
 class PluginWhen {
@@ -84,6 +93,71 @@ class PluginWhen {
   }
 }
 
+/// One field in a plugin-declared form (settings schema or `dialog` effect).
+class PluginFormField {
+  final String id;
+  final String type;
+  final String label;
+  final String? hint;
+  final dynamic defaultValue;
+  final List<PluginFormOption> options;
+
+  const PluginFormField({
+    required this.id,
+    required this.type,
+    required this.label,
+    this.hint,
+    this.defaultValue,
+    this.options = const [],
+  });
+
+  factory PluginFormField.fromJson(Map<String, dynamic> json) {
+    final rawOptions = json['options'];
+    return PluginFormField(
+      id: json['id'] as String? ?? '',
+      type: (json['type'] as String? ?? 'text').toLowerCase(),
+      label: json['label'] as String? ?? (json['id'] as String? ?? ''),
+      hint: json['hint'] as String?,
+      defaultValue: json['default'],
+      options: rawOptions is List
+          ? rawOptions
+                .whereType<Object>()
+                .map(PluginFormOption.fromAny)
+                .toList()
+          : const [],
+    );
+  }
+
+  static List<PluginFormField> listFromJson(dynamic raw) {
+    if (raw is! List) return const [];
+    return raw
+        .whereType<Map>()
+        .map((e) => PluginFormField.fromJson(e.cast<String, dynamic>()))
+        .where((f) => f.id.isNotEmpty)
+        .toList();
+  }
+}
+
+class PluginFormOption {
+  final String value;
+  final String label;
+
+  const PluginFormOption({required this.value, required this.label});
+
+  factory PluginFormOption.fromAny(Object raw) {
+    if (raw is Map) {
+      final m = raw.cast<String, dynamic>();
+      final value = (m['value'] ?? m['id'] ?? '').toString();
+      return PluginFormOption(
+        value: value,
+        label: m['label'] as String? ?? value,
+      );
+    }
+    final s = raw.toString();
+    return PluginFormOption(value: s, label: s);
+  }
+}
+
 class PluginContribution {
   final String pluginId;
   final String actionId;
@@ -91,9 +165,12 @@ class PluginContribution {
   final String title;
   final String? icon;
   final PluginWhen when;
+  final Set<String> surfaces;
+  final String? shortcut;
+  final List<PluginFormField> settings;
   final String initLuaPath;
   final String pluginDir;
-  final bool allowExec;
+  final PluginManifest manifest;
 
   const PluginContribution({
     required this.pluginId,
@@ -102,12 +179,19 @@ class PluginContribution {
     required this.title,
     required this.icon,
     required this.when,
+    required this.surfaces,
+    required this.shortcut,
+    required this.settings,
     required this.initLuaPath,
     required this.pluginDir,
-    required this.allowExec,
+    required this.manifest,
   });
 
   String get fullActionId => 'plugin:$pluginId:$actionId';
+
+  bool get allowExec => manifest.permissions.contains('exec');
+
+  bool showsOn(String surface) => surfaces.contains(surface);
 }
 
 class LoadedPlugin {
@@ -124,11 +208,26 @@ class LoadedPlugin {
     required this.contributions,
     this.error,
   });
+
+  /// Combined settings schema across all of the plugin's contributions,
+  /// de-duplicated by field id (first wins).
+  List<PluginFormField> get settingsSchema {
+    final seen = <String>{};
+    final out = <PluginFormField>[];
+    for (final c in contributions) {
+      for (final f in c.settings) {
+        if (seen.add(f.id)) out.add(f);
+      }
+    }
+    return out;
+  }
 }
 
 class PluginEffect {
   final String type;
-  final String? message;
+  final Map<String, dynamic> data;
 
-  const PluginEffect(this.type, this.message);
+  const PluginEffect(this.type, this.data);
+
+  String? get message => data['message'] as String?;
 }

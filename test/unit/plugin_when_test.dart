@@ -76,6 +76,16 @@ void main() {
   });
 
   group('PluginContribution', () {
+    const manifest = PluginManifest(
+      id: 'webp',
+      name: 'WebP',
+      version: '1.0.0',
+      author: '',
+      description: '',
+      apiVersion: 2,
+      permissions: {'exec'},
+    );
+
     test('fullActionId namespaces plugin and action', () {
       const c = PluginContribution(
         pluginId: 'webp',
@@ -84,11 +94,56 @@ void main() {
         title: 'Convert',
         icon: null,
         when: PluginWhen(),
+        surfaces: {'selection'},
+        shortcut: null,
+        settings: [],
         initLuaPath: '/x/init.lua',
         pluginDir: '/x',
-        allowExec: true,
+        manifest: manifest,
       );
       expect(c.fullActionId, 'plugin:webp:to_webp');
+      expect(c.allowExec, isTrue);
+      expect(c.showsOn('selection'), isTrue);
+      expect(c.showsOn('background'), isFalse);
+    });
+  });
+
+  group('PluginManifest.permsBitmask', () {
+    test('maps exec and fs to bits', () {
+      PluginManifest m(Set<String> perms) => PluginManifest(
+        id: 'p',
+        name: 'p',
+        version: '1',
+        author: '',
+        description: '',
+        apiVersion: 2,
+        permissions: perms,
+      );
+      expect(m({}).permsBitmask, 0);
+      expect(m({'exec'}).permsBitmask, 1);
+      expect(m({'fs'}).permsBitmask, 2);
+      expect(m({'exec', 'fs'}).permsBitmask, 3);
+    });
+  });
+
+  group('PluginFormField.listFromJson', () {
+    test('parses fields and drops entries without an id', () {
+      final fields = PluginFormField.listFromJson([
+        {'id': 'name', 'type': 'text', 'label': 'Name', 'default': 'x'},
+        {
+          'id': 'mode',
+          'type': 'select',
+          'options': [
+            {'value': 'a', 'label': 'A'},
+            'b',
+          ],
+        },
+        {'type': 'text'},
+      ]);
+      expect(fields.length, 2);
+      expect(fields.first.id, 'name');
+      expect(fields.first.defaultValue, 'x');
+      expect(fields[1].options.map((o) => o.value), ['a', 'b']);
     });
   });
 }

@@ -8,7 +8,9 @@ import '../../../ui/overlays/toast.dart';
 import '../../../ui/theme/app_theme.dart';
 import '../../../ui/theme/app_text_styles.dart';
 import '../../panes/shell_store.dart';
+import '../../plugins/plugin_form_dialog.dart';
 import '../../plugins/plugin_models.dart';
+import '../../plugins/plugin_settings_store.dart';
 import '../../plugins/plugin_store.dart';
 import '../preferences_view.dart';
 
@@ -102,11 +104,27 @@ class _PluginRow extends StatelessWidget {
   final LoadedPlugin plugin;
   const _PluginRow({required this.plugin});
 
+  Future<void> _configure(BuildContext context) async {
+    final schema = plugin.settingsSchema;
+    final current = PluginSettingsStore.instance.valuesFor(plugin.manifest.id);
+    final result = await showPluginFormDialog(
+      context: context,
+      title: t.preferences.plugins.configureTitle(name: plugin.manifest.name),
+      fields: schema,
+      initialValues: current,
+    );
+    if (result != null) {
+      await PluginSettingsStore.instance.setAll(plugin.manifest.id, result);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final m = plugin.manifest;
     final hasError = plugin.error != null;
     final dim = hasError || !plugin.enabled;
+    final canConfigure =
+        plugin.enabled && !hasError && plugin.settingsSchema.isNotEmpty;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: Opacity(
@@ -131,9 +149,9 @@ class _PluginRow extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       Text('v${m.version}', style: context.txt.muted),
-                      if (m.permissions.contains('exec')) ...[
+                      for (final perm in m.permissions) ...[
                         const SizedBox(width: 6),
-                        _Pill(label: 'exec', color: AppColors.warning),
+                        _Pill(label: perm, color: AppColors.warning),
                       ],
                       if (hasError) ...[
                         const SizedBox(width: 6),
@@ -172,6 +190,14 @@ class _PluginRow extends StatelessWidget {
                 ],
               ),
             ),
+            if (canConfigure) ...[
+              const SizedBox(width: 8),
+              _Btn(
+                icon: WaydirIconsRegular.slidersHorizontal,
+                label: t.preferences.plugins.configure,
+                onTap: () => _configure(context),
+              ),
+            ],
           ],
         ),
       ),
