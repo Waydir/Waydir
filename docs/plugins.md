@@ -192,6 +192,9 @@ Ready to copy from [examples/plugins/](examples/plugins/):
 - **backup-copy** - makes a `.bak` copy of each selected file. Uses `exec`.
 - **new-note** - background-menu entry with a dialog, a setting, a shortcut,
   and an `fs` write. A tour of the v2 API.
+- **sevenzip** - compress the selection or extract archives with `7z`. Uses
+  `exec` + `run_task`, a settings schema (format/level), a `when` filter, and a
+  dialog for the archive name.
 
 ## Notes
 

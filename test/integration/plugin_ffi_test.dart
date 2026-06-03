@@ -253,6 +253,25 @@ void main() {
     expect(effect['timeout'], 30);
   });
 
+  test('bundled example plugins all load without error', () {
+    final dir = Directory('docs/examples/plugins');
+    expect(dir.existsSync(), isTrue, reason: 'examples dir missing');
+    final examples = dir.listSync().whereType<Directory>();
+    expect(examples, isNotEmpty);
+    for (final ex in examples) {
+      final init = File(p.join(ex.path, 'init.lua'));
+      expect(init.existsSync(), isTrue, reason: '${ex.path} has no init.lua');
+      final raw = PluginFfi.load(init.path);
+      final json = jsonDecode(raw!) as Map<String, dynamic>;
+      expect(
+        json['ok'],
+        isTrue,
+        reason: '${p.basename(ex.path)} failed to load: ${json['error']}',
+      );
+      expect((json['contributions'] as List), isNotEmpty);
+    }
+  });
+
   test('sandbox blocks os and io access', () {
     final path = writePlugin('''
       waydir.register({
