@@ -561,7 +561,7 @@ mixin _WaydirMenuMixin
       );
       var timedOut = false;
       final exitCode = await process.exitCode.timeout(
-        _pluginTaskTimeout,
+        _pluginTaskTimeoutFor(effect),
         onTimeout: () {
           timedOut = true;
           process.kill();
@@ -600,7 +600,17 @@ mixin _WaydirMenuMixin
     }
   }
 
+  /// Default time budget for a plugin `run_task`, used when the task does not
+  /// declare its own `timeout` (seconds). Clamped to [_pluginTaskTimeoutMax].
   static const Duration _pluginTaskTimeout = Duration(minutes: 10);
+  static const Duration _pluginTaskTimeoutMax = Duration(hours: 6);
+
+  Duration _pluginTaskTimeoutFor(PluginEffect effect) {
+    final secs = (effect.data['timeout'] as num?)?.toInt();
+    if (secs == null || secs <= 0) return _pluginTaskTimeout;
+    final requested = Duration(seconds: secs);
+    return requested > _pluginTaskTimeoutMax ? _pluginTaskTimeoutMax : requested;
+  }
 
   Future<void> _showPluginDialog(
     PluginContribution c,

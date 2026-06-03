@@ -133,7 +133,7 @@ Field `type` is one of `text`, `input`, `password`, `checkbox`, `select`. A
 | `waydir.refresh()` | - | refresh the file list |
 | `waydir.log(msg)` | - | write to Waydir's log |
 | `waydir.exec(cmd, args)` | `exec` | run a program and wait (short jobs; capped at 5s) |
-| `waydir.run_task({title, cmd, args, cwd})` | `exec` | run a long program off the UI; progress via notification |
+| `waydir.run_task({title, cmd, args, cwd, timeout})` | `exec` | run a long program off the UI; progress via notification. `timeout` in seconds (default 600, max 21600) |
 | `waydir.read_text(path)` | `fs` | return a file's contents (capped at 4 MiB) |
 | `waydir.write_text(path, text)` | `fs` | write a file |
 | `waydir.mkdir(path)` | `fs` | create a directory (and parents) |

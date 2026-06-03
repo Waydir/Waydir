@@ -230,6 +230,29 @@ void main() {
     });
   });
 
+  test('run_task emits a task effect with timeout (needs exec)', () async {
+    final path = writePlugin('''
+      waydir.register({
+        id = "job",
+        title = "Job",
+        run = function(ctx)
+          waydir.run_task({ title = "T", cmd = "echo", args = {"hi"}, timeout = 30 })
+        end,
+      })
+    ''');
+    final raw = await PluginFfi.invoke(
+      initLuaPath: path,
+      actionId: 'job',
+      ctxJson: jsonEncode({'paths': <String>[], 'dir': '/', 'plugin_dir': tmp.path}),
+      perms: 1,
+    );
+    final json = jsonDecode(raw!) as Map<String, dynamic>;
+    final effect = (json['effects'] as List).first as Map<String, dynamic>;
+    expect(effect['type'], 'task');
+    expect(effect['cmd'], 'echo');
+    expect(effect['timeout'], 30);
+  });
+
   test('sandbox blocks os and io access', () {
     final path = writePlugin('''
       waydir.register({

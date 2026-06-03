@@ -192,12 +192,14 @@ fn install_api(
             let cmd: String = spec.get("cmd")?;
             let args: Vec<String> = opt_string_array(&spec, "args")?.unwrap_or_default();
             let cwd: Option<String> = spec.get("cwd")?;
+            let timeout: Option<i64> = spec.get("timeout")?;
             e.borrow_mut().push(json!({
                 "type": "task",
                 "title": title,
                 "cmd": cmd,
                 "args": args,
                 "cwd": cwd,
+                "timeout": timeout,
             }));
             Ok(())
         })?,
