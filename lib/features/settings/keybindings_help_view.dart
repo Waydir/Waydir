@@ -24,6 +24,10 @@ final _groupMeta = <ShortcutGroup, ({String Function() title, IconData icon})>{
     title: () => t.keybindings.categories.navigation,
     icon: WaydirIconsRegular.compass,
   ),
+  ShortcutGroup.view: (
+    title: () => t.keybindings.categories.view,
+    icon: WaydirIconsRegular.eye,
+  ),
   ShortcutGroup.tabs: (
     title: () => t.keybindings.categories.tabs,
     icon: WaydirIconsRegular.tabs,
@@ -31,6 +35,10 @@ final _groupMeta = <ShortcutGroup, ({String Function() title, IconData icon})>{
   ShortcutGroup.panes: (
     title: () => t.keybindings.categories.panes,
     icon: WaydirIconsRegular.columns,
+  ),
+  ShortcutGroup.terminal: (
+    title: () => t.keybindings.categories.terminal,
+    icon: WaydirIconsRegular.terminal,
   ),
   ShortcutGroup.fileOps: (
     title: () => t.keybindings.categories.fileOps,
@@ -43,6 +51,10 @@ final _groupMeta = <ShortcutGroup, ({String Function() title, IconData icon})>{
   ShortcutGroup.search: (
     title: () => t.keybindings.categories.search,
     icon: WaydirIconsRegular.magnifyingGlass,
+  ),
+  ShortcutGroup.general: (
+    title: () => t.keybindings.categories.general,
+    icon: WaydirIconsRegular.gearSix,
   ),
   ShortcutGroup.plugins: (
     title: () => t.preferences.plugins.title,
@@ -62,6 +74,8 @@ String _labelFor(ShortcutDef s) => switch (s.id) {
   'quick_look' => t.keybindings.quickLook,
   'cursor_up' => t.keybindings.cursorUp,
   'cursor_down' => t.keybindings.cursorDown,
+  'page_up' => t.keybindings.pageUp,
+  'page_down' => t.keybindings.pageDown,
   'new_tab' => t.keybindings.newTab,
   'close_tab' => t.keybindings.closeTab,
   'next_tab' => t.keybindings.nextTab,

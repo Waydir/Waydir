@@ -743,6 +743,12 @@ class Translations$keybindings$en {
 	/// en: 'Move down'
 	String get cursorDown => 'Move down';
 
+	/// en: 'Move up one page'
+	String get pageUp => 'Move up one page';
+
+	/// en: 'Move down one page'
+	String get pageDown => 'Move down one page';
+
 	/// en: 'New tab'
 	String get newTab => 'New tab';
 
@@ -2420,6 +2426,12 @@ class Translations$preferences$appearance$en {
 	/// en: 'Group folders ahead of files regardless of the sort order.'
 	String get foldersFirstHint => 'Group folders ahead of files regardless of the sort order.';
 
+	/// en: 'Sort folders too'
+	String get sortFolders => 'Sort folders too';
+
+	/// en: 'When off, only files are sorted and folders stay in their default name order.'
+	String get sortFoldersHint => 'When off, only files are sorted and folders stay in their default name order.';
+
 	/// en: 'Natural sort order'
 	String get naturalSort => 'Natural sort order';
 
@@ -2578,11 +2590,17 @@ class Translations$keybindings$categories$en {
 	/// en: 'Navigation'
 	String get navigation => 'Navigation';
 
+	/// en: 'View'
+	String get view => 'View';
+
 	/// en: 'Tabs'
 	String get tabs => 'Tabs';
 
 	/// en: 'Panes'
 	String get panes => 'Panes';
+
+	/// en: 'Terminal'
+	String get terminal => 'Terminal';
 
 	/// en: 'File Operations'
 	String get fileOps => 'File Operations';
@@ -2592,6 +2610,9 @@ class Translations$keybindings$categories$en {
 
 	/// en: 'Search'
 	String get search => 'Search';
+
+	/// en: 'General'
+	String get general => 'General';
 }
 
 // Path: fileView.date
@@ -3193,6 +3214,8 @@ extension on Translations {
 			'preferences.appearance.recentDatesRelativeHint' => 'When System locale is selected, files modified in the last 24 hours show as relative.',
 			'preferences.appearance.foldersFirst' => 'Show folders before files',
 			'preferences.appearance.foldersFirstHint' => 'Group folders ahead of files regardless of the sort order.',
+			'preferences.appearance.sortFolders' => 'Sort folders too',
+			'preferences.appearance.sortFoldersHint' => 'When off, only files are sorted and folders stay in their default name order.',
 			'preferences.appearance.naturalSort' => 'Natural sort order',
 			'preferences.appearance.naturalSortHint' => 'Sort numbers in names by value, so "file2" comes before "file10".',
 			'preferences.appearance.sortKey' => 'Sort files by',
@@ -3301,11 +3324,14 @@ extension on Translations {
 			'keybindings.title' => 'Keyboard Shortcuts',
 			'keybindings.menuLabel' => 'Shortcuts',
 			'keybindings.categories.navigation' => 'Navigation',
+			'keybindings.categories.view' => 'View',
 			'keybindings.categories.tabs' => 'Tabs',
 			'keybindings.categories.panes' => 'Panes',
+			'keybindings.categories.terminal' => 'Terminal',
 			'keybindings.categories.fileOps' => 'File Operations',
 			'keybindings.categories.selection' => 'Selection',
 			'keybindings.categories.search' => 'Search',
+			'keybindings.categories.general' => 'General',
 			'keybindings.or' => 'or',
 			'keybindings.fixed' => 'Fixed shortcut',
 			'keybindings.change' => 'Change shortcut',
@@ -3323,6 +3349,8 @@ extension on Translations {
 			'keybindings.quickLook' => 'Quick look',
 			'keybindings.cursorUp' => 'Move up',
 			'keybindings.cursorDown' => 'Move down',
+			'keybindings.pageUp' => 'Move up one page',
+			'keybindings.pageDown' => 'Move down one page',
 			'keybindings.newTab' => 'New tab',
 			'keybindings.closeTab' => 'Close tab',
 			'keybindings.nextTab' => 'Next tab',
@@ -3455,6 +3483,8 @@ extension on Translations {
 			'sidebar.devices' => 'Devices',
 			'sidebar.home' => 'Home',
 			'sidebar.desktop' => 'Desktop',
+			_ => null,
+		} ?? switch (path) {
 			'sidebar.documents' => 'Documents',
 			'sidebar.downloads' => 'Downloads',
 			'sidebar.pictures' => 'Pictures',
@@ -3462,8 +3492,6 @@ extension on Translations {
 			'sidebar.videos' => 'Videos',
 			'sidebar.trash' => 'Trash',
 			'sidebar.root' => 'Root',
-			_ => null,
-		} ?? switch (path) {
 			'sidebar.network' => 'Network',
 			'sidebar.bookmarks' => 'Bookmarks',
 			'sidebar.dropBookmark' => 'Drop folder to bookmark',

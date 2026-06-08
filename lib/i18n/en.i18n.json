@@ -276,6 +276,8 @@
       "recentDatesRelativeHint": "When System locale is selected, files modified in the last 24 hours show as relative.",
       "foldersFirst": "Show folders before files",
       "foldersFirstHint": "Group folders ahead of files regardless of the sort order.",
+      "sortFolders": "Sort folders too",
+      "sortFoldersHint": "When off, only files are sorted and folders stay in their default name order.",
       "naturalSort": "Natural sort order",
       "naturalSortHint": "Sort numbers in names by value, so \"file2\" comes before \"file10\".",
       "sortKey": "Sort files by",
@@ -424,11 +426,14 @@
     "menuLabel": "Shortcuts",
     "categories": {
       "navigation": "Navigation",
+      "view": "View",
       "tabs": "Tabs",
       "panes": "Panes",
+      "terminal": "Terminal",
       "fileOps": "File Operations",
       "selection": "Selection",
-      "search": "Search"
+      "search": "Search",
+      "general": "General"
     },
     "or": "or",
     "fixed": "Fixed shortcut",
@@ -447,6 +452,8 @@
     "quickLook": "Quick look",
     "cursorUp": "Move up",
     "cursorDown": "Move down",
+    "pageUp": "Move up one page",
+    "pageDown": "Move down one page",
     "newTab": "New tab",
     "closeTab": "Close tab",
     "nextTab": "Next tab",

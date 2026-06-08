@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Windows: entering a bare server (`\\computername`) now lists its shared folders, the way Explorer does.
 - Confirm button in the editable path bar.
 - Plugin system: extend Waydir with small Lua plugins that add context-menu, menu bar, toolbar, and keyboard-shortcut actions. Manage and configure them in Preferences → Plugins. See [docs/plugins.md](docs/plugins.md) for the guide and example plugins.
+- Preferences option to sort only files and keep folders in their default order.
 
 ### Fixed
 - SMB: listing a host's shares now prompts for a password when one is required.
@@ -24,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Windows: drive names now read `Local Disk (C:)`, and network drives show the share name like `share (Z:)`.
+- Shortcuts modal grouped into clearer categories (separate View, Terminal, and General sections).
 
 ## [0.9.1] - 2026-06-02
 

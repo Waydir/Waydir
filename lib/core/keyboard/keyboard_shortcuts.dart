@@ -4,7 +4,18 @@ import 'package:flutter/services.dart';
 
 import '../../i18n/strings.g.dart';
 
-enum ShortcutGroup { navigation, tabs, panes, fileOps, selection, search, plugins }
+enum ShortcutGroup {
+  navigation,
+  view,
+  tabs,
+  panes,
+  terminal,
+  fileOps,
+  selection,
+  search,
+  general,
+  plugins,
+}
 
 class KeyChord {
   final LogicalKeyboardKey key;
@@ -336,7 +347,7 @@ class AppShortcuts {
     ShortcutDef(
       id: 'toggle_sidebar',
       label: () => '',
-      group: ShortcutGroup.panes,
+      group: ShortcutGroup.view,
       key: LogicalKeyboardKey.keyB,
       ctrl: true,
     ),
@@ -350,7 +361,7 @@ class AppShortcuts {
     ShortcutDef(
       id: 'focus_terminal',
       label: () => '',
-      group: ShortcutGroup.panes,
+      group: ShortcutGroup.terminal,
       key: Platform.isMacOS
           ? LogicalKeyboardKey.keyJ
           : LogicalKeyboardKey.backquote,
@@ -360,7 +371,7 @@ class AppShortcuts {
     ShortcutDef(
       id: 'toggle_terminal',
       label: () => '',
-      group: ShortcutGroup.panes,
+      group: ShortcutGroup.terminal,
       key: Platform.isMacOS
           ? LogicalKeyboardKey.keyJ
           : LogicalKeyboardKey.backquote,
@@ -371,7 +382,7 @@ class AppShortcuts {
     ShortcutDef(
       id: 'new_terminal_tab',
       label: () => '',
-      group: ShortcutGroup.panes,
+      group: ShortcutGroup.terminal,
       key: LogicalKeyboardKey.keyT,
       ctrl: true,
       shift: true,
@@ -379,7 +390,7 @@ class AppShortcuts {
     ShortcutDef(
       id: 'close_terminal_tab',
       label: () => '',
-      group: ShortcutGroup.panes,
+      group: ShortcutGroup.terminal,
       key: LogicalKeyboardKey.keyW,
       ctrl: true,
       shift: true,
@@ -387,7 +398,7 @@ class AppShortcuts {
     ShortcutDef(
       id: 'terminal_font_increase',
       label: () => '',
-      group: ShortcutGroup.panes,
+      group: ShortcutGroup.terminal,
       key: LogicalKeyboardKey.equal,
       ctrl: true,
       customKeyDisplay: '+',
@@ -395,7 +406,7 @@ class AppShortcuts {
     ShortcutDef(
       id: 'terminal_font_decrease',
       label: () => '',
-      group: ShortcutGroup.panes,
+      group: ShortcutGroup.terminal,
       key: LogicalKeyboardKey.minus,
       ctrl: true,
       customKeyDisplay: '-',
@@ -403,7 +414,7 @@ class AppShortcuts {
     ShortcutDef(
       id: 'terminal_font_reset',
       label: () => '',
-      group: ShortcutGroup.panes,
+      group: ShortcutGroup.terminal,
       key: LogicalKeyboardKey.digit0,
       ctrl: true,
       customKeyDisplay: '0',
@@ -411,7 +422,7 @@ class AppShortcuts {
     ShortcutDef(
       id: 'file_list_zoom_in',
       label: () => '',
-      group: ShortcutGroup.panes,
+      group: ShortcutGroup.view,
       key: LogicalKeyboardKey.equal,
       ctrl: true,
       customKeyDisplay: '+',
@@ -419,7 +430,7 @@ class AppShortcuts {
     ShortcutDef(
       id: 'file_list_zoom_out',
       label: () => '',
-      group: ShortcutGroup.panes,
+      group: ShortcutGroup.view,
       key: LogicalKeyboardKey.minus,
       ctrl: true,
       customKeyDisplay: '-',
@@ -427,7 +438,7 @@ class AppShortcuts {
     ShortcutDef(
       id: 'file_list_zoom_reset',
       label: () => '',
-      group: ShortcutGroup.panes,
+      group: ShortcutGroup.view,
       key: LogicalKeyboardKey.digit0,
       ctrl: true,
       customKeyDisplay: '0',
@@ -554,21 +565,21 @@ class AppShortcuts {
     ShortcutDef(
       id: 'toggle_hidden',
       label: () => '',
-      group: ShortcutGroup.panes,
+      group: ShortcutGroup.view,
       key: LogicalKeyboardKey.keyH,
       ctrl: true,
     ),
     ShortcutDef(
       id: 'preferences',
       label: () => '',
-      group: ShortcutGroup.search,
+      group: ShortcutGroup.general,
       key: LogicalKeyboardKey.comma,
       ctrl: true,
     ),
     ShortcutDef(
       id: 'help',
       label: () => '',
-      group: ShortcutGroup.search,
+      group: ShortcutGroup.general,
       key: LogicalKeyboardKey.slash,
       shift: true,
       customKeyDisplay: '?',
