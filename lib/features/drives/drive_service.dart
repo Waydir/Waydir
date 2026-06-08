@@ -336,7 +336,7 @@ class _MacDriveService implements DriveService {
   @override
   Future<List<Drive>> getDrives() async {
     try {
-      final dfResult = await Process.run('df', ['-lP']);
+      final dfResult = await Process.run('df', ['-lPk']);
       if (dfResult.exitCode != 0) return [];
 
       final drives = <Drive>[];
