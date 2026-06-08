@@ -48,13 +48,26 @@ jobs:
 
       - name: Install appimagetool
         run: |
-          # Classic AppImageKit appimagetool: builds a gzip-compressed squashfs
-          # with the fuse2 runtime, so the AppImage mounts on systems with older
-          # squashfuse / libappimage / AppImageLauncher. The newer
-          # AppImage/appimagetool defaults to zstd, which those cannot read.
-          curl -sSL -o /usr/local/bin/appimagetool \
+          # AppImage compatibility needs two things:
+          #  - gzip-compressed squashfs (classic AppImageKit appimagetool's
+          #    default), readable by older libappimage / AppImageLauncher /
+          #    squashfuse. The newer appimagetool defaults to zstd, which those
+          #    cannot read ("Squashfs image uses (null) compression").
+          #  - a statically linked type2 runtime, so the AppImage mounts itself
+          #    without a system libfuse.so.2 (absent on modern fuse3-only
+          #    distros like Fedora).
+          # fastforge runs whatever `appimagetool` is on PATH; wrap it to always
+          # inject the static runtime.
+          curl -sSL -o /usr/local/bin/appimagetool.real \
             https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
-          sudo chmod +x /usr/local/bin/appimagetool
+          curl -sSL -o /usr/local/bin/appimage-runtime-x86_64 \
+            https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-x86_64
+          printf '%s\n' \
+            '#!/usr/bin/env bash' \
+            'export ARCH="${ARCH:-x86_64}"' \
+            'exec /usr/local/bin/appimagetool.real --runtime-file /usr/local/bin/appimage-runtime-x86_64 "$@"' \
+            > /usr/local/bin/appimagetool
+          sudo chmod +x /usr/local/bin/appimagetool /usr/local/bin/appimagetool.real /usr/local/bin/appimage-runtime-x86_64
 
       - name: Read version
         id: version
