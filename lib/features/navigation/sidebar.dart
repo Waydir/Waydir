@@ -28,6 +28,8 @@ import '../operations/operation_store.dart';
 import '../operations/operations_panel.dart';
 import '../../core/models/file_operation.dart';
 
+const double _resizeHandleWidth = 8;
+
 class _SidebarItem {
   final String label;
   final IconData icon;
@@ -62,6 +64,7 @@ class _SidebarState extends State<Sidebar> {
   late final Future<SftpCredentials?> Function(String logical)
   _sftpCredentialsRequester;
   final _bookmarkStore = BookmarkStore.instance;
+  final _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -142,6 +145,7 @@ class _SidebarState extends State<Sidebar> {
     if (widget.store.requestSftpCredentials == _sftpCredentialsRequester) {
       widget.store.requestSftpCredentials = null;
     }
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -259,9 +263,14 @@ class _SidebarState extends State<Sidebar> {
 
                   final collapsed = widget.collapsed;
                   final networkLocations = LocationResolver.mountedLocations();
-                  return ListView(
-                    padding: EdgeInsets.zero,
-                    children: [
+                  return Padding(
+                    padding: const EdgeInsets.only(right: _resizeHandleWidth),
+                    child: Scrollbar(
+                      controller: _scrollController,
+                      child: ListView(
+                        controller: _scrollController,
+                        padding: EdgeInsets.zero,
+                        children: [
                       if (!collapsed)
                         _SectionHeader(title: t.sidebar.favorites),
                       if (collapsed) const SizedBox(height: 6),
@@ -445,7 +454,9 @@ class _SidebarState extends State<Sidebar> {
                           onContextMenu: _showBookmarkMenu,
                         ),
                       ),
-                    ],
+                        ],
+                      ),
+                    ),
                   );
                 },
               ),

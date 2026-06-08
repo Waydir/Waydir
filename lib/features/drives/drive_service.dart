@@ -57,7 +57,7 @@ class _WindowsDriveService implements DriveService {
               Drive(
                 id: rootPath,
                 label: t.sidebar.drives.windowsDriveLabel(
-                  name: target ?? t.sidebar.drives.networkDrive,
+                  name: _shareName(target) ?? t.sidebar.drives.networkDrive,
                   letter: letter,
                 ),
                 mountPoint: rootPath,
@@ -138,6 +138,16 @@ class _WindowsDriveService implements DriveService {
 
   /// Resolves the UNC path (e.g. `\\server\share`) backing a mapped network
   /// drive letter via WNetGetConnectionW. Returns null if it can't be read.
+  String? _shareName(String? target) {
+    if (target == null) return null;
+    final parts = target
+        .split(RegExp(r'[\\/]+'))
+        .where((p) => p.isNotEmpty)
+        .toList();
+    if (parts.isEmpty) return null;
+    return parts.last;
+  }
+
   String? _networkDriveTarget(String letter) {
     final local = '$letter:'.toNativeUtf16();
     final length = calloc<Uint32>()..value = MAX_PATH + 1;

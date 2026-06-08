@@ -2734,8 +2734,8 @@ class Translations$sidebar$drives$en {
 	/// en: 'Macintosh HD'
 	String get macintoshHd => 'Macintosh HD';
 
-	/// en: '$letter: $name'
-	String windowsDriveLabel({required Object letter, required Object name}) => '${letter}: ${name}';
+	/// en: '$name ($letter:)'
+	String windowsDriveLabel({required Object name, required Object letter}) => '${name} (${letter}:)';
 
 	/// en: 'Mount $name'
 	String mountTitle({required Object name}) => 'Mount ${name}';
@@ -3489,7 +3489,7 @@ extension on Translations {
 			'sidebar.drives.unknownDrive' => 'Unknown Drive',
 			'sidebar.drives.networkDrive' => 'Network Drive',
 			'sidebar.drives.macintoshHd' => 'Macintosh HD',
-			'sidebar.drives.windowsDriveLabel' => ({required Object letter, required Object name}) => '${letter}: ${name}',
+			'sidebar.drives.windowsDriveLabel' => ({required Object name, required Object letter}) => '${name} (${letter}:)',
 			'sidebar.drives.mountTitle' => ({required Object name}) => 'Mount ${name}',
 			'sidebar.collapse' => 'Collapse sidebar',
 			'sidebar.expand' => 'Expand sidebar',

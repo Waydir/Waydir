@@ -16,10 +16,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - SMB: listing a host's shares now prompts for a password when one is required.
 - Restoring a session no longer hangs on startup when the last folder was a network path; on any restore failure Waydir falls back to the home folder and logs the error.
 - Cancel now stops a copy or move immediately during scanning.
+- Sidebar scrollbar no longer overlaps the resize edge, so both are easy to grab.
 - Root path `/` now shows in the path bar.
 - macOS: files and folders now show up reliably (the native core is shipped as a universal binary).
 - macOS: drive size and usage in tooltips are no longer doubled.
 - Linux: the AppImage now uses a gzip-compressed squashfs and a statically linked runtime, so it runs on older squashfuse / AppImageLauncher and on fuse3-only systems without libfuse2.
+
+### Changed
+- Windows: drive names now read `Local Disk (C:)`, and network drives show the share name like `share (Z:)`.
 
 ## [0.9.1] - 2026-06-02
 
