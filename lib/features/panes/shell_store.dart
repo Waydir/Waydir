@@ -9,6 +9,7 @@ import 'package:signals/signals.dart';
 
 import '../../core/database/app_database.dart';
 import '../../core/platform/platform_paths.dart';
+import '../../core/platform/trash_location.dart';
 import '../../core/settings/settings_store.dart';
 import '../../core/terminal/pty_session.dart';
 import '../../core/terminal/terminal_launch.dart';
@@ -60,6 +61,19 @@ class ShellStore {
 
   void openInNewTab(String path) => activePane.value?.tabs.addTab(path);
 
+  static bool _isRestorablePath(String path) {
+    if (isTrashPath(path) ||
+        PlatformPaths.isRemoteUri(path) ||
+        PlatformPaths.isNetworkPath(path)) {
+      return true;
+    }
+    try {
+      return Directory(path).existsSync();
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> _restoreSession() async {
     final s = SettingsStore.instance;
     final db = s.db;
@@ -99,9 +113,7 @@ class ShellStore {
       final maxPane = paneMap.keys.reduce((a, b) => a > b ? a : b);
       for (int i = 0; i <= maxPane; i++) {
         final paths = paneMap[i] ?? [];
-        final validPaths = paths
-            .where((p) => Directory(p).existsSync())
-            .toList();
+        final validPaths = paths.where(_isRestorablePath).toList();
         restored.add(
           PaneStore.fromPaths(
             operationStore: operationStore,
