@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - macOS: files and folders now show up reliably (the native core is shipped as a universal binary).
 - macOS: drive size and usage in tooltips are no longer doubled.
+- Linux: the AppImage uses a gzip-compressed squashfs again, so it runs on systems with older squashfuse / AppImageLauncher.
 
 ## [0.9.1] - 2026-06-02
 

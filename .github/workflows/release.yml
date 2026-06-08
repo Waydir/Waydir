@@ -48,8 +48,12 @@ jobs:
 
       - name: Install appimagetool
         run: |
+          # Classic AppImageKit appimagetool: builds a gzip-compressed squashfs
+          # with the fuse2 runtime, so the AppImage mounts on systems with older
+          # squashfuse / libappimage / AppImageLauncher. The newer
+          # AppImage/appimagetool defaults to zstd, which those cannot read.
           curl -sSL -o /usr/local/bin/appimagetool \
-            https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+            https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
           sudo chmod +x /usr/local/bin/appimagetool
 
       - name: Read version
