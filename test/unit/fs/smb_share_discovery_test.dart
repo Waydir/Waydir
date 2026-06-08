@@ -67,5 +67,21 @@ The command completed successfully.
       expect(shares.map((s) => s.name), ['public', 'media']);
       expect(shares[0].comment, 'Public files');
     });
+
+    test('parses localized net view output (no English "Disk")', () {
+      const text = '''
+Zasoby udostępnione w \\\\nas1
+
+Nazwa udziału   Typ    Używane jako   Komentarz
+-------------------------------------------------
+public          Dysk                  Pliki publiczne
+media           Dysk
+IPC\$            IPC                   Zdalne IPC
+Polecenie zostało wykonane pomyślnie.
+''';
+      final shares = SmbShareDiscovery.parseNetView(text);
+      expect(shares.map((s) => s.name), ['public', 'media']);
+      expect(shares[0].comment, 'Pliki publiczne');
+    });
   });
 }

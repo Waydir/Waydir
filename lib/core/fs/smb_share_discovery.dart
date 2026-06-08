@@ -244,13 +244,9 @@ class SmbShareDiscovery {
         continue;
       }
       if (!inTable) continue;
-      final lower = line.toLowerCase();
-      if (lower.contains('command completed')) break;
       final parts = line.split(RegExp(r'\s{2,}'));
       if (parts.length < 2) continue;
       final name = parts[0].trim();
-      final type = parts[1].trim().toLowerCase();
-      if (!type.startsWith('disk')) continue;
       if (name.isEmpty || name.endsWith(r'$')) continue;
       final comment = parts.length >= 3 ? parts.last.trim() : '';
       out.add(SmbShare(name: name, comment: comment.isEmpty ? null : comment));
