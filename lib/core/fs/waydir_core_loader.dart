@@ -330,18 +330,26 @@ class WaydirCoreLoader {
   static DynamicLibrary? load() {
     if (_tried) return _cached;
     _tried = true;
+    final failures = <String>[];
     for (final path in _candidatePaths()) {
       try {
         final lib = DynamicLibrary.open(path);
         final abi = lib.lookupFunction<_AbiNative, _AbiDart>('waydir_core_abi');
-        if (abi() < _requiredAbi) continue;
+        final value = abi();
+        if (value < _requiredAbi) {
+          failures.add('$path: abi $value < required $_requiredAbi');
+          continue;
+        }
         _cached = lib;
         return lib;
-      } catch (_) {}
+      } catch (e) {
+        failures.add('$path: $e');
+      }
     }
     log.error(
       'ffi.waydir_core',
-      t.errors.nativeCoreNotFound(paths: _candidatePaths().join(', ')),
+      '${t.errors.nativeCoreNotFound(paths: _candidatePaths().join(', '))}'
+      ' | ${failures.join(' | ')}',
     );
     return null;
   }

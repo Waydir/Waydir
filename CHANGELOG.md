@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Plugin system: extend Waydir with small Lua plugins that add context-menu, menu bar, toolbar, and keyboard-shortcut actions. Manage and configure them in Preferences → Plugins. See [docs/plugins.md](docs/plugins.md) for the guide and example plugins.
 
+### Fixed
+- macOS: files and folders now show up reliably (the native core is shipped as a universal binary).
+- macOS: drive size and usage in tooltips are no longer doubled.
+- Linux: the AppImage now uses a gzip-compressed squashfs and a statically linked runtime, so it runs on older squashfuse / AppImageLauncher and on fuse3-only systems without libfuse2.
+
 ## [0.9.1] - 2026-06-02
 
 ### Changed
