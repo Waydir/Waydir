@@ -322,7 +322,7 @@ class NativeTrashItem {
 class WaydirCoreLoader {
   WaydirCoreLoader._();
 
-  static const int _requiredAbi = 12;
+  static const int _requiredAbi = 13;
 
   static DynamicLibrary? _cached;
   static bool _tried = false;

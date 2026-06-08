@@ -66,6 +66,12 @@ mixin _WaydirMenuMixin
     ];
     if (!canPaste) items.removeAt(0);
 
+    final pluginItems = _backgroundPluginItems();
+    if (pluginItems.isNotEmpty) {
+      items.add(ContextMenuItem.divider);
+      items.addAll(pluginItems);
+    }
+
     showContextMenu(
       context: context,
       position: position,
@@ -76,6 +82,10 @@ mixin _WaydirMenuMixin
 
   void _handleBackgroundMenuAction(String action) {
     final store = _active;
+    if (action.startsWith('plugin:')) {
+      _runPluginAction(action, background: true);
+      return;
+    }
     switch (action) {
       case 'paste':
         store.paste();
@@ -90,6 +100,19 @@ mixin _WaydirMenuMixin
       case 'properties':
         _openFolderProperties(store.currentPath.value);
     }
+  }
+
+  List<ContextMenuItem> _backgroundPluginItems() {
+    final contributions = PluginStore.instance.backgroundContributions();
+    return [
+      for (final c in contributions)
+        ContextMenuItem(
+          icon: pluginGlyph(c.icon),
+          label: c.title,
+          action: c.fullActionId,
+          iconPath: _pluginIconPath(c),
+        ),
+    ];
   }
 
   Future<void> _handleContextMenu(
@@ -315,11 +338,326 @@ mixin _WaydirMenuMixin
       ),
     ];
 
+    final pluginItems = _pluginContextItems(entries);
+    if (pluginItems.isNotEmpty) {
+      items.add(ContextMenuItem.divider);
+      items.addAll(pluginItems);
+    }
+
     showContextMenu(
       context: context,
       position: position,
       items: items,
       onSelect: _handleMenuAction,
+    );
+  }
+
+  List<ContextMenuItem> _pluginContextItems(List<FileEntry> entries) {
+    final contributions = PluginStore.instance.contextContributionsFor(entries);
+    ContextMenuItem leaf(PluginContribution c) => ContextMenuItem(
+      icon: pluginGlyph(c.icon),
+      label: c.title,
+      action: c.fullActionId,
+      iconPath: _pluginIconPath(c),
+    );
+
+    final items = <ContextMenuItem>[];
+    final groupIndex = <String, int>{};
+    for (final c in contributions) {
+      final group = c.group;
+      if (group == null) {
+        items.add(leaf(c));
+        continue;
+      }
+      final at = groupIndex[group];
+      if (at == null) {
+        groupIndex[group] = items.length;
+        items.add(
+          ContextMenuItem(
+            icon: pluginGlyph(c.icon),
+            label: group,
+            action: 'plugin-group:$group',
+            iconPath: _pluginIconPath(c),
+            children: [leaf(c)],
+          ),
+        );
+      } else {
+        final parent = items[at];
+        items[at] = ContextMenuItem(
+          icon: parent.icon,
+          label: parent.label,
+          action: parent.action,
+          iconPath: parent.iconPath,
+          children: [...parent.children!, leaf(c)],
+        );
+      }
+    }
+    return items;
+  }
+
+  String? _pluginIconPath(PluginContribution c) => c.iconPath;
+
+  /// Guards against a plugin that re-emits `dialog` on every pass, which would
+  /// otherwise loop modals forever.
+  static const int _maxPluginDialogDepth = 8;
+
+  Future<void> _runPluginAction(
+    String fullActionId, {
+    bool background = false,
+    Map<String, dynamic>? form,
+    int depth = 0,
+  }) async {
+    final contribution = PluginStore.instance.contributionByFullId(
+      fullActionId,
+    );
+    if (contribution == null) return;
+    final store = _active;
+    final paths = background
+        ? const <String>[]
+        : store.selectedEntries.map((e) => e.realPath).toList();
+    final effects = await PluginStore.instance.invoke(
+      contribution,
+      paths: paths,
+      dir: store.currentPath.value,
+      form: form,
+    );
+    if (!mounted) return;
+    await _applyPluginEffects(
+      effects,
+      contribution,
+      background: background,
+      depth: depth,
+    );
+  }
+
+  Future<void> _applyPluginEffects(
+    List<PluginEffect> effects,
+    PluginContribution contribution, {
+    required bool background,
+    int depth = 0,
+  }) async {
+    for (final effect in effects) {
+      switch (effect.type) {
+        case 'toast':
+          if (effect.message != null) {
+            showToast(context: context, message: effect.message!);
+          }
+        case 'notify':
+          _notifyFromPlugin(contribution, effect);
+        case 'refresh':
+          _active.refresh();
+        case 'log':
+          log.warn('plugins', effect.message ?? '');
+        case 'set_setting':
+          final key = effect.data['key'] as String?;
+          if (key != null) {
+            await PluginSettingsStore.instance.set(
+              contribution.pluginId,
+              key,
+              effect.data['value'],
+            );
+          }
+        case 'operation':
+          await _runPluginOperation(effect);
+        case 'task':
+          _runPluginTask(contribution, effect);
+        case 'dialog':
+          await _showPluginDialog(
+            contribution,
+            effect,
+            background: background,
+            depth: depth,
+          );
+      }
+      if (!mounted) return;
+    }
+  }
+
+  void _notifyFromPlugin(PluginContribution c, PluginEffect effect) {
+    final level = (effect.data['level'] as String? ?? 'info').toLowerCase();
+    final persistent = effect.data['persistent'] == true;
+    Color? accent;
+    switch (level) {
+      case 'success':
+        accent = AppColors.success;
+      case 'warn':
+      case 'warning':
+        accent = AppColors.warning;
+      case 'error':
+        accent = AppColors.danger;
+    }
+    _notificationStore.add(
+      AppNotification(
+        title: effect.data['title'] as String? ?? c.manifest.name,
+        message: effect.message ?? '',
+        type: persistent
+            ? NotificationType.persistent
+            : NotificationType.autoDismiss,
+        icon: WaydirIconsRegular.gearSix,
+        accentColor: accent,
+      ),
+    );
+  }
+
+  Future<void> _runPluginOperation(PluginEffect effect) async {
+    final op = effect.data['op'] as String?;
+    final src = effect.data['src'] as String?;
+    final dst = effect.data['dst'] as String?;
+    if (src == null) return;
+    switch (op) {
+      case 'copy':
+        if (dst != null) _operationStore.enqueueCopy([src], dst);
+      case 'move':
+        if (dst != null) _operationStore.enqueueMove([src], dst);
+      case 'delete':
+        if (await _confirmPluginDelete(src, permanent: true)) {
+          _operationStore.enqueueDelete([src]);
+        }
+      case 'trash':
+        if (await _confirmPluginDelete(src, permanent: false)) {
+          _operationStore.enqueueTrash([src]);
+        }
+    }
+  }
+
+  /// Plugins can request destructive ops; gate them behind the same confirm
+  /// the UI uses. Permanent deletes always confirm; trash respects the
+  /// confirmDelete setting.
+  Future<bool> _confirmPluginDelete(
+    String path, {
+    required bool permanent,
+  }) async {
+    if (!permanent && !SettingsStore.instance.confirmDelete.value) return true;
+    final name = p.basename(path);
+    final actionLabel = permanent ? t.dialog.delete : t.dialog.moveToTrash;
+    final result = await showCustomDialog<String>(
+      context: context,
+      title: permanent
+          ? t.dialog.confirmDeleteTitle
+          : t.dialog.confirmTrashTitle,
+      icon: permanent
+          ? WaydirIconsRegular.trash
+          : WaydirIconsRegular.trashSimple,
+      iconColor: AppColors.danger,
+      body: Text(
+        permanent
+            ? t.dialog.confirmDeleteSingle(name: name)
+            : t.dialog.confirmTrashSingle(name: name),
+        style: context.txt.body.copyWith(height: 1.4),
+      ),
+      actions: [
+        DialogAction(label: t.dialog.cancel, color: AppColors.fgMuted),
+        DialogAction(label: actionLabel, color: AppColors.danger),
+      ],
+    );
+    return result == actionLabel;
+  }
+
+  Future<void> _runPluginTask(PluginContribution c, PluginEffect effect) async {
+    if (!c.allowExec) return;
+    final cmd = effect.data['cmd'] as String?;
+    if (cmd == null) return;
+    final title = effect.data['title'] as String? ?? c.manifest.name;
+    final args = (effect.data['args'] as List? ?? const [])
+        .whereType<String>()
+        .toList();
+    final cwd = effect.data['cwd'] as String?;
+    final notifId =
+        'plugin-task-${c.pluginId}-${DateTime.now().microsecondsSinceEpoch}';
+    _notificationStore.add(
+      AppNotification(
+        id: notifId,
+        title: title,
+        message: t.preferences.plugins.taskRunning,
+        type: NotificationType.persistent,
+        icon: WaydirIconsRegular.gearSix,
+      ),
+    );
+    try {
+      final process = await Process.start(
+        cmd,
+        args,
+        workingDirectory: cwd != null && cwd.isNotEmpty ? cwd : null,
+      );
+      var timedOut = false;
+      final exitCode = await process.exitCode.timeout(
+        _pluginTaskTimeoutFor(effect),
+        onTimeout: () {
+          timedOut = true;
+          process.kill();
+          return -1;
+        },
+      );
+      if (!mounted) return;
+      final ok = !timedOut && exitCode == 0;
+      _notificationStore.add(
+        AppNotification(
+          id: notifId,
+          title: title,
+          message: timedOut
+              ? t.preferences.plugins.taskTimeout
+              : ok
+              ? t.preferences.plugins.taskDone
+              : t.preferences.plugins.taskFailed(code: exitCode),
+          type: NotificationType.autoDismiss,
+          icon: WaydirIconsRegular.gearSix,
+          accentColor: ok ? AppColors.success : AppColors.danger,
+        ),
+      );
+      if (ok) _active.refresh();
+    } catch (e) {
+      if (!mounted) return;
+      _notificationStore.add(
+        AppNotification(
+          id: notifId,
+          title: title,
+          message: t.preferences.plugins.taskFailedError(error: '$e'),
+          type: NotificationType.autoDismiss,
+          icon: WaydirIconsRegular.gearSix,
+          accentColor: AppColors.danger,
+        ),
+      );
+    }
+  }
+
+  /// Default time budget for a plugin `run_task`, used when the task does not
+  /// declare its own `timeout` (seconds). Clamped to [_pluginTaskTimeoutMax].
+  static const Duration _pluginTaskTimeout = Duration(minutes: 10);
+  static const Duration _pluginTaskTimeoutMax = Duration(hours: 6);
+
+  Duration _pluginTaskTimeoutFor(PluginEffect effect) {
+    final secs = (effect.data['timeout'] as num?)?.toInt();
+    if (secs == null || secs <= 0) return _pluginTaskTimeout;
+    final requested = Duration(seconds: secs);
+    return requested > _pluginTaskTimeoutMax
+        ? _pluginTaskTimeoutMax
+        : requested;
+  }
+
+  Future<void> _showPluginDialog(
+    PluginContribution c,
+    PluginEffect effect, {
+    required bool background,
+    required int depth,
+  }) async {
+    if (depth >= _maxPluginDialogDepth) {
+      log.warn('plugins', 'dialog depth limit reached for ${c.fullActionId}');
+      return;
+    }
+    final spec = (effect.data['dialog'] as Map?)?.cast<String, dynamic>();
+    if (spec == null) return;
+    final fields = PluginFormField.listFromJson(spec['fields']);
+    final result = await showPluginFormDialog(
+      context: context,
+      title: spec['title'] as String? ?? c.title,
+      fields: fields,
+    );
+    if (result == null || !mounted) return;
+    await _runPluginAction(
+      c.fullActionId,
+      background: background,
+      form: result,
+      depth: depth + 1,
     );
   }
 
@@ -473,6 +811,8 @@ mixin _WaydirMenuMixin
         }
       case 'properties':
         _openPropertiesFromMenu(store);
+      default:
+        if (action.startsWith('plugin:')) _runPluginAction(action);
     }
   }
 
@@ -556,8 +896,30 @@ mixin _WaydirMenuMixin
               ],
               onSelect: _handleSelectionMenuAction,
             ),
+            ?_buildPluginMenu(),
           ],
         );
+      },
+    );
+  }
+
+  Widget? _buildPluginMenu() {
+    final contributions = PluginStore.instance.menubarContributions();
+    if (contributions.isEmpty) return null;
+    return TitleMenuButton(
+      label: t.preferences.plugins.title,
+      items: [
+        for (final c in contributions)
+          ContextMenuItem(
+            icon: pluginGlyph(c.icon),
+            label: c.title,
+            action: c.fullActionId,
+            iconPath: _pluginIconPath(c),
+            shortcut: c.shortcut,
+          ),
+      ],
+      onSelect: (action) {
+        if (action.startsWith('plugin:')) _runPluginAction(action);
       },
     );
   }
@@ -646,6 +1008,22 @@ mixin _WaydirMenuMixin
           ),
         ],
       ),
+      ?_platformPluginMenu(),
     ];
+  }
+
+  PlatformMenu? _platformPluginMenu() {
+    final contributions = PluginStore.instance.menubarContributions();
+    if (contributions.isEmpty) return null;
+    return PlatformMenu(
+      label: t.preferences.plugins.title,
+      menus: [
+        for (final c in contributions)
+          PlatformMenuItem(
+            label: c.title,
+            onSelected: () => _runPluginAction(c.fullActionId),
+          ),
+      ],
+    );
   }
 }

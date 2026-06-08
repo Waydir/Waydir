@@ -24,7 +24,10 @@ fn cstr(ptr: *const c_char) -> Option<String> {
     if ptr.is_null() {
         return None;
     }
-    unsafe { CStr::from_ptr(ptr) }.to_str().ok().map(|s| s.to_owned())
+    unsafe { CStr::from_ptr(ptr) }
+        .to_str()
+        .ok()
+        .map(|s| s.to_owned())
 }
 
 fn default_shell() -> String {
@@ -51,7 +54,9 @@ pub unsafe extern "C" fn waydir_pty_open(
     cols: u16,
     rows: u16,
 ) -> u64 {
-    let shell = cstr(shell).filter(|s| !s.is_empty()).unwrap_or_else(default_shell);
+    let shell = cstr(shell)
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(default_shell);
     let cwd = cstr(cwd).filter(|s| !s.is_empty());
     let args: Vec<String> = cstr(args)
         .filter(|s| !s.is_empty())
@@ -188,7 +193,11 @@ pub unsafe extern "C" fn waydir_pty_write(id: u64, data: *const u8, len: usize) 
         Err(_) => return -1,
     };
     match map.get_mut(&id) {
-        Some(session) => match session.writer.write_all(bytes).and_then(|_| session.writer.flush()) {
+        Some(session) => match session
+            .writer
+            .write_all(bytes)
+            .and_then(|_| session.writer.flush())
+        {
             Ok(_) => 0,
             Err(_) => -1,
         },

@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 
 import '../../i18n/strings.g.dart';
 
-enum ShortcutGroup { navigation, tabs, panes, fileOps, selection, search }
+enum ShortcutGroup { navigation, tabs, panes, fileOps, selection, search, plugins }
 
 class KeyChord {
   final LogicalKeyboardKey key;
@@ -208,7 +208,7 @@ class AppShortcuts {
     return null;
   }
 
-  static final all = <ShortcutDef>[
+  static final List<ShortcutDef> _builtin = <ShortcutDef>[
     ShortcutDef(
       id: 'open_item',
       label: () => '',
@@ -583,9 +583,118 @@ class AppShortcuts {
     ),
   ];
 
-  static final _byId = {for (final s in all) s.id: s};
+  /// Dynamic shortcuts contributed by plugins. Replaced wholesale on reload.
+  static List<ShortcutDef> _pluginDefs = const [];
+
+  static List<ShortcutDef> get all => [..._builtin, ..._pluginDefs];
+
+  static Map<String, ShortcutDef> _byId = {for (final s in _builtin) s.id: s};
+
+  /// Registers plugin-contributed shortcuts and rebuilds the id index.
+  static void setPluginShortcuts(List<ShortcutDef> defs) {
+    _pluginDefs = defs;
+    _byId = {for (final s in all) s.id: s};
+  }
 
   static ShortcutDef getById(String id) => _byId[id]!;
+  static ShortcutDef? tryGetById(String id) => _byId[id];
+
+  /// True if [chord] is already bound by a built-in shortcut. Used to stop
+  /// plugins from shadowing core keys.
+  static bool isChordUsedByBuiltin(KeyChord chord) {
+    for (final def in _builtin) {
+      if (effectiveBinding(def.id).sameChord(chord)) return true;
+      if (!isOverridden(def.id) &&
+          def.altKey != null &&
+          KeyChord(
+            key: def.altKey!,
+            ctrl: def.altCtrl,
+            shift: def.altShift,
+          ).sameChord(chord)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  static const Map<String, LogicalKeyboardKey> _namedKeys = {
+    'space': LogicalKeyboardKey.space,
+    'enter': LogicalKeyboardKey.enter,
+    'return': LogicalKeyboardKey.enter,
+    'tab': LogicalKeyboardKey.tab,
+    'escape': LogicalKeyboardKey.escape,
+    'esc': LogicalKeyboardKey.escape,
+    'backspace': LogicalKeyboardKey.backspace,
+    'delete': LogicalKeyboardKey.delete,
+    'del': LogicalKeyboardKey.delete,
+    'up': LogicalKeyboardKey.arrowUp,
+    'down': LogicalKeyboardKey.arrowDown,
+    'left': LogicalKeyboardKey.arrowLeft,
+    'right': LogicalKeyboardKey.arrowRight,
+    'home': LogicalKeyboardKey.home,
+    'end': LogicalKeyboardKey.end,
+    'pageup': LogicalKeyboardKey.pageUp,
+    'pagedown': LogicalKeyboardKey.pageDown,
+    'comma': LogicalKeyboardKey.comma,
+    'period': LogicalKeyboardKey.period,
+    'slash': LogicalKeyboardKey.slash,
+  };
+
+  /// Parses a chord spec like `"ctrl+shift+x"` or `"alt+f5"` into a [KeyChord],
+  /// or null if no key token is recognised. Modifier names: ctrl/control, cmd/
+  /// meta (treated as ctrl), shift, alt/option.
+  static KeyChord? parseChord(String spec) {
+    final parts = spec
+        .toLowerCase()
+        .split('+')
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+    if (parts.isEmpty) return null;
+    var ctrl = false, shift = false, alt = false;
+    LogicalKeyboardKey? key;
+    for (final part in parts) {
+      switch (part) {
+        case 'ctrl':
+        case 'control':
+        case 'cmd':
+        case 'command':
+        case 'meta':
+        case 'super':
+          ctrl = true;
+        case 'shift':
+          shift = true;
+        case 'alt':
+        case 'option':
+          alt = true;
+        default:
+          key = _parseKeyToken(part);
+      }
+    }
+    if (key == null) return null;
+    return KeyChord(key: key, ctrl: ctrl, shift: shift, alt: alt);
+  }
+
+  static LogicalKeyboardKey? _parseKeyToken(String token) {
+    if (_namedKeys.containsKey(token)) return _namedKeys[token];
+    if (token.length == 1) {
+      final code = token.codeUnitAt(0);
+      if (code >= 0x61 && code <= 0x7a) {
+        return LogicalKeyboardKey(LogicalKeyboardKey.keyA.keyId + (code - 0x61));
+      }
+      if (code >= 0x30 && code <= 0x39) {
+        return LogicalKeyboardKey(
+          LogicalKeyboardKey.digit0.keyId + (code - 0x30),
+        );
+      }
+    }
+    final fn = RegExp(r'^f([1-9]|1[0-2])$').firstMatch(token);
+    if (fn != null) {
+      final n = int.parse(fn.group(1)!);
+      return LogicalKeyboardKey(LogicalKeyboardKey.f1.keyId + (n - 1));
+    }
+    return null;
+  }
 
   static bool isKey(String id, LogicalKeyboardKey key) {
     final def = _byId[id];

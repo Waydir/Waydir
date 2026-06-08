@@ -1,0 +1,9 @@
+{
+  "id": "sevenzip",
+  "name": "7-Zip",
+  "version": "1.0.0",
+  "author": "waydir",
+  "description": "Compress the selection or extract archives with 7-Zip.",
+  "api_version": 2,
+  "permissions": ["exec"]
+}

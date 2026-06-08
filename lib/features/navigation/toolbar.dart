@@ -8,12 +8,16 @@ import '../../core/fs/file_system_service.dart';
 import '../../core/models/file_entry.dart';
 import '../../core/platform/platform_paths.dart';
 import '../../core/settings/settings_store.dart';
+import '../plugins/plugin_icons.dart';
+import '../plugins/plugin_models.dart';
+import '../plugins/plugin_store.dart';
 import 'bookmark_store.dart';
 import 'breadcrumbs/breadcrumb_bar.dart';
 import 'breadcrumbs/crumb.dart';
 import 'navigation_store.dart';
 import '../../ui/theme/app_theme.dart';
 import '../../ui/theme/app_text_styles.dart';
+import '../../ui/widgets/app_icon.dart';
 import '../../i18n/strings.g.dart';
 import '../../ui/overlays/context_menu.dart';
 import '../../ui/overlays/toast.dart';
@@ -22,7 +26,16 @@ class PaneLocationBar extends StatelessWidget {
   final NavigationStore store;
   final VoidCallback? onMultiRename;
 
-  const PaneLocationBar({super.key, required this.store, this.onMultiRename});
+  /// Invoked with a `plugin:<id>:<action>` id when a plugin toolbar entry is
+  /// tapped. Plugin toolbar actions operate on the current folder.
+  final void Function(String fullActionId)? onPluginAction;
+
+  const PaneLocationBar({
+    super.key,
+    required this.store,
+    this.onMultiRename,
+    this.onPluginAction,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -76,6 +89,7 @@ class PaneLocationBar extends StatelessWidget {
               store: store,
               toolbarWidth: constraints.maxWidth,
               onMultiRename: onMultiRename,
+              onPluginAction: onPluginAction,
             ),
             const SizedBox(width: 4),
           ],
@@ -89,11 +103,13 @@ class _RightActions extends StatelessWidget {
   final NavigationStore store;
   final double toolbarWidth;
   final VoidCallback? onMultiRename;
+  final void Function(String fullActionId)? onPluginAction;
 
   const _RightActions({
     required this.store,
     required this.toolbarWidth,
     this.onMultiRename,
+    this.onPluginAction,
   });
 
   static const double _collapseBelow = 480.0;
@@ -101,7 +117,11 @@ class _RightActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (toolbarWidth < _collapseBelow) {
-      return _OverflowMenuButton(store: store, onMultiRename: onMultiRename);
+      return _OverflowMenuButton(
+        store: store,
+        onMultiRename: onMultiRename,
+        onPluginAction: onPluginAction,
+      );
     }
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -144,7 +164,71 @@ class _RightActions extends StatelessWidget {
           ),
         ),
         _NewFolderButton(store: store),
+        if (onPluginAction != null)
+          SignalBuilder(
+            builder: (context) {
+              PluginStore.instance.plugins.value;
+              final tools = PluginStore.instance.toolbarContributions();
+              if (tools.isEmpty) return const SizedBox.shrink();
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final c in tools)
+                    _PluginToolButton(
+                      contribution: c,
+                      onTap: () => onPluginAction!(c.fullActionId),
+                    ),
+                ],
+              );
+            },
+          ),
       ],
+    );
+  }
+}
+
+class _PluginToolButton extends StatefulWidget {
+  final PluginContribution contribution;
+  final VoidCallback onTap;
+
+  const _PluginToolButton({required this.contribution, required this.onTap});
+
+  @override
+  State<_PluginToolButton> createState() => _PluginToolButtonState();
+}
+
+class _PluginToolButtonState extends State<_PluginToolButton> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final iconPath = widget.contribution.iconPath;
+    return Tooltip(
+      message: widget.contribution.title,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: Container(
+            width: 30,
+            height: 30,
+            margin: const EdgeInsets.symmetric(horizontal: 1),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: _hovered ? AppColors.bgHover : Colors.transparent,
+              borderRadius: BorderRadius.zero,
+            ),
+            child: iconPath != null
+                ? AppIcon(path: iconPath, size: 16)
+                : Icon(
+                    pluginGlyph(widget.contribution.icon),
+                    size: 16,
+                    color: _hovered ? AppColors.fg : AppColors.fgMuted,
+                  ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -152,7 +236,12 @@ class _RightActions extends StatelessWidget {
 class _OverflowMenuButton extends StatefulWidget {
   final NavigationStore store;
   final VoidCallback? onMultiRename;
-  const _OverflowMenuButton({required this.store, this.onMultiRename});
+  final void Function(String fullActionId)? onPluginAction;
+  const _OverflowMenuButton({
+    required this.store,
+    this.onMultiRename,
+    this.onPluginAction,
+  });
 
   @override
   State<_OverflowMenuButton> createState() => _OverflowMenuButtonState();
@@ -177,6 +266,9 @@ class _OverflowMenuButtonState extends State<_OverflowMenuButton> {
     final bookmarked = BookmarkStore.instance.containsPath(path);
     final selCount = widget.store.selectedCount.value;
     final showMultiRename = widget.onMultiRename != null && selCount >= 2;
+    final pluginTools = widget.onPluginAction == null
+        ? const <PluginContribution>[]
+        : PluginStore.instance.toolbarContributions();
 
     showContextMenu(
       context: context,
@@ -206,8 +298,20 @@ class _OverflowMenuButtonState extends State<_OverflowMenuButton> {
           label: t.toolbar.newFolder,
           action: _actionNewFolder,
         ),
+        if (pluginTools.isNotEmpty) ContextMenuItem.divider,
+        for (final c in pluginTools)
+          ContextMenuItem(
+            icon: pluginGlyph(c.icon),
+            label: c.title,
+            action: c.fullActionId,
+            iconPath: c.iconPath,
+          ),
       ],
       onSelect: (action) {
+        if (action.startsWith('plugin:')) {
+          widget.onPluginAction?.call(action);
+          return;
+        }
         switch (action) {
           case _actionBookmark:
             unawaited(BookmarkStore.instance.togglePath(path));

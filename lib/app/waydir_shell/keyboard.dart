@@ -5,7 +5,8 @@ mixin _WaydirKeyboardMixin
         State<WaydirShell>,
         _WaydirStateBase,
         _WaydirActionsMixin,
-        _WaydirTerminalMixin {
+        _WaydirTerminalMixin,
+        _WaydirMenuMixin {
   bool _acceptCursorRepeat() {
     final now = DateTime.now();
     final last = _lastCursorRepeatAt;
@@ -52,6 +53,13 @@ mixin _WaydirKeyboardMixin
 
     if (_isEditableFocused() || _isModalRouteOnTop() || _isTerminalFocused()) {
       return KeyEventResult.ignored;
+    }
+
+    for (final c in PluginStore.instance.shortcutContributions()) {
+      if (AppShortcuts.matches(c.fullActionId, key)) {
+        _runPluginAction(c.fullActionId);
+        return KeyEventResult.handled;
+      }
     }
 
     if (AppShortcuts.matches('toggle_dual', key)) {

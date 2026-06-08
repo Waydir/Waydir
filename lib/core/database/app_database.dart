@@ -131,6 +131,25 @@ class ShortcutBindings extends Table {
   Set<Column> get primaryKey => {actionId};
 }
 
+/// Per-plugin persisted configuration. [value] holds a JSON-encoded scalar so
+/// any field type from a plugin's settings schema round-trips unchanged.
+class PluginSettings extends Table {
+  TextColumn get pluginId => text()();
+  TextColumn get key => text()();
+  TextColumn get value => text()();
+
+  @override
+  Set<Column> get primaryKey => {pluginId, key};
+}
+
+/// Plugins the user has explicitly turned off. Presence means disabled.
+class DisabledPlugins extends Table {
+  TextColumn get pluginId => text()();
+
+  @override
+  Set<Column> get primaryKey => {pluginId};
+}
+
 @DriftDatabase(
   tables: [
     AppSettings,
@@ -141,13 +160,15 @@ class ShortcutBindings extends Table {
     RecentEnteredPaths,
     DefaultApps,
     ShortcutBindings,
+    PluginSettings,
+    DisabledPlugins,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 24;
+  int get schemaVersion => 26;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -258,8 +279,56 @@ class AppDatabase extends _$AppDatabase {
       if (from < 24) {
         await addSettingColumn(appSettings.sidebarWidth);
       }
+      if (from < 25) {
+        await m.createTable(pluginSettings);
+      }
+      if (from < 26) {
+        await m.createTable(disabledPlugins);
+      }
     },
   );
+
+  Future<List<String>> getDisabledPlugins() {
+    return select(disabledPlugins).map((r) => r.pluginId).get();
+  }
+
+  Future<void> setPluginDisabled(String pluginId, bool disabled) async {
+    if (disabled) {
+      await into(disabledPlugins).insertOnConflictUpdate(
+        DisabledPluginsCompanion.insert(pluginId: pluginId),
+      );
+    } else {
+      await (delete(
+        disabledPlugins,
+      )..where((t) => t.pluginId.equals(pluginId))).go();
+    }
+  }
+
+  Future<List<PluginSetting>> getPluginSettings(String pluginId) {
+    return (select(
+      pluginSettings,
+    )..where((t) => t.pluginId.equals(pluginId))).get();
+  }
+
+  Future<List<PluginSetting>> getAllPluginSettings() {
+    return select(pluginSettings).get();
+  }
+
+  Future<void> setPluginSetting(String pluginId, String key, String value) {
+    return into(pluginSettings).insertOnConflictUpdate(
+      PluginSettingsCompanion.insert(
+        pluginId: pluginId,
+        key: key,
+        value: value,
+      ),
+    );
+  }
+
+  Future<void> clearPluginSettings(String pluginId) {
+    return (delete(
+      pluginSettings,
+    )..where((t) => t.pluginId.equals(pluginId))).go();
+  }
 
   Future<List<ShortcutBinding>> getShortcutBindings() {
     return select(shortcutBindings).get();

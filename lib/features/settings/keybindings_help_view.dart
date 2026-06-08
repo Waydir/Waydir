@@ -44,6 +44,10 @@ final _groupMeta = <ShortcutGroup, ({String Function() title, IconData icon})>{
     title: () => t.keybindings.categories.search,
     icon: WaydirIconsRegular.magnifyingGlass,
   ),
+  ShortcutGroup.plugins: (
+    title: () => t.preferences.plugins.title,
+    icon: WaydirIconsRegular.gearSix,
+  ),
 };
 
 final _groupOrder = ShortcutGroup.values;
@@ -96,7 +100,7 @@ String _labelFor(ShortcutDef s) => switch (s.id) {
   'preferences' => t.keybindings.preferences,
   'help' => t.help.menuLabel,
   'close_search' => t.keybindings.closeSearch,
-  _ => s.id,
+  _ => s.label(),
 };
 
 class _KeybindingsHelpDialog extends StatefulWidget {
