@@ -1062,6 +1062,10 @@ class NavigationStore {
       navigateTo(normalized, enteredPath: trimmed);
       return true;
     }
+    if (PlatformPaths.windowsUncServerRoot(normalized) != null) {
+      navigateTo(normalized, enteredPath: trimmed);
+      return true;
+    }
 
     final type = FileSystemEntity.typeSync(normalized);
     if (type == FileSystemEntityType.directory) {
@@ -1113,7 +1117,9 @@ class NavigationStore {
       return;
     }
     final parent = PlatformPaths.parentOf(cur);
-    if (parent != cur && await FileSystemService.isNavigable(parent)) {
+    if (parent == cur) return;
+    if (PlatformPaths.windowsUncServerRoot(parent) != null ||
+        await FileSystemService.isNavigable(parent)) {
       navigateTo(parent);
     }
   }
