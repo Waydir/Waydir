@@ -207,6 +207,9 @@ class _AppearancePaneState extends State<AppearancePane> {
             RegistrySettingRow(
               setting: registry.byId('appearance.naturalSort'),
             ),
+            RegistrySettingRow(
+              setting: registry.byId('appearance.sortFolders'),
+            ),
           ],
         ),
       ],

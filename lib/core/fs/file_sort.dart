@@ -18,14 +18,17 @@ String sortKeyToString(SortKey k) => k.name;
 /// Returns a new list sorted by the given criteria.
 ///
 /// When [foldersFirst] is true, folders are always grouped before files
-/// regardless of the sort key/direction. Names use a case-insensitive
-/// comparison; ties always fall back to name so the order is stable.
+/// regardless of the sort key/direction. When [sortFolders] is false, folders
+/// keep their default name-ascending order and only files follow the chosen
+/// key/direction. Names use a case-insensitive comparison; ties always fall
+/// back to name so the order is stable.
 List<FileEntry> sortEntries(
   List<FileEntry> entries, {
   required SortKey key,
   required bool ascending,
   required bool foldersFirst,
   bool naturalSort = false,
+  bool sortFolders = true,
 }) {
   final out = List<FileEntry>.of(entries);
   int byName(FileEntry a, FileEntry b) => naturalSort
@@ -35,6 +38,11 @@ List<FileEntry> sortEntries(
   out.sort((a, b) {
     if (foldersFirst && a.type != b.type) {
       return a.type == FileItemType.folder ? -1 : 1;
+    }
+    if (!sortFolders &&
+        a.type == FileItemType.folder &&
+        b.type == FileItemType.folder) {
+      return byName(a, b);
     }
     int cmp;
     switch (key) {

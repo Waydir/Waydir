@@ -379,6 +379,14 @@ class SettingsRegistry {
       signal: SettingsStore.instance.foldersFirst,
     ),
     ToggleSetting(
+      id: 'appearance.sortFolders',
+      category: SettingsCategory.appearance,
+      label: () => t.preferences.appearance.sortFolders,
+      hint: () => t.preferences.appearance.sortFoldersHint,
+      searchTerms: const ['sort', 'folders', 'order', 'files', 'lock'],
+      signal: SettingsStore.instance.sortFolders,
+    ),
+    ToggleSetting(
       id: 'appearance.naturalSort',
       category: SettingsCategory.appearance,
       label: () => t.preferences.appearance.naturalSort,

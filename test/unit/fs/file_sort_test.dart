@@ -10,6 +10,14 @@ FileEntry _file(String name) => FileEntry(
   modified: DateTime(2026),
 );
 
+FileEntry _folder(String name) => FileEntry(
+  name: name,
+  path: '/$name',
+  type: FileItemType.folder,
+  size: 0,
+  modified: DateTime(2026),
+);
+
 List<String> _sortedNames(List<String> names, {required bool naturalSort}) {
   final sorted = sortEntries(
     names.map(_file).toList(),
@@ -48,6 +56,42 @@ void main() {
         _sortedNames(['10', '100', '1000', '2', '200'], naturalSort: true),
         ['2', '10', '100', '200', '1000'],
       );
+    });
+  });
+
+  group('sortEntries sortFolders', () {
+    test('folders keep name-ascending order when sortFolders is off', () {
+      final entries = [
+        _folder('beta'),
+        _folder('alpha'),
+        _file('c.txt'),
+        _file('a.txt'),
+      ];
+      final sorted = sortEntries(
+        entries,
+        key: SortKey.name,
+        ascending: false,
+        foldersFirst: true,
+        sortFolders: false,
+      );
+      expect(sorted.map((e) => e.name).toList(), [
+        'alpha',
+        'beta',
+        'c.txt',
+        'a.txt',
+      ]);
+    });
+
+    test('folders follow the sort direction when sortFolders is on', () {
+      final entries = [_folder('alpha'), _folder('beta')];
+      final sorted = sortEntries(
+        entries,
+        key: SortKey.name,
+        ascending: false,
+        foldersFirst: true,
+        sortFolders: true,
+      );
+      expect(sorted.map((e) => e.name).toList(), ['beta', 'alpha']);
     });
   });
 }

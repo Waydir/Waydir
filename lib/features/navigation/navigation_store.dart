@@ -260,6 +260,7 @@ class NavigationStore {
         ascending: sortAscending.value,
         foldersFirst: foldersFirst.value,
         naturalSort: SettingsStore.instance.naturalSort.value,
+        sortFolders: SettingsStore.instance.sortFolders.value,
       );
       return pending != null ? [pending, ...sorted] : sorted;
     }
@@ -281,6 +282,7 @@ class NavigationStore {
       ascending: sortAscending.value,
       foldersFirst: foldersFirst.value,
       naturalSort: SettingsStore.instance.naturalSort.value,
+      sortFolders: SettingsStore.instance.sortFolders.value,
     );
     return pending != null ? [pending, ...list] : list;
   });
@@ -1367,6 +1369,7 @@ class NavigationStore {
     ascending: sortAscending.value,
     foldersFirst: foldersFirst.value,
     naturalSort: SettingsStore.instance.naturalSort.value,
+    sortFolders: SettingsStore.instance.sortFolders.value,
   );
 
   static List<FileEntry> _dedupeByName(List<FileEntry> entries) {
