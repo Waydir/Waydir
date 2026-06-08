@@ -83,6 +83,9 @@ class SmbShareDiscovery {
   static String _cacheKey(String host, int? port, String? user) =>
       '${user ?? ''}@${host.toLowerCase()}:${port ?? ''}';
 
+  static bool _hasPassword(SmbCredentials? creds) =>
+      creds != null && creds.password.isNotEmpty;
+
   static bool _looksLikeAuthPrompt(String text) {
     final t = text.toLowerCase();
     return t.contains('nt_status_logon_failure') ||
@@ -118,7 +121,7 @@ class SmbShareDiscovery {
     final out = (result.stdout as String? ?? '');
     final err = (result.stderr as String? ?? '');
     if (result.exitCode != 0) {
-      if (creds == null && _looksLikeAuthPrompt('$out\n$err')) {
+      if (!_hasPassword(creds) && _looksLikeAuthPrompt('$out\n$err')) {
         return const SmbShareListAuthRequired();
       }
       final msg = err.trim().isNotEmpty ? err.trim() : out.trim();
@@ -173,7 +176,7 @@ class SmbShareDiscovery {
     final out = (result.stdout as String? ?? '');
     final err = (result.stderr as String? ?? '');
     if (result.exitCode != 0) {
-      if (creds == null && _looksLikeAuthPrompt('$out\n$err')) {
+      if (!_hasPassword(creds) && _looksLikeAuthPrompt('$out\n$err')) {
         return const SmbShareListAuthRequired();
       }
       final msg = err.trim().isNotEmpty ? err.trim() : out.trim();
@@ -241,13 +244,9 @@ class SmbShareDiscovery {
         continue;
       }
       if (!inTable) continue;
-      final lower = line.toLowerCase();
-      if (lower.contains('command completed')) break;
       final parts = line.split(RegExp(r'\s{2,}'));
       if (parts.length < 2) continue;
       final name = parts[0].trim();
-      final type = parts[1].trim().toLowerCase();
-      if (!type.startsWith('disk')) continue;
       if (name.isEmpty || name.endsWith(r'$')) continue;
       final comment = parts.length >= 3 ? parts.last.trim() : '';
       out.add(SmbShare(name: name, comment: comment.isEmpty ? null : comment));

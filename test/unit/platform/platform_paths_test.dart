@@ -25,6 +25,19 @@ void main() {
       expect(PlatformPaths.isRoot(r'\\192.168.32.12\adssad\folder'), isFalse);
     });
 
+    test('detects a UNC server root with no share', () {
+      expect(PlatformPaths.windowsUncServerRoot(r'\\computername'), 'computername');
+      expect(PlatformPaths.windowsUncServerRoot(r'\\computername\'), 'computername');
+      expect(PlatformPaths.windowsUncServerRoot('//computername'), 'computername');
+      expect(PlatformPaths.windowsUncServerRoot(r'\\192.168.32.12'), '192.168.32.12');
+    });
+
+    test('is not a server root once a share is present', () {
+      expect(PlatformPaths.windowsUncServerRoot(r'\\computername\share'), isNull);
+      expect(PlatformPaths.windowsUncServerRoot(r'\\computername\share\sub'), isNull);
+      expect(PlatformPaths.windowsUncServerRoot(r'C:\Users'), isNull);
+    });
+
     test('walks up from share to server as parent boundary', () {
       expect(
         PlatformPaths.parentOf(r'\\192.168.32.12\adssad\folder'),
