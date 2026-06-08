@@ -8,10 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Windows: entering a bare server (`\\computername`) now lists its shared folders, the way Explorer does.
 - Confirm button in the editable path bar.
 - Plugin system: extend Waydir with small Lua plugins that add context-menu, menu bar, toolbar, and keyboard-shortcut actions. Manage and configure them in Preferences → Plugins. See [docs/plugins.md](docs/plugins.md) for the guide and example plugins.
 
 ### Fixed
+- SMB: listing a host's shares now prompts for a password when one is required.
+- Restoring a session no longer hangs on startup when the last folder was a network path; on any restore failure Waydir falls back to the home folder and logs the error.
 - Cancel now stops a copy or move immediately during scanning.
 - Root path `/` now shows in the path bar.
 - macOS: files and folders now show up reliably (the native core is shipped as a universal binary).
