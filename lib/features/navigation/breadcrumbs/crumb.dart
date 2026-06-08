@@ -43,7 +43,12 @@ List<Crumb> crumbsFromPath(String path) {
   }
 
   final segments = PlatformPaths.segments(path);
-  if (segments.isEmpty) return const [];
+  if (segments.isEmpty) {
+    if (!PlatformPaths.isWindows && path.startsWith('/')) {
+      return const [Crumb(label: '/', fullPath: '/')];
+    }
+    return const [];
+  }
 
   final isWindows = PlatformPaths.isWindows;
   final isSmb = PlatformPaths.isSmbUri(path);

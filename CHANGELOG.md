@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Cancel now stops a copy or move immediately during scanning.
+- Root path `/` now shows in the path bar.
 - macOS: files and folders now show up reliably (the native core is shipped as a universal binary).
 - macOS: drive size and usage in tooltips are no longer doubled.
 - Linux: the AppImage now uses a gzip-compressed squashfs and a statically linked runtime, so it runs on older squashfuse / AppImageLauncher and on fuse3-only systems without libfuse2.
