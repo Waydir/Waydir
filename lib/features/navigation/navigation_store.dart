@@ -195,6 +195,33 @@ class NavigationStore {
     }
   }
 
+  Future<List<FileEntry>> _listWindowsUncShares(
+    String path,
+    String host,
+  ) async {
+    final result = await SmbShareDiscovery.list(host: host);
+    switch (result) {
+      case SmbShareListOk(:final shares):
+        final now = DateTime.now();
+        return [
+          for (final s in shares)
+            FileEntry(
+              name: s.name,
+              path: PlatformPaths.join(path, s.name),
+              type: FileItemType.folder,
+              size: 0,
+              modified: now,
+            ),
+        ];
+      case SmbShareListAuthRequired():
+        throw FileSystemException(t.errors.authenticationRequired, path);
+      case SmbShareListError(:final message):
+        throw FileSystemException(message, path);
+      case SmbShareListUnsupported():
+        throw FileSystemException(t.errors.smbNotSupportedOnPlatform, path);
+    }
+  }
+
   final DirectoryWatcherService _watcher = DirectoryWatcherService();
 
   final _folderStateCache = <String, _FolderState>{};
@@ -1144,6 +1171,18 @@ class NavigationStore {
               modifiedMs: e.modifiedMs,
             ),
         ];
+      } else if (PlatformPaths.windowsUncServerRoot(path) case final host?) {
+        entries = await _listWindowsUncShares(path, host);
+        if (token != _loadToken) return;
+        batch(() {
+          files.value = entries;
+          loadError.value = null;
+          trashAccessDenied.value = false;
+          isLoading.value = false;
+        });
+        _restoreFolderStateIfMatches(path);
+        _watcher.stop();
+        return;
       } else {
         entries = await FileSystemService.listDirectory(path);
       }

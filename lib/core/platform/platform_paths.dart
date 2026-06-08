@@ -332,6 +332,23 @@ class PlatformPaths {
     return path;
   }
 
+  /// Returns the host of a Windows UNC server root (`\\host` with no share),
+  /// or null otherwise. Native directory listing cannot enumerate the shares
+  /// of a bare server, so callers list them via share discovery the way
+  /// Explorer does.
+  static String? windowsUncServerRoot(String path) {
+    if (!isWindows || path.isEmpty) return null;
+    final cleaned = _normalizeWindowsPath(path);
+    if (!_isWindowsUncPath(cleaned)) return null;
+    final parts = _stripTrailingWindowsSeparator(cleaned)
+        .substring(2)
+        .split(r'\')
+        .where((s) => s.isNotEmpty)
+        .toList();
+    if (parts.length != 1) return null;
+    return parts.first;
+  }
+
   static String _windowsDriveRoot(String path) {
     if (path.length >= 2 && path[1] == ':') {
       return '${path[0].toUpperCase()}:\\';
