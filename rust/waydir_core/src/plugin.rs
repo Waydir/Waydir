@@ -195,7 +195,7 @@ fn install_api(
     let e = effects.clone();
     waydir.set(
         "run_task",
-        lua.create_function(move |_, spec: Table| {
+        lua.create_function(move |lua, spec: Table| {
             if !allow_exec {
                 return Err(err("exec permission not granted"));
             }
@@ -204,6 +204,12 @@ fn install_api(
             let args: Vec<String> = opt_string_array(&spec, "args")?.unwrap_or_default();
             let cwd: Option<String> = spec.get("cwd")?;
             let timeout: Option<i64> = spec.get("timeout")?;
+            let operation: Option<bool> = spec.get("operation")?;
+            let pty: Option<bool> = spec.get("pty")?;
+            let progress = match spec.get::<Option<Table>>("progress")? {
+                Some(p) => table_to_json(lua, p)?,
+                None => Json::Null,
+            };
             e.borrow_mut().push(json!({
                 "type": "task",
                 "title": title,
@@ -211,6 +217,64 @@ fn install_api(
                 "args": args,
                 "cwd": cwd,
                 "timeout": timeout,
+                "operation": operation.unwrap_or(false),
+                "pty": pty.unwrap_or(false),
+                "progress": progress,
+            }));
+            Ok(())
+        })?,
+    )?;
+
+    let e = effects.clone();
+    waydir.set(
+        "operation_start",
+        lua.create_function(move |lua, spec: Table| {
+            let json = table_to_json(lua, spec)?;
+            e.borrow_mut().push(json!({
+                "type": "custom_operation_start",
+                "id": json.get("id").cloned().unwrap_or(Json::Null),
+                "title": json.get("title").cloned().unwrap_or(Json::Null),
+                "total_bytes": json.get("total_bytes").cloned().unwrap_or(Json::Null),
+                "total_files": json.get("total_files").cloned().unwrap_or(Json::Null),
+            }));
+            Ok(())
+        })?,
+    )?;
+
+    let e = effects.clone();
+    waydir.set(
+        "operation_update",
+        lua.create_function(move |lua, (id, spec): (String, Table)| {
+            let json = table_to_json(lua, spec)?;
+            e.borrow_mut().push(json!({
+                "type": "custom_operation_update",
+                "id": id,
+                "progress": json.get("progress").cloned().unwrap_or(Json::Null),
+                "message": json.get("message").cloned().unwrap_or(Json::Null),
+                "processed_bytes": json.get("processed_bytes").cloned().unwrap_or(Json::Null),
+                "total_bytes": json.get("total_bytes").cloned().unwrap_or(Json::Null),
+                "bytes_per_second": json.get("bytes_per_second").cloned().unwrap_or(Json::Null),
+                "processed_files": json.get("processed_files").cloned().unwrap_or(Json::Null),
+                "total_files": json.get("total_files").cloned().unwrap_or(Json::Null),
+            }));
+            Ok(())
+        })?,
+    )?;
+
+    let e = effects.clone();
+    waydir.set(
+        "operation_finish",
+        lua.create_function(move |lua, (id, spec): (String, Option<Table>)| {
+            let json = match spec {
+                Some(s) => table_to_json(lua, s)?,
+                None => Json::Null,
+            };
+            e.borrow_mut().push(json!({
+                "type": "custom_operation_finish",
+                "id": id,
+                "success": json.get("success").cloned().unwrap_or(Json::Bool(true)),
+                "cancelled": json.get("cancelled").cloned().unwrap_or(Json::Bool(false)),
+                "error": json.get("error").cloned().unwrap_or(Json::Null),
             }));
             Ok(())
         })?,
@@ -230,6 +294,18 @@ fn install_api(
                 )));
             }
             std::fs::read_to_string(&path).map_err(|er| err(format!("read_text {path}: {er}")))
+        })?,
+    )?;
+
+    waydir.set(
+        "file_size",
+        lua.create_function(move |_, path: String| {
+            if !allow_fs {
+                return Err(err("fs permission not granted"));
+            }
+            let meta =
+                std::fs::metadata(&path).map_err(|er| err(format!("file_size {path}: {er}")))?;
+            Ok(meta.len())
         })?,
     )?;
 

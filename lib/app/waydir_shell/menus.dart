@@ -6,6 +6,8 @@ mixin _WaydirMenuMixin
         _WaydirStateBase,
         _WaydirActionsMixin,
         _WaydirTerminalMixin {
+  final Map<String, String> _pluginCustomOperationIds = {};
+
   void _handleBackgroundContextMenu(Offset position) {
     final store = _active;
     if (store.isTrashView) {
@@ -459,6 +461,12 @@ mixin _WaydirMenuMixin
           }
         case 'operation':
           await _runPluginOperation(effect);
+        case 'custom_operation_start':
+          _startPluginCustomOperation(contribution, effect);
+        case 'custom_operation_update':
+          _updatePluginCustomOperation(contribution, effect);
+        case 'custom_operation_finish':
+          _finishPluginCustomOperation(contribution, effect);
         case 'task':
           _runPluginTask(contribution, effect);
         case 'dialog':
@@ -520,6 +528,79 @@ mixin _WaydirMenuMixin
     }
   }
 
+  String? _pluginCustomOperationKey(
+    PluginContribution contribution,
+    PluginEffect effect,
+  ) {
+    final id = effect.data['id'] as String?;
+    if (id == null || id.trim().isEmpty) return null;
+    return '${contribution.pluginId}:${id.trim()}';
+  }
+
+  void _startPluginCustomOperation(
+    PluginContribution contribution,
+    PluginEffect effect,
+  ) {
+    final key = _pluginCustomOperationKey(contribution, effect);
+    if (key == null) return;
+
+    final existing = _pluginCustomOperationIds.remove(key);
+    if (existing != null) {
+      _operationStore.finishPluginTask(
+        existing,
+        success: false,
+        cancelled: true,
+      );
+    }
+
+    final title = effect.data['title'] as String? ?? contribution.manifest.name;
+    final task = _operationStore.beginPluginTask(
+      title: title,
+      totalBytes: (effect.data['total_bytes'] as num?)?.toInt(),
+      totalFiles: (effect.data['total_files'] as num?)?.toInt() ?? 0,
+    );
+    _pluginCustomOperationIds[key] = task.id;
+  }
+
+  void _updatePluginCustomOperation(
+    PluginContribution contribution,
+    PluginEffect effect,
+  ) {
+    final key = _pluginCustomOperationKey(contribution, effect);
+    if (key == null) return;
+    final taskId = _pluginCustomOperationIds[key];
+    if (taskId == null) return;
+
+    final progress = (effect.data['progress'] as num?)?.toDouble();
+    _operationStore.updatePluginTask(
+      taskId,
+      progress: progress,
+      processedBytes: (effect.data['processed_bytes'] as num?)?.toInt(),
+      totalBytes: (effect.data['total_bytes'] as num?)?.toInt(),
+      bytesPerSecond: (effect.data['bytes_per_second'] as num?)?.toDouble(),
+      processedFiles: (effect.data['processed_files'] as num?)?.toInt(),
+      totalFiles: (effect.data['total_files'] as num?)?.toInt(),
+      currentFile: effect.data['message'] as String?,
+    );
+  }
+
+  void _finishPluginCustomOperation(
+    PluginContribution contribution,
+    PluginEffect effect,
+  ) {
+    final key = _pluginCustomOperationKey(contribution, effect);
+    if (key == null) return;
+    final taskId = _pluginCustomOperationIds.remove(key);
+    if (taskId == null) return;
+
+    _operationStore.finishPluginTask(
+      taskId,
+      success: effect.data['success'] != false,
+      cancelled: effect.data['cancelled'] == true,
+      error: effect.data['error'] as String? ?? '',
+    );
+  }
+
   /// Plugins can request destructive ops; gate them behind the same confirm
   /// the UI uses. Permanent deletes always confirm; trash respects the
   /// confirmDelete setting.
@@ -562,6 +643,10 @@ mixin _WaydirMenuMixin
         .whereType<String>()
         .toList();
     final cwd = effect.data['cwd'] as String?;
+    if (effect.data['operation'] == true) {
+      await _runPluginOperationTask(effect, cmd, args, cwd, title);
+      return;
+    }
     final notifId =
         'plugin-task-${c.pluginId}-${DateTime.now().microsecondsSinceEpoch}';
     _notificationStore.add(
@@ -618,6 +703,217 @@ mixin _WaydirMenuMixin
         ),
       );
     }
+  }
+
+  Future<void> _runPluginOperationTask(
+    PluginEffect effect,
+    String cmd,
+    List<String> args,
+    String? cwd,
+    String title,
+  ) async {
+    final progress = (effect.data['progress'] as Map?)?.cast<String, dynamic>();
+    final usePty = effect.data['pty'] == true;
+
+    Process? process;
+    final task = _operationStore.beginPluginTask(
+      title: title,
+      totalBytes: (progress?['total_bytes'] as num?)?.toInt(),
+      totalFiles: (progress?['total_files'] as num?)?.toInt() ?? 0,
+      onCancel: () => process?.kill(),
+    );
+
+    final stderrTail = StringBuffer();
+    void rememberError(String chunk) {
+      if (chunk.trim().isEmpty) return;
+      stderrTail.write(chunk);
+      final text = stderrTail.toString();
+      if (text.length > 4096) {
+        stderrTail.clear();
+        stderrTail.write(text.substring(text.length - 4096));
+      }
+    }
+
+    void handleOutput(String chunk, {required bool stderr}) {
+      if (stderr) rememberError(chunk);
+      _updatePluginOperationProgress(task.id, chunk, progress);
+    }
+
+    try {
+      var runCmd = cmd;
+      var runArgs = args;
+      if (usePty && PlatformPaths.isLinux) {
+        runCmd = 'script';
+        runArgs = [
+          '-q',
+          '-e',
+          '-c',
+          _pluginShellCommand([cmd, ...args]),
+          '/dev/null',
+        ];
+      }
+
+      try {
+        process = await Process.start(
+          runCmd,
+          runArgs,
+          workingDirectory: cwd != null && cwd.isNotEmpty ? cwd : null,
+        );
+      } on ProcessException catch (e) {
+        if (!usePty || runCmd == cmd) rethrow;
+        log.warn(
+          'plugins',
+          'pty wrapper unavailable, running plugin task without pty: $e',
+        );
+        process = await Process.start(
+          cmd,
+          args,
+          workingDirectory: cwd != null && cwd.isNotEmpty ? cwd : null,
+        );
+      }
+      final stdoutSub = process.stdout
+          .transform(utf8.decoder)
+          .listen((chunk) => handleOutput(chunk, stderr: false));
+      final stderrSub = process.stderr
+          .transform(utf8.decoder)
+          .listen((chunk) => handleOutput(chunk, stderr: true));
+
+      var timedOut = false;
+      final exitCode = await process.exitCode.timeout(
+        _pluginTaskTimeoutFor(effect),
+        onTimeout: () {
+          timedOut = true;
+          process?.kill();
+          return -1;
+        },
+      );
+      await stdoutSub.cancel();
+      await stderrSub.cancel();
+
+      if (!mounted) return;
+      final current = _pluginTaskById(task.id);
+      final cancelled = timedOut || current?.status == TaskStatus.cancelling;
+      final ok = !cancelled && exitCode == 0;
+      _operationStore.finishPluginTask(
+        task.id,
+        success: ok,
+        cancelled: cancelled,
+        error: ok ? '' : _pluginTaskError(exitCode, timedOut, stderrTail),
+      );
+      if (ok) _active.refresh();
+    } catch (e) {
+      if (!mounted) return;
+      _operationStore.finishPluginTask(
+        task.id,
+        success: false,
+        cancelled: false,
+        error: e.toString(),
+      );
+    }
+  }
+
+  FileTask? _pluginTaskById(String id) {
+    for (final task in _operationStore.tasks.value) {
+      if (task.id == id) return task;
+    }
+    return null;
+  }
+
+  String _pluginTaskError(
+    int exitCode,
+    bool timedOut,
+    StringBuffer stderrTail,
+  ) {
+    if (timedOut) return t.preferences.plugins.taskTimeout;
+    final detail = stderrTail.toString().trim();
+    if (detail.isNotEmpty) return detail;
+    return t.preferences.plugins.taskFailed(code: exitCode);
+  }
+
+  void _updatePluginOperationProgress(
+    String taskId,
+    String chunk,
+    Map<String, dynamic>? progress,
+  ) {
+    if (progress == null) return;
+    for (final raw in chunk.split(RegExp(r'[\r\n]+'))) {
+      final line = raw
+          .replaceAll(RegExp(r'\x1B\[[0-?]*[ -/]*[@-~]'), '')
+          .trim();
+      if (line.isEmpty) continue;
+
+      final pct = _regexDouble(line, progress['percent_regex'] as String?);
+      if (pct != null) {
+        _operationStore.updatePluginTask(taskId, progress: pct / 100);
+      }
+
+      final message = _regexString(line, progress['message_regex'] as String?);
+      final bytes = _regexByteAmount(line, progress['bytes_regex'] as String?);
+      final speed = _regexByteAmount(line, progress['speed_regex'] as String?);
+      if (message != null || bytes != null || speed != null) {
+        _operationStore.updatePluginTask(
+          taskId,
+          processedBytes: bytes,
+          bytesPerSecond: speed?.toDouble(),
+          currentFile: message,
+        );
+      }
+    }
+  }
+
+  String? _regexString(String line, String? pattern) {
+    if (pattern == null || pattern.isEmpty) return null;
+    final match = RegExp(pattern).firstMatch(line);
+    if (match == null) return null;
+    return (match.groupCount >= 1 ? match.group(1) : match.group(0))?.trim();
+  }
+
+  double? _regexDouble(String line, String? pattern) {
+    final value = _regexString(line, pattern);
+    if (value == null) return null;
+    return double.tryParse(value);
+  }
+
+  int? _regexByteAmount(String line, String? pattern) {
+    final value = _regexString(line, pattern);
+    if (value == null) return null;
+    return _parsePluginByteAmount(value);
+  }
+
+  int? _parsePluginByteAmount(String raw) {
+    final match = RegExp(
+      r'([0-9]+(?:\.[0-9]+)?)\s*([KMGTPE]?)(i?)B',
+      caseSensitive: false,
+    ).firstMatch(raw.trim());
+    if (match == null) return null;
+    final value = double.tryParse(match.group(1) ?? '');
+    if (value == null) return null;
+    final prefix = (match.group(2) ?? '').toUpperCase();
+    final binary = (match.group(3) ?? '').isNotEmpty;
+    final base = binary ? 1024.0 : 1000.0;
+    final power = switch (prefix) {
+      'K' => 1,
+      'M' => 2,
+      'G' => 3,
+      'T' => 4,
+      'P' => 5,
+      'E' => 6,
+      _ => 0,
+    };
+    var multiplier = 1.0;
+    for (var i = 0; i < power; i++) {
+      multiplier *= base;
+    }
+    return (value * multiplier).round();
+  }
+
+  String _pluginShellCommand(List<String> argv) =>
+      argv.map(_pluginShellQuote).join(' ');
+
+  String _pluginShellQuote(String value) {
+    if (value.isEmpty) return "''";
+    if (RegExp(r'^[A-Za-z0-9_@%+=:,./-]+$').hasMatch(value)) return value;
+    return "'${value.replaceAll("'", "'\"'\"'")}'";
   }
 
   /// Default time budget for a plugin `run_task`, used when the task does not

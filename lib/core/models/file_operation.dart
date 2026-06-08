@@ -12,6 +12,7 @@ enum TaskType {
   extract,
   compress,
   archiveEdit,
+  plugin,
 }
 
 enum TaskStatus {
@@ -141,10 +142,14 @@ class TaskLabel {
         name: p.basename(task.destination ?? ''),
       ),
       TaskType.archiveEdit => t.tasks.updatingArchive,
+      TaskType.plugin => task.options['title'] ?? task.sources.first,
     };
   }
 
   static String subtitle(FileTask task) {
+    if (task.type == TaskType.plugin && task.status == TaskStatus.running) {
+      return task.currentFile.isEmpty ? 'Running...' : task.currentFile;
+    }
     return switch (task.status) {
       TaskStatus.queued => t.tasks.status.waiting,
       TaskStatus.preparing => t.tasks.status.scanning,
@@ -170,6 +175,12 @@ class TaskLabel {
     final tb = task.totalBytes;
     if (tb != null) {
       return '${formatBytes(task.processedBytes)} / ${formatBytes(tb)}';
+    }
+    if (task.type == TaskType.plugin && task.totalFiles == 0) {
+      if (task.options['determinate'] == 'true') {
+        return '${(task.progress * 100).round()}%';
+      }
+      return task.currentFile;
     }
     return t.tasks.status
         .running(

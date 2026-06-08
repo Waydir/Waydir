@@ -215,7 +215,12 @@ class _TaskTile extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.zero,
               child: LinearProgressIndicator(
-                value: task.totalFiles > 0 ? task.progress : null,
+                value:
+                    task.totalFiles > 0 ||
+                        task.totalBytes != null ||
+                        task.options['determinate'] == 'true'
+                    ? task.progress
+                    : null,
                 minHeight: 4,
                 backgroundColor: AppColors.bgInput,
                 valueColor: AlwaysStoppedAnimation(statusColor),

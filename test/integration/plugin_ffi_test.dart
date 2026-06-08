@@ -134,10 +134,7 @@ void main() {
     final json = jsonDecode(raw!) as Map<String, dynamic>;
     expect(json['ok'], isTrue);
     final effects = json['effects'] as List;
-    expect(effects.first, {
-      'type': 'log',
-      'message': 'exec sh failed: code 7',
-    });
+    expect(effects.first, {'type': 'log', 'message': 'exec sh failed: code 7'});
     expect(effects.last, {'type': 'toast', 'message': 'out:err:7'});
   });
 
@@ -332,6 +329,87 @@ void main() {
     expect(effect['type'], 'task');
     expect(effect['cmd'], 'echo');
     expect(effect['timeout'], 30);
+  });
+
+  test(
+    'run_task can request an operations entry with progress parsing',
+    () async {
+      final path = writePlugin('''
+      waydir.register({
+        id = "job_op",
+        title = "Job Op",
+        run = function(ctx)
+          waydir.run_task({
+            title = "T",
+            cmd = "echo",
+            args = {"42%"},
+            operation = true,
+            pty = true,
+            progress = { percent_regex = [[([0-9]+)%]] },
+          })
+        end,
+      })
+    ''');
+      final raw = await PluginFfi.invoke(
+        initLuaPath: path,
+        actionId: 'job_op',
+        ctxJson: jsonEncode({
+          'paths': <String>[],
+          'dir': '/',
+          'plugin_dir': tmp.path,
+        }),
+        perms: 1,
+      );
+      final json = jsonDecode(raw!) as Map<String, dynamic>;
+      final effect = (json['effects'] as List).first as Map<String, dynamic>;
+      expect(effect['type'], 'task');
+      expect(effect['operation'], isTrue);
+      expect(effect['pty'], isTrue);
+      expect((effect['progress'] as Map)['percent_regex'], '([0-9]+)%');
+    },
+  );
+
+  test('custom operation effects round-trip', () async {
+    final path = writePlugin('''
+      waydir.register({
+        id = "op",
+        title = "Op",
+        run = function(ctx)
+          waydir.operation_start({
+            id = "x",
+            title = "Custom",
+            total_bytes = 100,
+            total_files = 2,
+          })
+          waydir.operation_update("x", {
+            progress = 0.5,
+            message = "half",
+            processed_bytes = 50,
+            bytes_per_second = 10,
+            processed_files = 1,
+          })
+          waydir.operation_finish("x", { success = true })
+        end,
+      })
+    ''');
+    final raw = await PluginFfi.invoke(
+      initLuaPath: path,
+      actionId: 'op',
+      ctxJson: jsonEncode({
+        'paths': <String>[],
+        'dir': '/',
+        'plugin_dir': tmp.path,
+      }),
+      perms: 0,
+    );
+    final json = jsonDecode(raw!) as Map<String, dynamic>;
+    final effects = (json['effects'] as List).cast<Map<String, dynamic>>();
+    expect(effects[0]['type'], 'custom_operation_start');
+    expect(effects[0]['id'], 'x');
+    expect(effects[1]['type'], 'custom_operation_update');
+    expect(effects[1]['progress'], 0.5);
+    expect(effects[2]['type'], 'custom_operation_finish');
+    expect(effects[2]['success'], isTrue);
   });
 
   test('bundled example plugins all load without error', () {

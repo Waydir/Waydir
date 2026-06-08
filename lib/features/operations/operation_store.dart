@@ -86,6 +86,7 @@ class OperationStore {
   final _cleanupTimers = <String, Timer>{};
   final _conflictQueues = <String, List<ConflictInfo>>{};
   final _conflictNotifIds = <String, String>{};
+  final _pluginCancelHandlers = <String, VoidCallback>{};
 
   void enqueueCopy(List<String> sources, String destination) =>
       _enqueueTransfer(TaskType.copy, sources, destination);
@@ -283,6 +284,90 @@ class OperationStore {
     _enqueue(task);
   }
 
+  FileTask beginPluginTask({
+    required String title,
+    int? totalBytes,
+    int totalFiles = 0,
+    VoidCallback? onCancel,
+  }) {
+    final task = FileTask(
+      id: '${_idCounter++}',
+      type: TaskType.plugin,
+      sources: [title],
+      options: {'title': title},
+      status: TaskStatus.running,
+      totalBytes: totalBytes,
+      totalFiles: totalFiles,
+      startTime: DateTime.now(),
+    );
+    if (onCancel != null) _pluginCancelHandlers[task.id] = onCancel;
+    _addTask(task);
+    _showStartNotification(task);
+    return task;
+  }
+
+  void updatePluginTask(
+    String id, {
+    double? progress,
+    int? processedBytes,
+    int? totalBytes,
+    double? bytesPerSecond,
+    int? processedFiles,
+    int? totalFiles,
+    String? currentFile,
+  }) {
+    final task = tasks.value.firstWhereOrNull((t) => t.id == id);
+    if (task == null) return;
+    if (task.status != TaskStatus.running) return;
+
+    if (progress != null) {
+      task.progress = progress.clamp(0.0, 1.0);
+      task.options = {...task.options, 'determinate': 'true'};
+    }
+    if (processedBytes != null) task.processedBytes = processedBytes;
+    if (totalBytes != null) task.totalBytes = totalBytes;
+    if (bytesPerSecond != null) task.bytesPerSecond = bytesPerSecond;
+    if (processedFiles != null) task.processedFiles = processedFiles;
+    if (totalFiles != null) task.totalFiles = totalFiles;
+    if (currentFile != null) task.currentFile = currentFile;
+
+    final tb = task.totalBytes;
+    if (progress != null) {
+      // Explicit progress wins over derived file/byte progress.
+    } else if (tb != null && tb > 0) {
+      task.progress = (task.processedBytes / tb).clamp(0.0, 1.0);
+    } else if (task.totalFiles > 0) {
+      task.progress = (task.processedFiles / task.totalFiles).clamp(0.0, 1.0);
+    }
+    _updateTask(task);
+  }
+
+  void finishPluginTask(
+    String id, {
+    required bool success,
+    required bool cancelled,
+    String error = '',
+  }) {
+    final task = tasks.value.firstWhereOrNull((t) => t.id == id);
+    if (task == null) return;
+    _pluginCancelHandlers.remove(id);
+    task.status = cancelled
+        ? TaskStatus.cancelled
+        : success
+        ? TaskStatus.completed
+        : TaskStatus.failed;
+    if (error.isNotEmpty) {
+      task.errors = [...task.errors, TaskError(path: '', message: error)];
+    }
+    task.endTime = DateTime.now();
+    task.bytesPerSecond = 0;
+    if (task.status == TaskStatus.completed) task.progress = 1.0;
+    _updateTask(task);
+    _showFinishNotification(task);
+    taskCompleted.value = task.id;
+    _scheduleCleanup(task);
+  }
+
   void cancelTask(String id) {
     final task = tasks.value.firstWhereOrNull((t) => t.id == id);
     if (task == null) return;
@@ -296,6 +381,20 @@ class OperationStore {
         task.status == TaskStatus.preparing) {
       task.status = TaskStatus.cancelling;
       _updateTask(task);
+      final pluginCancel = _pluginCancelHandlers.remove(id);
+      if (pluginCancel != null) {
+        pluginCancel();
+        return;
+      }
+      if (task.type == TaskType.plugin) {
+        task.status = TaskStatus.cancelled;
+        task.endTime = DateTime.now();
+        _updateTask(task);
+        _showFinishNotification(task);
+        taskCompleted.value = task.id;
+        _scheduleCleanup(task);
+        return;
+      }
       _currentWorker?.sendPort.send(CancelCommand());
       if (_currentTaskId == id && _isArchiveTask(task.type)) {
         _hardCancelCurrent(task);
@@ -480,6 +579,8 @@ class OperationStore {
         entryPoint = FileSystemService.compressWorker;
       case TaskType.archiveEdit:
         entryPoint = FileSystemService.archiveEditWorker;
+      case TaskType.plugin:
+        throw StateError('plugin tasks are executed by the plugin runner');
     }
 
     try {
@@ -865,6 +966,8 @@ class OperationStore {
         return WaydirIconsRegular.fileZip;
       case TaskType.archiveEdit:
         return WaydirIconsRegular.archive;
+      case TaskType.plugin:
+        return WaydirIconsRegular.gearSix;
     }
   }
 

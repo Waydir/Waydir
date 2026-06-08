@@ -145,8 +145,9 @@ Field `type` is one of `text`, `input`, `password`, `checkbox`, `select`. A
 | `waydir.refresh()` | - | refresh the file list |
 | `waydir.log(msg)` | - | write to Waydir's log |
 | `waydir.exec(cmd, args)` | `exec` | run a program and wait, returning `stdout, stderr, exit_code` (short jobs; capped at 5s) |
-| `waydir.run_task({title, cmd, args, cwd, timeout})` | `exec` | run a long program off the UI; progress via notification. `timeout` in seconds (default 600, max 21600) |
+| `waydir.run_task({title, cmd, args, cwd, timeout, operation, pty, progress})` | `exec` | run a long program off the UI; progress via notification or Operations. `timeout` in seconds (default 600, max 21600) |
 | `waydir.read_text(path)` | `fs` | return a file's contents (capped at 4 MiB) |
+| `waydir.file_size(path)` | `fs` | return a file's byte size |
 | `waydir.write_text(path, text)` | `fs` | write a file |
 | `waydir.mkdir(path)` | `fs` | create a directory (and parents) |
 | `waydir.exists(path)` | `fs` | true if the path exists |
@@ -155,6 +156,9 @@ Field `type` is one of `text`, `input`, `password`, `checkbox`, `select`. A
 | `waydir.move(src, destDir)` | `fs` | queue a move into `destDir` |
 | `waydir.delete(path)` | `fs` | queue a permanent delete |
 | `waydir.trash(path)` | `fs` | queue a move to trash |
+| `waydir.operation_start({id, title, total_bytes, total_files})` | - | create a custom Operations entry |
+| `waydir.operation_update(id, {progress, message, processed_bytes, total_bytes, bytes_per_second, processed_files, total_files})` | - | update a custom Operations entry |
+| `waydir.operation_finish(id, {success, cancelled, error})` | - | finish a custom Operations entry |
 
 ### Dialogs (the `ctx.form` round-trip)
 
@@ -189,6 +193,41 @@ end
 
 For anything slow, use `waydir.run_task`: it runs the process outside the
 sandbox and reports completion as a notification, without freezing the action.
+
+To show a long command in the Operations panel instead of only as a
+notification, set `operation = true`. If the command only prints live progress
+when connected to a terminal, set `pty = true` (currently supported on Linux via
+the system `script` command). The optional `progress` table contains Dart regular
+expressions; the first capture group is used.
+
+```lua
+waydir.run_task({
+  title = "Upload",
+  cmd = "uploader",
+  args = { "--progress", "file.bin" },
+  operation = true,
+  pty = true,
+  progress = {
+    percent_regex = [[([0-9]+(?:\.[0-9]+)?)%]],
+    message_regex = [[^(.+?)\s+[0-9]+]],
+    bytes_regex = [[\s([0-9]+(?:\.[0-9]+)?\s*[KMGTPE]?i?B)\s]],
+    speed_regex = [[\s([0-9]+(?:\.[0-9]+)?\s*[KMGTPE]?i?B/s)]],
+  },
+})
+```
+
+Plugins can also manage custom Operations entries directly. `id` is scoped to
+the plugin, so separate plugins can reuse the same id safely.
+
+```lua
+waydir.operation_start({ id = "sync", title = "Sync", total_files = 10 })
+waydir.operation_update("sync", {
+  progress = 0.5,
+  message = "5 of 10",
+  processed_files = 5,
+})
+waydir.operation_finish("sync", { success = true })
+```
 
 ## Use any language for the heavy lifting
 
