@@ -24,7 +24,10 @@ void main() {
         AppShortcuts.parseChord('alt+enter')!.key,
         LogicalKeyboardKey.enter,
       );
-      expect(AppShortcuts.parseChord('ctrl+space')!.key, LogicalKeyboardKey.space);
+      expect(
+        AppShortcuts.parseChord('ctrl+space')!.key,
+        LogicalKeyboardKey.space,
+      );
     });
 
     test('returns null when no key token present', () {

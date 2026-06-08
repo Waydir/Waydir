@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-06-08
+
 ### Added
 - Windows: entering a bare server (`\\computername`) now lists its shared folders, the way Explorer does.
 - Confirm button in the editable path bar.

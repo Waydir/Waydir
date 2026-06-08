@@ -691,7 +691,9 @@ class AppShortcuts {
     if (token.length == 1) {
       final code = token.codeUnitAt(0);
       if (code >= 0x61 && code <= 0x7a) {
-        return LogicalKeyboardKey(LogicalKeyboardKey.keyA.keyId + (code - 0x61));
+        return LogicalKeyboardKey(
+          LogicalKeyboardKey.keyA.keyId + (code - 0x61),
+        );
       }
       if (code >= 0x30 && code <= 0x39) {
         return LogicalKeyboardKey(

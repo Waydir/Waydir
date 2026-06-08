@@ -402,9 +402,7 @@ void _runTransferWorker(List<dynamic> args, {required bool move}) {
             errors.add(TaskError(path: '', message: _friendly(e)));
           }
           if (cancelled) {
-            mainSendPort.send(
-              TaskDoneMessage(cancelled: true, errors: errors),
-            );
+            mainSendPort.send(TaskDoneMessage(cancelled: true, errors: errors));
             workerReceivePort.close();
             return;
           }

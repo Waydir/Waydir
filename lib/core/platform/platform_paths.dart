@@ -340,11 +340,9 @@ class PlatformPaths {
     if (!isWindows || path.isEmpty) return null;
     final cleaned = _normalizeWindowsPath(path);
     if (!_isWindowsUncPath(cleaned)) return null;
-    final parts = _stripTrailingWindowsSeparator(cleaned)
-        .substring(2)
-        .split(r'\')
-        .where((s) => s.isNotEmpty)
-        .toList();
+    final parts = _stripTrailingWindowsSeparator(
+      cleaned,
+    ).substring(2).split(r'\').where((s) => s.isNotEmpty).toList();
     if (parts.length != 1) return null;
     return parts.first;
   }

@@ -26,15 +26,33 @@ void main() {
     });
 
     test('detects a UNC server root with no share', () {
-      expect(PlatformPaths.windowsUncServerRoot(r'\\computername'), 'computername');
-      expect(PlatformPaths.windowsUncServerRoot(r'\\computername\'), 'computername');
-      expect(PlatformPaths.windowsUncServerRoot('//computername'), 'computername');
-      expect(PlatformPaths.windowsUncServerRoot(r'\\192.168.32.12'), '192.168.32.12');
+      expect(
+        PlatformPaths.windowsUncServerRoot(r'\\computername'),
+        'computername',
+      );
+      expect(
+        PlatformPaths.windowsUncServerRoot(r'\\computername\'),
+        'computername',
+      );
+      expect(
+        PlatformPaths.windowsUncServerRoot('//computername'),
+        'computername',
+      );
+      expect(
+        PlatformPaths.windowsUncServerRoot(r'\\192.168.32.12'),
+        '192.168.32.12',
+      );
     });
 
     test('is not a server root once a share is present', () {
-      expect(PlatformPaths.windowsUncServerRoot(r'\\computername\share'), isNull);
-      expect(PlatformPaths.windowsUncServerRoot(r'\\computername\share\sub'), isNull);
+      expect(
+        PlatformPaths.windowsUncServerRoot(r'\\computername\share'),
+        isNull,
+      );
+      expect(
+        PlatformPaths.windowsUncServerRoot(r'\\computername\share\sub'),
+        isNull,
+      );
       expect(PlatformPaths.windowsUncServerRoot(r'C:\Users'), isNull);
     });
 

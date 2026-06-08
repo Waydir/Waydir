@@ -542,9 +542,7 @@ class FileSystemService {
             await scanEntity(src, destination!);
           }
           if (cancelled) {
-            mainSendPort.send(
-              TaskDoneMessage(cancelled: true, errors: errors),
-            );
+            mainSendPort.send(TaskDoneMessage(cancelled: true, errors: errors));
             workerReceivePort.close();
             return;
           }
@@ -929,9 +927,7 @@ class FileSystemService {
             sourceRootCounts[src] = totalFiles - before;
           }
           if (cancelled) {
-            mainSendPort.send(
-              TaskDoneMessage(cancelled: true, errors: errors),
-            );
+            mainSendPort.send(TaskDoneMessage(cancelled: true, errors: errors));
             workerReceivePort.close();
             return;
           }

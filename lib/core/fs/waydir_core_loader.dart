@@ -349,7 +349,7 @@ class WaydirCoreLoader {
     log.error(
       'ffi.waydir_core',
       '${t.errors.nativeCoreNotFound(paths: _candidatePaths().join(', '))}'
-      ' | ${failures.join(' | ')}',
+          ' | ${failures.join(' | ')}',
     );
     return null;
   }
