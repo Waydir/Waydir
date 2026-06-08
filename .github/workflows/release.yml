@@ -217,4 +217,4 @@ jobs:
           files: release-files/*
           body_path: release-notes.md
           draft: false
-          prerelease: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
