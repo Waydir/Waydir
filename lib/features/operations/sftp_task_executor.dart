@@ -201,6 +201,7 @@ void _runTransferWorker(List<dynamic> args, {required bool move}) {
 
   Future<void> prescanRoot(String src, SftpFs fs) async {
     try {
+      if (cancelled) return;
       final name = PlatformPaths.fileName(src);
       final destIsSftp = PlatformPaths.isSftpUri(destination!);
       final dstTop = _joinDest(destination!, name, destIsSftp);
@@ -217,7 +218,7 @@ void _runTransferWorker(List<dynamic> args, {required bool move}) {
       var size = 0;
       var fileCount = 1;
       if (srcStat.type == FileItemType.folder) {
-        final scan = await _scanRecursive(src, fs);
+        final scan = await _scanRecursive(src, fs, () => cancelled);
         size = scan.bytes;
         fileCount = scan.files;
       } else {
@@ -400,6 +401,13 @@ void _runTransferWorker(List<dynamic> args, {required bool move}) {
           } catch (e) {
             errors.add(TaskError(path: '', message: _friendly(e)));
           }
+          if (cancelled) {
+            mainSendPort.send(
+              TaskDoneMessage(cancelled: true, errors: errors),
+            );
+            workerReceivePort.close();
+            return;
+          }
           mainSendPort.send(
             PreScanResultMessage(
               totalFiles: totalFiles,
@@ -506,7 +514,12 @@ Future<_AnyStat?> _statAny(String path, SftpFs fs) async {
   );
 }
 
-Future<({int files, int bytes})> _scanRecursive(String path, SftpFs fs) async {
+Future<({int files, int bytes})> _scanRecursive(
+  String path,
+  SftpFs fs,
+  bool Function() isCancelled,
+) async {
+  if (isCancelled()) return (files: 0, bytes: 0);
   if (PlatformPaths.isSftpUri(path)) {
     final stat = await fs.stat(path);
     if (stat == null) return (files: 0, bytes: 0);
@@ -517,7 +530,8 @@ Future<({int files, int bytes})> _scanRecursive(String path, SftpFs fs) async {
     var bytes = 0;
     final entries = await fs.listDirectory(path);
     for (final entry in entries) {
-      final r = await _scanRecursive(entry.path, fs);
+      if (isCancelled()) break;
+      final r = await _scanRecursive(entry.path, fs, isCancelled);
       files += r.files;
       bytes += r.bytes;
     }
@@ -531,7 +545,8 @@ Future<({int files, int bytes})> _scanRecursive(String path, SftpFs fs) async {
   var files = 1;
   var bytes = 0;
   await for (final entity in Directory(path).list(followLinks: false)) {
-    final r = await _scanRecursive(entity.path, fs);
+    if (isCancelled()) break;
+    final r = await _scanRecursive(entity.path, fs, isCancelled);
     files += r.files;
     bytes += r.bytes;
   }

@@ -252,7 +252,7 @@ class FileSystemService {
       }
     }
 
-    void scanEntity(String src, String dest) {
+    Future<void> scanEntity(String src, String dest) async {
       final name = src.split(Platform.pathSeparator).last;
       final targetPath = '$dest${Platform.pathSeparator}$name';
 
@@ -265,7 +265,7 @@ class FileSystemService {
       if (type == FileSystemEntityType.directory) {
         allPaths.add(src);
         totalFiles++;
-        _scanDirForCopy(
+        await _scanDirForCopy(
           Directory(src),
           targetPath,
           visitedDirs,
@@ -280,6 +280,7 @@ class FileSystemService {
             errors.add(TaskError(path: errorPath, message: errorMsg));
             mainSendPort.send(ErrorMessage(path: errorPath, message: errorMsg));
           },
+          () => cancelled,
         );
       } else {
         try {
@@ -531,13 +532,21 @@ class FileSystemService {
       workerReceivePort.close();
     }
 
-    workerReceivePort.listen((msg) {
+    workerReceivePort.listen((msg) async {
       try {
         if (msg is StartCommand) {
           destination = msg.destination;
           for (final src in msg.sources) {
+            if (cancelled) break;
             sourceRoots.add(src);
-            scanEntity(src, destination!);
+            await scanEntity(src, destination!);
+          }
+          if (cancelled) {
+            mainSendPort.send(
+              TaskDoneMessage(cancelled: true, errors: errors),
+            );
+            workerReceivePort.close();
+            return;
           }
           mainSendPort.send(
             PreScanResultMessage(
@@ -638,7 +647,7 @@ class FileSystemService {
       }
     }
 
-    void scanEntity(String src, String dest) {
+    Future<void> scanEntity(String src, String dest) async {
       final name = src.split(Platform.pathSeparator).last;
       final targetPath = '$dest${Platform.pathSeparator}$name';
 
@@ -652,7 +661,7 @@ class FileSystemService {
         allPaths.add(src);
         totalFiles++;
         var rootBytes = 0;
-        _scanDirForMove(
+        await _scanDirForMove(
           Directory(src),
           targetPath,
           visitedDirs,
@@ -672,6 +681,7 @@ class FileSystemService {
             errors.add(TaskError(path: errorPath, message: errorMsg));
             mainSendPort.send(ErrorMessage(path: errorPath, message: errorMsg));
           },
+          () => cancelled,
         );
         final dirTargetStat = FileStat.statSync(targetPath);
         if (dirTargetStat.type != FileSystemEntityType.notFound) {
@@ -906,16 +916,24 @@ class FileSystemService {
       workerReceivePort.close();
     }
 
-    workerReceivePort.listen((msg) {
+    workerReceivePort.listen((msg) async {
       try {
         if (msg is StartCommand) {
           destination = msg.destination;
           for (final src in msg.sources) {
+            if (cancelled) break;
             sourceRoots.add(src);
             sourceRootOrder.add(src);
             final before = totalFiles;
-            scanEntity(src, destination!);
+            await scanEntity(src, destination!);
             sourceRootCounts[src] = totalFiles - before;
+          }
+          if (cancelled) {
+            mainSendPort.send(
+              TaskDoneMessage(cancelled: true, errors: errors),
+            );
+            workerReceivePort.close();
+            return;
           }
           mainSendPort.send(
             PreScanResultMessage(
@@ -1780,24 +1798,35 @@ class FileSystemService {
     );
   }
 
-  static void _scanDirForCopy(
+  static Future<void> _scanDirForCopy(
     Directory dir,
     String dest,
     Set<String> visited,
     void Function(String path, int bytes, ConflictInfo? conflict) onFile,
     void Function(String path, String message) onError,
-  ) {
+    bool Function() isCancelled,
+  ) async {
+    if (isCancelled()) return;
     final canonical = _resolveCanonical(dir.path);
     if (!visited.add(canonical)) return;
     try {
+      var counter = 0;
       for (final entity in dir.listSync(followLinks: false)) {
+        if (isCancelled()) return;
         final name = entity.path.split(Platform.pathSeparator).last;
         final targetPath = '$dest${Platform.pathSeparator}$name';
         if (entity is Link) {
           onFile(entity.path, 0, null);
         } else if (entity is Directory) {
           onFile(entity.path, 0, null);
-          _scanDirForCopy(entity, targetPath, visited, onFile, onError);
+          await _scanDirForCopy(
+            entity,
+            targetPath,
+            visited,
+            onFile,
+            onError,
+            isCancelled,
+          );
         } else if (entity is File) {
           try {
             final sourceStat = FileStat.statSync(entity.path);
@@ -1820,30 +1849,44 @@ class FileSystemService {
             onError(entity.path, _friendlyError(e));
           }
         }
+        if ((++counter & 0x3F) == 0) {
+          await Future.delayed(Duration.zero);
+        }
       }
     } catch (e) {
       onError(dir.path, _friendlyError(e));
     }
   }
 
-  static void _scanDirForMove(
+  static Future<void> _scanDirForMove(
     Directory dir,
     String dest,
     Set<String> visited,
     void Function(String path, ConflictInfo? conflict) onEntry,
     void Function(String path, String message) onError,
-  ) {
+    bool Function() isCancelled,
+  ) async {
+    if (isCancelled()) return;
     final canonical = _resolveCanonical(dir.path);
     if (!visited.add(canonical)) return;
     try {
+      var counter = 0;
       for (final entity in dir.listSync(followLinks: false)) {
+        if (isCancelled()) return;
         final name = entity.path.split(Platform.pathSeparator).last;
         final targetPath = '$dest${Platform.pathSeparator}$name';
         if (entity is Link) {
           onEntry(entity.path, null);
           continue;
         } else if (entity is Directory) {
-          _scanDirForMove(entity, targetPath, visited, onEntry, onError);
+          await _scanDirForMove(
+            entity,
+            targetPath,
+            visited,
+            onEntry,
+            onError,
+            isCancelled,
+          );
         } else {
           try {
             ConflictInfo? conflict;
@@ -1864,6 +1907,9 @@ class FileSystemService {
           } catch (e) {
             onError(entity.path, _friendlyError(e));
           }
+        }
+        if ((++counter & 0x3F) == 0) {
+          await Future.delayed(Duration.zero);
         }
       }
     } catch (e) {
