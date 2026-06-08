@@ -508,8 +508,8 @@ class _PathBarState extends State<_PathBar> {
     if (_focusNode.hasFocus && _editing) _queueSuggestions();
   }
 
-  Future<void> _submit() async {
-    final text = _controller.text.trim();
+  Future<void> _submit([String? rawText]) async {
+    final text = (rawText ?? _controller.text).trim();
     _hideSuggestions();
     setState(() => _editing = false);
     if (text.isEmpty || text == widget.store.currentPath.value) {
@@ -806,6 +806,20 @@ class _PathBarState extends State<_PathBar> {
               ),
               cursorColor: AppColors.accent,
               cursorHeight: 14,
+            ),
+          ),
+        ),
+        MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: Listener(
+            onPointerDown: (_) => _submit(_controller.text),
+            child: Padding(
+              padding: const EdgeInsets.only(left: 2, right: 2),
+              child: Icon(
+                WaydirIconsRegular.check,
+                size: 14,
+                color: AppColors.accent,
+              ),
             ),
           ),
         ),
