@@ -144,7 +144,7 @@ Field `type` is one of `text`, `input`, `password`, `checkbox`, `select`. A
 | `waydir.set_setting(key, value)` | - | persist one of your settings |
 | `waydir.refresh()` | - | refresh the file list |
 | `waydir.log(msg)` | - | write to Waydir's log |
-| `waydir.exec(cmd, args)` | `exec` | run a program and wait (short jobs; capped at 5s) |
+| `waydir.exec(cmd, args)` | `exec` | run a program and wait, returning `stdout, stderr, exit_code` (short jobs; capped at 5s) |
 | `waydir.run_task({title, cmd, args, cwd, timeout})` | `exec` | run a long program off the UI; progress via notification. `timeout` in seconds (default 600, max 21600) |
 | `waydir.read_text(path)` | `fs` | return a file's contents (capped at 4 MiB) |
 | `waydir.write_text(path, text)` | `fs` | write a file |
@@ -177,7 +177,16 @@ end,
 
 ### Long jobs vs. quick commands
 
-`waydir.exec` runs inside the 5-second sandbox - fine for quick commands.
+`waydir.exec` runs inside the 5-second sandbox - fine for quick commands. It
+returns three values: stdout, stderr and exit code:
+
+```lua
+local out, err, code = waydir.exec("tailscale", { "file", "cp", "--targets" })
+if code == 0 then
+  waydir.toast(out)
+end
+```
+
 For anything slow, use `waydir.run_task`: it runs the process outside the
 sandbox and reports completion as a notification, without freezing the action.
 

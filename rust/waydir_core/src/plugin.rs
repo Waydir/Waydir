@@ -168,17 +168,25 @@ fn install_api(
             let args = args.unwrap_or_default();
             match std::process::Command::new(&cmd).args(&args).output() {
                 Ok(out) if !out.status.success() => {
+                    let stdout = String::from_utf8_lossy(&out.stdout).to_string();
+                    let stderr = String::from_utf8_lossy(&out.stderr).to_string();
+                    let code = out.status.code().unwrap_or(-1);
                     e.borrow_mut().push(json!({
                         "type": "log",
                         "message": format!(
                             "exec {} failed: code {}",
                             cmd,
-                            out.status.code().unwrap_or(-1)
+                            code
                         )
                     }));
-                    Ok(())
+                    Ok((stdout, stderr, code))
                 }
-                Ok(_) => Ok(()),
+                Ok(out) => {
+                    let stdout = String::from_utf8_lossy(&out.stdout).to_string();
+                    let stderr = String::from_utf8_lossy(&out.stderr).to_string();
+                    let code = out.status.code().unwrap_or(0);
+                    Ok((stdout, stderr, code))
+                }
                 Err(error) => Err(err(format!("exec {cmd}: {error}"))),
             }
         })?,

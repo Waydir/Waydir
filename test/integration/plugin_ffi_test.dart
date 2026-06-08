@@ -106,6 +106,41 @@ void main() {
     expect(json['error'].toString(), contains('permission'));
   });
 
+  test('exec returns stdout, stderr and exit code with permission', () async {
+    final path = writePlugin('''
+      waydir.register({
+        id = "exec_out",
+        title = "Exec Out",
+        run = function(ctx)
+          local stdout, stderr, code = waydir.exec("sh", {
+            "-c",
+            "printf out; printf err >&2; exit 7",
+          })
+          waydir.toast(stdout .. ":" .. stderr .. ":" .. code)
+        end,
+      })
+    ''');
+
+    final raw = await PluginFfi.invoke(
+      initLuaPath: path,
+      actionId: 'exec_out',
+      ctxJson: jsonEncode({
+        'paths': <String>[],
+        'dir': '/',
+        'plugin_dir': tmp.path,
+      }),
+      perms: 1,
+    );
+    final json = jsonDecode(raw!) as Map<String, dynamic>;
+    expect(json['ok'], isTrue);
+    final effects = json['effects'] as List;
+    expect(effects.first, {
+      'type': 'log',
+      'message': 'exec sh failed: code 7',
+    });
+    expect(effects.last, {'type': 'toast', 'message': 'out:err:7'});
+  });
+
   test('load returns where, shortcut and settings schema', () {
     final path = writePlugin('''
       waydir.register({
