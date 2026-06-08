@@ -8,6 +8,7 @@ import 'package:path/path.dart' as p;
 import 'package:signals/signals.dart';
 
 import '../../core/database/app_database.dart';
+import '../../core/logging/app_logger.dart';
 import '../../core/platform/platform_paths.dart';
 import '../../core/platform/trash_location.dart';
 import '../../core/settings/settings_store.dart';
@@ -75,6 +76,28 @@ class ShellStore {
   }
 
   Future<void> _restoreSession() async {
+    try {
+      await _buildSession();
+    } catch (e, st) {
+      log.error('shell.restore', 'Session restore failed', error: e, stack: st);
+    }
+    if (!ready.value) {
+      batch(() {
+        panes.value = [
+          PaneStore(
+            operationStore: operationStore,
+            initialPath: PlatformPaths.homePath,
+          ),
+        ];
+        isDual.value = false;
+        activePaneIndex.value = 0;
+        ready.value = true;
+      });
+    }
+    _wirePersistence();
+  }
+
+  Future<void> _buildSession() async {
     final s = SettingsStore.instance;
     final db = s.db;
 
@@ -135,8 +158,6 @@ class ShellStore {
         ready.value = true;
       });
     }
-
-    _wirePersistence();
   }
 
   void _wirePersistence() {
