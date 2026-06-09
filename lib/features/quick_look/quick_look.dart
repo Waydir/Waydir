@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:waydir/ui/icons/waydir_icons.dart';
@@ -109,26 +107,30 @@ class _QuickLookState extends State<_QuickLook> {
       return KeyEventResult.handled;
     }
 
-    final isDown = key == LogicalKeyboardKey.arrowDown;
-    final isUp = key == LogicalKeyboardKey.arrowUp;
-
     if (_editorActive.value) {
-      final stepModifier = Platform.isMacOS
-          ? HardwareKeyboard.instance.isAltPressed
-          : HardwareKeyboard.instance.isControlPressed;
-      if (stepModifier && (isDown || isUp)) {
+      if (AppShortcuts.matches('quick_look_next_file_edit', key)) {
         _focus.requestFocus();
-        return _stepCursor(isDown ? 1 : -1, isRepeat);
+        return _stepCursor(1, isRepeat);
+      }
+      if (AppShortcuts.matches('quick_look_prev_file_edit', key)) {
+        _focus.requestFocus();
+        return _stepCursor(-1, isRepeat);
       }
       return KeyEventResult.ignored;
     }
 
-    if (!isRepeat && AppShortcuts.matches('quick_look', key)) {
+    if (!isRepeat && AppShortcuts.matches('quick_look_close', key)) {
       Navigator.of(context).pop();
       return KeyEventResult.handled;
     }
-    if (isDown) return _stepCursor(1, isRepeat);
-    if (isUp) return _stepCursor(-1, isRepeat);
+    if (AppShortcuts.matches('quick_look_next_file', key) ||
+        AppShortcuts.matches('quick_look_next_file_edit', key)) {
+      return _stepCursor(1, isRepeat);
+    }
+    if (AppShortcuts.matches('quick_look_prev_file', key) ||
+        AppShortcuts.matches('quick_look_prev_file_edit', key)) {
+      return _stepCursor(-1, isRepeat);
+    }
     return KeyEventResult.ignored;
   }
 
@@ -158,6 +160,8 @@ class _QuickLookState extends State<_QuickLook> {
     final width = (size.width * 0.7).clamp(480.0, 1100.0);
     final height = (size.height * 0.78).clamp(360.0, 900.0);
     return Focus(
+      focusNode: _focus,
+      autofocus: true,
       onKeyEvent: _handleKey,
       child: Center(
         child: Material(
@@ -178,95 +182,208 @@ class _QuickLookState extends State<_QuickLook> {
                 ),
               ],
             ),
-            child: SignalBuilder(
-              builder: (_) {
-                final override = widget.explicitEntry;
-                if (override != null) {
-                  return Column(
-                    children: [
-                      _Header(
-                        entry: override,
-                        compact: true,
-                        showInfo: true,
-                        onToggleInfo: () {},
-                        onClose: () => Navigator.of(context).pop(),
-                      ),
-                      Container(height: 1, color: AppColors.bgDivider),
-                      Expanded(
-                        child: override.type == FileItemType.folder
-                            ? MultiProperties(entries: [override])
-                            : PropertiesOnly(entry: override),
-                      ),
-                    ],
-                  );
-                }
-                final selected = widget.store.selectedPaths.value;
-                if (selected.length > 1) {
-                  final entries = widget.store.selectedEntries;
-                  return Column(
-                    children: [
-                      _Header(
-                        entry: null,
-                        compact: true,
-                        showInfo: _showInfo,
-                        multiCount: entries.length,
-                        onToggleInfo: () {},
-                        onClose: () => Navigator.of(context).pop(),
-                      ),
-                      Container(height: 1, color: AppColors.bgDivider),
-                      Expanded(child: MultiProperties(entries: entries)),
-                    ],
-                  );
-                }
-                if (selected.length == 1) {
-                  final entries = widget.store.selectedEntries;
-                  if (entries.length == 1 &&
-                      entries.first.type == FileItemType.folder) {
-                    final entry = entries.first;
-                    _syncPresentation(entry);
-                    return Column(
-                      children: [
-                        _Header(
-                          entry: entry,
-                          compact: true,
-                          showInfo: true,
-                          onToggleInfo: () {},
-                          onClose: () => Navigator.of(context).pop(),
-                        ),
-                        Container(height: 1, color: AppColors.bgDivider),
-                        Expanded(child: MultiProperties(entries: entries)),
-                      ],
-                    );
-                  }
-                }
-                final entry = widget.store.cursorEntry.value;
-                _syncPresentation(entry);
-                return Column(
-                  children: [
-                    _Header(
-                      entry: entry,
-                      compact: _compact,
-                      showInfo: _showInfo,
-                      onToggleInfo: () =>
-                          setState(() => _showInfo = !_showInfo),
-                      onClose: () => Navigator.of(context).pop(),
-                    ),
-                    Container(height: 1, color: AppColors.bgDivider),
-                    Expanded(
-                      child: _Body(
-                        entry: entry,
-                        editorActive: _editorActive,
-                        showInfo: _showInfo,
-                        onCompactChanged: _setCompact,
-                      ),
-                    ),
-                  ],
-                );
-              },
+            child: Column(
+              children: [
+                Expanded(child: _buildContent(context)),
+                Container(height: 1, color: AppColors.bgDivider),
+                _ShortcutBar(editorActive: _editorActive),
+              ],
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context) {
+    return SignalBuilder(
+      builder: (_) {
+        final override = widget.explicitEntry;
+        if (override != null) {
+          return Column(
+            children: [
+              _Header(
+                entry: override,
+                compact: true,
+                showInfo: true,
+                onToggleInfo: () {},
+                onClose: () => Navigator.of(context).pop(),
+              ),
+              Container(height: 1, color: AppColors.bgDivider),
+              Expanded(
+                child: override.type == FileItemType.folder
+                    ? MultiProperties(entries: [override])
+                    : PropertiesOnly(entry: override),
+              ),
+            ],
+          );
+        }
+        final selected = widget.store.selectedPaths.value;
+        if (selected.length > 1) {
+          final entries = widget.store.selectedEntries;
+          return Column(
+            children: [
+              _Header(
+                entry: null,
+                compact: true,
+                showInfo: _showInfo,
+                multiCount: entries.length,
+                onToggleInfo: () {},
+                onClose: () => Navigator.of(context).pop(),
+              ),
+              Container(height: 1, color: AppColors.bgDivider),
+              Expanded(child: MultiProperties(entries: entries)),
+            ],
+          );
+        }
+        if (selected.length == 1) {
+          final entries = widget.store.selectedEntries;
+          if (entries.length == 1 &&
+              entries.first.type == FileItemType.folder) {
+            final entry = entries.first;
+            _syncPresentation(entry);
+            return Column(
+              children: [
+                _Header(
+                  entry: entry,
+                  compact: true,
+                  showInfo: true,
+                  onToggleInfo: () {},
+                  onClose: () => Navigator.of(context).pop(),
+                ),
+                Container(height: 1, color: AppColors.bgDivider),
+                Expanded(child: MultiProperties(entries: entries)),
+              ],
+            );
+          }
+        }
+        final entry = widget.store.cursorEntry.value;
+        _syncPresentation(entry);
+        return Column(
+          children: [
+            _Header(
+              entry: entry,
+              compact: _compact,
+              showInfo: _showInfo,
+              onToggleInfo: () => setState(() => _showInfo = !_showInfo),
+              onClose: () => Navigator.of(context).pop(),
+            ),
+            Container(height: 1, color: AppColors.bgDivider),
+            Expanded(
+              child: _Body(
+                entry: entry,
+                editorActive: _editorActive,
+                showInfo: _showInfo,
+                onCompactChanged: _setCompact,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _ShortcutBar extends StatelessWidget {
+  final ValueNotifier<bool> editorActive;
+
+  const _ShortcutBar({required this.editorActive});
+
+  List<String> _capsOf(String id) =>
+      AppShortcuts.getById(id).displayKeys.split('+');
+
+  List<String> _editStepCaps() {
+    final parts = _capsOf('quick_look_next_file_edit');
+    final mods = parts.length > 1
+        ? parts.sublist(0, parts.length - 1)
+        : const <String>[];
+    return [...mods, '↑', '↓'];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: editorActive,
+      builder: (context, editing, _) {
+        final hints = editing
+            ? [
+                _ShortcutHint(
+                  caps: _editStepCaps(),
+                  label: t.quickLook.hintSwitchFile,
+                ),
+                _ShortcutHint(
+                  caps: _capsOf('quick_look_save'),
+                  label: t.quickLook.save,
+                ),
+              ]
+            : [
+                _ShortcutHint(
+                  caps: const ['↑', '↓'],
+                  label: t.quickLook.hintSwitchFile,
+                ),
+                _ShortcutHint(
+                  caps: _capsOf('quick_look_close'),
+                  label: t.quickLook.hintClose,
+                ),
+              ];
+        return Container(
+          height: 30,
+          color: AppColors.bgStatus,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          child: Row(
+            children: [
+              for (var i = 0; i < hints.length; i++) ...[
+                if (i > 0) const SizedBox(width: 18),
+                hints[i],
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ShortcutHint extends StatelessWidget {
+  final List<String> caps;
+  final String label;
+
+  const _ShortcutHint({required this.caps, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var i = 0; i < caps.length; i++) ...[
+          if (i > 0) const SizedBox(width: 3),
+          _MiniCap(text: caps[i]),
+        ],
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: context.txt.micro.copyWith(color: AppColors.fgMuted),
+        ),
+      ],
+    );
+  }
+}
+
+class _MiniCap extends StatelessWidget {
+  final String text;
+
+  const _MiniCap({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 18),
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+      decoration: BoxDecoration(
+        color: AppColors.bgInput,
+        border: Border.all(color: AppColors.borderColor),
+      ),
+      child: Text(text, textAlign: TextAlign.center, style: context.txt.keyCap),
     );
   }
 }

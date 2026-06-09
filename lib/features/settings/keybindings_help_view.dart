@@ -24,6 +24,10 @@ final _groupMeta = <ShortcutGroup, ({String Function() title, IconData icon})>{
     title: () => t.keybindings.categories.navigation,
     icon: WaydirIconsRegular.compass,
   ),
+  ShortcutGroup.quickLook: (
+    title: () => t.keybindings.categories.quickLook,
+    icon: WaydirIconsRegular.eye,
+  ),
   ShortcutGroup.view: (
     title: () => t.keybindings.categories.view,
     icon: WaydirIconsRegular.eye,
@@ -72,6 +76,12 @@ String _labelFor(ShortcutDef s) => switch (s.id) {
   'refresh' => t.keybindings.refresh,
   'focus_path' => t.keybindings.focusPath,
   'quick_look' => t.keybindings.quickLook,
+  'quick_look_close' => t.keybindings.quickLookClose,
+  'quick_look_prev_file' => t.keybindings.quickLookPrevFile,
+  'quick_look_next_file' => t.keybindings.quickLookNextFile,
+  'quick_look_prev_file_edit' => t.keybindings.quickLookPrevFileEdit,
+  'quick_look_next_file_edit' => t.keybindings.quickLookNextFileEdit,
+  'quick_look_save' => t.keybindings.quickLookSave,
   'cursor_up' => t.keybindings.cursorUp,
   'cursor_down' => t.keybindings.cursorDown,
   'page_up' => t.keybindings.pageUp,
