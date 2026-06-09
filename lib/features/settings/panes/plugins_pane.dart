@@ -44,6 +44,7 @@ class _PluginsPaneState extends State<PluginsPane> {
     return SignalBuilder(
       builder: (context) {
         final plugins = PluginStore.instance.plugins.value;
+        final disabled = PluginSettingsStore.instance.disabled.value;
         return SettingsPaneScaffold(
           children: [
             Text(t.preferences.plugins.title, style: context.txt.dialogTitle),
@@ -88,7 +89,12 @@ class _PluginsPaneState extends State<PluginsPane> {
                         for (var i = 0; i < plugins.length; i++) ...[
                           if (i > 0)
                             Container(height: 1, color: AppColors.bgDivider),
-                          _PluginRow(plugin: plugins[i]),
+                          _PluginRow(
+                            plugin: plugins[i],
+                            userDisabled: disabled.contains(
+                              plugins[i].manifest.id,
+                            ),
+                          ),
                         ],
                       ],
                     ),
@@ -102,7 +108,9 @@ class _PluginsPaneState extends State<PluginsPane> {
 
 class _PluginRow extends StatelessWidget {
   final LoadedPlugin plugin;
-  const _PluginRow({required this.plugin});
+  final bool userDisabled;
+
+  const _PluginRow({required this.plugin, required this.userDisabled});
 
   Future<void> _configure(BuildContext context) async {
     final schema = plugin.settingsSchema;
@@ -123,7 +131,6 @@ class _PluginRow extends StatelessWidget {
     final m = plugin.manifest;
     final hasError = plugin.error != null;
     final loadable = plugin.enabled && !hasError;
-    final userDisabled = PluginSettingsStore.instance.isDisabled(m.id);
     final dim = hasError || !plugin.enabled || userDisabled;
     final canConfigure =
         loadable && !userDisabled && plugin.settingsSchema.isNotEmpty;

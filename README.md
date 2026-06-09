@@ -104,6 +104,8 @@ Persistence sits on `drift` + `sqlite3`. The UI thread does no I/O.
 ## 📦 Install
 
 Grab the latest build from the [Releases](https://github.com/Waydir/Waydir/releases) page.
+Waydir is distributed as native desktop packages and portable archives; pick the
+asset that matches your OS and CPU architecture.
 
 #### Linux
 
@@ -123,9 +125,13 @@ chmod +x waydir-*.AppImage && ./waydir-*.AppImage
 tar -xzf waydir-*-linux-x64.tar.gz && ./waydir
 ```
 
+Package builds integrate with your desktop launcher. AppImage and tarball builds
+are portable and can be launched from any folder.
+
 #### Windows
 
-`.exe` installer or portable `.zip`. Run the installer, or unpack the archive and launch `waydir.exe`.
+`.exe` installer or portable `.zip`. Run the installer, or unpack the archive
+and launch `waydir.exe`.
 
 #### macOS
 
@@ -163,7 +169,23 @@ tar -xzf waydir-*-linux-x64.tar.gz && ./waydir
 #### Customization & integrations
 - Light, Dark and Nord themes; custom themes via JSON
 - Configurable density, sort, hidden files and date format
+- Lua plugins for context actions, toolbar buttons, the top Plugins menu and shortcuts
 - Git status bar with branch switching and stash management
+
+## 🔌 Plugins
+
+Plugins let you add small workflow actions without rebuilding Waydir. They are
+plain Lua folders with a `manifest.json` and an `init.lua`; drop one into the
+plugins folder, then reload from **Preferences -> Plugins**.
+
+Plugin actions can appear in the selection context menu, background context
+menu, top **Plugins** menu, location toolbar, and keybindings. They run in a
+sandbox and request explicit permissions for external commands (`exec`) or file
+operations (`fs`).
+
+Start with [docs/plugins.md](docs/plugins.md) or the working examples in
+[docs/examples/plugins/](docs/examples/plugins/). Fuller plugin documentation is
+available at [waydir.dev/docs/plugins](https://waydir.dev/docs/plugins/).
 
 ## 🔧 Build from source
 

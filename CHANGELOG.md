@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Quick Look: arrow keys keep moving between files even when an editable file is open; Ctrl/⌥ + arrows switch files while editing.
 - The rename shortcut now starts multi-rename when several files are selected.
 - A failing plugin action now shows an error notification instead of crashing the app.
+- Plugin enable/disable state now updates immediately in Preferences.
 
 ## [0.11.0] - 2026-06-09
 

@@ -3,6 +3,25 @@
 A plugin adds entries to Waydir's menus and shortcuts that run your own logic.
 Plugins are written in Lua. No build step - drop a folder in, reload, done.
 
+This file is the compact reference shipped with the repository. Fuller plugin
+documentation is available at <https://waydir.dev/docs/plugins/>.
+
+## What plugins can do
+
+Plugins are meant for small workflow actions around the current file manager
+state. A plugin can add entries to:
+
+- the selection context menu;
+- the background context menu for the current folder;
+- the top **Plugins** menu;
+- the location toolbar;
+- keyboard shortcuts.
+
+Lua handles *when* an action is shown and *where* it runs. Heavy work can be
+delegated to external programs with `waydir.exec` or `waydir.run_task`, or to
+Waydir's own queued file operations with `waydir.copy`, `waydir.move`,
+`waydir.trash`, and related APIs.
+
 ## Quick start
 
 A plugin is a folder with two files:
@@ -13,16 +32,31 @@ my-plugin/
   init.lua
 ```
 
-Put it in your plugins folder:
+## Installing plugins
+
+Copy or unzip the whole plugin folder into Waydir's plugins directory. The
+folder itself must contain `manifest.json` and `init.lua` at the top level.
 
 | OS | Path |
 |----|------|
 | Linux | `~/.config/waydir/plugins/` |
 | macOS / Windows | app support dir `/plugins/` |
 
-Then open **Preferences -> Plugins** and click **Reload plugins** (or restart
-Waydir). The fastest way to find the folder is the **Open plugins folder**
-button there - it opens it in a new tab.
+The fastest way to find the correct directory is **Preferences -> Plugins ->
+Open plugins folder**. After copying the plugin, click **Reload plugins** or
+restart Waydir.
+
+Review the permissions shown in **Preferences -> Plugins** before trusting a
+plugin. `exec` allows external programs, and `fs` allows file reads/writes and
+queued file operations.
+
+If a plugin does not show up, check that:
+
+- the directory is not nested one level too deep after extracting an archive;
+- `manifest.json` is valid JSON;
+- `api_version` is `2`;
+- the plugin is enabled;
+- the selected files match the action's `when` filter.
 
 ## manifest.json
 

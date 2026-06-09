@@ -219,9 +219,10 @@ class PluginStore {
   }
 
   Iterable<PluginContribution> get _activeContributions sync* {
+    final disabled = PluginSettingsStore.instance.disabled.value;
     for (final plugin in plugins.value) {
       if (!plugin.enabled || plugin.error != null) continue;
-      if (PluginSettingsStore.instance.isDisabled(plugin.manifest.id)) continue;
+      if (disabled.contains(plugin.manifest.id)) continue;
       yield* plugin.contributions;
     }
   }
