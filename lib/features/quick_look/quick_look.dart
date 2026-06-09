@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:waydir/ui/icons/waydir_icons.dart';
 import 'package:signals/signals_flutter.dart';
 
+import '../../core/keyboard/keyboard_shortcuts.dart';
 import '../../core/models/file_entry.dart';
 import '../../features/files/file_icons.dart';
 import '../../features/navigation/navigation_store.dart';
@@ -90,6 +93,13 @@ class _QuickLookState extends State<_QuickLook> {
     return true;
   }
 
+  KeyEventResult _stepCursor(int delta, bool isRepeat) {
+    if (isRepeat && !_acceptCursorRepeat()) return KeyEventResult.handled;
+    if (!isRepeat) _lastCursorRepeatAt = null;
+    widget.store.moveCursor(delta);
+    return KeyEventResult.handled;
+  }
+
   KeyEventResult _handleKey(FocusNode node, KeyEvent event) {
     final isRepeat = event is KeyRepeatEvent;
     if (event is! KeyDownEvent && !isRepeat) return KeyEventResult.ignored;
@@ -98,23 +108,27 @@ class _QuickLookState extends State<_QuickLook> {
       Navigator.of(context).pop();
       return KeyEventResult.handled;
     }
-    if (_editorActive.value) return KeyEventResult.ignored;
-    if (!isRepeat && key == LogicalKeyboardKey.space) {
+
+    final isDown = key == LogicalKeyboardKey.arrowDown;
+    final isUp = key == LogicalKeyboardKey.arrowUp;
+
+    if (_editorActive.value) {
+      final stepModifier = Platform.isMacOS
+          ? HardwareKeyboard.instance.isAltPressed
+          : HardwareKeyboard.instance.isControlPressed;
+      if (stepModifier && (isDown || isUp)) {
+        _focus.requestFocus();
+        return _stepCursor(isDown ? 1 : -1, isRepeat);
+      }
+      return KeyEventResult.ignored;
+    }
+
+    if (!isRepeat && AppShortcuts.matches('quick_look', key)) {
       Navigator.of(context).pop();
       return KeyEventResult.handled;
     }
-    if (key == LogicalKeyboardKey.arrowDown) {
-      if (isRepeat && !_acceptCursorRepeat()) return KeyEventResult.handled;
-      if (!isRepeat) _lastCursorRepeatAt = null;
-      widget.store.moveCursor(1);
-      return KeyEventResult.handled;
-    }
-    if (key == LogicalKeyboardKey.arrowUp) {
-      if (isRepeat && !_acceptCursorRepeat()) return KeyEventResult.handled;
-      if (!isRepeat) _lastCursorRepeatAt = null;
-      widget.store.moveCursor(-1);
-      return KeyEventResult.handled;
-    }
+    if (isDown) return _stepCursor(1, isRepeat);
+    if (isUp) return _stepCursor(-1, isRepeat);
     return KeyEventResult.ignored;
   }
 
