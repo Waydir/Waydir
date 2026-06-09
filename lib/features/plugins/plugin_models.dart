@@ -2,6 +2,13 @@ import 'package:path/path.dart' as p;
 
 import '../../core/models/file_entry.dart';
 
+abstract class PluginRuntimeTarget {
+  String get pluginId;
+  PluginManifest get manifest;
+  bool get allowExec;
+  String get runtimeId;
+}
+
 class PluginManifest {
   final String id;
   final String name;
@@ -161,7 +168,8 @@ class PluginFormOption {
   }
 }
 
-class PluginContribution {
+class PluginContribution implements PluginRuntimeTarget {
+  @override
   final String pluginId;
   final String actionId;
   final String menu;
@@ -174,6 +182,7 @@ class PluginContribution {
   final List<PluginFormField> settings;
   final String initLuaPath;
   final String pluginDir;
+  @override
   final PluginManifest manifest;
 
   const PluginContribution({
@@ -194,6 +203,9 @@ class PluginContribution {
 
   String get fullActionId => 'plugin:$pluginId:$actionId';
 
+  @override
+  String get runtimeId => fullActionId;
+
   /// Resolves [icon] to an absolute file path when it points at an image
   /// (PNG/SVG) bundled in the plugin, or null for the default glyph.
   String? get iconPath {
@@ -205,9 +217,148 @@ class PluginContribution {
     return null;
   }
 
+  @override
   bool get allowExec => manifest.permissions.contains('exec');
 
   bool showsOn(String surface) => surfaces.contains(surface);
+}
+
+class PluginBarContribution implements PluginRuntimeTarget {
+  @override
+  final String pluginId;
+  final String barId;
+  final String scope;
+  final String title;
+  final String? icon;
+  final int intervalSeconds;
+  final List<PluginFormField> settings;
+  final String initLuaPath;
+  final String pluginDir;
+  @override
+  final PluginManifest manifest;
+
+  const PluginBarContribution({
+    required this.pluginId,
+    required this.barId,
+    required this.scope,
+    required this.title,
+    required this.icon,
+    required this.intervalSeconds,
+    required this.settings,
+    required this.initLuaPath,
+    required this.pluginDir,
+    required this.manifest,
+  });
+
+  String get fullBarId => 'plugin:$pluginId:bar:$barId';
+
+  @override
+  String get runtimeId => fullBarId;
+
+  String? get iconPath {
+    final ic = icon;
+    if (ic == null) return null;
+    if (ic.contains('/') || ic.endsWith('.svg') || ic.endsWith('.png')) {
+      return p.isAbsolute(ic) ? ic : p.join(pluginDir, ic);
+    }
+    return null;
+  }
+
+  @override
+  bool get allowExec => manifest.permissions.contains('exec');
+}
+
+class PluginBarItem {
+  final String type;
+  final String id;
+  final String text;
+  final String? icon;
+  final String? tooltip;
+  final String? level;
+  final String? action;
+
+  const PluginBarItem({
+    required this.type,
+    required this.id,
+    required this.text,
+    this.icon,
+    this.tooltip,
+    this.level,
+    this.action,
+  });
+
+  factory PluginBarItem.fromJson(Map<String, dynamic> json) {
+    return PluginBarItem(
+      type: (json['type'] as String? ?? 'text').toLowerCase(),
+      id: json['id'] as String? ?? '',
+      text: (json['text'] ?? json['label'] ?? '').toString(),
+      icon: json['icon'] as String?,
+      tooltip: json['tooltip'] as String?,
+      level: (json['level'] as String?)?.toLowerCase(),
+      action: (json['action'] as String?)?.toLowerCase(),
+    );
+  }
+}
+
+class PluginBarState {
+  final bool visible;
+  final List<PluginBarItem> items;
+  final String? error;
+  final DateTime updatedAt;
+
+  const PluginBarState({
+    required this.visible,
+    required this.items,
+    required this.updatedAt,
+    this.error,
+  });
+
+  factory PluginBarState.hidden() {
+    return PluginBarState(
+      visible: false,
+      items: const [],
+      updatedAt: DateTime.now(),
+    );
+  }
+
+  factory PluginBarState.error(String message) {
+    return PluginBarState(
+      visible: true,
+      items: [
+        PluginBarItem(
+          type: 'badge',
+          id: 'error',
+          text: message,
+          level: 'error',
+        ),
+      ],
+      error: message,
+      updatedAt: DateTime.now(),
+    );
+  }
+
+  factory PluginBarState.fromJson(dynamic raw) {
+    if (raw is! Map) return PluginBarState.hidden();
+    final map = raw.cast<String, dynamic>();
+    final itemsRaw = map['items'];
+    return PluginBarState(
+      visible: map['visible'] != false,
+      items: itemsRaw is List
+          ? itemsRaw
+                .whereType<Map>()
+                .map((e) => PluginBarItem.fromJson(e.cast<String, dynamic>()))
+                .toList()
+          : const [],
+      updatedAt: DateTime.now(),
+    );
+  }
+}
+
+class PluginBarInvokeResult {
+  final PluginBarState? state;
+  final List<PluginEffect> effects;
+
+  const PluginBarInvokeResult({required this.state, required this.effects});
 }
 
 class LoadedPlugin {
@@ -215,6 +366,7 @@ class LoadedPlugin {
   final String dir;
   final bool enabled;
   final List<PluginContribution> contributions;
+  final List<PluginBarContribution> bars;
   final String? error;
 
   const LoadedPlugin({
@@ -222,6 +374,7 @@ class LoadedPlugin {
     required this.dir,
     required this.enabled,
     required this.contributions,
+    this.bars = const [],
     this.error,
   });
 
@@ -232,6 +385,11 @@ class LoadedPlugin {
     final out = <PluginFormField>[];
     for (final c in contributions) {
       for (final f in c.settings) {
+        if (seen.add(f.id)) out.add(f);
+      }
+    }
+    for (final b in bars) {
+      for (final f in b.settings) {
         if (seen.add(f.id)) out.add(f);
       }
     }

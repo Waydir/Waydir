@@ -68,6 +68,13 @@ fn when_to_json(t: &Table) -> mlua::Result<Json> {
     Ok(Json::Object(obj))
 }
 
+fn settings_to_json(lua: &Lua, spec: &Table) -> mlua::Result<Json> {
+    match spec.get::<Option<Table>>("settings")? {
+        Some(s) => table_to_json(lua, s),
+        None => Ok(Json::Null),
+    }
+}
+
 fn table_to_json(lua: &Lua, t: Table) -> mlua::Result<Json> {
     lua.from_value(Value::Table(t))
 }
@@ -403,6 +410,35 @@ fn install_api(
     Ok(waydir)
 }
 
+fn ctx_to_lua_table(lua: &Lua, ctx: &Json) -> mlua::Result<Table> {
+    let tbl = lua.create_table()?;
+    let nil_opts = mlua::SerializeOptions::new()
+        .serialize_none_to_null(false)
+        .serialize_unit_to_null(false);
+    if let Some(obj) = ctx.as_object() {
+        for (key, value) in obj {
+            if key == "paths" {
+                continue;
+            }
+            tbl.set(key.as_str(), lua.to_value_with(value, nil_opts)?)?;
+        }
+    }
+    let paths_tbl = lua.create_table()?;
+    let paths = ctx.get("paths").and_then(|v| v.as_array());
+    let mut count = 0;
+    if let Some(arr) = paths {
+        for (i, v) in arr.iter().enumerate() {
+            if let Some(s) = v.as_str() {
+                paths_tbl.set(i + 1, s)?;
+                count += 1;
+            }
+        }
+    }
+    tbl.set("paths", paths_tbl)?;
+    tbl.set("count", count)?;
+    Ok(tbl)
+}
+
 fn load_impl(path: &str) -> mlua::Result<Json> {
     let code = std::fs::read_to_string(path).map_err(|e| err(format!("read {path}: {e}")))?;
     let lua = new_sandbox()?;
@@ -410,6 +446,7 @@ fn load_impl(path: &str) -> mlua::Result<Json> {
     let waydir = install_api(&lua, &effects, false, false)?;
 
     let contribs: Rc<RefCell<Vec<Json>>> = Rc::new(RefCell::new(Vec::new()));
+    let bars: Rc<RefCell<Vec<Json>>> = Rc::new(RefCell::new(Vec::new()));
     let sink = contribs.clone();
     waydir.set(
         "register",
@@ -427,10 +464,7 @@ fn load_impl(path: &str) -> mlua::Result<Json> {
             };
             let where_ = opt_string_array(&spec, "where")?;
             let shortcut: Option<String> = spec.get("shortcut")?;
-            let settings = match spec.get::<Option<Table>>("settings")? {
-                Some(s) => table_to_json(lua, s)?,
-                None => Json::Null,
-            };
+            let settings = settings_to_json(lua, &spec)?;
             sink.borrow_mut().push(json!({
                 "id": id,
                 "menu": menu,
@@ -445,12 +479,38 @@ fn load_impl(path: &str) -> mlua::Result<Json> {
             Ok(())
         })?,
     )?;
+    let bar_sink = bars.clone();
+    waydir.set(
+        "register_bar",
+        lua.create_function(move |lua, spec: Table| {
+            let id: String = spec.get("id")?;
+            let scope: String = spec
+                .get::<Option<String>>("scope")?
+                .unwrap_or_else(|| "global".into());
+            let title: String = spec
+                .get::<Option<String>>("title")?
+                .unwrap_or_else(|| id.clone());
+            let icon: Option<String> = spec.get("icon")?;
+            let interval: Option<i64> = spec.get("interval")?;
+            let settings = settings_to_json(lua, &spec)?;
+            bar_sink.borrow_mut().push(json!({
+                "id": id,
+                "scope": scope,
+                "title": title,
+                "icon": icon,
+                "interval": interval,
+                "settings": settings,
+            }));
+            Ok(())
+        })?,
+    )?;
     lua.globals().set("waydir", waydir)?;
 
     lua.load(&code).set_name(path).exec()?;
 
     let list = contribs.borrow().clone();
-    Ok(json!({ "ok": true, "contributions": list }))
+    let bar_list = bars.borrow().clone();
+    Ok(json!({ "ok": true, "contributions": list, "bars": bar_list }))
 }
 
 fn invoke_impl(path: &str, action_id: &str, ctx_json: &str, perms: i32) -> mlua::Result<Json> {
@@ -478,6 +538,10 @@ fn invoke_impl(path: &str, action_id: &str, ctx_json: &str, perms: i32) -> mlua:
             Ok(())
         })?,
     )?;
+    waydir.set(
+        "register_bar",
+        lua.create_function(move |_, _: Table| Ok(()))?,
+    )?;
     lua.globals().set("waydir", waydir)?;
 
     lua.load(&code).set_name(path).exec()?;
@@ -485,37 +549,107 @@ fn invoke_impl(path: &str, action_id: &str, ctx_json: &str, perms: i32) -> mlua:
     let run = found.borrow_mut().take();
     let run = run.ok_or_else(|| err(format!("action {action_id} not found")))?;
 
-    let ctx_tbl = lua.create_table()?;
-    let paths_tbl = lua.create_table()?;
-    let paths = ctx.get("paths").and_then(|v| v.as_array());
-    let mut count = 0;
-    if let Some(arr) = paths {
-        for (i, v) in arr.iter().enumerate() {
-            if let Some(s) = v.as_str() {
-                paths_tbl.set(i + 1, s)?;
-                count += 1;
-            }
-        }
-    }
-    ctx_tbl.set("paths", paths_tbl)?;
-    ctx_tbl.set("count", count)?;
-    ctx_tbl.set("dir", ctx.get("dir").and_then(|v| v.as_str()).unwrap_or(""))?;
-    ctx_tbl.set(
-        "plugin_dir",
-        ctx.get("plugin_dir").and_then(|v| v.as_str()).unwrap_or(""),
-    )?;
-    let nil_opts = mlua::SerializeOptions::new()
-        .serialize_none_to_null(false)
-        .serialize_unit_to_null(false);
-    let settings = ctx.get("settings").cloned().unwrap_or(Json::Null);
-    ctx_tbl.set("settings", lua.to_value_with(&settings, nil_opts)?)?;
-    let form = ctx.get("form").cloned().unwrap_or(Json::Null);
-    ctx_tbl.set("form", lua.to_value_with(&form, nil_opts)?)?;
+    let ctx_tbl = ctx_to_lua_table(&lua, &ctx)?;
 
     run.call::<Value>(ctx_tbl)?;
 
     let list = effects.borrow().clone();
     Ok(json!({ "ok": true, "effects": list }))
+}
+
+fn bar_update_impl(path: &str, bar_id: &str, ctx_json: &str, perms: i32) -> mlua::Result<Json> {
+    let allow_exec = perms & PERM_EXEC != 0;
+    let allow_fs = perms & PERM_FS != 0;
+    let code = std::fs::read_to_string(path).map_err(|e| err(format!("read {path}: {e}")))?;
+    let ctx: Json = serde_json::from_str(ctx_json).map_err(|e| err(format!("ctx json: {e}")))?;
+
+    let lua = new_sandbox()?;
+    let effects: Effects = Rc::new(RefCell::new(Vec::new()));
+    let waydir = install_api(&lua, &effects, allow_exec, allow_fs)?;
+    waydir.set("register", lua.create_function(move |_, _: Table| Ok(()))?)?;
+
+    let target = bar_id.to_string();
+    let found: Rc<RefCell<Option<mlua::Function>>> = Rc::new(RefCell::new(None));
+    let slot = found.clone();
+    waydir.set(
+        "register_bar",
+        lua.create_function(move |_, spec: Table| {
+            let id: String = spec.get("id")?;
+            if id == target {
+                if let Some(update) = spec.get::<Option<mlua::Function>>("update")? {
+                    *slot.borrow_mut() = Some(update);
+                }
+            }
+            Ok(())
+        })?,
+    )?;
+    lua.globals().set("waydir", waydir)?;
+
+    lua.load(&code).set_name(path).exec()?;
+
+    let update = found.borrow_mut().take();
+    let update = update.ok_or_else(|| err(format!("bar {bar_id} update not found")))?;
+    let state_value = update.call::<Value>(ctx_to_lua_table(&lua, &ctx)?)?;
+    let state = match state_value {
+        Value::Nil => Json::Null,
+        value => lua.from_value(value)?,
+    };
+    let list = effects.borrow().clone();
+    Ok(json!({ "ok": true, "state": state, "effects": list }))
+}
+
+fn bar_click_impl(
+    path: &str,
+    bar_id: &str,
+    item_id: &str,
+    ctx_json: &str,
+    perms: i32,
+) -> mlua::Result<Json> {
+    let allow_exec = perms & PERM_EXEC != 0;
+    let allow_fs = perms & PERM_FS != 0;
+    let code = std::fs::read_to_string(path).map_err(|e| err(format!("read {path}: {e}")))?;
+    let mut ctx: Json =
+        serde_json::from_str(ctx_json).map_err(|e| err(format!("ctx json: {e}")))?;
+    if let Some(obj) = ctx.as_object_mut() {
+        obj.insert("item_id".into(), Json::String(item_id.to_string()));
+    }
+
+    let lua = new_sandbox()?;
+    let effects: Effects = Rc::new(RefCell::new(Vec::new()));
+    let waydir = install_api(&lua, &effects, allow_exec, allow_fs)?;
+    waydir.set("register", lua.create_function(move |_, _: Table| Ok(()))?)?;
+
+    let target = bar_id.to_string();
+    let found: Rc<RefCell<Option<mlua::Function>>> = Rc::new(RefCell::new(None));
+    let slot = found.clone();
+    waydir.set(
+        "register_bar",
+        lua.create_function(move |_, spec: Table| {
+            let id: String = spec.get("id")?;
+            if id == target {
+                if let Some(click) = spec.get::<Option<mlua::Function>>("click")? {
+                    *slot.borrow_mut() = Some(click);
+                }
+            }
+            Ok(())
+        })?,
+    )?;
+    lua.globals().set("waydir", waydir)?;
+
+    lua.load(&code).set_name(path).exec()?;
+
+    let state = match found.borrow_mut().take() {
+        Some(click) => {
+            let value = click.call::<Value>(ctx_to_lua_table(&lua, &ctx)?)?;
+            match value {
+                Value::Nil => Json::Null,
+                value => lua.from_value(value)?,
+            }
+        }
+        None => Json::Null,
+    };
+    let list = effects.borrow().clone();
+    Ok(json!({ "ok": true, "state": state, "effects": list }))
 }
 
 fn to_cstring(value: Json) -> *mut c_char {
@@ -581,6 +715,67 @@ pub unsafe extern "C" fn waydir_plugin_invoke(
         Err(e) => return to_cstring(err_json(e)),
     };
     match invoke_impl(path, action_id, ctx_json, perms) {
+        Ok(v) => to_cstring(v),
+        Err(e) => to_cstring(err_json(e)),
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn waydir_plugin_bar_update(
+    path: *const c_char,
+    bar_id: *const c_char,
+    ctx_json: *const c_char,
+    perms: i32,
+) -> *mut c_char {
+    if path.is_null() || bar_id.is_null() || ctx_json.is_null() {
+        return to_cstring(err_json("null argument"));
+    }
+    let path = match CStr::from_ptr(path).to_str() {
+        Ok(s) => s,
+        Err(e) => return to_cstring(err_json(e)),
+    };
+    let bar_id = match CStr::from_ptr(bar_id).to_str() {
+        Ok(s) => s,
+        Err(e) => return to_cstring(err_json(e)),
+    };
+    let ctx_json = match CStr::from_ptr(ctx_json).to_str() {
+        Ok(s) => s,
+        Err(e) => return to_cstring(err_json(e)),
+    };
+    match bar_update_impl(path, bar_id, ctx_json, perms) {
+        Ok(v) => to_cstring(v),
+        Err(e) => to_cstring(err_json(e)),
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn waydir_plugin_bar_click(
+    path: *const c_char,
+    bar_id: *const c_char,
+    item_id: *const c_char,
+    ctx_json: *const c_char,
+    perms: i32,
+) -> *mut c_char {
+    if path.is_null() || bar_id.is_null() || item_id.is_null() || ctx_json.is_null() {
+        return to_cstring(err_json("null argument"));
+    }
+    let path = match CStr::from_ptr(path).to_str() {
+        Ok(s) => s,
+        Err(e) => return to_cstring(err_json(e)),
+    };
+    let bar_id = match CStr::from_ptr(bar_id).to_str() {
+        Ok(s) => s,
+        Err(e) => return to_cstring(err_json(e)),
+    };
+    let item_id = match CStr::from_ptr(item_id).to_str() {
+        Ok(s) => s,
+        Err(e) => return to_cstring(err_json(e)),
+    };
+    let ctx_json = match CStr::from_ptr(ctx_json).to_str() {
+        Ok(s) => s,
+        Err(e) => return to_cstring(err_json(e)),
+    };
+    match bar_click_impl(path, bar_id, item_id, ctx_json, perms) {
         Ok(v) => to_cstring(v),
         Err(e) => to_cstring(err_json(e)),
     }

@@ -20,6 +20,8 @@ import '../git/git_status_bar.dart';
 import '../navigation/navigation_store.dart';
 import '../navigation/search_bar_widget.dart';
 import '../navigation/toolbar.dart';
+import '../plugins/plugin_bar.dart';
+import '../plugins/plugin_store.dart';
 import '../tabs/tab_strip.dart';
 import '../../ui/icons/waydir_icons.dart';
 import '../../ui/theme/app_theme.dart';
@@ -39,6 +41,7 @@ class PaneView extends StatelessWidget {
   final OpenInNewTabCallback? onOpenInNewTab;
   final void Function(NavigationStore store)? onMultiRename;
   final void Function(String fullActionId)? onPluginToolbarAction;
+  final PluginBarEffectsHandler? onPluginBarEffects;
   final int terminalSlot;
   final List<TerminalTab> terminalTabs;
   final TerminalTab? activeTerminal;
@@ -65,6 +68,7 @@ class PaneView extends StatelessWidget {
     this.onOpenInNewTab,
     this.onMultiRename,
     this.onPluginToolbarAction,
+    this.onPluginBarEffects,
     required this.terminalSlot,
     required this.terminalTabs,
     required this.activeTerminal,
@@ -132,6 +136,32 @@ class PaneView extends StatelessWidget {
                     );
                   },
                 ),
+              ),
+              SignalBuilder(
+                builder: (_) {
+                  final bars = PluginStore.instance.paneBarContributions();
+                  final handler = onPluginBarEffects;
+                  if (bars.isEmpty || handler == null) {
+                    return const SizedBox.shrink();
+                  }
+                  final store = pane.tabs.activeTab.value.store;
+                  final paths = store.selectedPaths.value.toList()..sort();
+                  final ctx = {
+                    'scope': 'pane',
+                    'pane': terminalSlot,
+                    'is_active': isActive,
+                    'dir': store.currentPath.value,
+                    'paths': paths,
+                  };
+                  return PluginBarHost(
+                    hostId: 'pane:$terminalSlot',
+                    bars: bars,
+                    contextData: ctx,
+                    contextKey:
+                        '${store.currentPath.value}|${paths.join('\u0001')}|$isActive',
+                    onEffects: handler,
+                  );
+                },
               ),
               SignalBuilder(
                 builder: (_) {

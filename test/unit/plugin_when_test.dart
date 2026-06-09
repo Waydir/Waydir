@@ -147,4 +147,59 @@ void main() {
       expect(fields[1].options.map((o) => o.value), ['a', 'b']);
     });
   });
+
+  group('Plugin bars', () {
+    const manifest = PluginManifest(
+      id: 'bars',
+      name: 'Bars',
+      version: '1.0.0',
+      author: '',
+      description: '',
+      apiVersion: 2,
+      permissions: {'exec'},
+    );
+
+    test('parses bar state items', () {
+      final state = PluginBarState.fromJson({
+        'visible': true,
+        'items': [
+          {'type': 'badge', 'text': '5h 12%', 'level': 'success'},
+          {'type': 'button', 'id': 'refresh', 'icon': 'refresh'},
+        ],
+      });
+      expect(state.visible, isTrue);
+      expect(state.items.length, 2);
+      expect(state.items.first.type, 'badge');
+      expect(state.items.first.level, 'success');
+      expect(state.items[1].id, 'refresh');
+    });
+
+    test('includes bar settings in plugin settings schema', () {
+      const plugin = LoadedPlugin(
+        manifest: manifest,
+        dir: '/tmp/bars',
+        enabled: true,
+        contributions: [],
+        bars: [
+          PluginBarContribution(
+            pluginId: 'bars',
+            barId: 'status',
+            scope: 'global',
+            title: 'Status',
+            icon: null,
+            intervalSeconds: 10,
+            settings: [
+              PluginFormField(id: 'command', type: 'text', label: 'Command'),
+            ],
+            initLuaPath: '/tmp/bars/init.lua',
+            pluginDir: '/tmp/bars',
+            manifest: manifest,
+          ),
+        ],
+      );
+      expect(plugin.settingsSchema.map((f) => f.id), ['command']);
+      expect(plugin.bars.first.runtimeId, 'plugin:bars:bar:status');
+      expect(plugin.bars.first.allowExec, isTrue);
+    });
+  });
 }

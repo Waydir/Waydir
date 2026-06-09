@@ -82,6 +82,71 @@ void main() {
     expect(effects[1], {'type': 'refresh'});
   });
 
+  test('bar update and click return state and effects', () async {
+    final path = writePlugin('''
+      waydir.register_bar({
+        id = "status",
+        scope = "pane",
+        title = "Status",
+        interval = 3,
+        update = function(ctx)
+          return {
+            visible = ctx.dir == "/tmp",
+            items = {
+              { type = "badge", text = "ok", level = "success" },
+              { type = "button", id = "refresh", icon = "refresh" },
+            },
+          }
+        end,
+        click = function(ctx)
+          waydir.toast("clicked " .. ctx.item_id)
+        end,
+      })
+    ''');
+
+    final loaded = jsonDecode(PluginFfi.load(path)!) as Map<String, dynamic>;
+    expect(loaded['ok'], isTrue);
+    final bars = loaded['bars'] as List;
+    expect(bars, hasLength(1));
+    expect((bars.first as Map)['scope'], 'pane');
+
+    final ctx = jsonEncode({
+      'paths': <String>[],
+      'dir': '/tmp',
+      'plugin_dir': tmp.path,
+    });
+    final updated =
+        jsonDecode(
+              (await PluginFfi.barUpdate(
+                initLuaPath: path,
+                barId: 'status',
+                ctxJson: ctx,
+                perms: 0,
+              ))!,
+            )
+            as Map<String, dynamic>;
+    expect(updated['ok'], isTrue);
+    expect((updated['state'] as Map)['visible'], isTrue);
+    expect(((updated['state'] as Map)['items'] as List), hasLength(2));
+
+    final clicked =
+        jsonDecode(
+              (await PluginFfi.barClick(
+                initLuaPath: path,
+                barId: 'status',
+                itemId: 'refresh',
+                ctxJson: ctx,
+                perms: 0,
+              ))!,
+            )
+            as Map<String, dynamic>;
+    expect(clicked['ok'], isTrue);
+    expect((clicked['effects'] as List).first, {
+      'type': 'toast',
+      'message': 'clicked refresh',
+    });
+  });
+
   test('exec is denied without permission', () async {
     final path = writePlugin('''
       waydir.register({

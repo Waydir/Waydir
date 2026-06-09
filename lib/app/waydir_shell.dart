@@ -32,6 +32,7 @@ import '../features/panes/pane_view.dart';
 import '../features/panes/pane_divider.dart';
 import '../features/panes/shell_store.dart';
 import '../features/panes/terminal_tab.dart';
+import '../features/plugins/plugin_bar.dart';
 import '../features/plugins/plugin_form_dialog.dart';
 import '../features/plugins/plugin_icons.dart';
 import '../features/plugins/plugin_models.dart';
@@ -209,6 +210,8 @@ class _WaydirShellState extends State<WaydirShell>
       onOpenInNewTab: _openInNewTab,
       onMultiRename: _multiRename,
       onPluginToolbarAction: (id) => _runPluginAction(id, background: true),
+      onPluginBarEffects: (effects, target) =>
+          _applyPluginEffects(effects, target, background: true),
       terminalSlot: slot,
       terminalTabs: _shell.terminalsForSlot(slot),
       activeTerminal: _shell.activeTerminalForSlot(slot),
@@ -276,6 +279,22 @@ class _WaydirShellState extends State<WaydirShell>
     );
   }
 
+  Map<String, dynamic> _pluginBarContext(
+    NavigationStore store, {
+    required String scope,
+    int? pane,
+    bool isActive = true,
+  }) {
+    final paths = store.selectedPaths.value.toList()..sort();
+    return {
+      'scope': scope,
+      'pane': pane,
+      'is_active': isActive,
+      'dir': store.currentPath.value,
+      'paths': paths,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -322,6 +341,31 @@ class _WaydirShellState extends State<WaydirShell>
                                 Expanded(child: _buildPaneArea()),
                               ],
                             ),
+                          ),
+                          SignalBuilder(
+                            builder: (context) {
+                              final bars = PluginStore.instance
+                                  .globalBarContributions();
+                              if (bars.isEmpty) {
+                                return const SizedBox.shrink();
+                              }
+                              final ctx = _pluginBarContext(
+                                _active,
+                                scope: 'global',
+                              );
+                              return PluginBarHost(
+                                hostId: 'global',
+                                bars: bars,
+                                contextData: ctx,
+                                contextKey: jsonEncode(ctx),
+                                onEffects: (effects, target) =>
+                                    _applyPluginEffects(
+                                      effects,
+                                      target,
+                                      background: true,
+                                    ),
+                              );
+                            },
                           ),
                           SignalBuilder(
                             builder: (context) => StatusBar(

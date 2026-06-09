@@ -128,6 +128,7 @@ class PluginStore {
         dir: dirPath,
         enabled: false,
         contributions: const [],
+        bars: const [],
         error: 'manifest: $e',
       );
     }
@@ -138,6 +139,7 @@ class PluginStore {
         dir: dirPath,
         enabled: false,
         contributions: const [],
+        bars: const [],
         error:
             'api_version ${manifest.apiVersion} not supported '
             '(this build: $supportedApiVersion)',
@@ -151,6 +153,7 @@ class PluginStore {
         dir: dirPath,
         enabled: false,
         contributions: const [],
+        bars: const [],
         error: 'native core unavailable',
       );
     }
@@ -164,6 +167,7 @@ class PluginStore {
         dir: dirPath,
         enabled: false,
         contributions: const [],
+        bars: const [],
         error: 'load result: $e',
       );
     }
@@ -174,6 +178,7 @@ class PluginStore {
         dir: dirPath,
         enabled: false,
         contributions: const [],
+        bars: const [],
         error: parsed['error']?.toString() ?? 'unknown load error',
       );
     }
@@ -210,11 +215,34 @@ class PluginStore {
       );
     }
 
+    final bars = <PluginBarContribution>[];
+    for (final item in (parsed['bars'] as List? ?? const [])) {
+      final c = item as Map<String, dynamic>;
+      final barId = c['id'] as String?;
+      if (barId == null || barId.trim().isEmpty) continue;
+      final interval = (c['interval'] as num?)?.toInt() ?? 10;
+      bars.add(
+        PluginBarContribution(
+          pluginId: manifest.id,
+          barId: barId,
+          scope: (c['scope'] as String? ?? 'global').toLowerCase(),
+          title: c['title'] as String? ?? barId,
+          icon: c['icon'] as String?,
+          intervalSeconds: interval.clamp(2, 3600),
+          settings: PluginFormField.listFromJson(c['settings']),
+          initLuaPath: initFile.path,
+          pluginDir: dirPath,
+          manifest: manifest,
+        ),
+      );
+    }
+
     return LoadedPlugin(
       manifest: manifest,
       dir: dirPath,
       enabled: true,
       contributions: contributions,
+      bars: bars,
     );
   }
 
@@ -230,6 +258,15 @@ class PluginStore {
   /// Re-derives state that depends on which plugins are active (e.g. after the
   /// user enables/disables one). Call when the disabled set changes.
   void applyEnablement() => _syncShortcuts();
+
+  Iterable<PluginBarContribution> get _activeBars sync* {
+    final disabled = PluginSettingsStore.instance.disabled.value;
+    for (final plugin in plugins.value) {
+      if (!plugin.enabled || plugin.error != null) continue;
+      if (disabled.contains(plugin.manifest.id)) continue;
+      yield* plugin.bars;
+    }
+  }
 
   List<PluginContribution> contextContributionsFor(List<FileEntry> entries) {
     final out = <PluginContribution>[];
@@ -269,6 +306,20 @@ class PluginStore {
     ];
   }
 
+  List<PluginBarContribution> globalBarContributions() {
+    return [
+      for (final b in _activeBars)
+        if (b.scope == 'global') b,
+    ];
+  }
+
+  List<PluginBarContribution> paneBarContributions() {
+    return [
+      for (final b in _activeBars)
+        if (b.scope == 'pane') b,
+    ];
+  }
+
   PluginContribution? contributionByFullId(String fullActionId) {
     for (final plugin in plugins.value) {
       for (final c in plugin.contributions) {
@@ -303,6 +354,63 @@ class PluginStore {
         PluginEffect('error', {'message': 'native core unavailable'}),
       ];
     }
+    return _parseEffectsResponse(raw);
+  }
+
+  Future<PluginBarInvokeResult> updateBar(
+    PluginBarContribution bar, {
+    required Map<String, dynamic> context,
+  }) async {
+    final ctx = _barContext(bar, context);
+    final raw = await PluginFfi.barUpdate(
+      initLuaPath: bar.initLuaPath,
+      barId: bar.barId,
+      ctxJson: jsonEncode(ctx),
+      perms: bar.manifest.permsBitmask,
+    );
+    if (raw == null) {
+      return PluginBarInvokeResult(
+        state: PluginBarState.error('native core unavailable'),
+        effects: const [],
+      );
+    }
+    return _parseBarResponse(raw);
+  }
+
+  Future<PluginBarInvokeResult> clickBar(
+    PluginBarContribution bar, {
+    required String itemId,
+    required Map<String, dynamic> context,
+  }) async {
+    final ctx = _barContext(bar, context);
+    final raw = await PluginFfi.barClick(
+      initLuaPath: bar.initLuaPath,
+      barId: bar.barId,
+      itemId: itemId,
+      ctxJson: jsonEncode(ctx),
+      perms: bar.manifest.permsBitmask,
+    );
+    if (raw == null) {
+      return PluginBarInvokeResult(
+        state: PluginBarState.error('native core unavailable'),
+        effects: const [],
+      );
+    }
+    return _parseBarResponse(raw);
+  }
+
+  Map<String, dynamic> _barContext(
+    PluginBarContribution bar,
+    Map<String, dynamic> context,
+  ) {
+    return {
+      ...context,
+      'plugin_dir': bar.pluginDir,
+      'settings': mergedSettings(bar.pluginId),
+    };
+  }
+
+  List<PluginEffect> _parseEffectsResponse(String raw) {
     try {
       final parsed = jsonDecode(raw) as Map<String, dynamic>;
       if (parsed['ok'] != true) {
@@ -323,6 +431,41 @@ class PluginStore {
       return [
         PluginEffect('error', {'message': 'invalid plugin response'}),
       ];
+    }
+  }
+
+  PluginBarInvokeResult _parseBarResponse(String raw) {
+    try {
+      final parsed = jsonDecode(raw) as Map<String, dynamic>;
+      if (parsed['ok'] != true) {
+        final message = parsed['error']?.toString() ?? 'unknown error';
+        log.error('plugins', 'bar invoke failed: $message');
+        return PluginBarInvokeResult(
+          state: PluginBarState.error(message),
+          effects: [
+            PluginEffect('error', {'message': message}),
+          ],
+        );
+      }
+      final effects = <PluginEffect>[];
+      for (final e in (parsed['effects'] as List? ?? const [])) {
+        final m = (e as Map).cast<String, dynamic>();
+        effects.add(PluginEffect(m['type'] as String? ?? '', m));
+      }
+      return PluginBarInvokeResult(
+        state: parsed.containsKey('state')
+            ? PluginBarState.fromJson(parsed['state'])
+            : null,
+        effects: effects,
+      );
+    } catch (e) {
+      log.error('plugins', 'bar invoke parse: $e');
+      return PluginBarInvokeResult(
+        state: PluginBarState.error('invalid plugin response'),
+        effects: [
+          PluginEffect('error', {'message': 'invalid plugin response'}),
+        ],
+      );
     }
   }
 

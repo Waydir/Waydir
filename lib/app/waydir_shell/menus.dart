@@ -440,7 +440,7 @@ mixin _WaydirMenuMixin
     }
   }
 
-  void _notifyPluginError(PluginContribution c, String? message) {
+  void _notifyPluginError(PluginRuntimeTarget c, String? message) {
     final clean = _cleanPluginError(message);
     _notificationStore.add(
       AppNotification(
@@ -461,7 +461,7 @@ mixin _WaydirMenuMixin
 
   Future<void> _applyPluginEffects(
     List<PluginEffect> effects,
-    PluginContribution contribution, {
+    PluginRuntimeTarget contribution, {
     required bool background,
     int depth = 0,
   }) async {
@@ -499,18 +499,20 @@ mixin _WaydirMenuMixin
         case 'task':
           _runPluginTask(contribution, effect);
         case 'dialog':
-          await _showPluginDialog(
-            contribution,
-            effect,
-            background: background,
-            depth: depth,
-          );
+          if (contribution is PluginContribution) {
+            await _showPluginDialog(
+              contribution,
+              effect,
+              background: background,
+              depth: depth,
+            );
+          }
       }
       if (!mounted) return;
     }
   }
 
-  void _notifyFromPlugin(PluginContribution c, PluginEffect effect) {
+  void _notifyFromPlugin(PluginRuntimeTarget c, PluginEffect effect) {
     final level = (effect.data['level'] as String? ?? 'info').toLowerCase();
     final persistent = effect.data['persistent'] == true;
     Color? accent;
@@ -558,7 +560,7 @@ mixin _WaydirMenuMixin
   }
 
   String? _pluginCustomOperationKey(
-    PluginContribution contribution,
+    PluginRuntimeTarget contribution,
     PluginEffect effect,
   ) {
     final id = effect.data['id'] as String?;
@@ -567,7 +569,7 @@ mixin _WaydirMenuMixin
   }
 
   void _startPluginCustomOperation(
-    PluginContribution contribution,
+    PluginRuntimeTarget contribution,
     PluginEffect effect,
   ) {
     final key = _pluginCustomOperationKey(contribution, effect);
@@ -592,7 +594,7 @@ mixin _WaydirMenuMixin
   }
 
   void _updatePluginCustomOperation(
-    PluginContribution contribution,
+    PluginRuntimeTarget contribution,
     PluginEffect effect,
   ) {
     final key = _pluginCustomOperationKey(contribution, effect);
@@ -614,7 +616,7 @@ mixin _WaydirMenuMixin
   }
 
   void _finishPluginCustomOperation(
-    PluginContribution contribution,
+    PluginRuntimeTarget contribution,
     PluginEffect effect,
   ) {
     final key = _pluginCustomOperationKey(contribution, effect);
@@ -663,7 +665,10 @@ mixin _WaydirMenuMixin
     return result == actionLabel;
   }
 
-  Future<void> _runPluginTask(PluginContribution c, PluginEffect effect) async {
+  Future<void> _runPluginTask(
+    PluginRuntimeTarget c,
+    PluginEffect effect,
+  ) async {
     if (!c.allowExec) return;
     final cmd = effect.data['cmd'] as String?;
     if (cmd == null) return;

@@ -16,11 +16,16 @@ state. A plugin can add entries to:
 - the top **Plugins** menu;
 - the location toolbar;
 - keyboard shortcuts.
+- global and per-pane status bars.
 
 Lua handles *when* an action is shown and *where* it runs. Heavy work can be
 delegated to external programs with `waydir.exec` or `waydir.run_task`, or to
 Waydir's own queued file operations with `waydir.copy`, `waydir.move`,
 `waydir.trash`, and related APIs.
+
+Plugins can also register compact bars for continuously visible information:
+global bars render above Waydir's bottom status bar, and pane bars render with
+pane-local context above pane status strips such as Git.
 
 ## Quick start
 
@@ -117,12 +122,70 @@ entries sit next to New Folder, are always visible, and also act on the current
 folder (`ctx.dir`); the `title` is their tooltip.
 
 Named builtin glyphs for `icon` (no image file needed): `archive`, `bell`,
-`bookmark`, `bug`, `calendar`, `check`, `clipboard`, `clock`, `code`, `copy`,
-`desktop`, `download`, `eye`, `file`, `file-audio`, `file-code`, `file-image`,
-`file-pdf`, `file-text`, `file-zip`, `folder`, `folder-open`, `folder-plus`,
-`gear`, `git-branch`, `hard-drive`, `image`, `info`, `keyboard`, `list`,
-`magic-wand`, `music`, `note`, `palette`, `pencil`, `plus`, `ruler`, `scissors`,
-`search`, `sliders`, `terminal`, `trash`, `tree`, `usb`, `video`, `warning`.
+`arrow-clockwise`, `bookmark`, `bug`, `calendar`, `check`, `clipboard`,
+`clock`, `code`, `copy`, `desktop`, `download`, `eye`, `file`, `file-audio`,
+`file-code`, `file-image`, `file-pdf`, `file-text`, `file-zip`, `folder`,
+`folder-open`, `folder-plus`, `gear`, `git-branch`, `hard-drive`, `image`,
+`info`, `keyboard`, `list`, `magic-wand`, `music`, `note`, `palette`, `pencil`,
+`plus`, `refresh`, `ruler`, `scissors`, `search`, `sliders`, `terminal`,
+`trash`, `tree`, `usb`, `video`, `warning`.
+
+## Status bars
+
+Register a bar with `waydir.register_bar`. The `update(ctx)` function is called
+on load, when its context changes, and every `interval` seconds. Return
+`visible = false` to hide the bar for the current context.
+
+```lua
+waydir.register_bar({
+  id = "project_status",
+  scope = "pane",
+  title = "Project",
+  icon = "code",
+  interval = 10,
+  update = function(ctx)
+    if not ctx.dir:match("/src") then
+      return { visible = false }
+    end
+    return {
+      visible = true,
+      items = {
+        { type = "badge", text = "src", level = "info" },
+        { type = "text", text = ctx.dir },
+        { type = "button", id = "refresh", action = "refresh", icon = "refresh", tooltip = "Refresh" },
+      },
+    }
+  end,
+})
+```
+
+| Field | Meaning |
+|-------|---------|
+| `id` | bar id inside this plugin |
+| `scope` | `"global"` (above Waydir's bottom status bar) or `"pane"` (per pane, above pane status bars) |
+| `title` | label shown at the start of the bar |
+| `icon` | named builtin glyph or bundled image path |
+| `interval` | refresh cadence in seconds, clamped between 2 and 3600 |
+| `settings` | optional schema merged with the plugin's normal settings |
+| `update(ctx)` | returns the current visible state |
+| `click(ctx)` | optional handler for button item clicks; receives `ctx.item_id` |
+
+Bar `ctx` includes the usual `ctx.dir`, `ctx.paths`, `ctx.count`,
+`ctx.plugin_dir`, and `ctx.settings`. It also includes `ctx.scope`,
+`ctx.pane`, and `ctx.is_active`.
+
+`items` is a list of compact UI elements:
+
+| Item type | Fields |
+|-----------|--------|
+| `text` | `text`, optional `level` |
+| `badge` | `text`, optional `level` |
+| `icon` | `icon`, optional `level` |
+| `button` | `id`, optional `text`, `icon`, `tooltip`, `action` |
+| `separator` | no fields |
+
+`level` can be `info`, `success`, `warn`, or `error`. A button with
+`action = "refresh"` refreshes the bar without calling `click`.
 
 ### `when` - filter the selection
 

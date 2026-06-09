@@ -9,6 +9,7 @@ const IconData defaultPluginGlyph = WaydirIconsRegular.gearSix;
 /// shipping an image file. Keep names stable - they are part of the plugin API.
 const Map<String, IconData> _pluginGlyphs = {
   'archive': WaydirIconsRegular.archive,
+  'arrow-clockwise': WaydirIconsRegular.arrowClockwise,
   'bell': WaydirIconsRegular.bell,
   'bookmark': WaydirIconsRegular.bookmarkSimple,
   'bug': WaydirIconsRegular.bug,
@@ -44,6 +45,7 @@ const Map<String, IconData> _pluginGlyphs = {
   'palette': WaydirIconsRegular.palette,
   'pencil': WaydirIconsRegular.pencilSimple,
   'plus': WaydirIconsRegular.plus,
+  'refresh': WaydirIconsRegular.arrowClockwise,
   'ruler': WaydirIconsRegular.ruler,
   'scissors': WaydirIconsRegular.scissors,
   'search': WaydirIconsRegular.magnifyingGlass,

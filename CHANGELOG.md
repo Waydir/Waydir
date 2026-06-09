@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Quick Look shortcuts now have their own section in the keyboard shortcuts, and a hint bar at the bottom of the Quick Look window shows the available keys. The close key can be remapped (defaults to Space).
+- Plugins can register global and per-pane status bars with periodically refreshed text, badges, icons and buttons.
 
 ### Fixed
 - Quick Look: arrow keys keep moving between files even when an editable file is open; Ctrl/⌥ + arrows switch files while editing.
