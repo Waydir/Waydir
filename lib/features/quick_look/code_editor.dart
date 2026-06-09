@@ -90,15 +90,16 @@ class _CodeEditorState extends State<CodeEditor> {
     _ctrl.text = widget.initial;
     _lines = '\n'.allMatches(widget.initial).length + 1;
     _ctrl.addListener(_onChanged);
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => widget.editorActive.value = true,
-    );
+    _focus.addListener(_onFocusChange);
   }
+
+  void _onFocusChange() => widget.editorActive.value = _focus.hasFocus;
 
   @override
   void dispose() {
     _ctrl.removeListener(_onChanged);
     _ctrl.dispose();
+    _focus.removeListener(_onFocusChange);
     _focus.dispose();
     _vScroll.dispose();
     widget.editorActive.value = false;
@@ -249,7 +250,6 @@ class _EditorField extends StatelessWidget {
         controller: controller,
         focusNode: focusNode,
         scrollController: scrollController,
-        autofocus: true,
         expands: true,
         maxLines: null,
         cursorColor: AppColors.accent,

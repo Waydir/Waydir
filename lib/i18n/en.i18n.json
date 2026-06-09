@@ -426,6 +426,7 @@
     "menuLabel": "Shortcuts",
     "categories": {
       "navigation": "Navigation",
+      "quickLook": "Quick Look",
       "view": "View",
       "tabs": "Tabs",
       "panes": "Panes",
@@ -449,7 +450,13 @@
     "goForward": "Go forward",
     "refresh": "Refresh",
     "focusPath": "Focus path bar",
-    "quickLook": "Quick look",
+    "quickLook": "Open Quick Look",
+    "quickLookClose": "Close Quick Look",
+    "quickLookPrevFile": "Previous file",
+    "quickLookNextFile": "Next file",
+    "quickLookPrevFileEdit": "Previous file while editing",
+    "quickLookNextFileEdit": "Next file while editing",
+    "quickLookSave": "Save changes",
     "cursorUp": "Move up",
     "cursorDown": "Move down",
     "pageUp": "Move up one page",
@@ -546,7 +553,9 @@
     "typeBreakdown": "Type breakdown",
     "noExtension": "no extension",
     "sectionImage": "Image",
-    "sectionText": "Text"
+    "sectionText": "Text",
+    "hintSwitchFile": "Switch file",
+    "hintClose": "Close"
   },
   "toast": {
     "copiedItems(one)": "Copied 1 item",

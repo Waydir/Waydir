@@ -342,7 +342,11 @@ mixin _WaydirKeyboardMixin
     }
 
     if (AppShortcuts.matches('rename', key)) {
-      store.startRename();
+      if (store.selectedCount.value >= 2) {
+        _multiRename(store);
+      } else {
+        store.startRename();
+      }
       return KeyEventResult.handled;
     }
 

@@ -734,8 +734,26 @@ class Translations$keybindings$en {
 	/// en: 'Focus path bar'
 	String get focusPath => 'Focus path bar';
 
-	/// en: 'Quick look'
-	String get quickLook => 'Quick look';
+	/// en: 'Open Quick Look'
+	String get quickLook => 'Open Quick Look';
+
+	/// en: 'Close Quick Look'
+	String get quickLookClose => 'Close Quick Look';
+
+	/// en: 'Previous file'
+	String get quickLookPrevFile => 'Previous file';
+
+	/// en: 'Next file'
+	String get quickLookNextFile => 'Next file';
+
+	/// en: 'Previous file while editing'
+	String get quickLookPrevFileEdit => 'Previous file while editing';
+
+	/// en: 'Next file while editing'
+	String get quickLookNextFileEdit => 'Next file while editing';
+
+	/// en: 'Save changes'
+	String get quickLookSave => 'Save changes';
 
 	/// en: 'Move up'
 	String get cursorUp => 'Move up';
@@ -1033,6 +1051,12 @@ class Translations$quickLook$en {
 
 	/// en: 'Text'
 	String get sectionText => 'Text';
+
+	/// en: 'Switch file'
+	String get hintSwitchFile => 'Switch file';
+
+	/// en: 'Close'
+	String get hintClose => 'Close';
 }
 
 // Path: toast
@@ -2590,6 +2614,9 @@ class Translations$keybindings$categories$en {
 	/// en: 'Navigation'
 	String get navigation => 'Navigation';
 
+	/// en: 'Quick Look'
+	String get quickLook => 'Quick Look';
+
 	/// en: 'View'
 	String get view => 'View';
 
@@ -3324,6 +3351,7 @@ extension on Translations {
 			'keybindings.title' => 'Keyboard Shortcuts',
 			'keybindings.menuLabel' => 'Shortcuts',
 			'keybindings.categories.navigation' => 'Navigation',
+			'keybindings.categories.quickLook' => 'Quick Look',
 			'keybindings.categories.view' => 'View',
 			'keybindings.categories.tabs' => 'Tabs',
 			'keybindings.categories.panes' => 'Panes',
@@ -3346,7 +3374,13 @@ extension on Translations {
 			'keybindings.goForward' => 'Go forward',
 			'keybindings.refresh' => 'Refresh',
 			'keybindings.focusPath' => 'Focus path bar',
-			'keybindings.quickLook' => 'Quick look',
+			'keybindings.quickLook' => 'Open Quick Look',
+			'keybindings.quickLookClose' => 'Close Quick Look',
+			'keybindings.quickLookPrevFile' => 'Previous file',
+			'keybindings.quickLookNextFile' => 'Next file',
+			'keybindings.quickLookPrevFileEdit' => 'Previous file while editing',
+			'keybindings.quickLookNextFileEdit' => 'Next file while editing',
+			'keybindings.quickLookSave' => 'Save changes',
 			'keybindings.cursorUp' => 'Move up',
 			'keybindings.cursorDown' => 'Move down',
 			'keybindings.pageUp' => 'Move up one page',
@@ -3440,6 +3474,8 @@ extension on Translations {
 			'quickLook.noExtension' => 'no extension',
 			'quickLook.sectionImage' => 'Image',
 			'quickLook.sectionText' => 'Text',
+			'quickLook.hintSwitchFile' => 'Switch file',
+			'quickLook.hintClose' => 'Close',
 			'toast.copiedItems' => ({required Object count}) => 'Copied ${count} items',
 			'toast.cutItems' => ({required Object count}) => 'Cut ${count} items',
 			'toast.selectionSaved' => ({required Object count, required Object path}) => 'Saved ${count} names to ${path}',
@@ -3474,6 +3510,8 @@ extension on Translations {
 			'fileView.date.daysAgo' => ({required Object count}) => '${count}d ago',
 			'fileView.date.weeksAgo' => ({required Object count}) => '${count}w ago',
 			'fileView.date.monthsAgo' => ({required Object count}) => '${count}mo ago',
+			_ => null,
+		} ?? switch (path) {
 			'fileView.date.yearsAgo' => ({required Object count}) => '${count}y ago',
 			'fileView.columns.name' => 'Name',
 			'fileView.columns.size' => 'Size',
@@ -3483,8 +3521,6 @@ extension on Translations {
 			'sidebar.devices' => 'Devices',
 			'sidebar.home' => 'Home',
 			'sidebar.desktop' => 'Desktop',
-			_ => null,
-		} ?? switch (path) {
 			'sidebar.documents' => 'Documents',
 			'sidebar.downloads' => 'Downloads',
 			'sidebar.pictures' => 'Pictures',
