@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-06-09
+
 ### Added
 - Quick Look shortcuts now have their own section in the keyboard shortcuts, and a hint bar at the bottom of the Quick Look window shows the available keys. The close key can be remapped (defaults to Space).
 - Plugins can register global and per-pane status bars with periodically refreshed text, badges, icons and buttons.
@@ -270,7 +272,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Custom dark theme and custom title bar.
 - Settings store with persistent user preferences.
 
-[Unreleased]: https://github.com/Waydir/Waydir/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/Waydir/Waydir/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/Waydir/Waydir/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/Waydir/Waydir/compare/v0.10.1...v0.11.0
 [0.10.1]: https://github.com/Waydir/Waydir/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/Waydir/Waydir/compare/v0.9.1...v0.10.0
