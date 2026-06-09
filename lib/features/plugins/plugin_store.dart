@@ -297,13 +297,18 @@ class PluginStore {
       ctxJson: ctxJson,
       perms: contribution.manifest.permsBitmask,
     );
-    if (raw == null) return const [];
+    if (raw == null) {
+      return [
+        PluginEffect('error', {'message': 'native core unavailable'}),
+      ];
+    }
     try {
       final parsed = jsonDecode(raw) as Map<String, dynamic>;
       if (parsed['ok'] != true) {
-        log.error('plugins', 'invoke failed: ${parsed['error']}');
+        final message = parsed['error']?.toString() ?? 'unknown error';
+        log.error('plugins', 'invoke failed: $message');
         return [
-          PluginEffect('log', {'message': parsed['error']?.toString()}),
+          PluginEffect('error', {'message': message}),
         ];
       }
       final effects = <PluginEffect>[];
@@ -314,7 +319,9 @@ class PluginStore {
       return effects;
     } catch (e) {
       log.error('plugins', 'invoke parse: $e');
-      return const [];
+      return [
+        PluginEffect('error', {'message': 'invalid plugin response'}),
+      ];
     }
   }
 

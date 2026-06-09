@@ -162,6 +162,7 @@
       "taskDone": "Done",
       "taskFailed": "Failed (exit $code)",
       "taskFailedError": "Failed: $error",
+      "actionFailed": "Plugin action failed",
       "taskTimeout": "Timed out",
       "enable": "Enable",
       "disable": "Disable",

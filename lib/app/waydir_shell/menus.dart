@@ -413,23 +413,50 @@ mixin _WaydirMenuMixin
       fullActionId,
     );
     if (contribution == null) return;
-    final store = _active;
-    final paths = background
-        ? const <String>[]
-        : store.selectedEntries.map((e) => e.realPath).toList();
-    final effects = await PluginStore.instance.invoke(
-      contribution,
-      paths: paths,
-      dir: store.currentPath.value,
-      form: form,
+    try {
+      final store = _active;
+      final paths = background
+          ? const <String>[]
+          : store.selectedEntries.map((e) => e.realPath).toList();
+      final effects = await PluginStore.instance.invoke(
+        contribution,
+        paths: paths,
+        dir: store.currentPath.value,
+        form: form,
+      );
+      if (!mounted) return;
+      await _applyPluginEffects(
+        effects,
+        contribution,
+        background: background,
+        depth: depth,
+      );
+    } catch (e, st) {
+      log.error(
+        'plugins',
+        'action ${contribution.fullActionId} failed: $e\n$st',
+      );
+      if (mounted) _notifyPluginError(contribution, '$e');
+    }
+  }
+
+  void _notifyPluginError(PluginContribution c, String? message) {
+    final clean = _cleanPluginError(message);
+    _notificationStore.add(
+      AppNotification(
+        title: c.manifest.name,
+        message: clean.isNotEmpty ? clean : t.preferences.plugins.actionFailed,
+        type: NotificationType.autoDismiss,
+        icon: WaydirIconsRegular.gearSix,
+        accentColor: AppColors.danger,
+      ),
     );
-    if (!mounted) return;
-    await _applyPluginEffects(
-      effects,
-      contribution,
-      background: background,
-      depth: depth,
-    );
+  }
+
+  String _cleanPluginError(String? raw) {
+    if (raw == null) return '';
+    final firstLine = raw.split('\n').first.trim();
+    return firstLine.replaceFirst(RegExp(r'^runtime error:\s*'), '');
   }
 
   Future<void> _applyPluginEffects(
@@ -450,6 +477,8 @@ mixin _WaydirMenuMixin
           _active.refresh();
         case 'log':
           log.warn('plugins', effect.message ?? '');
+        case 'error':
+          _notifyPluginError(contribution, effect.message);
         case 'set_setting':
           final key = effect.data['key'] as String?;
           if (key != null) {

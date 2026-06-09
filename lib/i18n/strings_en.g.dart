@@ -2099,6 +2099,9 @@ class Translations$preferences$plugins$en {
 	/// en: 'Failed: $error'
 	String taskFailedError({required Object error}) => 'Failed: ${error}';
 
+	/// en: 'Plugin action failed'
+	String get actionFailed => 'Plugin action failed';
+
 	/// en: 'Timed out'
 	String get taskTimeout => 'Timed out';
 
@@ -3133,6 +3136,7 @@ extension on Translations {
 			'preferences.plugins.taskDone' => 'Done',
 			'preferences.plugins.taskFailed' => ({required Object code}) => 'Failed (exit ${code})',
 			'preferences.plugins.taskFailedError' => ({required Object error}) => 'Failed: ${error}',
+			'preferences.plugins.actionFailed' => 'Plugin action failed',
 			'preferences.plugins.taskTimeout' => 'Timed out',
 			'preferences.plugins.enable' => 'Enable',
 			'preferences.plugins.disable' => 'Disable',
@@ -3509,9 +3513,9 @@ extension on Translations {
 			'fileView.date.hoursAgo' => ({required Object count}) => '${count}h ago',
 			'fileView.date.daysAgo' => ({required Object count}) => '${count}d ago',
 			'fileView.date.weeksAgo' => ({required Object count}) => '${count}w ago',
-			'fileView.date.monthsAgo' => ({required Object count}) => '${count}mo ago',
 			_ => null,
 		} ?? switch (path) {
+			'fileView.date.monthsAgo' => ({required Object count}) => '${count}mo ago',
 			'fileView.date.yearsAgo' => ({required Object count}) => '${count}y ago',
 			'fileView.columns.name' => 'Name',
 			'fileView.columns.size' => 'Size',
