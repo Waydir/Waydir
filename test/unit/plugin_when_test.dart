@@ -188,6 +188,7 @@ void main() {
             title: 'Status',
             icon: null,
             intervalSeconds: 10,
+            refreshOnContextChange: true,
             settings: [
               PluginFormField(id: 'command', type: 'text', label: 'Command'),
             ],

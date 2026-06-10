@@ -231,6 +231,7 @@ class PluginBarContribution implements PluginRuntimeTarget {
   final String title;
   final String? icon;
   final int intervalSeconds;
+  final bool refreshOnContextChange;
   final List<PluginFormField> settings;
   final String initLuaPath;
   final String pluginDir;
@@ -244,6 +245,7 @@ class PluginBarContribution implements PluginRuntimeTarget {
     required this.title,
     required this.icon,
     required this.intervalSeconds,
+    required this.refreshOnContextChange,
     required this.settings,
     required this.initLuaPath,
     required this.pluginDir,
