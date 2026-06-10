@@ -634,6 +634,10 @@
     "network": "Network",
     "bookmarks": "Bookmarks",
     "dropBookmark": "Drop folder to bookmark",
+    "editLayout": "Edit sidebar",
+    "editDone": "Done",
+    "hide": "Hide",
+    "show": "Show",
     "connectToServer": "Connect to server",
     "connectDialog": {
       "title": "Connect to server",

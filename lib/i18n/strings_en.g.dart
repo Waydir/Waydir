@@ -1214,6 +1214,18 @@ class Translations$sidebar$en {
 	/// en: 'Drop folder to bookmark'
 	String get dropBookmark => 'Drop folder to bookmark';
 
+	/// en: 'Edit sidebar'
+	String get editLayout => 'Edit sidebar';
+
+	/// en: 'Done'
+	String get editDone => 'Done';
+
+	/// en: 'Hide'
+	String get hide => 'Hide';
+
+	/// en: 'Show'
+	String get show => 'Show';
+
 	/// en: 'Connect to server'
 	String get connectToServer => 'Connect to server';
 
@@ -3511,6 +3523,10 @@ extension on Translations {
 			'sidebar.network' => 'Network',
 			'sidebar.bookmarks' => 'Bookmarks',
 			'sidebar.dropBookmark' => 'Drop folder to bookmark',
+			'sidebar.editLayout' => 'Edit sidebar',
+			'sidebar.editDone' => 'Done',
+			'sidebar.hide' => 'Hide',
+			'sidebar.show' => 'Show',
 			'sidebar.connectToServer' => 'Connect to server',
 			'sidebar.connectDialog.title' => 'Connect to server',
 			'sidebar.connectDialog.host' => 'Server',
