@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Sidebar edit mode: reorder sections and items by dragging, and hide ones you don't use. Every item now has a right-click menu (open, copy path, properties, eject, and more).
+- File and terminal tabs can now be reordered by dragging.
 
 ### Changed
 - Reworked sidebar spacing for consistent alignment, and renamed the Favorites section to Places.

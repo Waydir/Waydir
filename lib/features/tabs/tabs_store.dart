@@ -76,6 +76,20 @@ class TabsStore {
     }
   }
 
+  void reorderTab(int from, int to) {
+    final list = tabs.value;
+    if (from < 0 || from >= list.length) return;
+    if (to < 0 || to >= list.length) return;
+    if (from == to) return;
+
+    final activeId = activeTab.value.id;
+    final next = List<TabState>.of(list);
+    final tab = next.removeAt(from);
+    next.insert(to, tab);
+    tabs.value = next;
+    activeIndex.value = next.indexWhere((t) => t.id == activeId);
+  }
+
   void dispose() {
     for (final tab in tabs.value) {
       tab.store.dispose();

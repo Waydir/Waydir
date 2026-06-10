@@ -69,10 +69,11 @@ class _TabChipState extends State<TabChip> {
               message: fullPath,
               child: Container(
                 height: 30,
-                constraints: const BoxConstraints(minWidth: 140, maxWidth: 220),
+                constraints: const BoxConstraints(minWidth: 72, maxWidth: 220),
                 decoration: BoxDecoration(color: bg, border: border),
                 padding: const EdgeInsets.only(left: 10, right: 4),
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
                       WaydirIconsRegular.folder,
@@ -80,7 +81,7 @@ class _TabChipState extends State<TabChip> {
                       color: isActive ? AppColors.accent : fg,
                     ),
                     const SizedBox(width: 7),
-                    Expanded(
+                    Flexible(
                       child: Text(
                         title,
                         overflow: TextOverflow.ellipsis,

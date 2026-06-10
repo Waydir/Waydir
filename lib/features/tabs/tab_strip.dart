@@ -22,23 +22,37 @@ class TabStrip extends StatelessWidget {
             color: isActive ? AppColors.bgSidebar : AppColors.bg,
             border: Border(bottom: BorderSide(color: AppColors.bgDivider)),
           ),
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.zero,
-            itemCount: tabs.length + 1,
-            separatorBuilder: (_, _) => const SizedBox(width: 0),
-            itemBuilder: (context, i) {
-              if (i == tabs.length) {
-                return _AddButton(
-                  onTap: () {
-                    final activePath =
-                        tabsStore.activeTab.value.store.currentPath.value;
-                    tabsStore.addTab(activePath);
+          child: Row(
+            children: [
+              Expanded(
+                child: ReorderableListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  buildDefaultDragHandles: false,
+                  padding: EdgeInsets.zero,
+                  itemCount: tabs.length,
+                  onReorderItem: tabsStore.reorderTab,
+                  itemBuilder: (context, index) {
+                    final tab = tabs[index];
+                    return ReorderableDragStartListener(
+                      key: ValueKey('tab:${tab.id}'),
+                      index: index,
+                      child: TabChip(
+                        tab: tab,
+                        index: index,
+                        tabsStore: tabsStore,
+                      ),
+                    );
                   },
-                );
-              }
-              return TabChip(tab: tabs[i], index: i, tabsStore: tabsStore);
-            },
+                ),
+              ),
+              _AddButton(
+                onTap: () {
+                  final activePath =
+                      tabsStore.activeTab.value.store.currentPath.value;
+                  tabsStore.addTab(activePath);
+                },
+              ),
+            ],
           ),
         );
       },

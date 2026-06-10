@@ -368,6 +368,27 @@ class ShellStore {
     setActiveTerminal(slot, tabs[next].id);
   }
 
+  void reorderTerminalTab(int slot, int from, int to) {
+    final visible = terminalsForSlot(slot);
+    if (from < 0 || from >= visible.length) return;
+    if (to < 0 || to >= visible.length) return;
+    if (from == to) return;
+
+    final reordered = List<TerminalTab>.of(visible);
+    final moved = reordered.removeAt(from);
+    reordered.insert(to, moved);
+
+    var nextVisibleIndex = 0;
+    final next = [
+      for (final tab in terminals.value)
+        if (!isDual.value || tab.originPane == slot)
+          reordered[nextVisibleIndex++]
+        else
+          tab,
+    ];
+    terminals.value = next;
+  }
+
   void setTerminalVisible(int slot, bool visible) {
     final next = [...terminalVisible.value];
     next[slot] = visible;

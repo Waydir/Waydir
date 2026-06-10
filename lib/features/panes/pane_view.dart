@@ -54,6 +54,7 @@ class PaneView extends StatelessWidget {
   final void Function(int id)? onCloseTerminalTab;
   final void Function(int slot)? onNewTerminalTab;
   final void Function(int slot, int dir)? onCycleTerminalTab;
+  final void Function(int slot, int from, int to)? onReorderTerminalTab;
   final void Function(int slot, double height)? onTerminalHeightChanged;
   final VoidCallback? onReturnFocusToFiles;
 
@@ -81,6 +82,7 @@ class PaneView extends StatelessWidget {
     this.onCloseTerminalTab,
     this.onNewTerminalTab,
     this.onCycleTerminalTab,
+    this.onReorderTerminalTab,
     this.onTerminalHeightChanged,
     this.onReturnFocusToFiles,
   });
@@ -184,6 +186,7 @@ class PaneView extends StatelessWidget {
                   onCloseTab: onCloseTerminalTab,
                   onNewTab: onNewTerminalTab,
                   onCycleTab: onCycleTerminalTab,
+                  onReorderTab: onReorderTerminalTab,
                   onHeightChanged: onTerminalHeightChanged,
                   onReturnFocusToFiles: onReturnFocusToFiles,
                 ),
@@ -292,6 +295,7 @@ class _TerminalPanel extends StatefulWidget {
   final void Function(int id)? onCloseTab;
   final void Function(int slot)? onNewTab;
   final void Function(int slot, int dir)? onCycleTab;
+  final void Function(int slot, int from, int to)? onReorderTab;
   final void Function(int slot, double height)? onHeightChanged;
   final VoidCallback? onReturnFocusToFiles;
 
@@ -307,6 +311,7 @@ class _TerminalPanel extends StatefulWidget {
     this.onCloseTab,
     this.onNewTab,
     this.onCycleTab,
+    this.onReorderTab,
     this.onHeightChanged,
     this.onReturnFocusToFiles,
   });
@@ -442,6 +447,7 @@ class _TerminalPanelState extends State<_TerminalPanel> {
           onCloseTab: widget.onCloseTab,
           onNewTab: widget.onNewTab,
           onClose: widget.onToggleTerminal,
+          onReorderTab: widget.onReorderTab,
         ),
         SizedBox(
           height: _effectiveHeight,
@@ -519,6 +525,7 @@ class _TerminalHeader extends StatelessWidget {
   final void Function(int id)? onCloseTab;
   final void Function(int slot)? onNewTab;
   final void Function(int slot)? onClose;
+  final void Function(int slot, int from, int to)? onReorderTab;
 
   const _TerminalHeader({
     required this.focused,
@@ -530,6 +537,7 @@ class _TerminalHeader extends StatelessWidget {
     this.onCloseTab,
     this.onNewTab,
     this.onClose,
+    this.onReorderTab,
   });
 
   @override
@@ -549,18 +557,27 @@ class _TerminalHeader extends StatelessWidget {
             Icon(WaydirIconsRegular.terminal, size: 13, color: fg),
             const SizedBox(width: 7),
             Expanded(
-              child: ListView.separated(
+              child: ReorderableListView.builder(
                 scrollDirection: Axis.horizontal,
+                buildDefaultDragHandles: false,
+                padding: EdgeInsets.zero,
                 itemCount: tabs.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 4),
+                onReorderItem: (from, to) => onReorderTab?.call(slot, from, to),
                 itemBuilder: (context, index) {
                   final tab = tabs[index];
-                  return _TerminalTabChip(
-                    tab: tab,
-                    active: tab.id == active.id,
-                    foreign: isSingleMode && tab.originPane == 1,
-                    onSelect: () => onSelectTab?.call(slot, tab.id),
-                    onClose: () => onCloseTab?.call(tab.id),
+                  return ReorderableDragStartListener(
+                    key: ValueKey('terminal-tab:${tab.id}'),
+                    index: index,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 4),
+                      child: _TerminalTabChip(
+                        tab: tab,
+                        active: tab.id == active.id,
+                        foreign: isSingleMode && tab.originPane == 1,
+                        onSelect: () => onSelectTab?.call(slot, tab.id),
+                        onClose: () => onCloseTab?.call(tab.id),
+                      ),
+                    ),
                   );
                 },
               ),

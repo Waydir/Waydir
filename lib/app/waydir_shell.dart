@@ -224,6 +224,7 @@ class _WaydirShellState extends State<WaydirShell>
       onCloseTerminalTab: _closeTerminalTab,
       onNewTerminalTab: _newTerminalTab,
       onCycleTerminalTab: _cycleTerminalTab,
+      onReorderTerminalTab: _shell.reorderTerminalTab,
       onTerminalHeightChanged: _setTerminalHeight,
       onReturnFocusToFiles: _focusFiles,
     );
