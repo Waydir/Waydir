@@ -623,7 +623,7 @@
     }
   },
   "sidebar": {
-    "favorites": "Favorites",
+    "places": "Places",
     "devices": "Devices",
     "home": "Home",
     "desktop": "Desktop",

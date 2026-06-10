@@ -563,7 +563,7 @@ class _SidebarState extends State<Sidebar> {
     final byId = <String, _SidebarSection>{
       sidebarSectionFavorites: _SidebarSection(
         id: sidebarSectionFavorites,
-        title: t.sidebar.favorites,
+        title: t.sidebar.places,
         entries: _favoriteEntries(currentPath),
       ),
       sidebarSectionDevices: _SidebarSection(

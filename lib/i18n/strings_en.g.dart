@@ -1181,8 +1181,8 @@ class Translations$sidebar$en {
 
 	// Translations
 
-	/// en: 'Favorites'
-	String get favorites => 'Favorites';
+	/// en: 'Places'
+	String get places => 'Places';
 
 	/// en: 'Devices'
 	String get devices => 'Devices';
@@ -3521,7 +3521,7 @@ extension on Translations {
 			'fileView.columns.size' => 'Size',
 			'fileView.columns.dateModified' => 'Date modified',
 			'fileView.columns.location' => 'Location',
-			'sidebar.favorites' => 'Favorites',
+			'sidebar.places' => 'Places',
 			'sidebar.devices' => 'Devices',
 			'sidebar.home' => 'Home',
 			'sidebar.desktop' => 'Desktop',
