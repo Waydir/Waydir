@@ -107,32 +107,57 @@ Grab the latest build from the [Releases](https://github.com/Waydir/Waydir/relea
 Waydir is distributed as native desktop packages and portable archives; pick the
 asset that matches your OS and CPU architecture.
 
-#### Linux
+#### Ubuntu / Debian
 
-**Recommended — package repository (auto-updates via your package manager):**
+**Recommended — package repository (auto-updates via `apt upgrade`):**
 
 ```bash
-# Debian / Ubuntu
 curl -1sLf 'https://dl.cloudsmith.io/public/waydir/waydir-project/setup.deb.sh' | sudo -E bash
 sudo apt install waydir
+```
 
-# Fedora / RHEL
+**Or grab a single `.deb` from [Releases](https://github.com/Waydir/Waydir/releases):**
+
+```bash
+sudo dpkg -i waydir-*.deb
+```
+
+#### Fedora / RHEL
+
+**Recommended — package repository (auto-updates via `dnf upgrade`):**
+
+```bash
 curl -1sLf 'https://dl.cloudsmith.io/public/waydir/waydir-project/setup.rpm.sh' | sudo -E bash
 sudo dnf install waydir
 ```
 
-Once the repository is set up, new releases arrive through your regular
-`apt upgrade` / `dnf upgrade`.
-
-**Or grab a single asset from [Releases](https://github.com/Waydir/Waydir/releases):**
+**Or grab a single `.rpm` from [Releases](https://github.com/Waydir/Waydir/releases):**
 
 ```bash
-# Debian / Ubuntu
-sudo dpkg -i waydir-*.deb
-
-# Fedora / RHEL
 sudo rpm -i waydir-*.rpm
+```
 
+#### openSUSE
+
+**Recommended — package repository (auto-updates via `zypper update`):**
+
+```bash
+curl -1sLf 'https://dl.cloudsmith.io/public/waydir/waydir-project/setup.rpm.sh' | sudo -E bash
+sudo zypper install waydir
+```
+
+**Or grab a single `.rpm` from [Releases](https://github.com/Waydir/Waydir/releases):**
+
+```bash
+sudo rpm -i waydir-*.rpm
+```
+
+#### Other Linux
+
+Portable builds from [Releases](https://github.com/Waydir/Waydir/releases) run on any
+distro:
+
+```bash
 # AppImage (portable, no install)
 chmod +x waydir-*.AppImage && ./waydir-*.AppImage
 
