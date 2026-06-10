@@ -38,9 +38,8 @@ class SidebarStore {
   Future<void> load() async {
     final rows = await _db.getSidebarPrefs();
 
-    final sectionRows =
-        rows.where((r) => r.scope == _sectionScope).toList()
-          ..sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
+    final sectionRows = rows.where((r) => r.scope == _sectionScope).toList()
+      ..sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
     final storedSections = sectionRows
         .map((r) => r.itemKey)
         .where(_defaultSectionOrder.contains)
@@ -58,9 +57,8 @@ class SidebarStore {
     final hidden = <String, Set<String>>{};
     for (final scope in _defaultSectionOrder) {
       if (scope == sidebarSectionBookmarks) continue;
-      final scopeRows =
-          rows.where((r) => r.scope == scope).toList()
-            ..sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
+      final scopeRows = rows.where((r) => r.scope == scope).toList()
+        ..sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
       order[scope] = scopeRows.map((r) => r.itemKey).toList();
       hidden[scope] = {
         for (final r in scopeRows)
@@ -93,6 +91,9 @@ class SidebarStore {
       next.remove(id);
     }
     hiddenSections.value = next;
+    // Materialize the full order so a lone hidden row can't reorder sections on
+    // the next load (rows without an orderIndex would otherwise sort first).
+    await _db.setSidebarOrder(_sectionScope, sectionOrder.value);
     final idx = sectionOrder.value.indexOf(id);
     await _db.setSidebarPref(
       _sectionScope,
@@ -105,11 +106,7 @@ class SidebarStore {
   /// Projects [items] into the user's stored order for [scope]: known keys
   /// first (by stored position), then any unknown items in their incoming
   /// order. Does not filter hidden items — callers decide based on edit mode.
-  List<T> orderItems<T>(
-    String scope,
-    List<T> items,
-    String Function(T) keyOf,
-  ) {
+  List<T> orderItems<T>(String scope, List<T> items, String Function(T) keyOf) {
     final order = itemOrder.value[scope];
     if (order == null || order.isEmpty) return items;
     final pos = {for (var i = 0; i < order.length; i++) order[i]: i};
@@ -136,7 +133,12 @@ class SidebarStore {
     await _db.setSidebarOrder(scope, next);
   }
 
-  Future<void> setItemHidden(String scope, String key, bool hidden) async {
+  Future<void> setItemHidden(
+    String scope,
+    String key,
+    bool hidden,
+    List<String> currentKeys,
+  ) async {
     final map = {
       for (final e in hiddenItems.value.entries) e.key: {...e.value},
     };
@@ -147,7 +149,13 @@ class SidebarStore {
       bucket.remove(key);
     }
     hiddenItems.value = map;
-    final idx = itemOrder.value[scope]?.indexOf(key) ?? -1;
+    final order = {...itemOrder.value};
+    order[scope] = currentKeys;
+    itemOrder.value = order;
+    // Persist the full order alongside the flag so a lone hidden row can't
+    // reorder items on the next load.
+    await _db.setSidebarOrder(scope, currentKeys);
+    final idx = currentKeys.indexOf(key);
     await _db.setSidebarPref(
       scope,
       key,
@@ -156,14 +164,15 @@ class SidebarStore {
     );
   }
 
+  /// [newIndex] is the post-removal target index, as supplied by
+  /// `ReorderableListView.onReorderItem`.
   List<String>? _moved(List<String> source, int oldIndex, int newIndex) {
     if (oldIndex < 0 || oldIndex >= source.length) return null;
-    final list = [...source];
     var to = newIndex;
-    if (to > oldIndex) to -= 1;
     if (to < 0) to = 0;
-    if (to >= list.length) to = list.length - 1;
+    if (to > source.length - 1) to = source.length - 1;
     if (to == oldIndex) return null;
+    final list = [...source];
     final item = list.removeAt(oldIndex);
     list.insert(to, item);
     return list;

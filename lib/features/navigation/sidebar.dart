@@ -7,6 +7,7 @@ import 'package:super_drag_and_drop/super_drag_and_drop.dart';
 import '../../core/database/app_database.dart';
 import 'bookmark_store.dart';
 import 'navigation_store.dart';
+import 'sidebar_store.dart';
 import '../drives/drive_store.dart';
 import '../drives/drive_model.dart';
 import '../../ui/theme/app_theme.dart';
@@ -30,11 +31,59 @@ import '../../core/models/file_operation.dart';
 
 const double _resizeHandleWidth = 8;
 
+const double _sectionGap = 10;
+const double _itemMargin = 6;
+const double _itemHeight = 28;
+const double _itemHeightWithSpace = 36;
+const double _railItemHeight = 32;
+
 class _SidebarItem {
   final String label;
   final IconData icon;
   final String path;
-  const _SidebarItem(this.label, this.icon, this.path);
+  final String? key;
+  const _SidebarItem(this.label, this.icon, this.path, {this.key});
+}
+
+/// One row's full rendering inputs, shared by normal and edit-mode rendering.
+class _SidebarEntry {
+  final String key;
+  final _SidebarItem item;
+  final bool isSelected;
+  final bool isMounted;
+  final DriveSpace? space;
+  final String? tooltip;
+  final ValueChanged<String> onTap;
+  final VoidCallback? onMiddleTap;
+  final void Function(List<String> paths, {bool move})? onDropFiles;
+  final VoidCallback? onUnmount;
+  final void Function(Offset position)? onContextMenu;
+
+  const _SidebarEntry({
+    required this.key,
+    required this.item,
+    required this.isSelected,
+    this.isMounted = true,
+    this.space,
+    this.tooltip,
+    required this.onTap,
+    this.onMiddleTap,
+    this.onDropFiles,
+    this.onUnmount,
+    this.onContextMenu,
+  });
+}
+
+class _SidebarSection {
+  final String id;
+  final String title;
+  final List<_SidebarEntry> entries;
+
+  const _SidebarSection({
+    required this.id,
+    required this.title,
+    required this.entries,
+  });
 }
 
 class Sidebar extends StatefulWidget {
@@ -73,42 +122,49 @@ class _SidebarState extends State<Sidebar> {
     _sftpCredentialsRequester = _requestSftpCredentials;
     final h = PlatformPaths.homePath;
     _favorites = [
-      _SidebarItem(t.sidebar.home, WaydirIconsRegular.house, h),
+      _SidebarItem(t.sidebar.home, WaydirIconsRegular.house, h, key: 'home'),
       _SidebarItem(
         t.sidebar.desktop,
         WaydirIconsRegular.desktop,
         PlatformPaths.desktopPath,
+        key: 'desktop',
       ),
       _SidebarItem(
         t.sidebar.documents,
         WaydirIconsRegular.notebook,
         PlatformPaths.documentsPath,
+        key: 'documents',
       ),
       _SidebarItem(
         t.sidebar.downloads,
         WaydirIconsRegular.downloadSimple,
         PlatformPaths.downloadsPath,
+        key: 'downloads',
       ),
       _SidebarItem(
         t.sidebar.pictures,
         WaydirIconsRegular.image,
         PlatformPaths.picturesPath,
+        key: 'pictures',
       ),
       _SidebarItem(
         t.sidebar.music,
         WaydirIconsRegular.musicNote,
         PlatformPaths.musicPath,
+        key: 'music',
       ),
       _SidebarItem(
         t.sidebar.videos,
         WaydirIconsRegular.videoCamera,
         PlatformPaths.videosPath,
+        key: 'videos',
       ),
       if (PlatformPaths.canOpenTrash)
         _SidebarItem(
           t.sidebar.trash,
           WaydirIconsRegular.trashSimple,
           kTrashPath,
+          key: 'trash',
         ),
     ];
     final trashDir = PlatformPaths.trashPath;
@@ -230,252 +286,20 @@ class _SidebarState extends State<Sidebar> {
       color: AppColors.bgSidebar,
       child: Column(
         children: [
-          _SidebarHeader(
-            collapsed: widget.collapsed,
-            onToggle: widget.onToggleCollapsed,
+          SignalBuilder(
+            builder: (context) => _SidebarHeader(
+              collapsed: widget.collapsed,
+              editing: !widget.collapsed && SidebarStore.instance.editing.value,
+              onToggle: widget.onToggleCollapsed,
+              onToggleEdit: widget.collapsed
+                  ? null
+                  : SidebarStore.instance.toggleEditing,
+            ),
           ),
           Expanded(
             child: _SidebarDropTarget(
               onDropBookmark: _bookmarkStore.addPath,
-              child: SignalBuilder(
-                builder: (context) {
-                  final currentPath = widget.store.currentPath.value;
-                  final currentDrives = driveStore.drives.value;
-
-                  final networkDrives = currentDrives
-                      .where((d) => d.isNetwork)
-                      .toList();
-                  final devices = currentDrives
-                      .where((d) => !d.isNetwork)
-                      .toList();
-                  final isUnix = PlatformPaths.isLinux || PlatformPaths.isMacOS;
-                  if (isUnix && !devices.any((d) => d.mountPoint == '/')) {
-                    devices.insert(
-                      0,
-                      Drive(
-                        id: '/',
-                        label: t.sidebar.root,
-                        isRemovable: false,
-                        mountPoint: '/',
-                      ),
-                    );
-                  }
-
-                  final collapsed = widget.collapsed;
-                  final networkLocations = LocationResolver.mountedLocations();
-                  return Padding(
-                    padding: const EdgeInsets.only(right: _resizeHandleWidth),
-                    child: Scrollbar(
-                      controller: _scrollController,
-                      child: ListView(
-                        controller: _scrollController,
-                        padding: EdgeInsets.zero,
-                        children: [
-                          if (!collapsed)
-                            _SectionHeader(title: t.sidebar.favorites),
-                          if (collapsed) const SizedBox(height: 6),
-                          ..._favorites.map((item) {
-                            final isRecycleBin = isTrashPath(item.path);
-                            return _ItemRow(
-                              item: item,
-                              isSelected: isRecycleBin
-                                  ? isTrashPath(currentPath)
-                                  : currentPath == item.path,
-                              isMounted: !isRecycleBin,
-                              collapsed: collapsed,
-                              onTap: widget.store.navigateTo,
-                              onMiddleTap:
-                                  widget.onOpenInNewTab != null && !isRecycleBin
-                                  ? () => widget.onOpenInNewTab!(item.path)
-                                  : null,
-                              onDropFiles: (paths, {bool move = false}) {
-                                if (isRecycleBin) {
-                                  widget.operationStore.enqueueTrash(paths);
-                                  return;
-                                }
-                                widget.store.dropFiles(
-                                  paths,
-                                  item.path,
-                                  move: move,
-                                );
-                              },
-                            );
-                          }),
-                          SizedBox(height: collapsed ? 12 : 8),
-                          if (!collapsed)
-                            _SectionHeader(title: t.sidebar.devices)
-                          else
-                            const _SectionRailDivider(),
-                          ...devices.map((drive) {
-                            final path = drive.mountPoint ?? drive.id;
-                            final isSelected = currentPath == path;
-                            final isMounted = drive.isMounted;
-                            final label = drive.id == '/'
-                                ? t.sidebar.root
-                                : drive.label;
-                            final canUnmount =
-                                isMounted &&
-                                drive.id != '/' &&
-                                drive.isRemovable;
-
-                            return _ItemRow(
-                              item: _SidebarItem(
-                                label,
-                                drive.isRemovable
-                                    ? WaydirIconsRegular.usb
-                                    : WaydirIconsRegular.hardDrive,
-                                path,
-                              ),
-                              isSelected: isSelected,
-                              isMounted: isMounted,
-                              space: isMounted ? drive.space : null,
-                              collapsed: collapsed,
-                              onTap: (p) async {
-                                if (isMounted) {
-                                  widget.store.navigateTo(p);
-                                } else {
-                                  try {
-                                    await driveStore.mount(drive);
-                                    Future.microtask(() {
-                                      final mountedDrive = driveStore
-                                          .drives
-                                          .value
-                                          .where((d) => d.id == drive.id)
-                                          .firstOrNull;
-                                      if (mountedDrive?.isMounted == true) {
-                                        widget.store.navigateTo(
-                                          mountedDrive!.mountPoint!,
-                                        );
-                                      }
-                                    });
-                                  } catch (e) {
-                                    final error = e.toString().toLowerCase();
-                                    if (error.contains('not authorized') ||
-                                        error.contains('polkit') ||
-                                        error.contains('authenticate')) {
-                                      if (context.mounted) {
-                                        final pwd = await showPasswordDialog(
-                                          context,
-                                          title: t.sidebar.drives.mountTitle(
-                                            name: drive.label,
-                                          ),
-                                        );
-                                        if (pwd != null) {
-                                          try {
-                                            await driveStore.mountWithPassword(
-                                              drive,
-                                              pwd,
-                                            );
-                                            Future.microtask(() {
-                                              final mountedDrive = driveStore
-                                                  .drives
-                                                  .value
-                                                  .where(
-                                                    (d) => d.id == drive.id,
-                                                  )
-                                                  .firstOrNull;
-                                              if (mountedDrive?.isMounted ==
-                                                  true) {
-                                                widget.store.navigateTo(
-                                                  mountedDrive!.mountPoint!,
-                                                );
-                                              }
-                                            });
-                                          } catch (_) {}
-                                        }
-                                      }
-                                    }
-                                  }
-                                }
-                              },
-                              onMiddleTap:
-                                  widget.onOpenInNewTab != null && isMounted
-                                  ? () => widget.onOpenInNewTab!(path)
-                                  : null,
-                              onDropFiles: (paths, {bool move = false}) {
-                                if (isMounted) {
-                                  widget.store.dropFiles(
-                                    paths,
-                                    path,
-                                    move: move,
-                                  );
-                                }
-                              },
-                              onUnmount: canUnmount
-                                  ? () async {
-                                      final currentPath =
-                                          widget.store.currentPath.value;
-                                      final mountPoint = drive.mountPoint;
-                                      try {
-                                        await driveStore.unmount(drive);
-                                        if (mountPoint != null &&
-                                            currentPath.startsWith(
-                                              mountPoint,
-                                            )) {
-                                          widget.store.navigateTo(
-                                            PlatformPaths.homePath,
-                                          );
-                                        }
-                                      } catch (_) {}
-                                    }
-                                  : null,
-                            );
-                          }),
-                          SizedBox(height: collapsed ? 12 : 8),
-                          if (networkLocations.isNotEmpty ||
-                              networkDrives.isNotEmpty) ...[
-                            _NetworkSection(
-                              locations: networkLocations,
-                              drives: networkDrives,
-                              currentPath: currentPath,
-                              collapsed: collapsed,
-                              onNavigate: widget.store.navigateTo,
-                              onOpenInNewTab: widget.onOpenInNewTab,
-                              onDropFiles:
-                                  (paths, destination, {bool move = false}) =>
-                                      widget.store.dropFiles(
-                                        paths,
-                                        destination,
-                                        move: move,
-                                      ),
-                              onUnmount: (path) async {
-                                final currentPath =
-                                    widget.store.currentPath.value;
-                                await LocationResolver.unmount(path);
-                                if (mounted) setState(() {});
-                                if (currentPath == path ||
-                                    currentPath.startsWith('$path/')) {
-                                  widget.store.navigateTo(
-                                    PlatformPaths.homePath,
-                                  );
-                                }
-                              },
-                            ),
-                            SizedBox(height: collapsed ? 12 : 8),
-                          ],
-                          SignalBuilder(
-                            builder: (context) => _BookmarksSection(
-                              bookmarks: _bookmarkStore.bookmarks.value,
-                              currentPath: widget.store.currentPath.value,
-                              collapsed: collapsed,
-                              onNavigate: widget.store.navigateTo,
-                              onOpenInNewTab: widget.onOpenInNewTab,
-                              onDropFiles:
-                                  (paths, destination, {bool move = false}) =>
-                                      widget.store.dropFiles(
-                                        paths,
-                                        destination,
-                                        move: move,
-                                      ),
-                              onContextMenu: _showBookmarkMenu,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
+              child: SignalBuilder(builder: _buildBody),
             ),
           ),
           _SidebarFooter(
@@ -489,6 +313,391 @@ class _SidebarState extends State<Sidebar> {
         ],
       ),
     );
+  }
+
+  Widget _buildBody(BuildContext context) {
+    final store = SidebarStore.instance;
+    final editing = !widget.collapsed && store.editing.value;
+    final collapsed = widget.collapsed;
+
+    final currentPath = widget.store.currentPath.value;
+    final currentDrives = driveStore.drives.value;
+    final bookmarks = _bookmarkStore.bookmarks.value;
+
+    // Read layout signals so the body re-renders on reorder/visibility edits.
+    final sectionOrder = store.sectionOrder.value;
+    store.hiddenSections.value;
+    store.itemOrder.value;
+    store.hiddenItems.value;
+
+    final networkDrives = currentDrives.where((d) => d.isNetwork).toList();
+    final devices = currentDrives.where((d) => !d.isNetwork).toList();
+    final isUnix = PlatformPaths.isLinux || PlatformPaths.isMacOS;
+    if (isUnix && !devices.any((d) => d.mountPoint == '/')) {
+      devices.insert(
+        0,
+        Drive(
+          id: '/',
+          label: t.sidebar.root,
+          isRemovable: false,
+          mountPoint: '/',
+        ),
+      );
+    }
+    final networkLocations = LocationResolver.mountedLocations();
+
+    final byId = <String, _SidebarSection>{
+      sidebarSectionFavorites: _SidebarSection(
+        id: sidebarSectionFavorites,
+        title: t.sidebar.favorites,
+        entries: _favoriteEntries(currentPath),
+      ),
+      sidebarSectionDevices: _SidebarSection(
+        id: sidebarSectionDevices,
+        title: t.sidebar.devices,
+        entries: _deviceEntries(devices, currentPath),
+      ),
+      sidebarSectionNetwork: _SidebarSection(
+        id: sidebarSectionNetwork,
+        title: t.sidebar.network,
+        entries: _networkEntries(networkDrives, networkLocations, currentPath),
+      ),
+      sidebarSectionBookmarks: _SidebarSection(
+        id: sidebarSectionBookmarks,
+        title: t.sidebar.bookmarks,
+        entries: _bookmarkEntries(bookmarks, currentPath),
+      ),
+    };
+    final ordered = [
+      for (final id in sectionOrder)
+        if (byId.containsKey(id)) byId[id]!,
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.only(right: _resizeHandleWidth),
+      child: Scrollbar(
+        controller: _scrollController,
+        child: editing
+            ? _buildEditList(ordered)
+            : _buildNormalList(ordered, collapsed),
+      ),
+    );
+  }
+
+  bool _sectionAlwaysShown(String id) => id != sidebarSectionNetwork;
+
+  Widget _buildNormalList(List<_SidebarSection> sections, bool collapsed) {
+    final store = SidebarStore.instance;
+    final children = <Widget>[];
+    var first = true;
+    for (final section in sections) {
+      if (store.isSectionHidden(section.id)) continue;
+      final visible = section.entries
+          .where((e) => !store.isItemHidden(section.id, e.key))
+          .toList();
+      if (!_sectionAlwaysShown(section.id) && visible.isEmpty) continue;
+
+      if (collapsed) {
+        if (first) {
+          children.add(const SizedBox(height: 6));
+        } else {
+          children.add(const _SectionRailDivider());
+        }
+      } else {
+        if (!first) children.add(const SizedBox(height: _sectionGap));
+        children.add(_SectionHeader(title: section.title));
+      }
+      first = false;
+
+      for (final entry in visible) {
+        children.add(_rowFor(entry, collapsed));
+      }
+      if (section.id == sidebarSectionBookmarks &&
+          visible.isEmpty &&
+          !collapsed) {
+        children.add(
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 2, 14, 10),
+            child: Text(
+              t.sidebar.dropBookmark,
+              overflow: TextOverflow.ellipsis,
+              style: context.txt.caption.copyWith(color: AppColors.fgMuted),
+            ),
+          ),
+        );
+      }
+    }
+    return ListView(
+      controller: _scrollController,
+      padding: EdgeInsets.zero,
+      children: children,
+    );
+  }
+
+  Widget _rowFor(_SidebarEntry entry, bool collapsed) {
+    return _ItemRow(
+      item: entry.item,
+      isSelected: entry.isSelected,
+      isMounted: entry.isMounted,
+      space: entry.space,
+      collapsed: collapsed,
+      tooltip: entry.tooltip,
+      onTap: entry.onTap,
+      onMiddleTap: entry.onMiddleTap,
+      onDropFiles: entry.onDropFiles ?? (paths, {bool move = false}) {},
+      onUnmount: entry.onUnmount,
+      onContextMenu: entry.onContextMenu,
+    );
+  }
+
+  Widget _buildEditList(List<_SidebarSection> sections) {
+    final shown = [
+      for (final section in sections)
+        if (_sectionAlwaysShown(section.id) || section.entries.isNotEmpty)
+          section,
+    ];
+    return ReorderableListView.builder(
+      scrollController: _scrollController,
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      buildDefaultDragHandles: false,
+      itemCount: shown.length,
+      onReorderItem: (oldIndex, newIndex) =>
+          SidebarStore.instance.reorderSections(oldIndex, newIndex),
+      itemBuilder: (context, index) {
+        final section = shown[index];
+        return _EditSection(
+          key: ValueKey('section:${section.id}'),
+          section: section,
+          sectionIndex: index,
+          onReorderItem: (oldI, newI) => _reorderItems(section, oldI, newI),
+        );
+      },
+    );
+  }
+
+  void _reorderItems(_SidebarSection section, int oldIndex, int newIndex) {
+    if (section.id == sidebarSectionBookmarks) {
+      _bookmarkStore.reorder(oldIndex, newIndex);
+      return;
+    }
+    SidebarStore.instance.reorderItems(
+      section.id,
+      oldIndex,
+      newIndex,
+      section.entries.map((e) => e.key).toList(),
+    );
+  }
+
+  List<_SidebarEntry> _favoriteEntries(String currentPath) {
+    final entries = _favorites.map((item) {
+      final isRecycleBin = isTrashPath(item.path);
+      return _SidebarEntry(
+        key: item.key!,
+        item: item,
+        isSelected: isRecycleBin
+            ? isTrashPath(currentPath)
+            : currentPath == item.path,
+        isMounted: !isRecycleBin,
+        onTap: widget.store.navigateTo,
+        onMiddleTap: widget.onOpenInNewTab != null && !isRecycleBin
+            ? () => widget.onOpenInNewTab!(item.path)
+            : null,
+        onDropFiles: (paths, {bool move = false}) {
+          if (isRecycleBin) {
+            widget.operationStore.enqueueTrash(paths);
+            return;
+          }
+          widget.store.dropFiles(paths, item.path, move: move);
+        },
+      );
+    }).toList();
+    return SidebarStore.instance.orderItems(
+      sidebarSectionFavorites,
+      entries,
+      (e) => e.key,
+    );
+  }
+
+  List<_SidebarEntry> _deviceEntries(List<Drive> devices, String currentPath) {
+    final entries = devices.map((drive) {
+      final path = drive.mountPoint ?? drive.id;
+      final isMounted = drive.isMounted;
+      final label = drive.id == '/' ? t.sidebar.root : drive.label;
+      final canUnmount = isMounted && drive.id != '/' && drive.isRemovable;
+      return _SidebarEntry(
+        key: drive.id,
+        item: _SidebarItem(
+          label,
+          drive.isRemovable
+              ? WaydirIconsRegular.usb
+              : WaydirIconsRegular.hardDrive,
+          path,
+        ),
+        isSelected: currentPath == path,
+        isMounted: isMounted,
+        space: isMounted ? drive.space : null,
+        onTap: (p) => _onDriveTap(drive, p),
+        onMiddleTap: widget.onOpenInNewTab != null && isMounted
+            ? () => widget.onOpenInNewTab!(path)
+            : null,
+        onDropFiles: (paths, {bool move = false}) {
+          if (isMounted) widget.store.dropFiles(paths, path, move: move);
+        },
+        onUnmount: canUnmount ? () => _unmountDrive(drive) : null,
+      );
+    }).toList();
+    return SidebarStore.instance.orderItems(
+      sidebarSectionDevices,
+      entries,
+      (e) => e.key,
+    );
+  }
+
+  List<_SidebarEntry> _networkEntries(
+    List<Drive> drives,
+    List<String> locations,
+    String currentPath,
+  ) {
+    final entries = <_SidebarEntry>[];
+    for (final drive in drives) {
+      final path = drive.mountPoint ?? drive.id;
+      entries.add(
+        _SidebarEntry(
+          key: 'drive:${drive.id}',
+          item: _SidebarItem(
+            drive.label,
+            WaydirIconsRegular.treeStructure,
+            path,
+          ),
+          isSelected: currentPath == path || currentPath.startsWith(path),
+          tooltip: drive.remoteTarget == null
+              ? drive.label
+              : '${drive.label}\n${drive.remoteTarget}',
+          onTap: widget.store.navigateTo,
+          onMiddleTap: widget.onOpenInNewTab != null
+              ? () => widget.onOpenInNewTab!(path)
+              : null,
+          onDropFiles: (paths, {bool move = false}) =>
+              widget.store.dropFiles(paths, path, move: move),
+        ),
+      );
+    }
+    for (final path in locations) {
+      final uri = LocationUri.parse(path);
+      entries.add(
+        _SidebarEntry(
+          key: 'loc:$path',
+          item: _SidebarItem(
+            uri.displayLabel,
+            WaydirIconsRegular.treeStructure,
+            path,
+          ),
+          isSelected: currentPath == path || currentPath.startsWith('$path/'),
+          tooltip: uri.displayLabel == path
+              ? uri.displayLabel
+              : '${uri.displayLabel}\n$path',
+          onTap: widget.store.navigateTo,
+          onMiddleTap: widget.onOpenInNewTab != null
+              ? () => widget.onOpenInNewTab!(path)
+              : null,
+          onDropFiles: (paths, {bool move = false}) =>
+              widget.store.dropFiles(paths, path, move: move),
+          onUnmount: () => _unmountLocation(path),
+        ),
+      );
+    }
+    return SidebarStore.instance.orderItems(
+      sidebarSectionNetwork,
+      entries,
+      (e) => e.key,
+    );
+  }
+
+  List<_SidebarEntry> _bookmarkEntries(
+    List<Bookmark> bookmarks,
+    String currentPath,
+  ) {
+    return bookmarks.map((bookmark) {
+      final uri = LocationUri.parse(bookmark.path);
+      final icon = uri.isNetwork
+          ? WaydirIconsRegular.treeStructure
+          : WaydirIconsRegular.bookmarkSimple;
+      final isMounted = uri.isLocal
+          ? Directory(bookmark.path).existsSync()
+          : true;
+      return _SidebarEntry(
+        key: 'bookmark:${bookmark.id}',
+        item: _SidebarItem(bookmark.label, icon, bookmark.path),
+        isSelected: currentPath == bookmark.path,
+        isMounted: isMounted,
+        onTap: widget.store.navigateTo,
+        onMiddleTap: widget.onOpenInNewTab != null
+            ? () => widget.onOpenInNewTab!(bookmark.path)
+            : null,
+        onDropFiles: (paths, {bool move = false}) =>
+            widget.store.dropFiles(paths, bookmark.path, move: move),
+        onContextMenu: (position) => _showBookmarkMenu(bookmark, position),
+      );
+    }).toList();
+  }
+
+  Future<void> _onDriveTap(Drive drive, String path) async {
+    if (drive.isMounted) {
+      widget.store.navigateTo(path);
+      return;
+    }
+    try {
+      await driveStore.mount(drive);
+      _navigateToMounted(drive.id);
+    } catch (e) {
+      final error = e.toString().toLowerCase();
+      if (!error.contains('not authorized') &&
+          !error.contains('polkit') &&
+          !error.contains('authenticate')) {
+        return;
+      }
+      if (!mounted) return;
+      final pwd = await showPasswordDialog(
+        context,
+        title: t.sidebar.drives.mountTitle(name: drive.label),
+      );
+      if (pwd == null) return;
+      try {
+        await driveStore.mountWithPassword(drive, pwd);
+        _navigateToMounted(drive.id);
+      } catch (_) {}
+    }
+  }
+
+  void _navigateToMounted(String driveId) {
+    Future.microtask(() {
+      final mounted = driveStore.drives.value
+          .where((d) => d.id == driveId)
+          .firstOrNull;
+      if (mounted?.isMounted == true) {
+        widget.store.navigateTo(mounted!.mountPoint!);
+      }
+    });
+  }
+
+  Future<void> _unmountDrive(Drive drive) async {
+    final currentPath = widget.store.currentPath.value;
+    final mountPoint = drive.mountPoint;
+    try {
+      await driveStore.unmount(drive);
+      if (mountPoint != null && currentPath.startsWith(mountPoint)) {
+        widget.store.navigateTo(PlatformPaths.homePath);
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _unmountLocation(String path) async {
+    final currentPath = widget.store.currentPath.value;
+    await LocationResolver.unmount(path);
+    if (mounted) setState(() {});
+    if (currentPath == path || currentPath.startsWith('$path/')) {
+      widget.store.navigateTo(PlatformPaths.homePath);
+    }
   }
 }
 
@@ -680,207 +889,284 @@ class _SidebarDropTargetState extends State<_SidebarDropTarget> {
   }
 }
 
-class _BookmarksSection extends StatelessWidget {
-  final List<Bookmark> bookmarks;
-  final String currentPath;
-  final bool collapsed;
-  final ValueChanged<String> onNavigate;
-  final void Function(String path)? onOpenInNewTab;
-  final void Function(List<String> paths, String destination, {bool move})
-  onDropFiles;
-  final void Function(Bookmark bookmark, Offset position) onContextMenu;
+class _EditSection extends StatelessWidget {
+  final _SidebarSection section;
+  final int sectionIndex;
+  final void Function(int oldIndex, int newIndex) onReorderItem;
 
-  const _BookmarksSection({
-    required this.bookmarks,
-    required this.currentPath,
-    required this.collapsed,
-    required this.onNavigate,
-    required this.onOpenInNewTab,
-    required this.onDropFiles,
-    required this.onContextMenu,
+  const _EditSection({
+    super.key,
+    required this.section,
+    required this.sectionIndex,
+    required this.onReorderItem,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (!collapsed)
-          _SectionHeader(title: t.sidebar.bookmarks)
-        else
-          const _SectionRailDivider(),
-        if (bookmarks.isEmpty)
-          collapsed
-              ? const SizedBox.shrink()
-              : Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 2, 14, 10),
+    final store = SidebarStore.instance;
+    final sectionHidden = store.isSectionHidden(section.id);
+    final allowItemHide = section.id != sidebarSectionBookmarks;
+    final entries = section.entries;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: _sectionGap),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 6, 8, 4),
+            child: Row(
+              children: [
+                ReorderableDragStartListener(
+                  index: sectionIndex,
+                  child: const _DragHandle(),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
                   child: Text(
-                    t.sidebar.dropBookmark,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.txt.caption.copyWith(
-                      color: AppColors.fgMuted,
+                    section.title.toUpperCase(),
+                    style: context.txt.sectionLabel.copyWith(
+                      color: sectionHidden ? AppColors.fgSubtle : null,
                     ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                )
-        else
-          ...bookmarks.map((bookmark) {
-            final uri = LocationUri.parse(bookmark.path);
-            final icon = uri.isNetwork
-                ? WaydirIconsRegular.treeStructure
-                : WaydirIconsRegular.bookmarkSimple;
-            final mounted = uri.isLocal
-                ? Directory(bookmark.path).existsSync()
-                : true;
-            return _ItemRow(
-              item: _SidebarItem(bookmark.label, icon, bookmark.path),
-              isSelected: currentPath == bookmark.path,
-              isMounted: mounted,
-              collapsed: collapsed,
-              onTap: onNavigate,
-              onMiddleTap: onOpenInNewTab != null
-                  ? () => onOpenInNewTab!(bookmark.path)
-                  : null,
-              onDropFiles: (paths, {bool move = false}) =>
-                  onDropFiles(paths, bookmark.path, move: move),
-              onContextMenu: (position) => onContextMenu(bookmark, position),
-            );
-          }),
-        const SizedBox(height: 8),
-      ],
+                ),
+                _VisibilityToggle(
+                  hidden: sectionHidden,
+                  onTap: () =>
+                      store.setSectionHidden(section.id, !sectionHidden),
+                ),
+              ],
+            ),
+          ),
+          if (entries.isNotEmpty)
+            ReorderableListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              buildDefaultDragHandles: false,
+              itemCount: entries.length,
+              onReorderItem: onReorderItem,
+              itemBuilder: (context, index) {
+                final entry = entries[index];
+                return _EditRow(
+                  key: ValueKey('item:${section.id}:${entry.key}'),
+                  entry: entry,
+                  index: index,
+                  scope: section.id,
+                  allowHide: allowItemHide,
+                  dimmed: sectionHidden,
+                  orderedKeys: entries.map((e) => e.key).toList(),
+                );
+              },
+            ),
+        ],
+      ),
     );
   }
 }
 
-class _NetworkSection extends StatelessWidget {
-  final List<String> locations;
-  final List<Drive> drives;
-  final String currentPath;
-  final bool collapsed;
-  final ValueChanged<String> onNavigate;
-  final void Function(String path)? onOpenInNewTab;
-  final void Function(List<String> paths, String destination, {bool move})
-  onDropFiles;
-  final Future<void> Function(String path) onUnmount;
+class _EditRow extends StatelessWidget {
+  final _SidebarEntry entry;
+  final int index;
+  final String scope;
+  final bool allowHide;
+  final bool dimmed;
+  final List<String> orderedKeys;
 
-  const _NetworkSection({
-    required this.locations,
-    this.drives = const [],
-    required this.currentPath,
-    required this.collapsed,
-    required this.onNavigate,
-    required this.onOpenInNewTab,
-    required this.onDropFiles,
-    required this.onUnmount,
+  const _EditRow({
+    super.key,
+    required this.entry,
+    required this.index,
+    required this.scope,
+    required this.allowHide,
+    required this.dimmed,
+    required this.orderedKeys,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (!collapsed)
-          _SectionHeader(title: t.sidebar.network)
-        else
-          const _SectionRailDivider(),
-        ...drives.map((drive) {
-          final path = drive.mountPoint ?? drive.id;
-          return _ItemRow(
-            item: _SidebarItem(
-              drive.label,
-              WaydirIconsRegular.treeStructure,
-              path,
-            ),
-            isSelected: currentPath == path || currentPath.startsWith(path),
-            isMounted: true,
-            collapsed: collapsed,
-            tooltip: drive.remoteTarget == null
-                ? drive.label
-                : '${drive.label}\n${drive.remoteTarget}',
-            onTap: onNavigate,
-            onMiddleTap: onOpenInNewTab != null
-                ? () => onOpenInNewTab!(path)
-                : null,
-            onDropFiles: (paths, {bool move = false}) =>
-                onDropFiles(paths, path, move: move),
-          );
-        }),
-        ...locations.map((path) {
-          final uri = LocationUri.parse(path);
-          return _ItemRow(
-            item: _SidebarItem(
-              uri.displayLabel,
-              WaydirIconsRegular.treeStructure,
-              path,
-            ),
-            isSelected: currentPath == path || currentPath.startsWith('$path/'),
-            isMounted: true,
-            collapsed: collapsed,
-            tooltip: uri.displayLabel == path
-                ? uri.displayLabel
-                : '${uri.displayLabel}\n$path',
-            onTap: onNavigate,
-            onMiddleTap: onOpenInNewTab != null
-                ? () => onOpenInNewTab!(path)
-                : null,
-            onDropFiles: (paths, {bool move = false}) =>
-                onDropFiles(paths, path, move: move),
-            onUnmount: () => unawaited(onUnmount(path)),
-          );
-        }),
-      ],
+    final store = SidebarStore.instance;
+    final itemHidden = allowHide && store.isItemHidden(scope, entry.key);
+    final faded = dimmed || itemHidden;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: _itemMargin, vertical: 1),
+      child: Opacity(
+        opacity: faded ? 0.45 : 1,
+        child: Container(
+          height: _itemHeight,
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          decoration: BoxDecoration(
+            color: AppColors.bgHover.withValues(alpha: 0.4),
+          ),
+          child: Row(
+            children: [
+              ReorderableDragStartListener(
+                index: index,
+                child: const _DragHandle(),
+              ),
+              const SizedBox(width: 8),
+              Icon(entry.item.icon, size: 15, color: AppColors.fgMuted),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  entry.item.label,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.txt.body,
+                ),
+              ),
+              if (allowHide)
+                _VisibilityToggle(
+                  hidden: itemHidden,
+                  onTap: () => store.setItemHidden(
+                    scope,
+                    entry.key,
+                    !itemHidden,
+                    orderedKeys,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
 
-class _SidebarHeader extends StatefulWidget {
-  final bool collapsed;
-  final VoidCallback? onToggle;
-
-  const _SidebarHeader({required this.collapsed, required this.onToggle});
-
-  @override
-  State<_SidebarHeader> createState() => _SidebarHeaderState();
-}
-
-class _SidebarHeaderState extends State<_SidebarHeader> {
-  bool _hovered = false;
+class _DragHandle extends StatelessWidget {
+  const _DragHandle();
 
   @override
   Widget build(BuildContext context) {
-    final collapsed = widget.collapsed;
-    final icon = Icon(
-      collapsed
+    return MouseRegion(
+      cursor: SystemMouseCursors.grab,
+      child: Icon(WaydirIconsRegular.list, size: 14, color: AppColors.fgSubtle),
+    );
+  }
+}
+
+class _VisibilityToggle extends StatelessWidget {
+  final bool hidden;
+  final VoidCallback onTap;
+
+  const _VisibilityToggle({required this.hidden, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: hidden ? t.sidebar.show : t.sidebar.hide,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: onTap,
+          behavior: HitTestBehavior.opaque,
+          child: Padding(
+            padding: const EdgeInsets.all(4),
+            child: Icon(
+              hidden ? WaydirIconsRegular.prohibit : WaydirIconsRegular.eye,
+              size: 14,
+              color: hidden ? AppColors.fgSubtle : AppColors.fgMuted,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SidebarHeader extends StatelessWidget {
+  final bool collapsed;
+  final bool editing;
+  final VoidCallback? onToggle;
+  final VoidCallback? onToggleEdit;
+
+  const _SidebarHeader({
+    required this.collapsed,
+    required this.editing,
+    required this.onToggle,
+    required this.onToggleEdit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final toggle = _HeaderButton(
+      icon: collapsed
           ? WaydirIconsRegular.sidebarSimple
           : WaydirIconsRegular.caretLeft,
-      size: 14,
-      color: _hovered ? AppColors.fg : AppColors.fgMuted,
+      tooltip: collapsed ? t.sidebar.expand : t.sidebar.collapse,
+      onTap: onToggle,
     );
 
     return Container(
       height: 32,
       padding: EdgeInsets.symmetric(horizontal: collapsed ? 0 : 6),
-      alignment: collapsed ? Alignment.center : Alignment.centerRight,
-      child: Tooltip(
-        message: collapsed ? t.sidebar.expand : t.sidebar.collapse,
-        child: MouseRegion(
-          cursor: SystemMouseCursors.click,
-          onEnter: (_) => setState(() => _hovered = true),
-          onExit: (_) => setState(() => _hovered = false),
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: widget.onToggle,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: _hovered ? AppColors.bgHover : Colors.transparent,
-                borderRadius: BorderRadius.zero,
-              ),
-              child: SizedBox(
-                width: 26,
-                height: 26,
-                child: Center(child: icon),
-              ),
+      child: collapsed
+          ? Center(child: toggle)
+          : Row(
+              children: [
+                if (onToggleEdit != null)
+                  _HeaderButton(
+                    icon: editing
+                        ? WaydirIconsRegular.check
+                        : WaydirIconsRegular.slidersHorizontal,
+                    tooltip: editing
+                        ? t.sidebar.editDone
+                        : t.sidebar.editLayout,
+                    active: editing,
+                    onTap: onToggleEdit,
+                  ),
+                const Spacer(),
+                toggle,
+              ],
+            ),
+    );
+  }
+}
+
+class _HeaderButton extends StatefulWidget {
+  final IconData icon;
+  final String tooltip;
+  final bool active;
+  final VoidCallback? onTap;
+
+  const _HeaderButton({
+    required this.icon,
+    required this.tooltip,
+    this.active = false,
+    required this.onTap,
+  });
+
+  @override
+  State<_HeaderButton> createState() => _HeaderButtonState();
+}
+
+class _HeaderButtonState extends State<_HeaderButton> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = widget.active
+        ? AppColors.fgAccent
+        : (_hovered ? AppColors.fg : AppColors.fgMuted);
+    return Tooltip(
+      message: widget.tooltip,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: widget.onTap,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: widget.active
+                  ? AppColors.bgSelectedMuted
+                  : (_hovered ? AppColors.bgHover : Colors.transparent),
+              borderRadius: BorderRadius.zero,
+            ),
+            child: SizedBox(
+              width: 26,
+              height: 26,
+              child: Center(child: Icon(widget.icon, size: 14, color: color)),
             ),
           ),
         ),
@@ -1257,9 +1543,9 @@ class _ItemRowState extends State<_ItemRow> {
             builder: (context) {
               final row = widget.collapsed
                   ? Container(
-                      height: 32,
+                      height: _railItemHeight,
                       margin: const EdgeInsets.symmetric(
-                        horizontal: 6,
+                        horizontal: _itemMargin,
                         vertical: 1,
                       ),
                       decoration: BoxDecoration(
@@ -1283,9 +1569,13 @@ class _ItemRowState extends State<_ItemRow> {
                       ),
                     )
                   : Container(
-                      height: widget.space == null ? 28 : 36,
+                      height: widget.space == null
+                          ? _itemHeight
+                          : _itemHeightWithSpace,
                       padding: const EdgeInsets.symmetric(horizontal: 10),
-                      margin: const EdgeInsets.symmetric(horizontal: 6),
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: _itemMargin,
+                      ),
                       decoration: BoxDecoration(
                         color: bg,
                         borderRadius: BorderRadius.zero,
