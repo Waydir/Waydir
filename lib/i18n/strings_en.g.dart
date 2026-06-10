@@ -190,6 +190,15 @@ class Translations$menu$en {
 	/// en: 'Remove Bookmark'
 	String get removeBookmark => 'Remove Bookmark';
 
+	/// en: 'Add to Bookmarks'
+	String get addBookmark => 'Add to Bookmarks';
+
+	/// en: 'Eject'
+	String get eject => 'Eject';
+
+	/// en: 'Disconnect'
+	String get disconnect => 'Disconnect';
+
 	/// en: 'Dual Pane Mode'
 	String get dualPaneMode => 'Dual Pane Mode';
 
@@ -3025,6 +3034,9 @@ extension on Translations {
 			'menu.openLocation' => 'Open Location',
 			'menu.openInNewTab' => 'Open in New Tab',
 			'menu.removeBookmark' => 'Remove Bookmark',
+			'menu.addBookmark' => 'Add to Bookmarks',
+			'menu.eject' => 'Eject',
+			'menu.disconnect' => 'Disconnect',
 			'menu.dualPaneMode' => 'Dual Pane Mode',
 			'menu.properties' => 'Properties',
 			'menu.openWith' => 'Open With',
@@ -3504,11 +3516,11 @@ extension on Translations {
 			'fileView.date.monthsAgo' => ({required Object count}) => '${count}mo ago',
 			'fileView.date.yearsAgo' => ({required Object count}) => '${count}y ago',
 			'fileView.columns.name' => 'Name',
+			_ => null,
+		} ?? switch (path) {
 			'fileView.columns.size' => 'Size',
 			'fileView.columns.dateModified' => 'Date modified',
 			'fileView.columns.location' => 'Location',
-			_ => null,
-		} ?? switch (path) {
 			'sidebar.favorites' => 'Favorites',
 			'sidebar.devices' => 'Devices',
 			'sidebar.home' => 'Home',
