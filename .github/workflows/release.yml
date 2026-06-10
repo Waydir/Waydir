@@ -99,6 +99,35 @@ jobs:
           name: linux-artifacts
           path: dist/**/*
 
+  publish-cloudsmith:
+    name: Publish to Cloudsmith
+    needs: build-linux
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    env:
+      CLOUDSMITH_REPO: waydir/waydir-project
+      CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+    steps:
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: linux-artifacts
+          path: dist
+
+      - name: Install Cloudsmith CLI
+        run: pipx install cloudsmith-cli
+
+      - name: Push deb and rpm
+        run: |
+          # any-distro/any-version: one Cloudsmith repo serves every
+          # deb and rpm distribution from a single target.
+          find dist -name '*.deb' -print0 | while IFS= read -r -d '' f; do
+            cloudsmith push deb "$CLOUDSMITH_REPO/any-distro/any-version" "$f"
+          done
+          find dist -name '*.rpm' -print0 | while IFS= read -r -d '' f; do
+            cloudsmith push rpm "$CLOUDSMITH_REPO/any-distro/any-version" "$f"
+          done
+
   build-windows:
     name: Build Windows
     runs-on: windows-latest
