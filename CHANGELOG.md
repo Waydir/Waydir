@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-06-10
+
+### Added
+- Debian/Ubuntu and Fedora/RHEL/openSUSE package repositories: install Waydir from an apt or dnf/zypper repository and receive new releases through your regular package manager updates.
+
+### Changed
+- deb and rpm builds no longer install updates from within the app. When Waydir runs from a package, the updater now points you to your package manager (`apt upgrade` / `dnf upgrade`), which the repository keeps up to date.
+
 ## [0.12.0] - 2026-06-09
 
 ### Added
