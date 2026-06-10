@@ -32,8 +32,6 @@ import '../operations/operation_store.dart';
 import '../operations/operations_panel.dart';
 import '../../core/models/file_operation.dart';
 
-const double _resizeHandleWidth = 8;
-
 // Layout tokens. Section headers and item icons share the same left edge
 // (_rowInsetH + _rowPadH) so the sidebar reads as one aligned column.
 const double _sectionGap = 12;
@@ -587,14 +585,11 @@ class _SidebarState extends State<Sidebar> {
         if (byId.containsKey(id)) byId[id]!,
     ];
 
-    return Padding(
-      padding: const EdgeInsets.only(right: _resizeHandleWidth),
-      child: Scrollbar(
-        controller: _scrollController,
-        child: editing
-            ? _buildEditList(ordered)
-            : _buildNormalList(ordered, collapsed),
-      ),
+    return Scrollbar(
+      controller: _scrollController,
+      child: editing
+          ? _buildEditList(ordered)
+          : _buildNormalList(ordered, collapsed),
     );
   }
 
@@ -665,20 +660,17 @@ class _SidebarState extends State<Sidebar> {
   }
 
   Widget _buildEditList(List<_SidebarSection> sections) {
-    final shown = [
-      for (final section in sections)
-        if (_sectionAlwaysShown(section.id) || section.entries.isNotEmpty)
-          section,
-    ];
+    // Show every section while editing — including an empty Network — so its
+    // position in the order can be set before any network locations exist.
     return ReorderableListView.builder(
       scrollController: _scrollController,
       padding: const EdgeInsets.symmetric(vertical: 6),
       buildDefaultDragHandles: false,
-      itemCount: shown.length,
+      itemCount: sections.length,
       onReorderItem: (oldIndex, newIndex) =>
           SidebarStore.instance.reorderSections(oldIndex, newIndex),
       itemBuilder: (context, index) {
-        final section = shown[index];
+        final section = sections[index];
         return _EditSection(
           key: ValueKey('section:${section.id}'),
           section: section,
@@ -960,12 +952,12 @@ class _SidebarFooter extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(border: border),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(6, 5, 6, 5),
+        padding: const EdgeInsets.fromLTRB(_rowInsetH, 6, _rowInsetH, 6),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             _ConnectToServerButton(collapsed: false, onTap: onConnect),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             _SidebarOperationsButton(operationStore: operationStore),
           ],
         ),
@@ -1002,8 +994,8 @@ class _ConnectToServerButtonState extends State<_ConnectToServerButton> {
             behavior: HitTestBehavior.opaque,
             onTap: widget.onTap,
             child: Container(
-              height: 30,
-              padding: const EdgeInsets.symmetric(horizontal: 9),
+              height: 32,
+              padding: const EdgeInsets.symmetric(horizontal: _rowPadH),
               decoration: BoxDecoration(
                 color: _hovered ? AppColors.bgHover : Colors.transparent,
                 borderRadius: BorderRadius.zero,
@@ -1012,10 +1004,10 @@ class _ConnectToServerButtonState extends State<_ConnectToServerButton> {
                 children: [
                   Icon(
                     WaydirIconsRegular.treeStructure,
-                    size: 14,
+                    size: _iconSize,
                     color: color,
                   ),
-                  const SizedBox(width: 7),
+                  const SizedBox(width: _iconGap),
                   Expanded(
                     child: Text(
                       t.sidebar.connectToServer,
@@ -1506,7 +1498,10 @@ class _SidebarOperationsButtonState extends State<_SidebarOperationsButton> {
               behavior: HitTestBehavior.opaque,
               child: Container(
                 constraints: const BoxConstraints(minHeight: 38),
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: _rowPadH,
+                  vertical: 7,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.accent.withValues(
                     alpha: _hovered ? 0.18 : 0.11,
@@ -1523,10 +1518,10 @@ class _SidebarOperationsButtonState extends State<_SidebarOperationsButton> {
                       children: [
                         Icon(
                           _operationIcon(active),
-                          size: 14,
+                          size: _iconSize,
                           color: AppColors.fgAccent,
                         ),
-                        const SizedBox(width: 7),
+                        const SizedBox(width: _iconGap),
                         Expanded(
                           child: Text(
                             TaskLabel.title(active),
@@ -1611,16 +1606,20 @@ class _SidebarOperationsButtonState extends State<_SidebarOperationsButton> {
           onTap: _openPanel,
           behavior: HitTestBehavior.opaque,
           child: Container(
-            height: 34,
-            padding: const EdgeInsets.symmetric(horizontal: 9),
+            height: 32,
+            padding: const EdgeInsets.symmetric(horizontal: _rowPadH),
             decoration: BoxDecoration(
               color: _hovered ? AppColors.bgHover : Colors.transparent,
               borderRadius: BorderRadius.zero,
             ),
             child: Row(
               children: [
-                Icon(WaydirIconsRegular.clockClockwise, size: 14, color: color),
-                const SizedBox(width: 7),
+                Icon(
+                  WaydirIconsRegular.clockClockwise,
+                  size: _iconSize,
+                  color: color,
+                ),
+                const SizedBox(width: _iconGap),
                 Expanded(
                   child: Text(
                     t.toolbar.operations,
