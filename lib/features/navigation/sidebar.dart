@@ -32,17 +32,19 @@ import '../operations/operation_store.dart';
 import '../operations/operations_panel.dart';
 import '../../core/models/file_operation.dart';
 
-// Layout tokens. Section headers and item icons share the same left edge
-// (_rowInsetH + _rowPadH) so the sidebar reads as one aligned column.
+// Layout tokens. A symmetric [_gutter] frames the scrollable content and the
+// footer, leaving room on the right for the scrollbar and resize handle without
+// the scrollbar landing on the handle. Inside that frame every row, header and
+// footer button shares the same [_rowPadH] inner inset, so icons line up in one
+// aligned column.
 const double _sectionGap = 12;
-const double _rowInsetH = 6;
+const double _gutter = 8;
 const double _rowPadH = 10;
 const double _rowHeight = 30;
 const double _rowHeightWithSpace = 40;
 const double _railRowHeight = 34;
 const double _iconSize = 16;
 const double _iconGap = 10;
-const double _rowTextLeft = _rowInsetH + _rowPadH;
 
 class _SidebarItem {
   final String label;
@@ -585,11 +587,14 @@ class _SidebarState extends State<Sidebar> {
         if (byId.containsKey(id)) byId[id]!,
     ];
 
-    return Scrollbar(
-      controller: _scrollController,
-      child: editing
-          ? _buildEditList(ordered)
-          : _buildNormalList(ordered, collapsed),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: _gutter),
+      child: Scrollbar(
+        controller: _scrollController,
+        child: editing
+            ? _buildEditList(ordered)
+            : _buildNormalList(ordered, collapsed),
+      ),
     );
   }
 
@@ -626,7 +631,7 @@ class _SidebarState extends State<Sidebar> {
           !collapsed) {
         children.add(
           Padding(
-            padding: const EdgeInsets.fromLTRB(_rowTextLeft, 2, _rowPadH, 8),
+            padding: const EdgeInsets.fromLTRB(_rowPadH, 2, _rowPadH, 8),
             child: Text(
               t.sidebar.dropBookmark,
               overflow: TextOverflow.ellipsis,
@@ -952,7 +957,7 @@ class _SidebarFooter extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(border: border),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(_rowInsetH, 6, _rowInsetH, 6),
+        padding: const EdgeInsets.fromLTRB(_gutter, 6, _gutter, 6),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1202,12 +1207,12 @@ class _EditRow extends StatelessWidget {
     final itemHidden = allowHide && store.isItemHidden(scope, entry.key);
     final faded = dimmed || itemHidden;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: _rowInsetH, vertical: 1),
+      padding: const EdgeInsets.symmetric(vertical: 1),
       child: Opacity(
         opacity: faded ? 0.45 : 1,
         child: Container(
           height: _rowHeight,
-          padding: const EdgeInsets.symmetric(horizontal: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
           decoration: BoxDecoration(
             color: AppColors.bgHover.withValues(alpha: 0.4),
           ),
@@ -1671,7 +1676,7 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(_rowTextLeft, 14, _rowPadH, 6),
+      padding: const EdgeInsets.fromLTRB(_rowPadH, 14, _rowPadH, 6),
       child: Text(title.toUpperCase(), style: context.txt.sectionLabel),
     );
   }
@@ -1786,7 +1791,7 @@ class _ItemRowState extends State<_ItemRow> {
   Widget _railRow() {
     return Container(
       height: _railRowHeight,
-      margin: const EdgeInsets.symmetric(horizontal: _rowInsetH, vertical: 1),
+      margin: const EdgeInsets.symmetric(vertical: 1),
       decoration: BoxDecoration(color: _bg, border: _dragBorder),
       child: Stack(
         children: [
@@ -1851,7 +1856,6 @@ class _ItemRowState extends State<_ItemRow> {
 
     return Container(
       height: widget.space == null ? _rowHeight : _rowHeightWithSpace,
-      margin: const EdgeInsets.symmetric(horizontal: _rowInsetH),
       decoration: BoxDecoration(color: _bg, border: _dragBorder),
       child: Stack(
         children: [
