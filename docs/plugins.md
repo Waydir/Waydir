@@ -133,8 +133,9 @@ Named builtin glyphs for `icon` (no image file needed): `archive`, `bell`,
 ## Status bars
 
 Register a bar with `waydir.register_bar`. The `update(ctx)` function is called
-on load, when its context changes, and every `interval` seconds. Return
-`visible = false` to hide the bar for the current context.
+on load, every `interval` seconds, and (unless `refresh_on_change = false`) when
+its context changes. Return `visible = false` to hide the bar for the current
+context.
 
 ```lua
 waydir.register_bar({
@@ -143,6 +144,7 @@ waydir.register_bar({
   title = "Project",
   icon = "code",
   interval = 10,
+  refresh_on_change = true,
   update = function(ctx)
     if not ctx.dir:match("/src") then
       return { visible = false }
@@ -165,7 +167,8 @@ waydir.register_bar({
 | `scope` | `"global"` (above Waydir's bottom status bar) or `"pane"` (per pane, above pane status bars) |
 | `title` | label shown at the start of the bar |
 | `icon` | named builtin glyph or bundled image path |
-| `interval` | refresh cadence in seconds, clamped between 2 and 3600 |
+| `interval` | refresh cadence in seconds, clamped between 2 and 3600; `0` disables periodic refresh |
+| `refresh_on_change` | refresh when the context changes (folder, selection, active pane); defaults to `true` |
 | `settings` | optional schema merged with the plugin's normal settings |
 | `update(ctx)` | returns the current visible state |
 | `click(ctx)` | optional handler for button item clicks; receives `ctx.item_id` |

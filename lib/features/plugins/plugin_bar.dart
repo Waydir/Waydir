@@ -74,7 +74,7 @@ class _PluginBarHostState extends State<PluginBarHost> {
     _syncTimers(refreshNew: true);
     if (oldWidget.contextKey != widget.contextKey) {
       for (final bar in widget.bars) {
-        unawaited(_refresh(bar));
+        if (bar.refreshOnContextChange) unawaited(_refresh(bar));
       }
     }
   }
@@ -101,22 +101,23 @@ class _PluginBarHostState extends State<PluginBarHost> {
     }
     PluginBarStore.instance.removeAll(removed);
     for (final entry in next.entries) {
-      if (_intervals[entry.key] != entry.value.intervalSeconds) {
-        _timers.remove(entry.key)?.cancel();
-        _intervals.remove(entry.key);
-      }
-      if (_timers.containsKey(entry.key)) continue;
       final bar = entry.value;
       final key = entry.key;
-      _intervals[key] = bar.intervalSeconds;
-      _timers[entry.key] = Timer.periodic(
-        Duration(seconds: bar.intervalSeconds),
-        (_) {
-          final current = _barForKey(key);
-          if (current != null) unawaited(_refresh(current));
-        },
-      );
-      if (refreshNew) unawaited(_refresh(bar));
+      final known = _intervals.containsKey(key);
+      if (!known || _intervals[key] != bar.intervalSeconds) {
+        _timers.remove(key)?.cancel();
+        _intervals[key] = bar.intervalSeconds;
+        if (bar.intervalSeconds > 0) {
+          _timers[key] = Timer.periodic(
+            Duration(seconds: bar.intervalSeconds),
+            (_) {
+              final current = _barForKey(key);
+              if (current != null) unawaited(_refresh(current));
+            },
+          );
+        }
+      }
+      if (!known && refreshNew) unawaited(_refresh(bar));
     }
   }
 
