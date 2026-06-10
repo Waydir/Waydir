@@ -2,8 +2,7 @@
 
 # Waydir
 
-> A cross-platform file manager with dual-pane navigation, tabs, and
-> network drives. Built on Flutter with a native Rust core.
+A cross-platform file manager with dual-pane navigation, tabs, and network drives. Built on Flutter with a native Rust core.
 
 Native Rust core • Flutter UI • Keyboard-first
 
