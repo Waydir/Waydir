@@ -233,4 +233,60 @@ void main() {
       expect(bookmarks, isEmpty);
     });
   });
+
+  group('SidebarPrefs', () {
+    test('getSidebarPrefs returns empty list initially', () async {
+      expect(await db.getSidebarPrefs(), isEmpty);
+    });
+
+    test('setSidebarOrder writes ascending order indices', () async {
+      await db.setSidebarOrder('section', ['network', 'favorites', 'devices']);
+
+      final rows = await db.getSidebarPrefs()
+        ..sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
+      expect(rows.map((r) => r.itemKey), ['network', 'favorites', 'devices']);
+      expect(rows.map((r) => r.orderIndex), [0, 1, 2]);
+      expect(rows.every((r) => !r.hidden), isTrue);
+    });
+
+    test('setSidebarOrder updates indices but preserves hidden flag', () async {
+      await db.setSidebarOrder('favorites', ['home', 'music']);
+      await db.setSidebarPref(
+        'favorites',
+        'music',
+        orderIndex: 1,
+        hidden: true,
+      );
+
+      await db.setSidebarOrder('favorites', ['music', 'home']);
+
+      final rows = await db.getSidebarPrefs();
+      final music = rows.firstWhere((r) => r.itemKey == 'music');
+      expect(music.orderIndex, 0);
+      expect(music.hidden, isTrue);
+    });
+
+    test('setSidebarPref upserts a single row', () async {
+      await db.setSidebarPref(
+        'section',
+        'network',
+        orderIndex: 2,
+        hidden: true,
+      );
+
+      final row = (await db.getSidebarPrefs()).single;
+      expect(row.scope, 'section');
+      expect(row.itemKey, 'network');
+      expect(row.orderIndex, 2);
+      expect(row.hidden, isTrue);
+
+      await db.setSidebarPref(
+        'section',
+        'network',
+        orderIndex: 2,
+        hidden: false,
+      );
+      expect((await db.getSidebarPrefs()).single.hidden, isFalse);
+    });
+  });
 }
