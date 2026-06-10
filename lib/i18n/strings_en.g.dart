@@ -571,6 +571,9 @@ class Translations$update$en {
 	/// en: 'AppImages don't update themselves. Download the new version and replace this file.'
 	String get appImageManual => 'AppImages don\'t update themselves. Download the new version and replace this file.';
 
+	/// en: 'This build was installed from a package. Update it through your package manager — run sudo apt upgrade or sudo dnf upgrade.'
+	String get packageManagerManual => 'This build was installed from a package. Update it through your package manager — run sudo apt upgrade or sudo dnf upgrade.';
+
 	/// en: 'Downloading...'
 	String get btnDownloading => 'Downloading...';
 
@@ -588,15 +591,6 @@ class Translations$update$en {
 
 	/// en: 'Open DMG'
 	String get btnOpenDmg => 'Open DMG';
-
-	/// en: 'Restart Waydir'
-	String get btnRestart => 'Restart Waydir';
-
-	/// en: 'Update installed'
-	String get installed => 'Update installed';
-
-	/// en: 'Restart Waydir to start using v${version}.'
-	String restartHint({required Object version}) => 'Restart Waydir to start using v${version}.';
 
 	/// en: 'checking...'
 	String get statusCheckingInline => 'checking...';
@@ -619,23 +613,11 @@ class Translations$update$en {
 	/// en: 'GitHub API $statusCode: $reason'
 	String githubApiError({required Object statusCode, required Object reason}) => 'GitHub API ${statusCode}: ${reason}';
 
-	/// en: 'Could not launch package installer. Open the file manually: $path'
-	String packageInstallerLaunchFailed({required Object path}) => 'Could not launch package installer. Open the file manually: ${path}';
-
 	/// en: 'Cannot write to bundle directory. Install the new version manually.'
 	String get bundleNotWritable => 'Cannot write to bundle directory. Install the new version manually.';
 
 	/// en: 'Failed to launch installer: $error'
 	String installerLaunchFailed({required Object error}) => 'Failed to launch installer: ${error}';
-
-	/// en: 'Failed to relaunch: $error'
-	String relaunchFailed({required Object error}) => 'Failed to relaunch: ${error}';
-
-	/// en: '--- Install OK. Press Enter to close ---'
-	String get terminalInstallOk => '--- Install OK. Press Enter to close ---';
-
-	/// en: '--- Install failed (exit $status). Press Enter to close ---'
-	String terminalInstallFailed({required Object status}) => '--- Install failed (exit ${status}). Press Enter to close ---';
 }
 
 // Path: appMenu
@@ -3302,15 +3284,13 @@ extension on Translations {
 			'update.btnDownload' => 'Download',
 			'update.btnGetUpdate' => 'Get the update',
 			'update.appImageManual' => 'AppImages don\'t update themselves. Download the new version and replace this file.',
+			'update.packageManagerManual' => 'This build was installed from a package. Update it through your package manager — run sudo apt upgrade or sudo dnf upgrade.',
 			'update.btnDownloading' => 'Downloading...',
 			'update.btnCheckNow' => 'Check now',
 			'update.btnRetry' => 'Retry',
 			'update.btnInstall' => 'Install',
 			'update.btnUpdate' => 'Update',
 			'update.btnOpenDmg' => 'Open DMG',
-			'update.btnRestart' => 'Restart Waydir',
-			'update.installed' => 'Update installed',
-			'update.restartHint' => ({required Object version}) => 'Restart Waydir to start using v${version}.',
 			'update.statusCheckingInline' => 'checking...',
 			'update.statusUpToDateInline' => 'up to date',
 			'update.formatInstaller' => 'installer',
@@ -3318,12 +3298,8 @@ extension on Translations {
 			'update.formatUnknown' => 'unknown',
 			'update.downloadFailed' => ({required Object statusCode}) => 'Download failed: HTTP ${statusCode}',
 			'update.githubApiError' => ({required Object statusCode, required Object reason}) => 'GitHub API ${statusCode}: ${reason}',
-			'update.packageInstallerLaunchFailed' => ({required Object path}) => 'Could not launch package installer. Open the file manually: ${path}',
 			'update.bundleNotWritable' => 'Cannot write to bundle directory. Install the new version manually.',
 			'update.installerLaunchFailed' => ({required Object error}) => 'Failed to launch installer: ${error}',
-			'update.relaunchFailed' => ({required Object error}) => 'Failed to relaunch: ${error}',
-			'update.terminalInstallOk' => '--- Install OK. Press Enter to close ---',
-			'update.terminalInstallFailed' => ({required Object status}) => '--- Install failed (exit ${status}). Press Enter to close ---',
 			'appMenu.help' => 'Help',
 			'appMenu.starOnGithub' => 'Star on GitHub',
 			'appMenu.quit' => 'Quit',
@@ -3513,14 +3489,14 @@ extension on Translations {
 			'fileView.date.hoursAgo' => ({required Object count}) => '${count}h ago',
 			'fileView.date.daysAgo' => ({required Object count}) => '${count}d ago',
 			'fileView.date.weeksAgo' => ({required Object count}) => '${count}w ago',
-			_ => null,
-		} ?? switch (path) {
 			'fileView.date.monthsAgo' => ({required Object count}) => '${count}mo ago',
 			'fileView.date.yearsAgo' => ({required Object count}) => '${count}y ago',
 			'fileView.columns.name' => 'Name',
 			'fileView.columns.size' => 'Size',
 			'fileView.columns.dateModified' => 'Date modified',
 			'fileView.columns.location' => 'Location',
+			_ => null,
+		} ?? switch (path) {
 			'sidebar.favorites' => 'Favorites',
 			'sidebar.devices' => 'Devices',
 			'sidebar.home' => 'Home',

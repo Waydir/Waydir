@@ -99,7 +99,6 @@ class _Header extends StatelessWidget {
       UpdateStatus.downloading => t.update.downloading,
       UpdateStatus.ready => t.update.ready,
       UpdateStatus.launching => t.update.launching,
-      UpdateStatus.installed => t.update.installed,
       UpdateStatus.error => t.update.error,
     };
     return Container(
@@ -148,16 +147,6 @@ class _Body extends StatelessWidget {
         if (status == UpdateStatus.upToDate) {
           return _CenterMessage(
             message: t.update.upToDate(version: store.currentVersion),
-          );
-        }
-        if (status == UpdateStatus.installed) {
-          final v =
-              store.pendingRestartVersion.value ??
-              store.latestRelease.value?.version ??
-              '';
-          return _CenterMessage(
-            message: t.update.restartHint(version: v),
-            color: AppColors.success,
           );
         }
         final release = store.latestRelease.value;
@@ -303,10 +292,14 @@ class _AssetRow extends StatelessWidget {
       );
     }
     if (!UpdateStore.canSelfInstall(fmt)) {
+      final message =
+          fmt == InstallFormat.linuxDeb || fmt == InstallFormat.linuxRpm
+          ? t.update.packageManagerManual
+          : t.update.appImageManual;
       return Padding(
         padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
         child: Text(
-          t.update.appImageManual,
+          message,
           style: context.txt.muted.copyWith(color: AppColors.fgMuted),
         ),
       );
@@ -515,12 +508,6 @@ class _PrimaryButtonState extends State<_PrimaryButton> {
           await Future.delayed(const Duration(milliseconds: 300));
           exit(0);
         }
-      case UpdateStatus.installed:
-        final ok = await store.relaunch();
-        if (ok) {
-          await Future.delayed(const Duration(milliseconds: 200));
-          exit(0);
-        }
       case UpdateStatus.error:
         await store.check(force: true);
       case UpdateStatus.upToDate:
@@ -552,7 +539,6 @@ class _PrimaryButtonState extends State<_PrimaryButton> {
     }
     if (status == UpdateStatus.checking) return t.update.checking;
     if (status == UpdateStatus.launching) return t.update.launching;
-    if (status == UpdateStatus.installed) return t.update.btnRestart;
     if (status == UpdateStatus.error) return t.update.btnRetry;
     return t.update.btnCheckNow;
   }

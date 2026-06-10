@@ -8,7 +8,6 @@ import 'package:signals/signals.dart';
 import 'github_releases.dart';
 import 'install_format.dart';
 import '../../i18n/strings.g.dart';
-import 'package_installer.dart';
 import 'swap_installer.dart';
 
 enum UpdateStatus {
@@ -19,7 +18,6 @@ enum UpdateStatus {
   downloading,
   ready,
   launching,
-  installed,
   error,
 }
 
@@ -53,7 +51,6 @@ class UpdateStore {
   final totalBytes = signal<int>(0);
   final downloadedFile = signal<File?>(null);
   final errorMessage = signal<String?>(null);
-  final pendingRestartVersion = signal<String?>(null);
 
   DateTime? _lastCheckedAt;
   http.Client? _downloadClient;
@@ -69,58 +66,19 @@ class UpdateStore {
 
   static bool canSelfInstall(InstallFormat? fmt) =>
       fmt != null &&
+      fmt != InstallFormat.linuxDeb &&
+      fmt != InstallFormat.linuxRpm &&
       fmt != InstallFormat.linuxAppImage &&
       fmt != InstallFormat.unknown;
 
   Future<void> checkOnStartup() async {
-    await _loadPendingRestart();
-    if (status.value == UpdateStatus.installed) return;
     await Future.delayed(const Duration(seconds: 4));
     await check(force: false);
   }
 
-  Future<File> _restartMarkerFile() async {
-    final dir = await getApplicationSupportDirectory();
-    return File('${dir.path}/pending_restart_version');
-  }
-
-  Future<void> _loadPendingRestart() async {
-    try {
-      final f = await _restartMarkerFile();
-      if (!f.existsSync()) return;
-      final v = f.readAsStringSync().trim();
-      if (v.isEmpty) return;
-      if (!_isNewer(v, currentVersion)) {
-        try {
-          f.deleteSync();
-        } catch (_) {}
-        return;
-      }
-      pendingRestartVersion.value = v;
-      status.value = UpdateStatus.installed;
-    } catch (_) {}
-  }
-
-  Future<void> _writePendingRestart(String version) async {
-    try {
-      final f = await _restartMarkerFile();
-      f.parent.createSync(recursive: true);
-      f.writeAsStringSync(version);
-    } catch (_) {}
-  }
-
-  Future<void> _clearPendingRestart() async {
-    try {
-      final f = await _restartMarkerFile();
-      if (f.existsSync()) f.deleteSync();
-    } catch (_) {}
-    pendingRestartVersion.value = null;
-  }
-
   Future<void> check({bool force = true}) async {
     if (status.value == UpdateStatus.checking ||
-        status.value == UpdateStatus.downloading ||
-        status.value == UpdateStatus.installed) {
+        status.value == UpdateStatus.downloading) {
       return;
     }
     if (!force && _lastCheckedAt != null) {
@@ -216,23 +174,6 @@ class UpdateStore {
     status.value = UpdateStatus.launching;
     try {
       switch (fmt) {
-        case InstallFormat.linuxDeb:
-        case InstallFormat.linuxRpm:
-          final ok = await PackageInstaller.install(file, fmt);
-          if (!ok) {
-            errorMessage.value = t.update.packageInstallerLaunchFailed(
-              path: file.path,
-            );
-            status.value = UpdateStatus.error;
-            return false;
-          }
-          final newVersion = latestRelease.value?.version;
-          if (newVersion != null && newVersion.isNotEmpty) {
-            pendingRestartVersion.value = newVersion;
-            await _writePendingRestart(newVersion);
-          }
-          status.value = UpdateStatus.installed;
-          return false;
         case InstallFormat.linuxPortable:
           final ok = await SwapInstaller.installLinuxPortable(file);
           if (!ok) {
@@ -261,6 +202,8 @@ class UpdateStore {
             file.path,
           ], mode: ProcessStartMode.detached);
           return true;
+        case InstallFormat.linuxDeb:
+        case InstallFormat.linuxRpm:
         case InstallFormat.linuxAppImage:
         case InstallFormat.unknown:
           return false;
@@ -268,18 +211,6 @@ class UpdateStore {
     } catch (e) {
       errorMessage.value = t.update.installerLaunchFailed(error: e);
       status.value = UpdateStatus.error;
-      return false;
-    }
-  }
-
-  Future<bool> relaunch() async {
-    try {
-      final exe = Platform.resolvedExecutable;
-      await Process.start(exe, const [], mode: ProcessStartMode.detached);
-      await _clearPendingRestart();
-      return true;
-    } catch (e) {
-      errorMessage.value = t.update.relaunchFailed(error: e);
       return false;
     }
   }
