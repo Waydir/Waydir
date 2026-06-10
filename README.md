@@ -109,7 +109,22 @@ asset that matches your OS and CPU architecture.
 
 #### Linux
 
-Available as `.deb`, `.rpm`, `.AppImage`, and `.tar.gz`.
+**Recommended — package repository (auto-updates via your package manager):**
+
+```bash
+# Debian / Ubuntu
+curl -1sLf 'https://dl.cloudsmith.io/public/waydir/waydir-project/setup.deb.sh' | sudo -E bash
+sudo apt install waydir
+
+# Fedora / RHEL
+curl -1sLf 'https://dl.cloudsmith.io/public/waydir/waydir-project/setup.rpm.sh' | sudo -E bash
+sudo dnf install waydir
+```
+
+Once the repository is set up, new releases arrive through your regular
+`apt upgrade` / `dnf upgrade`.
+
+**Or grab a single asset from [Releases](https://github.com/Waydir/Waydir/releases):**
 
 ```bash
 # Debian / Ubuntu
@@ -127,6 +142,9 @@ tar -xzf waydir-*-linux-x64.tar.gz && ./waydir
 
 Package builds integrate with your desktop launcher. AppImage and tarball builds
 are portable and can be launched from any folder.
+
+Package repository hosting is graciously provided by [Cloudsmith](https://cloudsmith.com),
+the only fully hosted, cloud-native, universal package management solution.
 
 #### Windows
 
