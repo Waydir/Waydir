@@ -63,4 +63,30 @@ void main() {
       expect(leftovers, isEmpty);
     },
   );
+
+  test('copy cancel while waiting for conflicts ends cancelled', () async {
+    final src = Directory(p.join(tmpDir.path, 'src'))..createSync();
+    File(p.join(src.path, 'same.txt')).writeAsStringSync('source');
+    final dest = Directory(p.join(tmpDir.path, 'dest'))..createSync();
+    final targetDir = Directory(p.join(dest.path, 'src'))..createSync();
+    File(p.join(targetDir.path, 'same.txt')).writeAsStringSync('target');
+
+    store.enqueueCopy([src.path], dest.path);
+    final waiting = await waitForTask(
+      store,
+      (task) => task.status == TaskStatus.waitingConflicts,
+    );
+    store.cancelTask(waiting.id);
+
+    final terminal = await waitForTask(
+      store,
+      (task) => task.id == waiting.id && isTerminalTask(task),
+    );
+
+    expect(terminal.status, TaskStatus.cancelled);
+    expect(
+      File(p.join(targetDir.path, 'same.txt')).readAsStringSync(),
+      'target',
+    );
+  });
 }

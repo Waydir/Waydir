@@ -87,6 +87,8 @@ class OperationStore {
   final _conflictQueues = <String, List<ConflictInfo>>{};
   final _conflictNotifIds = <String, String>{};
   final _pluginCancelHandlers = <String, VoidCallback>{};
+  Timer? _currentCancelWatchdog;
+  void Function()? _completeCurrentAsCancelled;
 
   void enqueueCopy(List<String> sources, String destination) =>
       _enqueueTransfer(TaskType.copy, sources, destination);
@@ -372,13 +374,14 @@ class OperationStore {
     final task = tasks.value.firstWhereOrNull((t) => t.id == id);
     if (task == null) return;
 
-    if (task.status == TaskStatus.waitingConflicts) {
-      resolveCurrentConflict(id, ConflictResolution.skip, applyToAll: true);
-      return;
-    }
-
     if (task.status == TaskStatus.running ||
-        task.status == TaskStatus.preparing) {
+        task.status == TaskStatus.preparing ||
+        task.status == TaskStatus.waitingConflicts ||
+        task.status == TaskStatus.cancelling) {
+      if (task.status == TaskStatus.cancelling) {
+        _startCancelWatchdog(task);
+        return;
+      }
       task.status = TaskStatus.cancelling;
       _updateTask(task);
       final pluginCancel = _pluginCancelHandlers.remove(id);
@@ -396,6 +399,7 @@ class OperationStore {
         return;
       }
       _currentWorker?.sendPort.send(CancelCommand());
+      _startCancelWatchdog(task);
       if (_currentTaskId == id && _isArchiveTask(task.type)) {
         _hardCancelCurrent(task);
       }
@@ -407,6 +411,17 @@ class OperationStore {
       _scheduleCleanup(task);
     }
     _dismissTaskConflictNotification(id);
+  }
+
+  void _startCancelWatchdog(FileTask task) {
+    if (_currentTaskId != task.id) return;
+    _currentCancelWatchdog?.cancel();
+    _currentCancelWatchdog = Timer(const Duration(seconds: 2), () {
+      if (_currentTaskId != task.id) return;
+      if (task.status != TaskStatus.cancelling) return;
+      _hardCancelCurrent(task);
+      _completeCurrentAsCancelled?.call();
+    });
   }
 
   bool _isArchiveTask(TaskType type) =>
@@ -549,6 +564,8 @@ class OperationStore {
     task.status = TaskStatus.preparing;
     _updateTask(task);
     _currentTaskId = task.id;
+    _currentCancelWatchdog?.cancel();
+    _completeCurrentAsCancelled = null;
 
     final useSftp = _shouldExecuteSftp(task);
     if (useSftp) {
@@ -607,6 +624,32 @@ class OperationStore {
       var lastSampleBytes = 0;
       var emaBytesPerSec = 0.0;
 
+      void finishTask(TaskStatus status, {List<TaskError>? errors}) {
+        if (completer.isCompleted) return;
+        _currentCancelWatchdog?.cancel();
+        _currentCancelWatchdog = null;
+        if (errors != null) task.errors = errors;
+        task.status = status;
+        task.bytesPerSecond = 0;
+        task.endTime = DateTime.now();
+        task.progress = task.status == TaskStatus.completed
+            ? 1.0
+            : task.progress;
+        _updateTask(task);
+        _dismissTaskConflictNotification(task.id);
+        _showFinishNotification(task);
+        taskCompleted.value = task.id;
+        _scheduleCleanup(task);
+        handle.dispose();
+        completer.complete();
+      }
+
+      _completeCurrentAsCancelled = () {
+        if (_currentTaskId != task.id) return;
+        _cleanupCancelledTaskTemps(task);
+        finishTask(TaskStatus.cancelled);
+      };
+
       void handleMessage(dynamic msg) {
         if (completer.isCompleted) return;
         if (msg is! WorkerMessage) return;
@@ -616,6 +659,12 @@ class OperationStore {
           task.totalBytes = msg.totalBytes;
           task.conflicts = msg.conflicts;
 
+          if (task.status == TaskStatus.cancelling) {
+            _updateTask(task);
+            handle.sendPort.send(CancelCommand());
+            return;
+          }
+
           task.status = msg.conflicts.isEmpty
               ? TaskStatus.running
               : TaskStatus.waitingConflicts;
@@ -623,6 +672,10 @@ class OperationStore {
 
           handle.sendPort.send(ExecuteCommand(resolutions: {}));
         } else if (msg is ConflictPromptMessage) {
+          if (task.status == TaskStatus.cancelling) {
+            handle.sendPort.send(CancelCommand());
+            return;
+          }
           _enqueueConflict(task, msg.conflict);
         } else if (msg is ProgressMessage) {
           task.processedFiles = msg.processedFiles;
@@ -663,28 +716,13 @@ class OperationStore {
           _updateTask(task);
         } else if (msg is TaskDoneMessage) {
           final allErrors = [...task.errors, ...msg.errors];
-          if (msg.cancelled) {
-            task.status = TaskStatus.cancelled;
-          } else if (allErrors.isNotEmpty && task.processedFiles == 0) {
-            task.status = TaskStatus.failed;
-          } else {
-            task.status = TaskStatus.completed;
-          }
-          task.errors = allErrors;
-          task.bytesPerSecond = 0;
-          task.endTime = DateTime.now();
-          task.progress = task.status == TaskStatus.completed
-              ? 1.0
-              : task.progress;
-          _updateTask(task);
-
-          _dismissTaskConflictNotification(task.id);
-          _showFinishNotification(task);
-          taskCompleted.value = task.id;
-
-          _scheduleCleanup(task);
-          handle.dispose();
-          completer.complete();
+          final status = msg.cancelled || task.status == TaskStatus.cancelling
+              ? TaskStatus.cancelled
+              : allErrors.isNotEmpty && task.processedFiles == 0
+              ? TaskStatus.failed
+              : TaskStatus.completed;
+          if (status == TaskStatus.cancelled) _cleanupCancelledTaskTemps(task);
+          finishTask(status, errors: allErrors);
         }
       }
 
@@ -693,41 +731,30 @@ class OperationStore {
       handle.errorPort.listen((err) {
         if (completer.isCompleted) return;
         log.error('operation', 'task ${task.id} isolate error', error: err);
-        task.status = TaskStatus.failed;
-        task.errors = [
-          ...task.errors,
-          TaskError(path: '', message: err.toString()),
-        ];
-        task.endTime = DateTime.now();
-        _updateTask(task);
-        _dismissTaskConflictNotification(task.id);
-        _showFinishNotification(task);
-        taskCompleted.value = task.id;
-        _scheduleCleanup(task);
-        handle.dispose();
-        completer.complete();
+        finishTask(
+          TaskStatus.failed,
+          errors: [
+            ...task.errors,
+            TaskError(path: '', message: err.toString()),
+          ],
+        );
       });
 
       handle.exitPort.listen((_) {
         if (completer.isCompleted) return;
         if (task.status == TaskStatus.cancelling) {
-          task.status = TaskStatus.cancelled;
+          _cleanupCancelledTaskTemps(task);
+          finishTask(TaskStatus.cancelled);
         } else {
           log.error('operation', 'task ${task.id} worker exited unexpectedly');
-          task.status = TaskStatus.failed;
-          task.errors = [
-            ...task.errors,
-            TaskError(path: '', message: t.errors.workerExitedUnexpectedly),
-          ];
+          finishTask(
+            TaskStatus.failed,
+            errors: [
+              ...task.errors,
+              TaskError(path: '', message: t.errors.workerExitedUnexpectedly),
+            ],
+          );
         }
-        task.endTime = DateTime.now();
-        _updateTask(task);
-        _dismissTaskConflictNotification(task.id);
-        _showFinishNotification(task);
-        taskCompleted.value = task.id;
-        _scheduleCleanup(task);
-        handle.dispose();
-        completer.complete();
       });
 
       await completer.future;
@@ -740,7 +767,43 @@ class OperationStore {
       _dismissTaskConflictNotification(task.id);
       _showFinishNotification(task);
       _scheduleCleanup(task);
+    } finally {
+      if (_currentTaskId == task.id) {
+        _currentCancelWatchdog?.cancel();
+        _currentCancelWatchdog = null;
+        _completeCurrentAsCancelled = null;
+      }
     }
+  }
+
+  void _cleanupCancelledTaskTemps(FileTask task) {
+    final destination = task.destination;
+    if (destination == null || destination.isEmpty) return;
+    if (PlatformPaths.isSftpUri(destination)) return;
+    _cleanupLocalTempFiles(destination, depth: 3);
+  }
+
+  void _cleanupLocalTempFiles(String root, {required int depth}) {
+    try {
+      final dir = Directory(root);
+      if (!dir.existsSync()) return;
+      for (final entity in dir.listSync(followLinks: false)) {
+        final name = p.basename(entity.path);
+        if (name.contains('.waydir_tmp_')) {
+          try {
+            if (entity is Directory) {
+              entity.deleteSync(recursive: true);
+            } else {
+              entity.deleteSync();
+            }
+          } catch (_) {}
+          continue;
+        }
+        if (depth > 0 && entity is Directory) {
+          _cleanupLocalTempFiles(entity.path, depth: depth - 1);
+        }
+      }
+    } catch (_) {}
   }
 
   bool _shouldExecuteSftp(FileTask task) {
@@ -1079,6 +1142,9 @@ class OperationStore {
       timer.cancel();
     }
     _cleanupTimers.clear();
+    _currentCancelWatchdog?.cancel();
+    _currentCancelWatchdog = null;
+    _completeCurrentAsCancelled = null;
     _currentWorker?.dispose();
   }
 }

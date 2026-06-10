@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Reworked sidebar spacing for consistent alignment, and renamed the Favorites section to Places.
 
+### Fixed
+- Operation cancellation no longer gets stuck in the cancelling state.
+
 ## [0.13.0] - 2026-06-10
 
 ### Added
