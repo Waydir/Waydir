@@ -109,7 +109,7 @@ asset that matches your OS and CPU architecture.
 
 #### Ubuntu / Debian
 
-**Recommended — package repository (auto-updates via `apt upgrade`):**
+**Recommended - package repository (auto-updates via `apt upgrade`):**
 
 ```bash
 curl -1sLf 'https://dl.cloudsmith.io/public/waydir/waydir-project/setup.deb.sh' | sudo -E bash
@@ -124,7 +124,7 @@ sudo dpkg -i waydir-*.deb
 
 #### Fedora / RHEL
 
-**Recommended — package repository (auto-updates via `dnf upgrade`):**
+**Recommended - package repository (auto-updates via `dnf upgrade`):**
 
 ```bash
 curl -1sLf 'https://dl.cloudsmith.io/public/waydir/waydir-project/setup.rpm.sh' | sudo -E bash
@@ -139,7 +139,7 @@ sudo rpm -i waydir-*.rpm
 
 #### openSUSE
 
-**Recommended — package repository (auto-updates via `zypper update`):**
+**Recommended - package repository (auto-updates via `zypper update`):**
 
 ```bash
 curl -1sLf 'https://dl.cloudsmith.io/public/waydir/waydir-project/setup.rpm.sh' | sudo -E bash
