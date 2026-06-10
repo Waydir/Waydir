@@ -49,6 +49,13 @@ void main() {
         )
         .getSingleOrNull();
     expect(recentPathsTable, isNotNull);
+
+    final sidebarPrefsTable = await db
+        .customSelect(
+          "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'sidebar_prefs'",
+        )
+        .getSingleOrNull();
+    expect(sidebarPrefsTable, isNotNull);
   });
 }
 

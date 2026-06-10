@@ -4864,6 +4864,318 @@ class DisabledPluginsCompanion extends UpdateCompanion<DisabledPlugin> {
   }
 }
 
+class $SidebarPrefsTable extends SidebarPrefs
+    with TableInfo<$SidebarPrefsTable, SidebarPref> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SidebarPrefsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _scopeMeta = const VerificationMeta('scope');
+  @override
+  late final GeneratedColumn<String> scope = GeneratedColumn<String>(
+    'scope',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _itemKeyMeta = const VerificationMeta(
+    'itemKey',
+  );
+  @override
+  late final GeneratedColumn<String> itemKey = GeneratedColumn<String>(
+    'item_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _orderIndexMeta = const VerificationMeta(
+    'orderIndex',
+  );
+  @override
+  late final GeneratedColumn<int> orderIndex = GeneratedColumn<int>(
+    'order_index',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _hiddenMeta = const VerificationMeta('hidden');
+  @override
+  late final GeneratedColumn<bool> hidden = GeneratedColumn<bool>(
+    'hidden',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("hidden" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [scope, itemKey, orderIndex, hidden];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sidebar_prefs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SidebarPref> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('scope')) {
+      context.handle(
+        _scopeMeta,
+        scope.isAcceptableOrUnknown(data['scope']!, _scopeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_scopeMeta);
+    }
+    if (data.containsKey('item_key')) {
+      context.handle(
+        _itemKeyMeta,
+        itemKey.isAcceptableOrUnknown(data['item_key']!, _itemKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_itemKeyMeta);
+    }
+    if (data.containsKey('order_index')) {
+      context.handle(
+        _orderIndexMeta,
+        orderIndex.isAcceptableOrUnknown(data['order_index']!, _orderIndexMeta),
+      );
+    }
+    if (data.containsKey('hidden')) {
+      context.handle(
+        _hiddenMeta,
+        hidden.isAcceptableOrUnknown(data['hidden']!, _hiddenMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {scope, itemKey};
+  @override
+  SidebarPref map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SidebarPref(
+      scope: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}scope'],
+      )!,
+      itemKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}item_key'],
+      )!,
+      orderIndex: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}order_index'],
+      )!,
+      hidden: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}hidden'],
+      )!,
+    );
+  }
+
+  @override
+  $SidebarPrefsTable createAlias(String alias) {
+    return $SidebarPrefsTable(attachedDatabase, alias);
+  }
+}
+
+class SidebarPref extends DataClass implements Insertable<SidebarPref> {
+  final String scope;
+  final String itemKey;
+  final int orderIndex;
+  final bool hidden;
+  const SidebarPref({
+    required this.scope,
+    required this.itemKey,
+    required this.orderIndex,
+    required this.hidden,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['scope'] = Variable<String>(scope);
+    map['item_key'] = Variable<String>(itemKey);
+    map['order_index'] = Variable<int>(orderIndex);
+    map['hidden'] = Variable<bool>(hidden);
+    return map;
+  }
+
+  SidebarPrefsCompanion toCompanion(bool nullToAbsent) {
+    return SidebarPrefsCompanion(
+      scope: Value(scope),
+      itemKey: Value(itemKey),
+      orderIndex: Value(orderIndex),
+      hidden: Value(hidden),
+    );
+  }
+
+  factory SidebarPref.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SidebarPref(
+      scope: serializer.fromJson<String>(json['scope']),
+      itemKey: serializer.fromJson<String>(json['itemKey']),
+      orderIndex: serializer.fromJson<int>(json['orderIndex']),
+      hidden: serializer.fromJson<bool>(json['hidden']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'scope': serializer.toJson<String>(scope),
+      'itemKey': serializer.toJson<String>(itemKey),
+      'orderIndex': serializer.toJson<int>(orderIndex),
+      'hidden': serializer.toJson<bool>(hidden),
+    };
+  }
+
+  SidebarPref copyWith({
+    String? scope,
+    String? itemKey,
+    int? orderIndex,
+    bool? hidden,
+  }) => SidebarPref(
+    scope: scope ?? this.scope,
+    itemKey: itemKey ?? this.itemKey,
+    orderIndex: orderIndex ?? this.orderIndex,
+    hidden: hidden ?? this.hidden,
+  );
+  SidebarPref copyWithCompanion(SidebarPrefsCompanion data) {
+    return SidebarPref(
+      scope: data.scope.present ? data.scope.value : this.scope,
+      itemKey: data.itemKey.present ? data.itemKey.value : this.itemKey,
+      orderIndex: data.orderIndex.present
+          ? data.orderIndex.value
+          : this.orderIndex,
+      hidden: data.hidden.present ? data.hidden.value : this.hidden,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SidebarPref(')
+          ..write('scope: $scope, ')
+          ..write('itemKey: $itemKey, ')
+          ..write('orderIndex: $orderIndex, ')
+          ..write('hidden: $hidden')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(scope, itemKey, orderIndex, hidden);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SidebarPref &&
+          other.scope == this.scope &&
+          other.itemKey == this.itemKey &&
+          other.orderIndex == this.orderIndex &&
+          other.hidden == this.hidden);
+}
+
+class SidebarPrefsCompanion extends UpdateCompanion<SidebarPref> {
+  final Value<String> scope;
+  final Value<String> itemKey;
+  final Value<int> orderIndex;
+  final Value<bool> hidden;
+  final Value<int> rowid;
+  const SidebarPrefsCompanion({
+    this.scope = const Value.absent(),
+    this.itemKey = const Value.absent(),
+    this.orderIndex = const Value.absent(),
+    this.hidden = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SidebarPrefsCompanion.insert({
+    required String scope,
+    required String itemKey,
+    this.orderIndex = const Value.absent(),
+    this.hidden = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : scope = Value(scope),
+       itemKey = Value(itemKey);
+  static Insertable<SidebarPref> custom({
+    Expression<String>? scope,
+    Expression<String>? itemKey,
+    Expression<int>? orderIndex,
+    Expression<bool>? hidden,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (scope != null) 'scope': scope,
+      if (itemKey != null) 'item_key': itemKey,
+      if (orderIndex != null) 'order_index': orderIndex,
+      if (hidden != null) 'hidden': hidden,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SidebarPrefsCompanion copyWith({
+    Value<String>? scope,
+    Value<String>? itemKey,
+    Value<int>? orderIndex,
+    Value<bool>? hidden,
+    Value<int>? rowid,
+  }) {
+    return SidebarPrefsCompanion(
+      scope: scope ?? this.scope,
+      itemKey: itemKey ?? this.itemKey,
+      orderIndex: orderIndex ?? this.orderIndex,
+      hidden: hidden ?? this.hidden,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (scope.present) {
+      map['scope'] = Variable<String>(scope.value);
+    }
+    if (itemKey.present) {
+      map['item_key'] = Variable<String>(itemKey.value);
+    }
+    if (orderIndex.present) {
+      map['order_index'] = Variable<int>(orderIndex.value);
+    }
+    if (hidden.present) {
+      map['hidden'] = Variable<bool>(hidden.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SidebarPrefsCompanion(')
+          ..write('scope: $scope, ')
+          ..write('itemKey: $itemKey, ')
+          ..write('orderIndex: $orderIndex, ')
+          ..write('hidden: $hidden, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -4882,6 +5194,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $DisabledPluginsTable disabledPlugins = $DisabledPluginsTable(
     this,
   );
+  late final $SidebarPrefsTable sidebarPrefs = $SidebarPrefsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4897,6 +5210,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     shortcutBindings,
     pluginSettings,
     disabledPlugins,
+    sidebarPrefs,
   ];
 }
 
@@ -7404,6 +7718,189 @@ typedef $$DisabledPluginsTableProcessedTableManager =
       DisabledPlugin,
       PrefetchHooks Function()
     >;
+typedef $$SidebarPrefsTableCreateCompanionBuilder =
+    SidebarPrefsCompanion Function({
+      required String scope,
+      required String itemKey,
+      Value<int> orderIndex,
+      Value<bool> hidden,
+      Value<int> rowid,
+    });
+typedef $$SidebarPrefsTableUpdateCompanionBuilder =
+    SidebarPrefsCompanion Function({
+      Value<String> scope,
+      Value<String> itemKey,
+      Value<int> orderIndex,
+      Value<bool> hidden,
+      Value<int> rowid,
+    });
+
+class $$SidebarPrefsTableFilterComposer
+    extends Composer<_$AppDatabase, $SidebarPrefsTable> {
+  $$SidebarPrefsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get scope => $composableBuilder(
+    column: $table.scope,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get itemKey => $composableBuilder(
+    column: $table.itemKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get orderIndex => $composableBuilder(
+    column: $table.orderIndex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get hidden => $composableBuilder(
+    column: $table.hidden,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SidebarPrefsTableOrderingComposer
+    extends Composer<_$AppDatabase, $SidebarPrefsTable> {
+  $$SidebarPrefsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get scope => $composableBuilder(
+    column: $table.scope,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get itemKey => $composableBuilder(
+    column: $table.itemKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get orderIndex => $composableBuilder(
+    column: $table.orderIndex,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get hidden => $composableBuilder(
+    column: $table.hidden,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SidebarPrefsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SidebarPrefsTable> {
+  $$SidebarPrefsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get scope =>
+      $composableBuilder(column: $table.scope, builder: (column) => column);
+
+  GeneratedColumn<String> get itemKey =>
+      $composableBuilder(column: $table.itemKey, builder: (column) => column);
+
+  GeneratedColumn<int> get orderIndex => $composableBuilder(
+    column: $table.orderIndex,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get hidden =>
+      $composableBuilder(column: $table.hidden, builder: (column) => column);
+}
+
+class $$SidebarPrefsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SidebarPrefsTable,
+          SidebarPref,
+          $$SidebarPrefsTableFilterComposer,
+          $$SidebarPrefsTableOrderingComposer,
+          $$SidebarPrefsTableAnnotationComposer,
+          $$SidebarPrefsTableCreateCompanionBuilder,
+          $$SidebarPrefsTableUpdateCompanionBuilder,
+          (
+            SidebarPref,
+            BaseReferences<_$AppDatabase, $SidebarPrefsTable, SidebarPref>,
+          ),
+          SidebarPref,
+          PrefetchHooks Function()
+        > {
+  $$SidebarPrefsTableTableManager(_$AppDatabase db, $SidebarPrefsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SidebarPrefsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SidebarPrefsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SidebarPrefsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> scope = const Value.absent(),
+                Value<String> itemKey = const Value.absent(),
+                Value<int> orderIndex = const Value.absent(),
+                Value<bool> hidden = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SidebarPrefsCompanion(
+                scope: scope,
+                itemKey: itemKey,
+                orderIndex: orderIndex,
+                hidden: hidden,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String scope,
+                required String itemKey,
+                Value<int> orderIndex = const Value.absent(),
+                Value<bool> hidden = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SidebarPrefsCompanion.insert(
+                scope: scope,
+                itemKey: itemKey,
+                orderIndex: orderIndex,
+                hidden: hidden,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SidebarPrefsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SidebarPrefsTable,
+      SidebarPref,
+      $$SidebarPrefsTableFilterComposer,
+      $$SidebarPrefsTableOrderingComposer,
+      $$SidebarPrefsTableAnnotationComposer,
+      $$SidebarPrefsTableCreateCompanionBuilder,
+      $$SidebarPrefsTableUpdateCompanionBuilder,
+      (
+        SidebarPref,
+        BaseReferences<_$AppDatabase, $SidebarPrefsTable, SidebarPref>,
+      ),
+      SidebarPref,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -7428,4 +7925,6 @@ class $AppDatabaseManager {
       $$PluginSettingsTableTableManager(_db, _db.pluginSettings);
   $$DisabledPluginsTableTableManager get disabledPlugins =>
       $$DisabledPluginsTableTableManager(_db, _db.disabledPlugins);
+  $$SidebarPrefsTableTableManager get sidebarPrefs =>
+      $$SidebarPrefsTableTableManager(_db, _db.sidebarPrefs);
 }

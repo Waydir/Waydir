@@ -39,6 +39,9 @@
     "openLocation": "Open Location",
     "openInNewTab": "Open in New Tab",
     "removeBookmark": "Remove Bookmark",
+    "addBookmark": "Add to Bookmarks",
+    "eject": "Eject",
+    "disconnect": "Disconnect",
     "dualPaneMode": "Dual Pane Mode",
     "properties": "Properties",
     "openWith": "Open With",
@@ -620,7 +623,7 @@
     }
   },
   "sidebar": {
-    "favorites": "Favorites",
+    "places": "Places",
     "devices": "Devices",
     "home": "Home",
     "desktop": "Desktop",
@@ -634,6 +637,10 @@
     "network": "Network",
     "bookmarks": "Bookmarks",
     "dropBookmark": "Drop folder to bookmark",
+    "editLayout": "Edit sidebar",
+    "editDone": "Done",
+    "hide": "Hide",
+    "show": "Show",
     "connectToServer": "Connect to server",
     "connectDialog": {
       "title": "Connect to server",

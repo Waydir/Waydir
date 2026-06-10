@@ -190,6 +190,15 @@ class Translations$menu$en {
 	/// en: 'Remove Bookmark'
 	String get removeBookmark => 'Remove Bookmark';
 
+	/// en: 'Add to Bookmarks'
+	String get addBookmark => 'Add to Bookmarks';
+
+	/// en: 'Eject'
+	String get eject => 'Eject';
+
+	/// en: 'Disconnect'
+	String get disconnect => 'Disconnect';
+
 	/// en: 'Dual Pane Mode'
 	String get dualPaneMode => 'Dual Pane Mode';
 
@@ -1172,8 +1181,8 @@ class Translations$sidebar$en {
 
 	// Translations
 
-	/// en: 'Favorites'
-	String get favorites => 'Favorites';
+	/// en: 'Places'
+	String get places => 'Places';
 
 	/// en: 'Devices'
 	String get devices => 'Devices';
@@ -1213,6 +1222,18 @@ class Translations$sidebar$en {
 
 	/// en: 'Drop folder to bookmark'
 	String get dropBookmark => 'Drop folder to bookmark';
+
+	/// en: 'Edit sidebar'
+	String get editLayout => 'Edit sidebar';
+
+	/// en: 'Done'
+	String get editDone => 'Done';
+
+	/// en: 'Hide'
+	String get hide => 'Hide';
+
+	/// en: 'Show'
+	String get show => 'Show';
 
 	/// en: 'Connect to server'
 	String get connectToServer => 'Connect to server';
@@ -3013,6 +3034,9 @@ extension on Translations {
 			'menu.openLocation' => 'Open Location',
 			'menu.openInNewTab' => 'Open in New Tab',
 			'menu.removeBookmark' => 'Remove Bookmark',
+			'menu.addBookmark' => 'Add to Bookmarks',
+			'menu.eject' => 'Eject',
+			'menu.disconnect' => 'Disconnect',
 			'menu.dualPaneMode' => 'Dual Pane Mode',
 			'menu.properties' => 'Properties',
 			'menu.openWith' => 'Open With',
@@ -3492,12 +3516,12 @@ extension on Translations {
 			'fileView.date.monthsAgo' => ({required Object count}) => '${count}mo ago',
 			'fileView.date.yearsAgo' => ({required Object count}) => '${count}y ago',
 			'fileView.columns.name' => 'Name',
+			_ => null,
+		} ?? switch (path) {
 			'fileView.columns.size' => 'Size',
 			'fileView.columns.dateModified' => 'Date modified',
 			'fileView.columns.location' => 'Location',
-			_ => null,
-		} ?? switch (path) {
-			'sidebar.favorites' => 'Favorites',
+			'sidebar.places' => 'Places',
 			'sidebar.devices' => 'Devices',
 			'sidebar.home' => 'Home',
 			'sidebar.desktop' => 'Desktop',
@@ -3511,6 +3535,10 @@ extension on Translations {
 			'sidebar.network' => 'Network',
 			'sidebar.bookmarks' => 'Bookmarks',
 			'sidebar.dropBookmark' => 'Drop folder to bookmark',
+			'sidebar.editLayout' => 'Edit sidebar',
+			'sidebar.editDone' => 'Done',
+			'sidebar.hide' => 'Hide',
+			'sidebar.show' => 'Show',
 			'sidebar.connectToServer' => 'Connect to server',
 			'sidebar.connectDialog.title' => 'Connect to server',
 			'sidebar.connectDialog.host' => 'Server',
