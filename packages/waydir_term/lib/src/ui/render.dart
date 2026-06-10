@@ -5,6 +5,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:waydir_term/src/core/buffer/cell_offset.dart';
 import 'package:waydir_term/src/core/buffer/range.dart';
+import 'package:waydir_term/src/core/buffer/range_line.dart';
 import 'package:waydir_term/src/core/buffer/segment.dart';
 import 'package:waydir_term/src/core/mouse/button.dart';
 import 'package:waydir_term/src/core/mouse/button_state.dart';
@@ -251,9 +252,16 @@ class RenderTerminal extends RenderBox with RelayoutWhenSystemFontsChangeMixin {
 
   /// Selects entire words in the terminal that contains [from] and [to].
   void selectWord(Offset from, [Offset? to]) {
-    final fromOffset = getCellOffset(from);
-    final fromBoundary = _terminal.buffer.getWordBoundary(fromOffset);
+    final fromBoundary = getWordBoundary(from);
     if (fromBoundary == null) return;
+    selectWordRange(fromBoundary, to);
+  }
+
+  BufferRangeLine? getWordBoundary(Offset offset) {
+    return _terminal.buffer.getWordBoundary(getCellOffset(offset));
+  }
+
+  void selectWordRange(BufferRangeLine fromBoundary, [Offset? to]) {
     if (to == null) {
       _controller.setSelection(
         _terminal.buffer.createAnchorFromOffset(fromBoundary.begin),
@@ -276,7 +284,10 @@ class RenderTerminal extends RenderBox with RelayoutWhenSystemFontsChangeMixin {
   /// Selects characters in the terminal that starts from [from] to [to]. At
   /// least one cell is selected even if [from] and [to] are same.
   void selectCharacters(Offset from, [Offset? to]) {
-    final fromPosition = getCellOffset(from);
+    selectCharactersFromCell(getCellOffset(from), to);
+  }
+
+  void selectCharactersFromCell(CellOffset fromPosition, [Offset? to]) {
     if (to == null) {
       _controller.setSelection(
         _terminal.buffer.createAnchorFromOffset(fromPosition),
