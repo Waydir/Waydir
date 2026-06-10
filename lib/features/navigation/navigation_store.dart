@@ -1596,8 +1596,10 @@ class NavigationStore {
   }
 
   Future<MultiRenameOutcome> multiRename(
-    List<({String path, String newName})> renames,
-  ) async {
+    List<({String path, String newName})> renames, {
+    MultiRenameProgressCallback? onProgress,
+    bool Function()? isCancelled,
+  }) async {
     if (renames.isEmpty) return const MultiRenameOutcome.empty();
     if (isTrashView) {
       return MultiRenameOutcome(
@@ -1608,12 +1610,28 @@ class NavigationStore {
         blocked: true,
       );
     }
+    var processed = 0;
+    final total = renames.length;
+    var cancelled = false;
+
+    bool shouldStop() {
+      cancelled = cancelled || (isCancelled?.call() ?? false);
+      return cancelled;
+    }
+
+    void report(String currentName) {
+      if (total <= 0) return;
+      processed++;
+      if (processed > total) processed = total;
+      onProgress?.call(processed, total, currentName);
+    }
 
     final localOrSmb = <({String path, String newName})>[];
     final sftp = <({String path, String newName})>[];
     final archive = <({ArchiveLocation loc, String oldPath, String newName})>[];
 
     for (final r in renames) {
+      if (shouldStop()) break;
       final loc = await _archiveLocationFor(r.path);
       if (loc != null && !loc.isRoot) {
         archive.add((loc: loc, oldPath: r.path, newName: r.newName));
@@ -1625,9 +1643,13 @@ class NavigationStore {
     }
 
     final acc = _MutableOutcome();
-    _multiRenameLocal(localOrSmb, acc);
-    await _multiRenameSftp(sftp, acc);
-    _multiRenameArchive(archive, acc);
+    _multiRenameLocal(localOrSmb, acc, report, shouldStop);
+    if (!shouldStop()) {
+      await _multiRenameSftp(sftp, acc, report, shouldStop);
+    }
+    if (!shouldStop()) {
+      _multiRenameArchive(archive, acc, report, shouldStop);
+    }
 
     batch(() {
       renamingPath.value = null;
@@ -1651,19 +1673,26 @@ class NavigationStore {
   void _multiRenameLocal(
     List<({String path, String newName})> renames,
     _MutableOutcome acc,
+    void Function(String currentName) report,
+    bool Function() shouldStop,
   ) {
     if (renames.isEmpty) return;
 
     final ops = <_LocalRenameOp>[];
     for (final r in renames) {
+      if (shouldStop()) return;
       final physicalOld = _physical(r.path);
       final dir = PlatformPaths.parentOf(physicalOld);
       final physicalNew = '$dir${PlatformPaths.separator}${r.newName}';
       if (!PlatformPaths.isValidFileName(r.newName)) {
         acc.invalid++;
+        report(r.newName);
         continue;
       }
-      if (physicalOld == physicalNew) continue;
+      if (physicalOld == physicalNew) {
+        report(r.newName);
+        continue;
+      }
       ops.add(
         _LocalRenameOp(
           physicalOld: physicalOld,
@@ -1678,11 +1707,13 @@ class NavigationStore {
     final sources = ops.map((o) => _norm(o.physicalOld)).toSet();
     final filtered = <_LocalRenameOp>[];
     for (final op in ops) {
+      if (shouldStop()) return;
       final exists =
           FileSystemEntity.typeSync(op.physicalNew) !=
           FileSystemEntityType.notFound;
       if (exists && !sources.contains(_norm(op.physicalNew))) {
         acc.collision++;
+        report(op.newName);
         continue;
       }
       filtered.add(op);
@@ -1693,10 +1724,12 @@ class NavigationStore {
     );
 
     if (needsTwoPhase) {
-      _applyTwoPhase(filtered, acc);
+      _applyTwoPhase(filtered, acc, report, shouldStop);
     } else {
       for (final op in filtered) {
+        if (shouldStop()) return;
         _applyDirect(op, acc);
+        report(op.newName);
       }
     }
   }
@@ -1717,10 +1750,16 @@ class NavigationStore {
     }
   }
 
-  void _applyTwoPhase(List<_LocalRenameOp> ops, _MutableOutcome acc) {
+  void _applyTwoPhase(
+    List<_LocalRenameOp> ops,
+    _MutableOutcome acc,
+    void Function(String currentName) report,
+    bool Function() shouldStop,
+  ) {
     final stamp = DateTime.now().millisecondsSinceEpoch;
     final staged = <({String tempPath, String finalName})>[];
     for (var i = 0; i < ops.length; i++) {
+      if (shouldStop()) return;
       final op = ops[i];
       final tempName = '.waydir-rename-$stamp-$i.tmp';
       final dir = PlatformPaths.parentOf(op.physicalOld);
@@ -1739,46 +1778,58 @@ class NavigationStore {
           default:
             acc.other++;
         }
+        report(op.newName);
       }
     }
     for (final s in staged) {
+      if (shouldStop()) return;
       final r = FileSystemService.rename(s.tempPath, s.finalName);
       if (r is RenameSuccess) {
         acc.succeeded++;
       } else {
         acc.other++;
       }
+      report(s.finalName);
     }
   }
 
   Future<void> _multiRenameSftp(
     List<({String path, String newName})> renames,
     _MutableOutcome acc,
+    void Function(String currentName) report,
+    bool Function() shouldStop,
   ) async {
     if (renames.isEmpty) return;
     final fs = const SftpFs();
 
     final ops = <_SftpRenameOp>[];
     for (final r in renames) {
+      if (shouldStop()) return;
       if (!PlatformPaths.isValidFileName(r.newName)) {
         acc.invalid++;
+        report(r.newName);
         continue;
       }
       final parent = PlatformPaths.parentOf(r.path);
       final newPath = '$parent/${r.newName}';
-      if (r.path == newPath) continue;
+      if (r.path == newPath) {
+        report(r.newName);
+        continue;
+      }
       ops.add(_SftpRenameOp(oldPath: r.path, newPath: newPath));
     }
 
     final sources = ops.map((o) => o.oldPath).toSet();
     final filtered = <_SftpRenameOp>[];
     for (final op in ops) {
+      if (shouldStop()) return;
       if (sources.contains(op.newPath)) {
         filtered.add(op);
         continue;
       }
       if (await fs.exists(op.newPath)) {
         acc.collision++;
+        report(PlatformPaths.fileName(op.newPath));
         continue;
       }
       filtered.add(op);
@@ -1787,12 +1838,14 @@ class NavigationStore {
     final needsTwoPhase = filtered.any((o) => sources.contains(o.newPath));
     if (!needsTwoPhase) {
       for (final op in filtered) {
+        if (shouldStop()) return;
         try {
           await fs.rename(op.oldPath, op.newPath);
           acc.succeeded++;
         } catch (_) {
           acc.other++;
         }
+        report(PlatformPaths.fileName(op.newPath));
       }
       return;
     }
@@ -1800,6 +1853,7 @@ class NavigationStore {
     final stamp = DateTime.now().millisecondsSinceEpoch;
     final staged = <({String tempPath, String finalPath})>[];
     for (var i = 0; i < filtered.length; i++) {
+      if (shouldStop()) return;
       final op = filtered[i];
       final tempPath =
           '${PlatformPaths.parentOf(op.oldPath)}/.waydir-rename-$stamp-$i.tmp';
@@ -1808,25 +1862,32 @@ class NavigationStore {
         staged.add((tempPath: tempPath, finalPath: op.newPath));
       } catch (_) {
         acc.other++;
+        report(PlatformPaths.fileName(op.newPath));
       }
     }
     for (final s in staged) {
+      if (shouldStop()) return;
       try {
         await fs.rename(s.tempPath, s.finalPath);
         acc.succeeded++;
       } catch (_) {
         acc.other++;
       }
+      report(PlatformPaths.fileName(s.finalPath));
     }
   }
 
   void _multiRenameArchive(
     List<({ArchiveLocation loc, String oldPath, String newName})> renames,
     _MutableOutcome acc,
+    void Function(String currentName) report,
+    bool Function() shouldStop,
   ) {
     for (final r in renames) {
+      if (shouldStop()) return;
       if (!PlatformPaths.isValidFileName(r.newName)) {
         acc.invalid++;
+        report(r.newName);
         continue;
       }
       operationStore.enqueueArchiveEdit(
@@ -1836,6 +1897,7 @@ class NavigationStore {
         renameToName: r.newName,
       );
       acc.succeeded++;
+      report(r.newName);
     }
   }
 
@@ -2431,6 +2493,9 @@ class MultiRenameOutcome {
   int get failed => invalid + collision + other;
   int get total => succeeded + failed;
 }
+
+typedef MultiRenameProgressCallback =
+    void Function(int processed, int total, String currentName);
 
 class _MutableOutcome {
   int succeeded = 0;

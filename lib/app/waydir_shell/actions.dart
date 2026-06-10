@@ -217,11 +217,58 @@ mixin _WaydirActionsMixin on State<WaydirShell>, _WaydirStateBase {
       _restoreFocus();
       return;
     }
-    final outcome = await store.multiRename(
-      result.renames.map((r) => (path: r.oldPath, newName: r.newName)).toList(),
+    var cancelled = false;
+    final task = store.operationStore.beginPluginTask(
+      title: t.multiRename.title,
+      totalFiles: result.renames.length,
+      onCancel: () => cancelled = true,
     );
-    if (mounted) _showMultiRenameToast(outcome);
-    _restoreFocus();
+    store.operationStore.updatePluginTask(
+      task.id,
+      progress: 0,
+      processedFiles: 0,
+      totalFiles: result.renames.length,
+      currentFile: t.tasks.status.scanning,
+    );
+    try {
+      final outcome = await store.multiRename(
+        result.renames
+            .map((r) => (path: r.oldPath, newName: r.newName))
+            .toList(),
+        isCancelled: () => cancelled,
+        onProgress: (processed, total, currentName) {
+          store.operationStore.updatePluginTask(
+            task.id,
+            progress: total == 0 ? 0 : processed / total,
+            processedFiles: processed,
+            totalFiles: total,
+            currentFile: currentName,
+          );
+        },
+      );
+      store.operationStore.finishPluginTask(
+        task.id,
+        success: true,
+        cancelled: cancelled,
+        error: outcome.failed == 0 ? '' : _multiRenameDetails(outcome),
+      );
+      if (mounted && !cancelled) _showMultiRenameToast(outcome);
+    } catch (e) {
+      store.operationStore.finishPluginTask(
+        task.id,
+        success: false,
+        cancelled: cancelled,
+        error: e.toString(),
+      );
+      if (mounted && !cancelled) {
+        showToast(
+          context: context,
+          message: t.toast.renameError(message: e),
+        );
+      }
+    } finally {
+      _restoreFocus();
+    }
   }
 
   void _showMultiRenameToast(MultiRenameOutcome outcome) {
@@ -236,6 +283,18 @@ mixin _WaydirActionsMixin on State<WaydirShell>, _WaydirStateBase {
       );
       return;
     }
+    final details = _multiRenameDetails(outcome);
+    showToast(
+      context: context,
+      message: t.toast.multiRenamePartial(
+        succeeded: outcome.succeeded,
+        total: outcome.total,
+        details: details,
+      ),
+    );
+  }
+
+  String _multiRenameDetails(MultiRenameOutcome outcome) {
     final parts = <String>[];
     if (outcome.collision > 0) {
       parts.add(t.toast.multiRenameCollisions(count: outcome.collision));
@@ -246,14 +305,7 @@ mixin _WaydirActionsMixin on State<WaydirShell>, _WaydirStateBase {
     if (outcome.other > 0) {
       parts.add(t.toast.multiRenameOtherErrors(count: outcome.other));
     }
-    showToast(
-      context: context,
-      message: t.toast.multiRenamePartial(
-        succeeded: outcome.succeeded,
-        total: outcome.total,
-        details: parts.join(', '),
-      ),
-    );
+    return parts.join(', ');
   }
 
   void _extractSelected({required bool toOwnFolder}) async {

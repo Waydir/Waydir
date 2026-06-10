@@ -50,5 +50,34 @@ void main() {
       expect(store.currentPath.value, child.path);
       expect(store.selectedPaths.value, {file.path});
     });
+
+    test('multi rename reports progress for each renamed file', () async {
+      final first = File(p.join(tmpDir.path, 'one.txt'))
+        ..writeAsStringSync('1');
+      final second = File(p.join(tmpDir.path, 'two.txt'))
+        ..writeAsStringSync('2');
+      final progress = <({int processed, int total, String current})>[];
+
+      final outcome = await store.multiRename(
+        [
+          (path: first.path, newName: 'renamed-one.txt'),
+          (path: second.path, newName: 'renamed-two.txt'),
+        ],
+        onProgress: (processed, total, currentName) {
+          progress.add((
+            processed: processed,
+            total: total,
+            current: currentName,
+          ));
+        },
+      );
+
+      expect(outcome.succeeded, 2);
+      expect(outcome.failed, 0);
+      expect(progress.map((p) => p.processed), [1, 2]);
+      expect(progress.every((p) => p.total == 2), isTrue);
+      expect(File(p.join(tmpDir.path, 'renamed-one.txt')).existsSync(), isTrue);
+      expect(File(p.join(tmpDir.path, 'renamed-two.txt')).existsSync(), isTrue);
+    });
   });
 }

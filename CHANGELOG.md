@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Reworked sidebar spacing for consistent alignment, and renamed the Favorites section to Places.
+- Multi Rename now appears in Operations with progress while files are being renamed.
 
 ### Fixed
 - Operation cancellation no longer gets stuck in the cancelling state.
