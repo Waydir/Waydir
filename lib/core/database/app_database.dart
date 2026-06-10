@@ -151,6 +151,20 @@ class DisabledPlugins extends Table {
   Set<Column> get primaryKey => {pluginId};
 }
 
+/// User overrides for sidebar layout: section and item order plus visibility.
+/// [scope] is `section` for whole sections, otherwise the section id
+/// (`favorites`, `devices`, `network`) whose items are being ordered. [itemKey]
+/// is the section id (for `section` scope) or a stable item key within a scope.
+class SidebarPrefs extends Table {
+  TextColumn get scope => text()();
+  TextColumn get itemKey => text()();
+  IntColumn get orderIndex => integer().withDefault(const Constant(0))();
+  BoolColumn get hidden => boolean().withDefault(const Constant(false))();
+
+  @override
+  Set<Column> get primaryKey => {scope, itemKey};
+}
+
 @DriftDatabase(
   tables: [
     AppSettings,
@@ -163,13 +177,14 @@ class DisabledPlugins extends Table {
     ShortcutBindings,
     PluginSettings,
     DisabledPlugins,
+    SidebarPrefs,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 27;
+  int get schemaVersion => 28;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -289,6 +304,9 @@ class AppDatabase extends _$AppDatabase {
       if (from < 27) {
         await addSettingColumn(appSettings.sortFolders);
       }
+      if (from < 28) {
+        await m.createTable(sidebarPrefs);
+      }
     },
   );
 
@@ -350,6 +368,45 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> clearShortcutBindings() {
     return delete(shortcutBindings).go();
+  }
+
+  Future<List<SidebarPref>> getSidebarPrefs() {
+    return select(sidebarPrefs).get();
+  }
+
+  Future<void> setSidebarPref(
+    String scope,
+    String itemKey, {
+    required int orderIndex,
+    required bool hidden,
+  }) {
+    return into(sidebarPrefs).insertOnConflictUpdate(
+      SidebarPrefsCompanion.insert(
+        scope: scope,
+        itemKey: itemKey,
+        orderIndex: Value(orderIndex),
+        hidden: Value(hidden),
+      ),
+    );
+  }
+
+  Future<void> setSidebarOrder(String scope, List<String> keysInOrder) async {
+    await batch((b) {
+      for (var i = 0; i < keysInOrder.length; i++) {
+        final idx = i;
+        b.insert(
+          sidebarPrefs,
+          SidebarPrefsCompanion.insert(
+            scope: scope,
+            itemKey: keysInOrder[idx],
+            orderIndex: Value(idx),
+          ),
+          onConflict: DoUpdate(
+            (_) => SidebarPrefsCompanion(orderIndex: Value(idx)),
+          ),
+        );
+      }
+    });
   }
 
   Future<DefaultApp?> getDefaultApp(String typeKey) {
