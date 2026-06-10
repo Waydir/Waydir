@@ -32,12 +32,14 @@ mixin _WaydirMenuMixin
     }
     final canPaste = store.canPaste.value;
     final items = <ContextMenuItem>[
-      ContextMenuItem(
-        icon: WaydirIconsRegular.clipboard,
-        label: t.menu.paste,
-        action: 'paste',
-      ),
-      ContextMenuItem.divider,
+      if (canPaste) ...[
+        ContextMenuItem(
+          icon: WaydirIconsRegular.clipboard,
+          label: t.menu.paste,
+          action: 'paste',
+        ),
+        ContextMenuItem.divider,
+      ],
       ContextMenuItem(
         icon: WaydirIconsRegular.terminal,
         label: t.menu.openInTerminal,
@@ -66,7 +68,6 @@ mixin _WaydirMenuMixin
         action: 'properties',
       ),
     ];
-    if (!canPaste) items.removeAt(0);
 
     final pluginItems = _backgroundPluginItems();
     if (pluginItems.isNotEmpty) {

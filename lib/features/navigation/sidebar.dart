@@ -32,13 +32,9 @@ import '../operations/operation_store.dart';
 import '../operations/operations_panel.dart';
 import '../../core/models/file_operation.dart';
 
-// Layout tokens. A symmetric [_gutter] frames the scrollable content and the
-// footer, leaving room on the right for the scrollbar and resize handle without
-// the scrollbar landing on the handle. Inside that frame every row, header and
-// footer button shares the same [_rowPadH] inner inset, so icons line up in one
-// aligned column.
 const double _sectionGap = 12;
 const double _gutter = 8;
+const double _expandedRightGutter = 12;
 const double _rowPadH = 10;
 const double _rowHeight = 30;
 const double _rowHeightWithSpace = 40;
@@ -588,7 +584,10 @@ class _SidebarState extends State<Sidebar> {
     ];
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: _gutter),
+      padding: EdgeInsets.only(
+        left: _gutter,
+        right: collapsed ? _gutter : _expandedRightGutter,
+      ),
       child: Scrollbar(
         controller: _scrollController,
         child: editing
@@ -957,7 +956,7 @@ class _SidebarFooter extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(border: border),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(_gutter, 6, _gutter, 6),
+        padding: const EdgeInsets.fromLTRB(_gutter, 6, _expandedRightGutter, 6),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1316,7 +1315,10 @@ class _SidebarHeader extends StatelessWidget {
 
     return Container(
       height: 32,
-      padding: EdgeInsets.symmetric(horizontal: collapsed ? 0 : 6),
+      padding: EdgeInsets.only(
+        left: collapsed ? 0 : 6,
+        right: collapsed ? 0 : 10,
+      ),
       child: collapsed
           ? Center(child: toggle)
           : Row(
