@@ -27,6 +27,16 @@ void main() {
       expect(registry.themes.map((theme) => theme.id), builtInIds);
     });
 
+    test('includes One Dark as a built-in theme', () {
+      final registry = AppThemeRegistry();
+      final theme = registry.resolve('one-dark');
+
+      expect(theme.name, 'One Dark');
+      expect(theme.builtIn, isTrue);
+      expect(theme.palette.bg.toARGB32(), 0xFF282C34);
+      expect(theme.palette.terminal.blue.toARGB32(), 0xFF61AFEF);
+    });
+
     test('loads valid custom themes after built-ins', () async {
       final json = darkTheme.toJson()
         ..['id'] = 'midnight'
