@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:waydir/ui/icons/waydir_icons.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:super_drag_and_drop/super_drag_and_drop.dart';
@@ -16,8 +17,10 @@ import '../../ui/dialogs/password_dialog.dart';
 import '../../ui/dialogs/rename_dialog.dart';
 import '../../ui/dialogs/sftp_credentials_dialog.dart';
 import '../../ui/overlays/context_menu.dart';
+import '../../core/models/file_entry.dart';
 import '../../core/platform/platform_paths.dart';
 import '../../core/platform/trash_location.dart';
+import '../quick_look/quick_look.dart';
 import '../../i18n/strings.g.dart';
 import '../../utils/drag_drop.dart';
 import '../../utils/format.dart';
@@ -31,11 +34,17 @@ import '../../core/models/file_operation.dart';
 
 const double _resizeHandleWidth = 8;
 
-const double _sectionGap = 10;
-const double _itemMargin = 6;
-const double _itemHeight = 28;
-const double _itemHeightWithSpace = 36;
-const double _railItemHeight = 32;
+// Layout tokens. Section headers and item icons share the same left edge
+// (_rowInsetH + _rowPadH) so the sidebar reads as one aligned column.
+const double _sectionGap = 12;
+const double _rowInsetH = 6;
+const double _rowPadH = 10;
+const double _rowHeight = 30;
+const double _rowHeightWithSpace = 40;
+const double _railRowHeight = 34;
+const double _iconSize = 16;
+const double _iconGap = 10;
+const double _rowTextLeft = _rowInsetH + _rowPadH;
 
 class _SidebarItem {
   final String label;
@@ -271,10 +280,215 @@ class _SidebarState extends State<Sidebar> {
             widget.store.navigateTo(bookmark.path);
           case 'open_in_new_tab':
             widget.onOpenInNewTab?.call(bookmark.path);
+          case 'copy_path':
+            _copyPath(bookmark.path);
           case 'rename':
             _renameBookmark(bookmark);
           case 'remove':
             _bookmarkStore.remove(bookmark);
+        }
+      },
+    );
+  }
+
+  void _copyPath(String path) {
+    unawaited(Clipboard.setData(ClipboardData(text: path)));
+  }
+
+  void _showProperties(String path) {
+    final dir = Directory(path);
+    if (!dir.existsSync()) return;
+    final name = PlatformPaths.fileName(path);
+    final entry = FileEntry(
+      name: name.isEmpty ? path : name,
+      path: path,
+      type: FileItemType.folder,
+      size: 0,
+      modified: dir.statSync().modified,
+    );
+    unawaited(
+      showQuickLook(
+        context: context,
+        store: widget.store,
+        explicitEntry: entry,
+      ),
+    );
+  }
+
+  void _showFolderMenu(String path, Offset position, {required bool isTrash}) {
+    final items = <ContextMenuItem>[
+      ContextMenuItem(
+        icon: WaydirIconsRegular.folderOpen,
+        label: t.menu.open,
+        action: 'open',
+      ),
+      if (!isTrash && widget.onOpenInNewTab != null)
+        ContextMenuItem(
+          icon: WaydirIconsRegular.arrowSquareOut,
+          label: t.menu.openInNewTab,
+          action: 'open_in_new_tab',
+        ),
+      if (!isTrash) ...[
+        ContextMenuItem.divider,
+        ContextMenuItem(
+          icon: WaydirIconsRegular.copy,
+          label: t.menu.copyPath,
+          action: 'copy_path',
+        ),
+        ContextMenuItem(
+          icon: WaydirIconsRegular.bookmarkSimple,
+          label: t.menu.addBookmark,
+          action: 'add_bookmark',
+        ),
+        ContextMenuItem.divider,
+        ContextMenuItem(
+          icon: WaydirIconsRegular.info,
+          label: t.menu.properties,
+          action: 'properties',
+        ),
+      ],
+    ];
+    showContextMenu(
+      context: context,
+      position: position,
+      items: items,
+      onSelect: (action) {
+        switch (action) {
+          case 'open':
+            widget.store.navigateTo(path);
+          case 'open_in_new_tab':
+            widget.onOpenInNewTab?.call(path);
+          case 'copy_path':
+            _copyPath(path);
+          case 'add_bookmark':
+            unawaited(_bookmarkStore.addPath(path));
+          case 'properties':
+            _showProperties(path);
+        }
+      },
+    );
+  }
+
+  void _showDriveMenu(Drive drive, String path, Offset position) {
+    final isMounted = drive.isMounted;
+    final canUnmount = isMounted && drive.id != '/' && drive.isRemovable;
+    final items = <ContextMenuItem>[
+      ContextMenuItem(
+        icon: WaydirIconsRegular.folderOpen,
+        label: t.menu.open,
+        action: 'open',
+      ),
+      if (isMounted && widget.onOpenInNewTab != null)
+        ContextMenuItem(
+          icon: WaydirIconsRegular.arrowSquareOut,
+          label: t.menu.openInNewTab,
+          action: 'open_in_new_tab',
+        ),
+      if (isMounted) ...[
+        ContextMenuItem.divider,
+        ContextMenuItem(
+          icon: WaydirIconsRegular.copy,
+          label: t.menu.copyPath,
+          action: 'copy_path',
+        ),
+        ContextMenuItem(
+          icon: WaydirIconsRegular.bookmarkSimple,
+          label: t.menu.addBookmark,
+          action: 'add_bookmark',
+        ),
+      ],
+      if (canUnmount)
+        ContextMenuItem(
+          icon: WaydirIconsRegular.eject,
+          label: t.menu.eject,
+          action: 'eject',
+        ),
+      if (isMounted) ...[
+        ContextMenuItem.divider,
+        ContextMenuItem(
+          icon: WaydirIconsRegular.info,
+          label: t.menu.properties,
+          action: 'properties',
+        ),
+      ],
+    ];
+    showContextMenu(
+      context: context,
+      position: position,
+      items: items,
+      onSelect: (action) {
+        switch (action) {
+          case 'open':
+            unawaited(_onDriveTap(drive, path));
+          case 'open_in_new_tab':
+            widget.onOpenInNewTab?.call(path);
+          case 'copy_path':
+            _copyPath(path);
+          case 'add_bookmark':
+            unawaited(_bookmarkStore.addPath(path));
+          case 'eject':
+            unawaited(_unmountDrive(drive));
+          case 'properties':
+            _showProperties(path);
+        }
+      },
+    );
+  }
+
+  void _showNetworkMenu(
+    String path,
+    Offset position, {
+    required bool canDisconnect,
+  }) {
+    final items = <ContextMenuItem>[
+      ContextMenuItem(
+        icon: WaydirIconsRegular.folderOpen,
+        label: t.menu.open,
+        action: 'open',
+      ),
+      if (widget.onOpenInNewTab != null)
+        ContextMenuItem(
+          icon: WaydirIconsRegular.arrowSquareOut,
+          label: t.menu.openInNewTab,
+          action: 'open_in_new_tab',
+        ),
+      ContextMenuItem.divider,
+      ContextMenuItem(
+        icon: WaydirIconsRegular.copy,
+        label: t.menu.copyPath,
+        action: 'copy_path',
+      ),
+      ContextMenuItem(
+        icon: WaydirIconsRegular.bookmarkSimple,
+        label: t.menu.addBookmark,
+        action: 'add_bookmark',
+      ),
+      if (canDisconnect) ...[
+        ContextMenuItem.divider,
+        ContextMenuItem(
+          icon: WaydirIconsRegular.eject,
+          label: t.menu.disconnect,
+          action: 'disconnect',
+          danger: true,
+        ),
+      ],
+    ];
+    showContextMenu(
+      context: context,
+      position: position,
+      items: items,
+      onSelect: (action) {
+        switch (action) {
+          case 'open':
+            widget.store.navigateTo(path);
+          case 'open_in_new_tab':
+            widget.onOpenInNewTab?.call(path);
+          case 'copy_path':
+            _copyPath(path);
+          case 'add_bookmark':
+            unawaited(_bookmarkStore.addLocation(path));
+          case 'disconnect':
+            unawaited(_unmountLocation(path));
         }
       },
     );
@@ -417,7 +631,7 @@ class _SidebarState extends State<Sidebar> {
           !collapsed) {
         children.add(
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 2, 14, 10),
+            padding: const EdgeInsets.fromLTRB(_rowTextLeft, 2, _rowPadH, 8),
             child: Text(
               t.sidebar.dropBookmark,
               overflow: TextOverflow.ellipsis,
@@ -509,6 +723,8 @@ class _SidebarState extends State<Sidebar> {
           }
           widget.store.dropFiles(paths, item.path, move: move);
         },
+        onContextMenu: (position) =>
+            _showFolderMenu(item.path, position, isTrash: isRecycleBin),
       );
     }).toList();
     return SidebarStore.instance.orderItems(
@@ -544,6 +760,7 @@ class _SidebarState extends State<Sidebar> {
           if (isMounted) widget.store.dropFiles(paths, path, move: move);
         },
         onUnmount: canUnmount ? () => _unmountDrive(drive) : null,
+        onContextMenu: (position) => _showDriveMenu(drive, path, position),
       );
     }).toList();
     return SidebarStore.instance.orderItems(
@@ -579,6 +796,8 @@ class _SidebarState extends State<Sidebar> {
               : null,
           onDropFiles: (paths, {bool move = false}) =>
               widget.store.dropFiles(paths, path, move: move),
+          onContextMenu: (position) =>
+              _showNetworkMenu(path, position, canDisconnect: false),
         ),
       );
     }
@@ -603,6 +822,8 @@ class _SidebarState extends State<Sidebar> {
           onDropFiles: (paths, {bool move = false}) =>
               widget.store.dropFiles(paths, path, move: move),
           onUnmount: () => _unmountLocation(path),
+          onContextMenu: (position) =>
+              _showNetworkMenu(path, position, canDisconnect: true),
         ),
       );
     }
@@ -989,11 +1210,11 @@ class _EditRow extends StatelessWidget {
     final itemHidden = allowHide && store.isItemHidden(scope, entry.key);
     final faded = dimmed || itemHidden;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: _itemMargin, vertical: 1),
+      padding: const EdgeInsets.symmetric(horizontal: _rowInsetH, vertical: 1),
       child: Opacity(
         opacity: faded ? 0.45 : 1,
         child: Container(
-          height: _itemHeight,
+          height: _rowHeight,
           padding: const EdgeInsets.symmetric(horizontal: 6),
           decoration: BoxDecoration(
             color: AppColors.bgHover.withValues(alpha: 0.4),
@@ -1181,7 +1402,7 @@ class _SectionRailDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
       child: Container(height: 1, color: AppColors.bgDivider),
     );
   }
@@ -1451,7 +1672,7 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 6, 14, 4),
+      padding: const EdgeInsets.fromLTRB(_rowTextLeft, 14, _rowPadH, 6),
       child: Text(title.toUpperCase(), style: context.txt.sectionLabel),
     );
   }
@@ -1494,17 +1715,6 @@ class _ItemRowState extends State<_ItemRow> {
 
   @override
   Widget build(BuildContext context) {
-    Color bg;
-    if (_dragOver) {
-      bg = AppColors.accent.withValues(alpha: 0.12);
-    } else if (widget.isSelected) {
-      bg = AppColors.bgSelectedMuted;
-    } else if (_hovered) {
-      bg = AppColors.bgHover;
-    } else {
-      bg = Colors.transparent;
-    }
-
     return DropRegion(
       formats: [Formats.fileUri, formatLocalFile],
       hitTestBehavior: HitTestBehavior.opaque,
@@ -1541,105 +1751,7 @@ class _ItemRowState extends State<_ItemRow> {
               : null,
           child: Builder(
             builder: (context) {
-              final row = widget.collapsed
-                  ? Container(
-                      height: _railItemHeight,
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: _itemMargin,
-                        vertical: 1,
-                      ),
-                      decoration: BoxDecoration(
-                        color: bg,
-                        borderRadius: BorderRadius.zero,
-                        border: _dragOver
-                            ? Border.all(
-                                color: AppColors.accent.withValues(alpha: 0.4),
-                              )
-                            : null,
-                      ),
-                      alignment: Alignment.center,
-                      child: Icon(
-                        widget.item.icon,
-                        size: 16,
-                        color: widget.isSelected
-                            ? AppColors.fgAccent
-                            : (widget.isMounted
-                                  ? AppColors.fg.withValues(alpha: 0.85)
-                                  : AppColors.fgMuted),
-                      ),
-                    )
-                  : Container(
-                      height: widget.space == null
-                          ? _itemHeight
-                          : _itemHeightWithSpace,
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: _itemMargin,
-                      ),
-                      decoration: BoxDecoration(
-                        color: bg,
-                        borderRadius: BorderRadius.zero,
-                        border: _dragOver
-                            ? Border.all(
-                                color: AppColors.accent.withValues(alpha: 0.4),
-                              )
-                            : null,
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                widget.item.icon,
-                                size: 16,
-                                color: widget.isSelected
-                                    ? AppColors.fgAccent
-                                    : AppColors.fgMuted,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  widget.item.label,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: context.txt.body.copyWith(
-                                    color: widget.isSelected
-                                        ? AppColors.fg
-                                        : (widget.isMounted
-                                              ? AppColors.fg.withValues(
-                                                  alpha: 0.85,
-                                                )
-                                              : AppColors.fgMuted),
-                                    fontWeight: widget.isSelected
-                                        ? FontWeight.w500
-                                        : FontWeight.normal,
-                                  ),
-                                ),
-                              ),
-                              if (widget.onUnmount != null)
-                                IconButton(
-                                  icon: Icon(
-                                    WaydirIconsRegular.eject,
-                                    size: 14,
-                                    color: AppColors.fgMuted,
-                                  ),
-                                  onPressed: widget.onUnmount,
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(
-                                    minWidth: 24,
-                                    minHeight: 22,
-                                  ),
-                                  splashRadius: 12,
-                                ),
-                            ],
-                          ),
-                          if (widget.space != null) ...[
-                            const SizedBox(height: 4),
-                            _DriveSpaceBar(space: widget.space!),
-                          ],
-                        ],
-                      ),
-                    );
+              final row = widget.collapsed ? _railRow() : _expandedRow(context);
               final tooltipMessage = _tooltipMessage();
               if (tooltipMessage == null) return row;
               return Tooltip(
@@ -1650,6 +1762,112 @@ class _ItemRowState extends State<_ItemRow> {
             },
           ),
         ),
+      ),
+    );
+  }
+
+  Color get _bg {
+    if (_dragOver) return AppColors.accent.withValues(alpha: 0.12);
+    if (widget.isSelected) return AppColors.bgSelectedMuted;
+    if (_hovered) return AppColors.bgHover;
+    return Colors.transparent;
+  }
+
+  Color get _iconColor {
+    if (widget.isSelected) return AppColors.fgAccent;
+    return widget.isMounted
+        ? AppColors.fg.withValues(alpha: 0.85)
+        : AppColors.fgMuted;
+  }
+
+  Border? get _dragBorder => _dragOver
+      ? Border.all(color: AppColors.accent.withValues(alpha: 0.4))
+      : null;
+
+  Widget _railRow() {
+    return Container(
+      height: _railRowHeight,
+      margin: const EdgeInsets.symmetric(horizontal: _rowInsetH, vertical: 1),
+      decoration: BoxDecoration(color: _bg, border: _dragBorder),
+      child: Stack(
+        children: [
+          if (widget.isSelected)
+            const Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              child: _SelectionAccent(),
+            ),
+          Center(
+            child: Icon(widget.item.icon, size: _iconSize, color: _iconColor),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _expandedRow(BuildContext context) {
+    final content = Row(
+      children: [
+        Icon(widget.item.icon, size: _iconSize, color: _iconColor),
+        const SizedBox(width: _iconGap),
+        Expanded(
+          child: Text(
+            widget.item.label,
+            overflow: TextOverflow.ellipsis,
+            style: context.txt.body.copyWith(
+              color: widget.isSelected
+                  ? AppColors.fg
+                  : (widget.isMounted
+                        ? AppColors.fg.withValues(alpha: 0.85)
+                        : AppColors.fgMuted),
+              fontWeight: widget.isSelected
+                  ? FontWeight.w500
+                  : FontWeight.normal,
+            ),
+          ),
+        ),
+        if (widget.onUnmount != null)
+          _RowIconButton(
+            icon: WaydirIconsRegular.eject,
+            tooltip: t.menu.eject,
+            onTap: widget.onUnmount!,
+          ),
+      ],
+    );
+
+    final body = widget.space == null
+        ? content
+        : Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              content,
+              const SizedBox(height: 5),
+              Padding(
+                padding: const EdgeInsets.only(left: _iconSize + _iconGap),
+                child: _DriveSpaceBar(space: widget.space!),
+              ),
+            ],
+          );
+
+    return Container(
+      height: widget.space == null ? _rowHeight : _rowHeightWithSpace,
+      margin: const EdgeInsets.symmetric(horizontal: _rowInsetH),
+      decoration: BoxDecoration(color: _bg, border: _dragBorder),
+      child: Stack(
+        children: [
+          if (widget.isSelected)
+            const Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              child: _SelectionAccent(),
+            ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: _rowPadH),
+            child: Center(child: body),
+          ),
+        ],
       ),
     );
   }
@@ -1668,6 +1886,63 @@ class _ItemRowState extends State<_ItemRow> {
       '${t.sidebar.driveSpace.free}: ${formatBytes(space.freeBytes)}',
       '${t.sidebar.driveSpace.total}: ${formatBytes(space.totalBytes)}',
     ].join('\n');
+  }
+}
+
+class _SelectionAccent extends StatelessWidget {
+  const _SelectionAccent();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(width: 2, color: AppColors.accent);
+  }
+}
+
+class _RowIconButton extends StatefulWidget {
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  const _RowIconButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  @override
+  State<_RowIconButton> createState() => _RowIconButtonState();
+}
+
+class _RowIconButtonState extends State<_RowIconButton> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: widget.tooltip,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(
+          onTap: widget.onTap,
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            width: 22,
+            height: 22,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: _hovered ? AppColors.bgHoverStrong : Colors.transparent,
+            ),
+            child: Icon(
+              widget.icon,
+              size: 14,
+              color: _hovered ? AppColors.fg : AppColors.fgMuted,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
