@@ -619,7 +619,12 @@
       "name": "Name",
       "size": "Size",
       "dateModified": "Date modified",
-      "location": "Location"
+      "location": "Location",
+      "kind": "Kind",
+      "dateCreated": "Date created",
+      "permissions": "Permissions",
+      "owner": "Owner",
+      "configure": "Configure columns"
     }
   },
   "sidebar": {

@@ -45,6 +45,10 @@ pub unsafe extern "C" fn waydir_list(
             is_dir,
             size: 0,
             mtime_ms: 0,
+            ctime_ms: 0,
+            mode: 0,
+            uid: 0,
+            gid: 0,
             name: os_bytes(de.file_name().as_os_str()),
             path: os_bytes(dp.as_os_str()),
             disk_path: dp,
@@ -88,5 +92,34 @@ fn fill_stat(e: &mut Entry) {
     if let Ok(meta) = std::fs::metadata(&e.disk_path) {
         e.size = meta.len() as i64;
         e.mtime_ms = mtime_ms(&meta);
+        e.ctime_ms = ctime_ms(&meta);
+        fill_owner_mode(e, &meta);
     }
 }
+
+#[cfg(unix)]
+fn ctime_ms(meta: &std::fs::Metadata) -> i64 {
+    use std::os::unix::fs::MetadataExt;
+    meta.ctime() * 1000 + (meta.ctime_nsec() / 1_000_000)
+}
+
+#[cfg(not(unix))]
+fn ctime_ms(meta: &std::fs::Metadata) -> i64 {
+    use std::time::UNIX_EPOCH;
+    meta.created()
+        .ok()
+        .and_then(|t| t.duration_since(UNIX_EPOCH).ok())
+        .map(|d| d.as_millis() as i64)
+        .unwrap_or(0)
+}
+
+#[cfg(unix)]
+fn fill_owner_mode(e: &mut Entry, meta: &std::fs::Metadata) {
+    use std::os::unix::fs::MetadataExt;
+    e.mode = meta.mode();
+    e.uid = meta.uid();
+    e.gid = meta.gid();
+}
+
+#[cfg(not(unix))]
+fn fill_owner_mode(_e: &mut Entry, _meta: &std::fs::Metadata) {}

@@ -54,7 +54,7 @@ pub unsafe extern "C" fn waydir_free(ptr: *mut u8, len: usize) {
 
 #[no_mangle]
 pub extern "C" fn waydir_core_abi() -> u32 {
-    13
+    14
 }
 
 #[no_mangle]

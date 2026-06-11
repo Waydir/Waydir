@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import '../fs/passwd_lookup.dart';
 import '../platform/platform_paths.dart';
 import '../platform/win32_attributes.dart';
 
@@ -24,9 +25,23 @@ class FileEntry {
   /// is materialised lazily and only when actually read.
   final int modifiedMs;
 
+  /// Creation/change time as epoch milliseconds (unix ctime), 0 when unknown.
+  final int createdMs;
+
+  /// Unix mode bits (type + permissions), 0 when unknown (e.g. non-unix).
+  final int mode;
+
+  /// Owning user / group ids, 0 when unknown.
+  final int uid;
+  final int gid;
+
   DateTime? _modified;
   DateTime get modified =>
       _modified ??= DateTime.fromMillisecondsSinceEpoch(modifiedMs);
+
+  DateTime? _created;
+  DateTime get created =>
+      _created ??= DateTime.fromMillisecondsSinceEpoch(createdMs);
 
   late final String nameLower = name.toLowerCase();
 
@@ -42,9 +57,15 @@ class FileEntry {
     required this.type,
     required this.size,
     required DateTime modified,
+    DateTime? created,
+    this.mode = 0,
+    this.uid = 0,
+    this.gid = 0,
     String? realPath,
   }) : modifiedMs = modified.millisecondsSinceEpoch,
+       createdMs = (created ?? modified).millisecondsSinceEpoch,
        _modified = modified,
+       _created = created,
        _realPath = realPath;
 
   FileEntry.raw({
@@ -53,6 +74,10 @@ class FileEntry {
     required this.type,
     required this.size,
     required this.modifiedMs,
+    this.createdMs = 0,
+    this.mode = 0,
+    this.uid = 0,
+    this.gid = 0,
     String? realPath,
   }) : _realPath = realPath;
 
@@ -64,6 +89,8 @@ class FileEntry {
       type: entity is Directory ? FileItemType.folder : FileItemType.file,
       size: stat.size,
       modified: stat.modified,
+      created: stat.changed,
+      mode: stat.mode,
     );
   }
 
@@ -80,6 +107,31 @@ class FileEntry {
     }
     return name.startsWith('.');
   }
+
+  /// Human label for the "Kind" column: folder, or the upper-cased extension,
+  /// falling back to a generic file label when there is no extension.
+  String get kind {
+    if (type == FileItemType.folder) return 'folder';
+    final ext = extension;
+    return ext.isEmpty ? 'file' : ext.toUpperCase();
+  }
+
+  /// Unix-style permission string (e.g. "drwxr-xr-x"), or "--" when [mode] is
+  /// unknown (non-unix listings, archives, …).
+  String get permissionsString {
+    if (mode == 0) return '--';
+    const flags = ['x', 'w', 'r'];
+    final sb = StringBuffer();
+    sb.write(type == FileItemType.folder ? 'd' : '-');
+    for (var shift = 8; shift >= 0; shift--) {
+      sb.write((mode & (1 << shift)) != 0 ? flags[shift % 3] : '-');
+    }
+    return sb.toString();
+  }
+
+  /// Owner user name resolved from [uid] via [PasswdLookup], falling back to
+  /// the numeric uid. Empty when ownership is unknown (uid 0 and root unmapped).
+  String get ownerName => PasswdLookup.userName(uid);
 }
 
 /// Compact binary codec for shipping large [FileEntry] lists across an
@@ -92,6 +144,11 @@ class FileEntryCodec {
   static const int threshold = 2000;
   static const int _magic = 0x57444952; // 'WDIR'
 
+  /// Fixed-size record header, mirroring `codec.rs::RECORD_HEAD`. Layout
+  /// (big-endian): u8 is_dir, i64 size, i64 mtime_ms, i64 ctime_ms, u32 mode,
+  /// u32 uid, u32 gid, u32 name_len, u32 path_len.
+  static const int _recordHead = 1 + 8 + 8 + 8 + 4 + 4 + 4 + 4 + 4;
+
   static Uint8List encode(List<FileEntry> entries) {
     final b = BytesBuilder(copy: false);
     final header = ByteData(8);
@@ -102,12 +159,16 @@ class FileEntryCodec {
     for (final e in entries) {
       final nameB = utf8.encode(e.name);
       final pathB = utf8.encode(e.path);
-      final rec = ByteData(1 + 8 + 8 + 4 + 4);
+      final rec = ByteData(_recordHead);
       rec.setUint8(0, e.type == FileItemType.folder ? 0 : 1);
       rec.setInt64(1, e.size);
       rec.setInt64(9, e.modifiedMs);
-      rec.setUint32(17, nameB.length);
-      rec.setUint32(21, pathB.length);
+      rec.setInt64(17, e.createdMs);
+      rec.setUint32(25, e.mode);
+      rec.setUint32(29, e.uid);
+      rec.setUint32(33, e.gid);
+      rec.setUint32(37, nameB.length);
+      rec.setUint32(41, pathB.length);
       b.add(rec.buffer.asUint8List());
       b.add(nameB);
       b.add(pathB);
@@ -137,9 +198,13 @@ class FileEntryCodec {
           : FileItemType.file;
       final size = view.getInt64(off + 1);
       final modifiedMs = view.getInt64(off + 9);
-      final nameLen = view.getUint32(off + 17);
-      final pathLen = view.getUint32(off + 21);
-      off += 25;
+      final createdMs = view.getInt64(off + 17);
+      final mode = view.getUint32(off + 25);
+      final uid = view.getUint32(off + 29);
+      final gid = view.getUint32(off + 33);
+      final nameLen = view.getUint32(off + 37);
+      final pathLen = view.getUint32(off + 41);
+      off += _recordHead;
       final name = utf8.decode(bytes.sublist(off, off + nameLen));
       off += nameLen;
       final path = utf8.decode(bytes.sublist(off, off + pathLen));
@@ -151,6 +216,10 @@ class FileEntryCodec {
           type: type,
           size: size,
           modifiedMs: modifiedMs,
+          createdMs: createdMs,
+          mode: mode,
+          uid: uid,
+          gid: gid,
         ),
       );
     }

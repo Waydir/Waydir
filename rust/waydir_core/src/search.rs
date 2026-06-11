@@ -187,6 +187,10 @@ pub unsafe extern "C" fn waydir_search(
                     is_dir,
                     0,
                     0,
+                    0,
+                    0,
+                    0,
+                    0,
                     &os_bytes(os_name),
                     &os_bytes(dirent.path().as_os_str()),
                 );
@@ -279,6 +283,10 @@ pub unsafe extern "C" fn waydir_search_start(
                     put_record(
                         &mut g.0,
                         is_dir,
+                        0,
+                        0,
+                        0,
+                        0,
                         0,
                         0,
                         &os_bytes(os_name),
