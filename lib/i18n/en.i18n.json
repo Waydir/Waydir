@@ -346,7 +346,7 @@
     "btnDownload": "Download",
     "btnGetUpdate": "Get the update",
     "appImageManual": "AppImages don't update themselves. Download the new version and replace this file.",
-    "packageManagerManual": "This build was installed from a package. Update it through your package manager — run sudo apt upgrade or sudo dnf upgrade.",
+    "packageManagerManual": "Installed from a package. Update it through your package manager (e.g. apt or dnf).",
     "btnDownloading": "Downloading...",
     "btnCheckNow": "Check now",
     "btnRetry": "Retry",

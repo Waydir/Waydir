@@ -580,8 +580,8 @@ class Translations$update$en {
 	/// en: 'AppImages don't update themselves. Download the new version and replace this file.'
 	String get appImageManual => 'AppImages don\'t update themselves. Download the new version and replace this file.';
 
-	/// en: 'This build was installed from a package. Update it through your package manager — run sudo apt upgrade or sudo dnf upgrade.'
-	String get packageManagerManual => 'This build was installed from a package. Update it through your package manager — run sudo apt upgrade or sudo dnf upgrade.';
+	/// en: 'Installed from a package. Update it through your package manager (e.g. apt or dnf).'
+	String get packageManagerManual => 'Installed from a package. Update it through your package manager (e.g. apt or dnf).';
 
 	/// en: 'Downloading...'
 	String get btnDownloading => 'Downloading...';
@@ -3308,7 +3308,7 @@ extension on Translations {
 			'update.btnDownload' => 'Download',
 			'update.btnGetUpdate' => 'Get the update',
 			'update.appImageManual' => 'AppImages don\'t update themselves. Download the new version and replace this file.',
-			'update.packageManagerManual' => 'This build was installed from a package. Update it through your package manager — run sudo apt upgrade or sudo dnf upgrade.',
+			'update.packageManagerManual' => 'Installed from a package. Update it through your package manager (e.g. apt or dnf).',
 			'update.btnDownloading' => 'Downloading...',
 			'update.btnCheckNow' => 'Check now',
 			'update.btnRetry' => 'Retry',
