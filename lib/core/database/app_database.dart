@@ -69,6 +69,9 @@ class AppSettings extends Table {
       boolean().withDefault(const Constant(false))();
   BoolColumn get showColumnOwner =>
       boolean().withDefault(const Constant(false))();
+  TextColumn get columnOrder => text().withDefault(
+    const Constant('size,date,kind,created,permissions,owner'),
+  )();
 }
 
 class SessionTabs extends Table {
@@ -196,7 +199,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 29;
+  int get schemaVersion => 30;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -326,6 +329,9 @@ class AppDatabase extends _$AppDatabase {
         await addSettingColumn(appSettings.showColumnCreated);
         await addSettingColumn(appSettings.showColumnPermissions);
         await addSettingColumn(appSettings.showColumnOwner);
+      }
+      if (from < 30) {
+        await addSettingColumn(appSettings.columnOrder);
       }
     },
   );

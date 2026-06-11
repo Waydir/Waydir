@@ -561,6 +561,18 @@ class $AppSettingsTable extends AppSettings
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _columnOrderMeta = const VerificationMeta(
+    'columnOrder',
+  );
+  @override
+  late final GeneratedColumn<String> columnOrder = GeneratedColumn<String>(
+    'column_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('size,date,kind,created,permissions,owner'),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -604,6 +616,7 @@ class $AppSettingsTable extends AppSettings
     showColumnCreated,
     showColumnPermissions,
     showColumnOwner,
+    columnOrder,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -956,6 +969,15 @@ class $AppSettingsTable extends AppSettings
         ),
       );
     }
+    if (data.containsKey('column_order')) {
+      context.handle(
+        _columnOrderMeta,
+        columnOrder.isAcceptableOrUnknown(
+          data['column_order']!,
+          _columnOrderMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1129,6 +1151,10 @@ class $AppSettingsTable extends AppSettings
         DriftSqlType.bool,
         data['${effectivePrefix}show_column_owner'],
       )!,
+      columnOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}column_order'],
+      )!,
     );
   }
 
@@ -1180,6 +1206,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
   final bool showColumnCreated;
   final bool showColumnPermissions;
   final bool showColumnOwner;
+  final String columnOrder;
   const AppSetting({
     required this.id,
     required this.themeMode,
@@ -1222,6 +1249,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     required this.showColumnCreated,
     required this.showColumnPermissions,
     required this.showColumnOwner,
+    required this.columnOrder,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1269,6 +1297,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     map['show_column_created'] = Variable<bool>(showColumnCreated);
     map['show_column_permissions'] = Variable<bool>(showColumnPermissions);
     map['show_column_owner'] = Variable<bool>(showColumnOwner);
+    map['column_order'] = Variable<String>(columnOrder);
     return map;
   }
 
@@ -1315,6 +1344,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       showColumnCreated: Value(showColumnCreated),
       showColumnPermissions: Value(showColumnPermissions),
       showColumnOwner: Value(showColumnOwner),
+      columnOrder: Value(columnOrder),
     );
   }
 
@@ -1385,6 +1415,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
         json['showColumnPermissions'],
       ),
       showColumnOwner: serializer.fromJson<bool>(json['showColumnOwner']),
+      columnOrder: serializer.fromJson<String>(json['columnOrder']),
     );
   }
   @override
@@ -1436,6 +1467,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       'showColumnCreated': serializer.toJson<bool>(showColumnCreated),
       'showColumnPermissions': serializer.toJson<bool>(showColumnPermissions),
       'showColumnOwner': serializer.toJson<bool>(showColumnOwner),
+      'columnOrder': serializer.toJson<String>(columnOrder),
     };
   }
 
@@ -1481,6 +1513,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     bool? showColumnCreated,
     bool? showColumnPermissions,
     bool? showColumnOwner,
+    String? columnOrder,
   }) => AppSetting(
     id: id ?? this.id,
     themeMode: themeMode ?? this.themeMode,
@@ -1525,6 +1558,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     showColumnCreated: showColumnCreated ?? this.showColumnCreated,
     showColumnPermissions: showColumnPermissions ?? this.showColumnPermissions,
     showColumnOwner: showColumnOwner ?? this.showColumnOwner,
+    columnOrder: columnOrder ?? this.columnOrder,
   );
   AppSetting copyWithCompanion(AppSettingsCompanion data) {
     return AppSetting(
@@ -1641,6 +1675,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       showColumnOwner: data.showColumnOwner.present
           ? data.showColumnOwner.value
           : this.showColumnOwner,
+      columnOrder: data.columnOrder.present
+          ? data.columnOrder.value
+          : this.columnOrder,
     );
   }
 
@@ -1687,7 +1724,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           ..write('showColumnKind: $showColumnKind, ')
           ..write('showColumnCreated: $showColumnCreated, ')
           ..write('showColumnPermissions: $showColumnPermissions, ')
-          ..write('showColumnOwner: $showColumnOwner')
+          ..write('showColumnOwner: $showColumnOwner, ')
+          ..write('columnOrder: $columnOrder')
           ..write(')'))
         .toString();
   }
@@ -1735,6 +1773,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     showColumnCreated,
     showColumnPermissions,
     showColumnOwner,
+    columnOrder,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -1780,7 +1819,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           other.showColumnKind == this.showColumnKind &&
           other.showColumnCreated == this.showColumnCreated &&
           other.showColumnPermissions == this.showColumnPermissions &&
-          other.showColumnOwner == this.showColumnOwner);
+          other.showColumnOwner == this.showColumnOwner &&
+          other.columnOrder == this.columnOrder);
 }
 
 class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
@@ -1825,6 +1865,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
   final Value<bool> showColumnCreated;
   final Value<bool> showColumnPermissions;
   final Value<bool> showColumnOwner;
+  final Value<String> columnOrder;
   const AppSettingsCompanion({
     this.id = const Value.absent(),
     this.themeMode = const Value.absent(),
@@ -1867,6 +1908,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.showColumnCreated = const Value.absent(),
     this.showColumnPermissions = const Value.absent(),
     this.showColumnOwner = const Value.absent(),
+    this.columnOrder = const Value.absent(),
   });
   AppSettingsCompanion.insert({
     this.id = const Value.absent(),
@@ -1910,6 +1952,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.showColumnCreated = const Value.absent(),
     this.showColumnPermissions = const Value.absent(),
     this.showColumnOwner = const Value.absent(),
+    this.columnOrder = const Value.absent(),
   });
   static Insertable<AppSetting> custom({
     Expression<int>? id,
@@ -1953,6 +1996,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Expression<bool>? showColumnCreated,
     Expression<bool>? showColumnPermissions,
     Expression<bool>? showColumnOwner,
+    Expression<String>? columnOrder,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2007,6 +2051,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       if (showColumnPermissions != null)
         'show_column_permissions': showColumnPermissions,
       if (showColumnOwner != null) 'show_column_owner': showColumnOwner,
+      if (columnOrder != null) 'column_order': columnOrder,
     });
   }
 
@@ -2052,6 +2097,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Value<bool>? showColumnCreated,
     Value<bool>? showColumnPermissions,
     Value<bool>? showColumnOwner,
+    Value<String>? columnOrder,
   }) {
     return AppSettingsCompanion(
       id: id ?? this.id,
@@ -2100,6 +2146,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       showColumnPermissions:
           showColumnPermissions ?? this.showColumnPermissions,
       showColumnOwner: showColumnOwner ?? this.showColumnOwner,
+      columnOrder: columnOrder ?? this.columnOrder,
     );
   }
 
@@ -2241,6 +2288,9 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     if (showColumnOwner.present) {
       map['show_column_owner'] = Variable<bool>(showColumnOwner.value);
     }
+    if (columnOrder.present) {
+      map['column_order'] = Variable<String>(columnOrder.value);
+    }
     return map;
   }
 
@@ -2287,7 +2337,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
           ..write('showColumnKind: $showColumnKind, ')
           ..write('showColumnCreated: $showColumnCreated, ')
           ..write('showColumnPermissions: $showColumnPermissions, ')
-          ..write('showColumnOwner: $showColumnOwner')
+          ..write('showColumnOwner: $showColumnOwner, ')
+          ..write('columnOrder: $columnOrder')
           ..write(')'))
         .toString();
   }
@@ -5587,6 +5638,7 @@ typedef $$AppSettingsTableCreateCompanionBuilder =
       Value<bool> showColumnCreated,
       Value<bool> showColumnPermissions,
       Value<bool> showColumnOwner,
+      Value<String> columnOrder,
     });
 typedef $$AppSettingsTableUpdateCompanionBuilder =
     AppSettingsCompanion Function({
@@ -5631,6 +5683,7 @@ typedef $$AppSettingsTableUpdateCompanionBuilder =
       Value<bool> showColumnCreated,
       Value<bool> showColumnPermissions,
       Value<bool> showColumnOwner,
+      Value<String> columnOrder,
     });
 
 class $$AppSettingsTableFilterComposer
@@ -5844,6 +5897,11 @@ class $$AppSettingsTableFilterComposer
 
   ColumnFilters<bool> get showColumnOwner => $composableBuilder(
     column: $table.showColumnOwner,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get columnOrder => $composableBuilder(
+    column: $table.columnOrder,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -6061,6 +6119,11 @@ class $$AppSettingsTableOrderingComposer
     column: $table.showColumnOwner,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get columnOrder => $composableBuilder(
+    column: $table.columnOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$AppSettingsTableAnnotationComposer
@@ -6266,6 +6329,11 @@ class $$AppSettingsTableAnnotationComposer
     column: $table.showColumnOwner,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get columnOrder => $composableBuilder(
+    column: $table.columnOrder,
+    builder: (column) => column,
+  );
 }
 
 class $$AppSettingsTableTableManager
@@ -6340,6 +6408,7 @@ class $$AppSettingsTableTableManager
                 Value<bool> showColumnCreated = const Value.absent(),
                 Value<bool> showColumnPermissions = const Value.absent(),
                 Value<bool> showColumnOwner = const Value.absent(),
+                Value<String> columnOrder = const Value.absent(),
               }) => AppSettingsCompanion(
                 id: id,
                 themeMode: themeMode,
@@ -6382,6 +6451,7 @@ class $$AppSettingsTableTableManager
                 showColumnCreated: showColumnCreated,
                 showColumnPermissions: showColumnPermissions,
                 showColumnOwner: showColumnOwner,
+                columnOrder: columnOrder,
               ),
           createCompanionCallback:
               ({
@@ -6426,6 +6496,7 @@ class $$AppSettingsTableTableManager
                 Value<bool> showColumnCreated = const Value.absent(),
                 Value<bool> showColumnPermissions = const Value.absent(),
                 Value<bool> showColumnOwner = const Value.absent(),
+                Value<String> columnOrder = const Value.absent(),
               }) => AppSettingsCompanion.insert(
                 id: id,
                 themeMode: themeMode,
@@ -6468,6 +6539,7 @@ class $$AppSettingsTableTableManager
                 showColumnCreated: showColumnCreated,
                 showColumnPermissions: showColumnPermissions,
                 showColumnOwner: showColumnOwner,
+                columnOrder: columnOrder,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

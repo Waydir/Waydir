@@ -52,6 +52,9 @@ class SettingsStore {
   final showColumnCreated = signal<bool>(false);
   final showColumnPermissions = signal<bool>(false);
   final showColumnOwner = signal<bool>(false);
+  final columnOrder = signal<String>(
+    'size,date,kind,created,permissions,owner',
+  );
   final shortcutBindings = signal<Map<String, KeyChord>>({});
 
   late final AppDatabase _db;
@@ -112,6 +115,7 @@ class SettingsStore {
     showColumnCreated.value = row.showColumnCreated;
     showColumnPermissions.value = row.showColumnPermissions;
     showColumnOwner.value = row.showColumnOwner;
+    columnOrder.value = row.columnOrder;
     final shortcutRows = await _db.getShortcutBindings();
     final bindings = <String, KeyChord>{};
     for (final row in shortcutRows) {
@@ -210,6 +214,7 @@ class SettingsStore {
         showColumnCreated.value;
         showColumnPermissions.value;
         showColumnOwner.value;
+        columnOrder.value;
         if (!_loaded) return;
         _scheduleSave();
       }),
@@ -265,6 +270,7 @@ class SettingsStore {
           showColumnCreated: Value(showColumnCreated.value),
           showColumnPermissions: Value(showColumnPermissions.value),
           showColumnOwner: Value(showColumnOwner.value),
+          columnOrder: Value(columnOrder.value),
         ),
       );
     } catch (_) {}
