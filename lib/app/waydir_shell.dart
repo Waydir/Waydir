@@ -15,6 +15,7 @@ import '../core/logging/app_logger.dart';
 import '../features/locations/location_resolver.dart';
 import '../core/open/open_service.dart';
 import '../core/keyboard/keyboard_shortcuts.dart';
+import '../core/platform/full_disk_access.dart';
 import '../core/platform/platform_paths.dart';
 import '../core/models/app_notification.dart';
 import '../core/models/file_entry.dart';
@@ -27,6 +28,7 @@ import '../features/update/update_dialog.dart';
 import '../features/navigation/navigation_store.dart';
 import '../features/navigation/sidebar.dart';
 import '../features/navigation/status_bar.dart';
+import '../features/onboarding/full_disk_access_dialog.dart';
 import '../features/operations/operation_store.dart';
 import '../features/panes/pane_view.dart';
 import '../features/panes/pane_divider.dart';
@@ -171,6 +173,17 @@ class _WaydirShellState extends State<WaydirShell>
       }),
     );
     _installUpdateNotification();
+    _maybePromptFullDiskAccess();
+  }
+
+  void _maybePromptFullDiskAccess() {
+    if (!Platform.isMacOS) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      if (await hasFullDiskAccess()) return;
+      if (!mounted) return;
+      await showFullDiskAccessDialog(context);
+    });
   }
 
   @override

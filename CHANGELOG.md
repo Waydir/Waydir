@@ -9,9 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - File list columns can be configured: toggle Size, Date modified, Kind, Date created, Permissions and Owner on or off, and drag to reorder them. Every column is sortable.
+- The path bar now expands `~` to the home folder. ([@fwitkowski17](https://github.com/fwitkowski17))
+- macOS: Waydir now prompts for Full Disk Access when needed. ([@fwitkowski17](https://github.com/fwitkowski17))
 
 ### Fixed
 - Copying, pasting and dragging files into an empty folder now works. ([@fwitkowski17](https://github.com/fwitkowski17))
+- macOS: the Videos location now opens the Movies folder. ([@fwitkowski17](https://github.com/fwitkowski17))
 - macOS: files copied in Finder can now be pasted in Waydir, and Waydir's own copies are recognized by Finder. ([@fwitkowski17](https://github.com/fwitkowski17))
 
 ## [0.14.0] - 2026-06-10

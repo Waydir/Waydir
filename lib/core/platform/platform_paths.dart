@@ -9,11 +9,14 @@ class PlatformPaths {
 
   static String? trashPathOverride;
   static bool? isWindowsOverrideForTesting;
+  static String? homePathOverrideForTesting;
   static final p.Context _windowsPath = p.Context(style: p.Style.windows);
 
   static String get separator => Platform.pathSeparator;
 
   static String get homePath {
+    final override = homePathOverrideForTesting;
+    if (override != null) return override;
     if (isWindows) {
       return Platform.environment['USERPROFILE'] ??
           '${Platform.environment['HOMEDRIVE'] ?? 'C:'}${Platform.environment['HOMEPATH'] ?? r'\Users\Default'}';
@@ -224,7 +227,9 @@ class PlatformPaths {
   static String get picturesPath =>
       _xdgDir('PICTURES') ?? join(homePath, 'Pictures');
   static String get musicPath => _xdgDir('MUSIC') ?? join(homePath, 'Music');
-  static String get videosPath => _xdgDir('VIDEOS') ?? join(homePath, 'Videos');
+  static String get videosPath =>
+      _xdgDir('VIDEOS') ??
+      join(homePath, Platform.isMacOS ? 'Movies' : 'Videos');
 
   static String? get trashPath {
     final override = trashPathOverride;
@@ -292,6 +297,16 @@ class PlatformPaths {
     }
     if (isWindows) return _windowsPath.basename(path);
     return p.basename(path);
+  }
+
+  static String expandTilde(String path) {
+    if (!path.startsWith('~')) return path;
+    if (path == '~') return homePath;
+    final second = path[1];
+    if (second == '/' || (isWindows && second == r'\')) {
+      return join(homePath, path.substring(2));
+    }
+    return path;
   }
 
   static String normalize(String path) {
