@@ -224,7 +224,7 @@ class PlatformPaths {
   static String get picturesPath =>
       _xdgDir('PICTURES') ?? join(homePath, 'Pictures');
   static String get musicPath => _xdgDir('MUSIC') ?? join(homePath, 'Music');
-  static String get videosPath => _xdgDir('VIDEOS') ?? join(homePath, 'Videos');
+  static String get videosPath => _xdgDir('VIDEOS') ?? join(homePath, Platform.isMacOS ? 'Movies' : 'Videos');
 
   static String? get trashPath {
     final override = trashPathOverride;
