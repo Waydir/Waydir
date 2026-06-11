@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter/services.dart';
 
+import 'macos_clipboard_ffi.dart';
+
 class FileClipboard {
   static bool get _isWayland =>
       Platform.environment.containsKey('WAYLAND_DISPLAY');
@@ -9,11 +11,14 @@ class FileClipboard {
     List<String> paths, {
     required bool isCut,
   }) async {
+    if (Platform.isMacOS) {
+      _writeMacOS(paths, isCut: isCut);
+      return;
+    }
+
     try {
       if (Platform.isWindows) {
         await _writeWindows(paths);
-      } else if (Platform.isMacOS) {
-        await _writeMacOS(paths);
       } else if (_isWayland) {
         await _runWrite('wl-copy', [
           '-f',
@@ -55,6 +60,8 @@ class FileClipboard {
 
   static Future<bool> isCutOperation() async {
     try {
+      if (Platform.isMacOS) return macIsCut();
+
       final data = await Clipboard.getData(Clipboard.kTextPlain);
       if (data?.text?.startsWith('x-special/cut') ?? false) return true;
 
@@ -98,15 +105,12 @@ class FileClipboard {
         .toList();
   }
 
-  static Future<void> _writeMacOS(List<String> paths) async {
-    final uris = paths.map((p) => Uri.file(p).toString()).join('\n');
-    await _runWrite('pbcopy', <String>[], uris);
+  static void _writeMacOS(List<String> paths, {required bool isCut}) {
+    macWriteFiles(paths, isCut: isCut);
   }
 
   static Future<List<String>> _readMacOS() async {
-    final output = await _runRead('pbpaste', []);
-    if (output == null) return [];
-    return _parseUris(output);
+    return macReadFiles();
   }
 
   static Future<List<String>> _readX11() async {
