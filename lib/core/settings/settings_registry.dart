@@ -9,7 +9,7 @@ import '../terminal/shell_detector.dart';
 import '../terminal/terminal.dart';
 import 'settings_store.dart';
 
-enum SettingsCategory { general, appearance, terminal }
+enum SettingsCategory { general, appearance, terminal, quickLook }
 
 enum SettingKind { toggle, choice, text }
 
@@ -426,6 +426,98 @@ class SettingsRegistry {
       searchTerms: const ['sort', 'ascending', 'descending', 'order'],
       signal: SettingsStore.instance.sortAscending,
     ),
+    ToggleSetting(
+      id: 'quickLook.useSystemFont',
+      category: SettingsCategory.quickLook,
+      label: () => t.preferences.quickLook.useSystemFont,
+      hint: () => t.preferences.quickLook.useSystemFontHint,
+      searchTerms: const [
+        'quick look',
+        'editor',
+        'font',
+        'system',
+        'monospace',
+      ],
+      signal: SettingsStore.instance.quickLookUseSystemFont,
+    ),
+    ChoiceSetting<String>(
+      id: 'quickLook.fontFamily',
+      category: SettingsCategory.quickLook,
+      label: () => t.preferences.quickLook.fontFamily,
+      hint: () => t.preferences.quickLook.fontFamilyHint,
+      searchTerms: const [
+        'quick look',
+        'editor',
+        'font',
+        'family',
+        'monospace',
+      ],
+      signal: SettingsStore.instance.quickLookFontFamily,
+      choices: _fontChoices(const ['monospace']),
+    ),
+    ChoiceSetting<int>(
+      id: 'quickLook.fontSize',
+      category: SettingsCategory.quickLook,
+      label: () => t.preferences.quickLook.fontSize,
+      hint: () => t.preferences.quickLook.fontSizeHint,
+      searchTerms: const ['quick look', 'editor', 'font', 'size'],
+      signal: SettingsStore.instance.quickLookFontSize,
+      choices: [
+        for (final value in SettingsStore.terminalFontSizes)
+          SettingChoice(
+            value: value,
+            label: () => '${value}px',
+            icon: WaydirIconsRegular.textAa,
+          ),
+      ],
+    ),
+    ChoiceSetting<double>(
+      id: 'quickLook.lineHeight',
+      category: SettingsCategory.quickLook,
+      label: () => t.preferences.quickLook.lineHeight,
+      hint: () => t.preferences.quickLook.lineHeightHint,
+      searchTerms: const [
+        'quick look',
+        'editor',
+        'line',
+        'height',
+        'spacing',
+        'leading',
+      ],
+      signal: SettingsStore.instance.quickLookLineHeight,
+      choices: [
+        for (final value in const [1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.8, 2.0])
+          SettingChoice(
+            value: value,
+            label: () => value.toStringAsFixed(1),
+            icon: WaydirIconsRegular.rows,
+          ),
+      ],
+    ),
+    ToggleSetting(
+      id: 'quickLook.showLineNumbers',
+      category: SettingsCategory.quickLook,
+      label: () => t.preferences.quickLook.showLineNumbers,
+      hint: () => t.preferences.quickLook.showLineNumbersHint,
+      searchTerms: const ['quick look', 'editor', 'line numbers', 'gutter'],
+      signal: SettingsStore.instance.quickLookShowLineNumbers,
+    ),
+    ToggleSetting(
+      id: 'quickLook.wrapLines',
+      category: SettingsCategory.quickLook,
+      label: () => t.preferences.quickLook.wrapLines,
+      hint: () => t.preferences.quickLook.wrapLinesHint,
+      searchTerms: const ['quick look', 'editor', 'wrap', 'line wrap'],
+      signal: SettingsStore.instance.quickLookWrapLines,
+    ),
+    ToggleSetting(
+      id: 'quickLook.vimMode',
+      category: SettingsCategory.quickLook,
+      label: () => t.preferences.quickLook.vimMode,
+      hint: () => t.preferences.quickLook.vimModeHint,
+      searchTerms: const ['quick look', 'editor', 'vim', 'modal', 'keys'],
+      signal: SettingsStore.instance.quickLookVimMode,
+    ),
   ];
 
   List<AppSetting<dynamic>> byCategory(SettingsCategory category) {
@@ -438,6 +530,16 @@ class SettingsRegistry {
 
   void refreshTerminalFontChoices(List<String> families) {
     final setting = byId('terminal.fontFamily') as ChoiceSetting<String>;
+    final current = setting.value;
+    final names = [
+      ...families,
+      if (current.isNotEmpty && !families.contains(current)) current,
+    ];
+    setting.choices = _fontChoices(names);
+  }
+
+  void refreshQuickLookFontChoices(List<String> families) {
+    final setting = byId('quickLook.fontFamily') as ChoiceSetting<String>;
     final current = setting.value;
     final names = [
       ...families,

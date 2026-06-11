@@ -573,6 +573,101 @@ class $AppSettingsTable extends AppSettings
     requiredDuringInsert: false,
     defaultValue: const Constant('size,date,kind,created,permissions,owner'),
   );
+  static const VerificationMeta _quickLookUseSystemFontMeta =
+      const VerificationMeta('quickLookUseSystemFont');
+  @override
+  late final GeneratedColumn<bool> quickLookUseSystemFont =
+      GeneratedColumn<bool>(
+        'quick_look_use_system_font',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("quick_look_use_system_font" IN (0, 1))',
+        ),
+        defaultValue: const Constant(true),
+      );
+  static const VerificationMeta _quickLookFontFamilyMeta =
+      const VerificationMeta('quickLookFontFamily');
+  @override
+  late final GeneratedColumn<String> quickLookFontFamily =
+      GeneratedColumn<String>(
+        'quick_look_font_family',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(''),
+      );
+  static const VerificationMeta _quickLookFontSizeMeta = const VerificationMeta(
+    'quickLookFontSize',
+  );
+  @override
+  late final GeneratedColumn<int> quickLookFontSize = GeneratedColumn<int>(
+    'quick_look_font_size',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(13),
+  );
+  static const VerificationMeta _quickLookLineHeightMeta =
+      const VerificationMeta('quickLookLineHeight');
+  @override
+  late final GeneratedColumn<double> quickLookLineHeight =
+      GeneratedColumn<double>(
+        'quick_look_line_height',
+        aliasedName,
+        false,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(1.5),
+      );
+  static const VerificationMeta _quickLookShowLineNumbersMeta =
+      const VerificationMeta('quickLookShowLineNumbers');
+  @override
+  late final GeneratedColumn<bool> quickLookShowLineNumbers =
+      GeneratedColumn<bool>(
+        'quick_look_show_line_numbers',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("quick_look_show_line_numbers" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
+  static const VerificationMeta _quickLookVimModeMeta = const VerificationMeta(
+    'quickLookVimMode',
+  );
+  @override
+  late final GeneratedColumn<bool> quickLookVimMode = GeneratedColumn<bool>(
+    'quick_look_vim_mode',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("quick_look_vim_mode" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _quickLookWrapLinesMeta =
+      const VerificationMeta('quickLookWrapLines');
+  @override
+  late final GeneratedColumn<bool> quickLookWrapLines = GeneratedColumn<bool>(
+    'quick_look_wrap_lines',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("quick_look_wrap_lines" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -617,6 +712,13 @@ class $AppSettingsTable extends AppSettings
     showColumnPermissions,
     showColumnOwner,
     columnOrder,
+    quickLookUseSystemFont,
+    quickLookFontFamily,
+    quickLookFontSize,
+    quickLookLineHeight,
+    quickLookShowLineNumbers,
+    quickLookVimMode,
+    quickLookWrapLines,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -978,6 +1080,69 @@ class $AppSettingsTable extends AppSettings
         ),
       );
     }
+    if (data.containsKey('quick_look_use_system_font')) {
+      context.handle(
+        _quickLookUseSystemFontMeta,
+        quickLookUseSystemFont.isAcceptableOrUnknown(
+          data['quick_look_use_system_font']!,
+          _quickLookUseSystemFontMeta,
+        ),
+      );
+    }
+    if (data.containsKey('quick_look_font_family')) {
+      context.handle(
+        _quickLookFontFamilyMeta,
+        quickLookFontFamily.isAcceptableOrUnknown(
+          data['quick_look_font_family']!,
+          _quickLookFontFamilyMeta,
+        ),
+      );
+    }
+    if (data.containsKey('quick_look_font_size')) {
+      context.handle(
+        _quickLookFontSizeMeta,
+        quickLookFontSize.isAcceptableOrUnknown(
+          data['quick_look_font_size']!,
+          _quickLookFontSizeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('quick_look_line_height')) {
+      context.handle(
+        _quickLookLineHeightMeta,
+        quickLookLineHeight.isAcceptableOrUnknown(
+          data['quick_look_line_height']!,
+          _quickLookLineHeightMeta,
+        ),
+      );
+    }
+    if (data.containsKey('quick_look_show_line_numbers')) {
+      context.handle(
+        _quickLookShowLineNumbersMeta,
+        quickLookShowLineNumbers.isAcceptableOrUnknown(
+          data['quick_look_show_line_numbers']!,
+          _quickLookShowLineNumbersMeta,
+        ),
+      );
+    }
+    if (data.containsKey('quick_look_vim_mode')) {
+      context.handle(
+        _quickLookVimModeMeta,
+        quickLookVimMode.isAcceptableOrUnknown(
+          data['quick_look_vim_mode']!,
+          _quickLookVimModeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('quick_look_wrap_lines')) {
+      context.handle(
+        _quickLookWrapLinesMeta,
+        quickLookWrapLines.isAcceptableOrUnknown(
+          data['quick_look_wrap_lines']!,
+          _quickLookWrapLinesMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1155,6 +1320,34 @@ class $AppSettingsTable extends AppSettings
         DriftSqlType.string,
         data['${effectivePrefix}column_order'],
       )!,
+      quickLookUseSystemFont: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}quick_look_use_system_font'],
+      )!,
+      quickLookFontFamily: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}quick_look_font_family'],
+      )!,
+      quickLookFontSize: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}quick_look_font_size'],
+      )!,
+      quickLookLineHeight: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}quick_look_line_height'],
+      )!,
+      quickLookShowLineNumbers: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}quick_look_show_line_numbers'],
+      )!,
+      quickLookVimMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}quick_look_vim_mode'],
+      )!,
+      quickLookWrapLines: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}quick_look_wrap_lines'],
+      )!,
     );
   }
 
@@ -1207,6 +1400,13 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
   final bool showColumnPermissions;
   final bool showColumnOwner;
   final String columnOrder;
+  final bool quickLookUseSystemFont;
+  final String quickLookFontFamily;
+  final int quickLookFontSize;
+  final double quickLookLineHeight;
+  final bool quickLookShowLineNumbers;
+  final bool quickLookVimMode;
+  final bool quickLookWrapLines;
   const AppSetting({
     required this.id,
     required this.themeMode,
@@ -1250,6 +1450,13 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     required this.showColumnPermissions,
     required this.showColumnOwner,
     required this.columnOrder,
+    required this.quickLookUseSystemFont,
+    required this.quickLookFontFamily,
+    required this.quickLookFontSize,
+    required this.quickLookLineHeight,
+    required this.quickLookShowLineNumbers,
+    required this.quickLookVimMode,
+    required this.quickLookWrapLines,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1298,6 +1505,15 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     map['show_column_permissions'] = Variable<bool>(showColumnPermissions);
     map['show_column_owner'] = Variable<bool>(showColumnOwner);
     map['column_order'] = Variable<String>(columnOrder);
+    map['quick_look_use_system_font'] = Variable<bool>(quickLookUseSystemFont);
+    map['quick_look_font_family'] = Variable<String>(quickLookFontFamily);
+    map['quick_look_font_size'] = Variable<int>(quickLookFontSize);
+    map['quick_look_line_height'] = Variable<double>(quickLookLineHeight);
+    map['quick_look_show_line_numbers'] = Variable<bool>(
+      quickLookShowLineNumbers,
+    );
+    map['quick_look_vim_mode'] = Variable<bool>(quickLookVimMode);
+    map['quick_look_wrap_lines'] = Variable<bool>(quickLookWrapLines);
     return map;
   }
 
@@ -1345,6 +1561,13 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       showColumnPermissions: Value(showColumnPermissions),
       showColumnOwner: Value(showColumnOwner),
       columnOrder: Value(columnOrder),
+      quickLookUseSystemFont: Value(quickLookUseSystemFont),
+      quickLookFontFamily: Value(quickLookFontFamily),
+      quickLookFontSize: Value(quickLookFontSize),
+      quickLookLineHeight: Value(quickLookLineHeight),
+      quickLookShowLineNumbers: Value(quickLookShowLineNumbers),
+      quickLookVimMode: Value(quickLookVimMode),
+      quickLookWrapLines: Value(quickLookWrapLines),
     );
   }
 
@@ -1416,6 +1639,21 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       ),
       showColumnOwner: serializer.fromJson<bool>(json['showColumnOwner']),
       columnOrder: serializer.fromJson<String>(json['columnOrder']),
+      quickLookUseSystemFont: serializer.fromJson<bool>(
+        json['quickLookUseSystemFont'],
+      ),
+      quickLookFontFamily: serializer.fromJson<String>(
+        json['quickLookFontFamily'],
+      ),
+      quickLookFontSize: serializer.fromJson<int>(json['quickLookFontSize']),
+      quickLookLineHeight: serializer.fromJson<double>(
+        json['quickLookLineHeight'],
+      ),
+      quickLookShowLineNumbers: serializer.fromJson<bool>(
+        json['quickLookShowLineNumbers'],
+      ),
+      quickLookVimMode: serializer.fromJson<bool>(json['quickLookVimMode']),
+      quickLookWrapLines: serializer.fromJson<bool>(json['quickLookWrapLines']),
     );
   }
   @override
@@ -1468,6 +1706,15 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       'showColumnPermissions': serializer.toJson<bool>(showColumnPermissions),
       'showColumnOwner': serializer.toJson<bool>(showColumnOwner),
       'columnOrder': serializer.toJson<String>(columnOrder),
+      'quickLookUseSystemFont': serializer.toJson<bool>(quickLookUseSystemFont),
+      'quickLookFontFamily': serializer.toJson<String>(quickLookFontFamily),
+      'quickLookFontSize': serializer.toJson<int>(quickLookFontSize),
+      'quickLookLineHeight': serializer.toJson<double>(quickLookLineHeight),
+      'quickLookShowLineNumbers': serializer.toJson<bool>(
+        quickLookShowLineNumbers,
+      ),
+      'quickLookVimMode': serializer.toJson<bool>(quickLookVimMode),
+      'quickLookWrapLines': serializer.toJson<bool>(quickLookWrapLines),
     };
   }
 
@@ -1514,6 +1761,13 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     bool? showColumnPermissions,
     bool? showColumnOwner,
     String? columnOrder,
+    bool? quickLookUseSystemFont,
+    String? quickLookFontFamily,
+    int? quickLookFontSize,
+    double? quickLookLineHeight,
+    bool? quickLookShowLineNumbers,
+    bool? quickLookVimMode,
+    bool? quickLookWrapLines,
   }) => AppSetting(
     id: id ?? this.id,
     themeMode: themeMode ?? this.themeMode,
@@ -1559,6 +1813,15 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     showColumnPermissions: showColumnPermissions ?? this.showColumnPermissions,
     showColumnOwner: showColumnOwner ?? this.showColumnOwner,
     columnOrder: columnOrder ?? this.columnOrder,
+    quickLookUseSystemFont:
+        quickLookUseSystemFont ?? this.quickLookUseSystemFont,
+    quickLookFontFamily: quickLookFontFamily ?? this.quickLookFontFamily,
+    quickLookFontSize: quickLookFontSize ?? this.quickLookFontSize,
+    quickLookLineHeight: quickLookLineHeight ?? this.quickLookLineHeight,
+    quickLookShowLineNumbers:
+        quickLookShowLineNumbers ?? this.quickLookShowLineNumbers,
+    quickLookVimMode: quickLookVimMode ?? this.quickLookVimMode,
+    quickLookWrapLines: quickLookWrapLines ?? this.quickLookWrapLines,
   );
   AppSetting copyWithCompanion(AppSettingsCompanion data) {
     return AppSetting(
@@ -1678,6 +1941,27 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       columnOrder: data.columnOrder.present
           ? data.columnOrder.value
           : this.columnOrder,
+      quickLookUseSystemFont: data.quickLookUseSystemFont.present
+          ? data.quickLookUseSystemFont.value
+          : this.quickLookUseSystemFont,
+      quickLookFontFamily: data.quickLookFontFamily.present
+          ? data.quickLookFontFamily.value
+          : this.quickLookFontFamily,
+      quickLookFontSize: data.quickLookFontSize.present
+          ? data.quickLookFontSize.value
+          : this.quickLookFontSize,
+      quickLookLineHeight: data.quickLookLineHeight.present
+          ? data.quickLookLineHeight.value
+          : this.quickLookLineHeight,
+      quickLookShowLineNumbers: data.quickLookShowLineNumbers.present
+          ? data.quickLookShowLineNumbers.value
+          : this.quickLookShowLineNumbers,
+      quickLookVimMode: data.quickLookVimMode.present
+          ? data.quickLookVimMode.value
+          : this.quickLookVimMode,
+      quickLookWrapLines: data.quickLookWrapLines.present
+          ? data.quickLookWrapLines.value
+          : this.quickLookWrapLines,
     );
   }
 
@@ -1725,7 +2009,14 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           ..write('showColumnCreated: $showColumnCreated, ')
           ..write('showColumnPermissions: $showColumnPermissions, ')
           ..write('showColumnOwner: $showColumnOwner, ')
-          ..write('columnOrder: $columnOrder')
+          ..write('columnOrder: $columnOrder, ')
+          ..write('quickLookUseSystemFont: $quickLookUseSystemFont, ')
+          ..write('quickLookFontFamily: $quickLookFontFamily, ')
+          ..write('quickLookFontSize: $quickLookFontSize, ')
+          ..write('quickLookLineHeight: $quickLookLineHeight, ')
+          ..write('quickLookShowLineNumbers: $quickLookShowLineNumbers, ')
+          ..write('quickLookVimMode: $quickLookVimMode, ')
+          ..write('quickLookWrapLines: $quickLookWrapLines')
           ..write(')'))
         .toString();
   }
@@ -1774,6 +2065,13 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     showColumnPermissions,
     showColumnOwner,
     columnOrder,
+    quickLookUseSystemFont,
+    quickLookFontFamily,
+    quickLookFontSize,
+    quickLookLineHeight,
+    quickLookShowLineNumbers,
+    quickLookVimMode,
+    quickLookWrapLines,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -1820,7 +2118,14 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           other.showColumnCreated == this.showColumnCreated &&
           other.showColumnPermissions == this.showColumnPermissions &&
           other.showColumnOwner == this.showColumnOwner &&
-          other.columnOrder == this.columnOrder);
+          other.columnOrder == this.columnOrder &&
+          other.quickLookUseSystemFont == this.quickLookUseSystemFont &&
+          other.quickLookFontFamily == this.quickLookFontFamily &&
+          other.quickLookFontSize == this.quickLookFontSize &&
+          other.quickLookLineHeight == this.quickLookLineHeight &&
+          other.quickLookShowLineNumbers == this.quickLookShowLineNumbers &&
+          other.quickLookVimMode == this.quickLookVimMode &&
+          other.quickLookWrapLines == this.quickLookWrapLines);
 }
 
 class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
@@ -1866,6 +2171,13 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
   final Value<bool> showColumnPermissions;
   final Value<bool> showColumnOwner;
   final Value<String> columnOrder;
+  final Value<bool> quickLookUseSystemFont;
+  final Value<String> quickLookFontFamily;
+  final Value<int> quickLookFontSize;
+  final Value<double> quickLookLineHeight;
+  final Value<bool> quickLookShowLineNumbers;
+  final Value<bool> quickLookVimMode;
+  final Value<bool> quickLookWrapLines;
   const AppSettingsCompanion({
     this.id = const Value.absent(),
     this.themeMode = const Value.absent(),
@@ -1909,6 +2221,13 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.showColumnPermissions = const Value.absent(),
     this.showColumnOwner = const Value.absent(),
     this.columnOrder = const Value.absent(),
+    this.quickLookUseSystemFont = const Value.absent(),
+    this.quickLookFontFamily = const Value.absent(),
+    this.quickLookFontSize = const Value.absent(),
+    this.quickLookLineHeight = const Value.absent(),
+    this.quickLookShowLineNumbers = const Value.absent(),
+    this.quickLookVimMode = const Value.absent(),
+    this.quickLookWrapLines = const Value.absent(),
   });
   AppSettingsCompanion.insert({
     this.id = const Value.absent(),
@@ -1953,6 +2272,13 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.showColumnPermissions = const Value.absent(),
     this.showColumnOwner = const Value.absent(),
     this.columnOrder = const Value.absent(),
+    this.quickLookUseSystemFont = const Value.absent(),
+    this.quickLookFontFamily = const Value.absent(),
+    this.quickLookFontSize = const Value.absent(),
+    this.quickLookLineHeight = const Value.absent(),
+    this.quickLookShowLineNumbers = const Value.absent(),
+    this.quickLookVimMode = const Value.absent(),
+    this.quickLookWrapLines = const Value.absent(),
   });
   static Insertable<AppSetting> custom({
     Expression<int>? id,
@@ -1997,6 +2323,13 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Expression<bool>? showColumnPermissions,
     Expression<bool>? showColumnOwner,
     Expression<String>? columnOrder,
+    Expression<bool>? quickLookUseSystemFont,
+    Expression<String>? quickLookFontFamily,
+    Expression<int>? quickLookFontSize,
+    Expression<double>? quickLookLineHeight,
+    Expression<bool>? quickLookShowLineNumbers,
+    Expression<bool>? quickLookVimMode,
+    Expression<bool>? quickLookWrapLines,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2052,6 +2385,18 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
         'show_column_permissions': showColumnPermissions,
       if (showColumnOwner != null) 'show_column_owner': showColumnOwner,
       if (columnOrder != null) 'column_order': columnOrder,
+      if (quickLookUseSystemFont != null)
+        'quick_look_use_system_font': quickLookUseSystemFont,
+      if (quickLookFontFamily != null)
+        'quick_look_font_family': quickLookFontFamily,
+      if (quickLookFontSize != null) 'quick_look_font_size': quickLookFontSize,
+      if (quickLookLineHeight != null)
+        'quick_look_line_height': quickLookLineHeight,
+      if (quickLookShowLineNumbers != null)
+        'quick_look_show_line_numbers': quickLookShowLineNumbers,
+      if (quickLookVimMode != null) 'quick_look_vim_mode': quickLookVimMode,
+      if (quickLookWrapLines != null)
+        'quick_look_wrap_lines': quickLookWrapLines,
     });
   }
 
@@ -2098,6 +2443,13 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Value<bool>? showColumnPermissions,
     Value<bool>? showColumnOwner,
     Value<String>? columnOrder,
+    Value<bool>? quickLookUseSystemFont,
+    Value<String>? quickLookFontFamily,
+    Value<int>? quickLookFontSize,
+    Value<double>? quickLookLineHeight,
+    Value<bool>? quickLookShowLineNumbers,
+    Value<bool>? quickLookVimMode,
+    Value<bool>? quickLookWrapLines,
   }) {
     return AppSettingsCompanion(
       id: id ?? this.id,
@@ -2147,6 +2499,15 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
           showColumnPermissions ?? this.showColumnPermissions,
       showColumnOwner: showColumnOwner ?? this.showColumnOwner,
       columnOrder: columnOrder ?? this.columnOrder,
+      quickLookUseSystemFont:
+          quickLookUseSystemFont ?? this.quickLookUseSystemFont,
+      quickLookFontFamily: quickLookFontFamily ?? this.quickLookFontFamily,
+      quickLookFontSize: quickLookFontSize ?? this.quickLookFontSize,
+      quickLookLineHeight: quickLookLineHeight ?? this.quickLookLineHeight,
+      quickLookShowLineNumbers:
+          quickLookShowLineNumbers ?? this.quickLookShowLineNumbers,
+      quickLookVimMode: quickLookVimMode ?? this.quickLookVimMode,
+      quickLookWrapLines: quickLookWrapLines ?? this.quickLookWrapLines,
     );
   }
 
@@ -2291,6 +2652,35 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     if (columnOrder.present) {
       map['column_order'] = Variable<String>(columnOrder.value);
     }
+    if (quickLookUseSystemFont.present) {
+      map['quick_look_use_system_font'] = Variable<bool>(
+        quickLookUseSystemFont.value,
+      );
+    }
+    if (quickLookFontFamily.present) {
+      map['quick_look_font_family'] = Variable<String>(
+        quickLookFontFamily.value,
+      );
+    }
+    if (quickLookFontSize.present) {
+      map['quick_look_font_size'] = Variable<int>(quickLookFontSize.value);
+    }
+    if (quickLookLineHeight.present) {
+      map['quick_look_line_height'] = Variable<double>(
+        quickLookLineHeight.value,
+      );
+    }
+    if (quickLookShowLineNumbers.present) {
+      map['quick_look_show_line_numbers'] = Variable<bool>(
+        quickLookShowLineNumbers.value,
+      );
+    }
+    if (quickLookVimMode.present) {
+      map['quick_look_vim_mode'] = Variable<bool>(quickLookVimMode.value);
+    }
+    if (quickLookWrapLines.present) {
+      map['quick_look_wrap_lines'] = Variable<bool>(quickLookWrapLines.value);
+    }
     return map;
   }
 
@@ -2338,7 +2728,14 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
           ..write('showColumnCreated: $showColumnCreated, ')
           ..write('showColumnPermissions: $showColumnPermissions, ')
           ..write('showColumnOwner: $showColumnOwner, ')
-          ..write('columnOrder: $columnOrder')
+          ..write('columnOrder: $columnOrder, ')
+          ..write('quickLookUseSystemFont: $quickLookUseSystemFont, ')
+          ..write('quickLookFontFamily: $quickLookFontFamily, ')
+          ..write('quickLookFontSize: $quickLookFontSize, ')
+          ..write('quickLookLineHeight: $quickLookLineHeight, ')
+          ..write('quickLookShowLineNumbers: $quickLookShowLineNumbers, ')
+          ..write('quickLookVimMode: $quickLookVimMode, ')
+          ..write('quickLookWrapLines: $quickLookWrapLines')
           ..write(')'))
         .toString();
   }
@@ -5639,6 +6036,13 @@ typedef $$AppSettingsTableCreateCompanionBuilder =
       Value<bool> showColumnPermissions,
       Value<bool> showColumnOwner,
       Value<String> columnOrder,
+      Value<bool> quickLookUseSystemFont,
+      Value<String> quickLookFontFamily,
+      Value<int> quickLookFontSize,
+      Value<double> quickLookLineHeight,
+      Value<bool> quickLookShowLineNumbers,
+      Value<bool> quickLookVimMode,
+      Value<bool> quickLookWrapLines,
     });
 typedef $$AppSettingsTableUpdateCompanionBuilder =
     AppSettingsCompanion Function({
@@ -5684,6 +6088,13 @@ typedef $$AppSettingsTableUpdateCompanionBuilder =
       Value<bool> showColumnPermissions,
       Value<bool> showColumnOwner,
       Value<String> columnOrder,
+      Value<bool> quickLookUseSystemFont,
+      Value<String> quickLookFontFamily,
+      Value<int> quickLookFontSize,
+      Value<double> quickLookLineHeight,
+      Value<bool> quickLookShowLineNumbers,
+      Value<bool> quickLookVimMode,
+      Value<bool> quickLookWrapLines,
     });
 
 class $$AppSettingsTableFilterComposer
@@ -5902,6 +6313,41 @@ class $$AppSettingsTableFilterComposer
 
   ColumnFilters<String> get columnOrder => $composableBuilder(
     column: $table.columnOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get quickLookUseSystemFont => $composableBuilder(
+    column: $table.quickLookUseSystemFont,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get quickLookFontFamily => $composableBuilder(
+    column: $table.quickLookFontFamily,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get quickLookFontSize => $composableBuilder(
+    column: $table.quickLookFontSize,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get quickLookLineHeight => $composableBuilder(
+    column: $table.quickLookLineHeight,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get quickLookShowLineNumbers => $composableBuilder(
+    column: $table.quickLookShowLineNumbers,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get quickLookVimMode => $composableBuilder(
+    column: $table.quickLookVimMode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get quickLookWrapLines => $composableBuilder(
+    column: $table.quickLookWrapLines,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -6124,6 +6570,41 @@ class $$AppSettingsTableOrderingComposer
     column: $table.columnOrder,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get quickLookUseSystemFont => $composableBuilder(
+    column: $table.quickLookUseSystemFont,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get quickLookFontFamily => $composableBuilder(
+    column: $table.quickLookFontFamily,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get quickLookFontSize => $composableBuilder(
+    column: $table.quickLookFontSize,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get quickLookLineHeight => $composableBuilder(
+    column: $table.quickLookLineHeight,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get quickLookShowLineNumbers => $composableBuilder(
+    column: $table.quickLookShowLineNumbers,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get quickLookVimMode => $composableBuilder(
+    column: $table.quickLookVimMode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get quickLookWrapLines => $composableBuilder(
+    column: $table.quickLookWrapLines,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$AppSettingsTableAnnotationComposer
@@ -6334,6 +6815,41 @@ class $$AppSettingsTableAnnotationComposer
     column: $table.columnOrder,
     builder: (column) => column,
   );
+
+  GeneratedColumn<bool> get quickLookUseSystemFont => $composableBuilder(
+    column: $table.quickLookUseSystemFont,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get quickLookFontFamily => $composableBuilder(
+    column: $table.quickLookFontFamily,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get quickLookFontSize => $composableBuilder(
+    column: $table.quickLookFontSize,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get quickLookLineHeight => $composableBuilder(
+    column: $table.quickLookLineHeight,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get quickLookShowLineNumbers => $composableBuilder(
+    column: $table.quickLookShowLineNumbers,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get quickLookVimMode => $composableBuilder(
+    column: $table.quickLookVimMode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get quickLookWrapLines => $composableBuilder(
+    column: $table.quickLookWrapLines,
+    builder: (column) => column,
+  );
 }
 
 class $$AppSettingsTableTableManager
@@ -6409,6 +6925,13 @@ class $$AppSettingsTableTableManager
                 Value<bool> showColumnPermissions = const Value.absent(),
                 Value<bool> showColumnOwner = const Value.absent(),
                 Value<String> columnOrder = const Value.absent(),
+                Value<bool> quickLookUseSystemFont = const Value.absent(),
+                Value<String> quickLookFontFamily = const Value.absent(),
+                Value<int> quickLookFontSize = const Value.absent(),
+                Value<double> quickLookLineHeight = const Value.absent(),
+                Value<bool> quickLookShowLineNumbers = const Value.absent(),
+                Value<bool> quickLookVimMode = const Value.absent(),
+                Value<bool> quickLookWrapLines = const Value.absent(),
               }) => AppSettingsCompanion(
                 id: id,
                 themeMode: themeMode,
@@ -6452,6 +6975,13 @@ class $$AppSettingsTableTableManager
                 showColumnPermissions: showColumnPermissions,
                 showColumnOwner: showColumnOwner,
                 columnOrder: columnOrder,
+                quickLookUseSystemFont: quickLookUseSystemFont,
+                quickLookFontFamily: quickLookFontFamily,
+                quickLookFontSize: quickLookFontSize,
+                quickLookLineHeight: quickLookLineHeight,
+                quickLookShowLineNumbers: quickLookShowLineNumbers,
+                quickLookVimMode: quickLookVimMode,
+                quickLookWrapLines: quickLookWrapLines,
               ),
           createCompanionCallback:
               ({
@@ -6497,6 +7027,13 @@ class $$AppSettingsTableTableManager
                 Value<bool> showColumnPermissions = const Value.absent(),
                 Value<bool> showColumnOwner = const Value.absent(),
                 Value<String> columnOrder = const Value.absent(),
+                Value<bool> quickLookUseSystemFont = const Value.absent(),
+                Value<String> quickLookFontFamily = const Value.absent(),
+                Value<int> quickLookFontSize = const Value.absent(),
+                Value<double> quickLookLineHeight = const Value.absent(),
+                Value<bool> quickLookShowLineNumbers = const Value.absent(),
+                Value<bool> quickLookVimMode = const Value.absent(),
+                Value<bool> quickLookWrapLines = const Value.absent(),
               }) => AppSettingsCompanion.insert(
                 id: id,
                 themeMode: themeMode,
@@ -6540,6 +7077,13 @@ class $$AppSettingsTableTableManager
                 showColumnPermissions: showColumnPermissions,
                 showColumnOwner: showColumnOwner,
                 columnOrder: columnOrder,
+                quickLookUseSystemFont: quickLookUseSystemFont,
+                quickLookFontFamily: quickLookFontFamily,
+                quickLookFontSize: quickLookFontSize,
+                quickLookLineHeight: quickLookLineHeight,
+                quickLookShowLineNumbers: quickLookShowLineNumbers,
+                quickLookVimMode: quickLookVimMode,
+                quickLookWrapLines: quickLookWrapLines,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

@@ -55,6 +55,13 @@ class SettingsStore {
   final columnOrder = signal<String>(
     'size,date,kind,created,permissions,owner',
   );
+  final quickLookUseSystemFont = signal<bool>(true);
+  final quickLookFontFamily = signal<String>('');
+  final quickLookFontSize = signal<int>(13);
+  final quickLookLineHeight = signal<double>(1.5);
+  final quickLookShowLineNumbers = signal<bool>(false);
+  final quickLookVimMode = signal<bool>(false);
+  final quickLookWrapLines = signal<bool>(true);
   final shortcutBindings = signal<Map<String, KeyChord>>({});
 
   late final AppDatabase _db;
@@ -116,6 +123,13 @@ class SettingsStore {
     showColumnPermissions.value = row.showColumnPermissions;
     showColumnOwner.value = row.showColumnOwner;
     columnOrder.value = row.columnOrder;
+    quickLookUseSystemFont.value = row.quickLookUseSystemFont;
+    quickLookFontFamily.value = row.quickLookFontFamily;
+    quickLookFontSize.value = row.quickLookFontSize;
+    quickLookLineHeight.value = row.quickLookLineHeight;
+    quickLookShowLineNumbers.value = row.quickLookShowLineNumbers;
+    quickLookVimMode.value = row.quickLookVimMode;
+    quickLookWrapLines.value = row.quickLookWrapLines;
     final shortcutRows = await _db.getShortcutBindings();
     final bindings = <String, KeyChord>{};
     for (final row in shortcutRows) {
@@ -215,6 +229,13 @@ class SettingsStore {
         showColumnPermissions.value;
         showColumnOwner.value;
         columnOrder.value;
+        quickLookUseSystemFont.value;
+        quickLookFontFamily.value;
+        quickLookFontSize.value;
+        quickLookLineHeight.value;
+        quickLookShowLineNumbers.value;
+        quickLookVimMode.value;
+        quickLookWrapLines.value;
         if (!_loaded) return;
         _scheduleSave();
       }),
@@ -271,6 +292,13 @@ class SettingsStore {
           showColumnPermissions: Value(showColumnPermissions.value),
           showColumnOwner: Value(showColumnOwner.value),
           columnOrder: Value(columnOrder.value),
+          quickLookUseSystemFont: Value(quickLookUseSystemFont.value),
+          quickLookFontFamily: Value(quickLookFontFamily.value),
+          quickLookFontSize: Value(quickLookFontSize.value),
+          quickLookLineHeight: Value(quickLookLineHeight.value),
+          quickLookShowLineNumbers: Value(quickLookShowLineNumbers.value),
+          quickLookVimMode: Value(quickLookVimMode.value),
+          quickLookWrapLines: Value(quickLookWrapLines.value),
         ),
       );
     } catch (_) {}

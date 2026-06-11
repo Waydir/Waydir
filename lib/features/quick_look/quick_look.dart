@@ -357,33 +357,17 @@ class _ShortcutHint extends StatelessWidget {
       children: [
         for (var i = 0; i < caps.length; i++) ...[
           if (i > 0) const SizedBox(width: 3),
-          _MiniCap(text: caps[i]),
+          Text(
+            caps[i],
+            style: context.txt.keyCap.copyWith(color: AppColors.fg),
+          ),
         ],
-        const SizedBox(width: 6),
+        const SizedBox(width: 5),
         Text(
           label,
-          style: context.txt.micro.copyWith(color: AppColors.fgMuted),
+          style: context.txt.caption.copyWith(color: AppColors.fgMuted),
         ),
       ],
-    );
-  }
-}
-
-class _MiniCap extends StatelessWidget {
-  final String text;
-
-  const _MiniCap({required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      constraints: const BoxConstraints(minWidth: 18),
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-      decoration: BoxDecoration(
-        color: AppColors.bgInput,
-        border: Border.all(color: AppColors.borderColor),
-      ),
-      child: Text(text, textAlign: TextAlign.center, style: context.txt.keyCap),
     );
   }
 }
