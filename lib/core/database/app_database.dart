@@ -199,7 +199,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 31;
+  int get schemaVersion => 30;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -333,8 +333,6 @@ class AppDatabase extends _$AppDatabase {
       if (from < 30) {
         await addSettingColumn(appSettings.columnOrder);
       }
-      // v31 introduced and then removed a `fullDiskPromptSeen` column; no
-      // migration is needed since the column is no longer part of the schema.
     },
   );
 

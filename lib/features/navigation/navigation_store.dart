@@ -1228,9 +1228,6 @@ class NavigationStore {
         _watcher.stop();
         return;
       }
-      // The native lister collapses every failure to a generic error, so probe
-      // the path directly to tell an OS permission denial (e.g. macOS revoking
-      // Full Disk Access) apart from other load errors and show a clear prompt.
       if (e is FileSystemException && _isPermissionDenied(path)) {
         batch(() {
           files.value = [];
@@ -1258,10 +1255,6 @@ class NavigationStore {
     }
   }
 
-  /// Whether [path] exists but the OS denies reading it. Only called on the
-  /// error path, so the synchronous probe runs at most once per failed load.
-  /// Covers macOS Full Disk Access denials (EPERM), POSIX EACCES, and the
-  /// Windows access-denied code.
   bool _isPermissionDenied(String path) {
     try {
       Directory(path).listSync(followLinks: false);

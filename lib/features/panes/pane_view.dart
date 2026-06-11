@@ -247,7 +247,10 @@ class _TabContent extends StatelessWidget {
             }
             final loadError = store.loadError.value;
             if (loadError != null) {
-              return _LoadErrorNotice(message: loadError, onRetry: store.refresh);
+              return _LoadErrorNotice(
+                message: loadError,
+                onRetry: store.refresh,
+              );
             }
             final files = store.visibleFiles.value;
             final selected = store.selectedPaths.value;
@@ -858,7 +861,6 @@ class _AccessDeniedPrompt extends StatelessWidget {
   }
 }
 
-/// Generic fallback when a folder fails to load for a non-permission reason.
 class _LoadErrorNotice extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;

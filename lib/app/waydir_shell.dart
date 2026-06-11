@@ -176,10 +176,6 @@ class _WaydirShellState extends State<WaydirShell>
     _maybePromptFullDiskAccess();
   }
 
-  /// On macOS startup, prompt for Full Disk Access whenever it is missing — a
-  /// file manager is largely useless without it, so we re-ask every launch
-  /// until it is granted. macOS cannot grant it programmatically (it takes
-  /// effect after relaunch), so we only open the settings pane.
   void _maybePromptFullDiskAccess() {
     if (!Platform.isMacOS) return;
     WidgetsBinding.instance.addPostFrameCallback((_) async {

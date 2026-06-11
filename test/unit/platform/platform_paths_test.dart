@@ -116,7 +116,10 @@ void main() {
     });
 
     test('expands ~/ to a path inside the home directory', () {
-      expect(PlatformPaths.expandTilde('~/Documents'), '/home/tester/Documents');
+      expect(
+        PlatformPaths.expandTilde('~/Documents'),
+        '/home/tester/Documents',
+      );
       expect(PlatformPaths.expandTilde('~/a/b'), '/home/tester/a/b');
     });
 
