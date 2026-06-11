@@ -50,6 +50,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$preferences$en preferences = Translations$preferences$en.internal(_root);
 	late final Translations$update$en update = Translations$update$en.internal(_root);
 	late final Translations$appMenu$en appMenu = Translations$appMenu$en.internal(_root);
+	late final Translations$changelog$en changelog = Translations$changelog$en.internal(_root);
 	late final Translations$help$en help = Translations$help$en.internal(_root);
 	late final Translations$keybindings$en keybindings = Translations$keybindings$en.internal(_root);
 	late final Translations$commandPalette$en commandPalette = Translations$commandPalette$en.internal(_root);
@@ -643,11 +644,29 @@ class Translations$appMenu$en {
 	/// en: 'Help'
 	String get help => 'Help';
 
+	/// en: 'Changelog'
+	String get changelog => 'Changelog';
+
 	/// en: 'Star on GitHub'
 	String get starOnGithub => 'Star on GitHub';
 
 	/// en: 'Quit'
 	String get quit => 'Quit';
+}
+
+// Path: changelog
+class Translations$changelog$en {
+	Translations$changelog$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Changelog'
+	String get title => 'Changelog';
+
+	/// en: 'Could not load the changelog.'
+	String get loadError => 'Could not load the changelog.';
 }
 
 // Path: help
@@ -3482,8 +3501,11 @@ extension on Translations {
 			'update.bundleNotWritable' => 'Cannot write to bundle directory. Install the new version manually.',
 			'update.installerLaunchFailed' => ({required Object error}) => 'Failed to launch installer: ${error}',
 			'appMenu.help' => 'Help',
+			'appMenu.changelog' => 'Changelog',
 			'appMenu.starOnGithub' => 'Star on GitHub',
 			'appMenu.quit' => 'Quit',
+			'changelog.title' => 'Changelog',
+			'changelog.loadError' => 'Could not load the changelog.',
 			'help.title' => 'Features',
 			'help.menuLabel' => 'Features',
 			'help.demoComingSoon' => 'Demo coming soon',
@@ -3651,11 +3673,11 @@ extension on Translations {
 			'toast.renameAlreadyExists' => ({required Object name}) => 'An item named \'${name}\' already exists',
 			'toast.renameInvalidName' => 'Invalid name',
 			'toast.renameError' => ({required Object message}) => 'Could not rename: ${message}',
+			_ => null,
+		} ?? switch (path) {
 			'toast.multiRenameSuccess' => ({required Object count}) => 'Renamed ${count} files',
 			'toast.multiRenamePartial' => ({required Object succeeded, required Object total, required Object details}) => 'Renamed ${succeeded} of ${total} (${details})',
 			'toast.multiRenameCollisions' => ({required Object count}) => '${count} already existed',
-			_ => null,
-		} ?? switch (path) {
 			'toast.multiRenameInvalid' => ({required Object count}) => '${count} invalid names',
 			'toast.multiRenameOtherErrors' => ({required Object count}) => '${count} errors',
 			'toast.multiRenameTrashBlocked' => 'Multi rename is not available in trash',

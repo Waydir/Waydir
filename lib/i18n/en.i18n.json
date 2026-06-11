@@ -386,8 +386,13 @@
   },
   "appMenu": {
     "help": "Help",
+    "changelog": "Changelog",
     "starOnGithub": "Star on GitHub",
     "quit": "Quit"
+  },
+  "changelog": {
+    "title": "Changelog",
+    "loadError": "Could not load the changelog."
   },
   "help": {
     "title": "Features",

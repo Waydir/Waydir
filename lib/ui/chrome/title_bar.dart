@@ -8,6 +8,7 @@ import 'package:waydir/ui/icons/waydir_icons.dart';
 
 import '../../app/app_info.dart';
 import '../../app/waydir_app.dart';
+import '../../features/help/changelog_dialog.dart';
 import '../../features/help/help_dialog.dart';
 import '../../features/settings/keybindings_help_view.dart';
 import '../../features/settings/preferences_view.dart';
@@ -29,6 +30,11 @@ void _openKeybindingsHelp() {
 void _openHelp() {
   final ctx = waydirNavigatorKey.currentContext;
   if (ctx != null) showHelpDialog(ctx);
+}
+
+void _openChangelog() {
+  final ctx = waydirNavigatorKey.currentContext;
+  if (ctx != null) showChangelogDialog(ctx);
 }
 
 void _openGithub() {
@@ -110,6 +116,10 @@ class TitleBar extends StatelessWidget {
                   meta: true,
                 ),
                 onSelected: _openKeybindingsHelp,
+              ),
+              PlatformMenuItem(
+                label: t.appMenu.changelog,
+                onSelected: _openChangelog,
               ),
             ],
           ),
@@ -198,6 +208,11 @@ class _MenuBar extends StatelessWidget {
               label: t.keybindings.menuLabel,
               action: 'keybindings',
             ),
+            ContextMenuItem(
+              icon: WaydirIconsRegular.notebook,
+              label: t.appMenu.changelog,
+              action: 'changelog',
+            ),
             ContextMenuItem.divider,
             ContextMenuItem(
               icon: WaydirIconsRegular.gitBranch,
@@ -219,6 +234,8 @@ class _MenuBar extends StatelessWidget {
                 _openHelp();
               case 'keybindings':
                 _openKeybindingsHelp();
+              case 'changelog':
+                _openChangelog();
               case 'star':
                 _openGithub();
               case 'quit':
