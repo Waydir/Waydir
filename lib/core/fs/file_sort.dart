@@ -1,6 +1,6 @@
 import '../models/file_entry.dart';
 
-enum SortKey { name, size, date }
+enum SortKey { name, size, date, kind, created, permissions, owner }
 
 SortKey sortKeyFromString(String v) {
   switch (v) {
@@ -8,6 +8,14 @@ SortKey sortKeyFromString(String v) {
       return SortKey.size;
     case 'date':
       return SortKey.date;
+    case 'kind':
+      return SortKey.kind;
+    case 'created':
+      return SortKey.created;
+    case 'permissions':
+      return SortKey.permissions;
+    case 'owner':
+      return SortKey.owner;
     default:
       return SortKey.name;
   }
@@ -51,7 +59,15 @@ List<FileEntry> sortEntries(
       case SortKey.size:
         cmp = a.size.compareTo(b.size);
       case SortKey.date:
-        cmp = a.modified.compareTo(b.modified);
+        cmp = a.modifiedMs.compareTo(b.modifiedMs);
+      case SortKey.kind:
+        cmp = a.kind.toLowerCase().compareTo(b.kind.toLowerCase());
+      case SortKey.created:
+        cmp = a.createdMs.compareTo(b.createdMs);
+      case SortKey.permissions:
+        cmp = a.mode.compareTo(b.mode);
+      case SortKey.owner:
+        cmp = a.ownerName.toLowerCase().compareTo(b.ownerName.toLowerCase());
     }
     if (cmp == 0) cmp = byName(a, b);
     return ascending ? cmp : -cmp;
