@@ -2320,6 +2320,13 @@ class NavigationStore {
     }
   }
 
+  Future<bool> hasPasteableFiles() async {
+    if (canPaste.value) return true;
+    if (isTrashView) return false;
+    final paths = await FileClipboard.readFilePaths();
+    return paths.isNotEmpty;
+  }
+
   void paste() async {
     if (isTrashView) return;
     final internalPaths = Set<String>.from(clipboardPaths.value);

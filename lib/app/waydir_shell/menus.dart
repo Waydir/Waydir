@@ -8,7 +8,7 @@ mixin _WaydirMenuMixin
         _WaydirTerminalMixin {
   final Map<String, String> _pluginCustomOperationIds = {};
 
-  void _handleBackgroundContextMenu(Offset position) {
+  Future<void> _handleBackgroundContextMenu(Offset position) async {
     final store = _active;
     if (store.isTrashView) {
       showContextMenu(
@@ -30,7 +30,8 @@ mixin _WaydirMenuMixin
       );
       return;
     }
-    final canPaste = store.canPaste.value;
+    final canPaste = await store.hasPasteableFiles();
+    if (!mounted) return;
     final items = <ContextMenuItem>[
       if (canPaste) ...[
         ContextMenuItem(
