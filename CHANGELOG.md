@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- File list columns can be configured: toggle Size, Date modified, Kind, Date created, Permissions and Owner on or off, and drag to reorder them. Every column is sortable.
+
 ### Fixed
 - Copying, pasting and dragging files into an empty folder now works. ([@fwitkowski17](https://github.com/fwitkowski17))
 
