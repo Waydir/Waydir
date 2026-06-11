@@ -1045,7 +1045,7 @@ class NavigationStore {
   }
 
   Future<bool> navigateToEnteredPath(String path) async {
-    final trimmed = path.trim();
+    final trimmed = PlatformPaths.expandTilde(path.trim());
     if (trimmed.isEmpty) return false;
     final uri = LocationUri.parse(trimmed);
     if (uri.scheme == LocationScheme.sftp) {

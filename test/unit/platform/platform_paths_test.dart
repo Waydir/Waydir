@@ -100,4 +100,51 @@ void main() {
       );
     });
   });
+
+  group('PlatformPaths.expandTilde', () {
+    setUp(() {
+      PlatformPaths.homePathOverrideForTesting = '/home/tester';
+    });
+
+    tearDown(() {
+      PlatformPaths.homePathOverrideForTesting = null;
+      PlatformPaths.isWindowsOverrideForTesting = null;
+    });
+
+    test('expands a bare tilde to the home directory', () {
+      expect(PlatformPaths.expandTilde('~'), '/home/tester');
+    });
+
+    test('expands ~/ to a path inside the home directory', () {
+      expect(PlatformPaths.expandTilde('~/Documents'), '/home/tester/Documents');
+      expect(PlatformPaths.expandTilde('~/a/b'), '/home/tester/a/b');
+    });
+
+    test('leaves absolute paths unchanged', () {
+      expect(PlatformPaths.expandTilde('/etc/passwd'), '/etc/passwd');
+    });
+
+    test('does not expand ~user', () {
+      expect(PlatformPaths.expandTilde('~user'), '~user');
+      expect(PlatformPaths.expandTilde('~user/docs'), '~user/docs');
+    });
+
+    test('leaves remote URIs unchanged', () {
+      expect(
+        PlatformPaths.expandTilde('smb://server/share'),
+        'smb://server/share',
+      );
+    });
+
+    test('leaves an empty string unchanged', () {
+      expect(PlatformPaths.expandTilde(''), '');
+    });
+
+    test('expands ~\\ on Windows', () {
+      PlatformPaths.isWindowsOverrideForTesting = true;
+      PlatformPaths.homePathOverrideForTesting = r'C:\Users\tester';
+      expect(PlatformPaths.expandTilde(r'~\Docs'), r'C:\Users\tester\Docs');
+      expect(PlatformPaths.expandTilde('~/Docs'), r'C:\Users\tester\Docs');
+    });
+  });
 }

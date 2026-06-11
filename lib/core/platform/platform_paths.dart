@@ -9,11 +9,14 @@ class PlatformPaths {
 
   static String? trashPathOverride;
   static bool? isWindowsOverrideForTesting;
+  static String? homePathOverrideForTesting;
   static final p.Context _windowsPath = p.Context(style: p.Style.windows);
 
   static String get separator => Platform.pathSeparator;
 
   static String get homePath {
+    final override = homePathOverrideForTesting;
+    if (override != null) return override;
     if (isWindows) {
       return Platform.environment['USERPROFILE'] ??
           '${Platform.environment['HOMEDRIVE'] ?? 'C:'}${Platform.environment['HOMEPATH'] ?? r'\Users\Default'}';
@@ -292,6 +295,19 @@ class PlatformPaths {
     }
     if (isWindows) return _windowsPath.basename(path);
     return p.basename(path);
+  }
+
+  /// Expands a leading `~` to the user's home directory. Handles `~` on its
+  /// own and `~/...` (plus `~\...` on Windows). Anything else — including
+  /// `~user`, remote URIs and absolute paths — is returned unchanged.
+  static String expandTilde(String path) {
+    if (!path.startsWith('~')) return path;
+    if (path == '~') return homePath;
+    final second = path[1];
+    if (second == '/' || (isWindows && second == r'\')) {
+      return join(homePath, path.substring(2));
+    }
+    return path;
   }
 
   static String normalize(String path) {
