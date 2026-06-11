@@ -47,6 +47,7 @@ class NavigationStore {
   Future<SftpCredentials?> Function(String logical)? requestSftpCredentials;
   final loadError = signal<String?>(null);
   final trashAccessDenied = signal<bool>(false);
+  final accessDenied = signal<bool>(false);
   final renamingPath = signal<String?>(null);
   final renameError = signal<String?>(null);
   final pendingCreate = signal<FileEntry?>(null);
@@ -1133,6 +1134,7 @@ class NavigationStore {
     batch(() {
       isLoading.value = true;
       trashAccessDenied.value = false;
+      accessDenied.value = false;
     });
     try {
       final List<FileEntry> entries;
@@ -1220,6 +1222,18 @@ class NavigationStore {
           files.value = [];
           loadError.value = null;
           trashAccessDenied.value = true;
+          accessDenied.value = false;
+          isLoading.value = false;
+        });
+        _watcher.stop();
+        return;
+      }
+      if (e is FileSystemException && _isPermissionDenied(path)) {
+        batch(() {
+          files.value = [];
+          loadError.value = null;
+          trashAccessDenied.value = false;
+          accessDenied.value = true;
           isLoading.value = false;
         });
         _watcher.stop();
@@ -1234,9 +1248,26 @@ class NavigationStore {
           _ => e.toString(),
         };
         trashAccessDenied.value = false;
+        accessDenied.value = false;
         isLoading.value = false;
       });
       _watcher.stop();
+    }
+  }
+
+  bool _isPermissionDenied(String path) {
+    try {
+      Directory(path).listSync(followLinks: false);
+      return false;
+    } on FileSystemException catch (e) {
+      final code = e.osError?.errorCode;
+      if (code == 1 || code == 13 || code == 5) return true;
+      final msg = e.message.toLowerCase();
+      return msg.contains('operation not permitted') ||
+          msg.contains('permission denied') ||
+          msg.contains('access is denied');
+    } catch (_) {
+      return false;
     }
   }
 

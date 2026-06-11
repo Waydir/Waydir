@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -6,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:waydir_term/xterm.dart';
 import '../../core/keyboard/keyboard_shortcuts.dart';
+import '../../core/platform/full_disk_access.dart';
 import '../../core/settings/settings_store.dart';
 import '../../features/files/file_view.dart'
     show
@@ -241,6 +241,16 @@ class _TabContent extends StatelessWidget {
           builder: (context) {
             if (store.trashAccessDenied.value) {
               return const _TrashPermissionPrompt();
+            }
+            if (store.accessDenied.value) {
+              return const _AccessDeniedPrompt();
+            }
+            final loadError = store.loadError.value;
+            if (loadError != null) {
+              return _LoadErrorNotice(
+                message: loadError,
+                onRetry: store.refresh,
+              );
             }
             final files = store.visibleFiles.value;
             final selected = store.selectedPaths.value;
@@ -759,8 +769,16 @@ class _TerminalResizeHandleState extends State<_TerminalResizeHandle> {
   }
 }
 
-class _TrashPermissionPrompt extends StatelessWidget {
-  const _TrashPermissionPrompt();
+class _PermissionNotice extends StatelessWidget {
+  final String title;
+  final String body;
+  final List<Widget> actions;
+
+  const _PermissionNotice({
+    required this.title,
+    required this.body,
+    this.actions = const [],
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -777,33 +795,84 @@ class _TrashPermissionPrompt extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              t.trash.accessDeniedTitle,
+              title,
               textAlign: TextAlign.center,
               style: context.txt.dialogTitle.copyWith(color: AppColors.fgMuted),
             ),
             const SizedBox(height: 8),
             Text(
-              t.trash.accessDeniedBody,
+              body,
               textAlign: TextAlign.center,
               style: context.txt.body.copyWith(
                 color: AppColors.fgMuted,
                 height: 1.35,
               ),
             ),
-            const SizedBox(height: 18),
-            _PromptButton(
-              label: t.trash.openSystemSettings,
-              onTap: () {
-                unawaited(
-                  Process.run('open', [
-                    'x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles',
-                  ]),
-                );
-              },
-            ),
+            if (actions.isNotEmpty) ...[
+              const SizedBox(height: 18),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                alignment: WrapAlignment.center,
+                children: actions,
+              ),
+            ],
           ],
         ),
       ),
+    );
+  }
+}
+
+class _TrashPermissionPrompt extends StatelessWidget {
+  const _TrashPermissionPrompt();
+
+  @override
+  Widget build(BuildContext context) {
+    return _PermissionNotice(
+      title: t.trash.accessDeniedTitle,
+      body: t.trash.accessDeniedBody,
+      actions: [
+        _PromptButton(
+          label: t.trash.openSystemSettings,
+          onTap: openFullDiskAccessSettings,
+        ),
+      ],
+    );
+  }
+}
+
+class _AccessDeniedPrompt extends StatelessWidget {
+  const _AccessDeniedPrompt();
+
+  @override
+  Widget build(BuildContext context) {
+    return _PermissionNotice(
+      title: t.folderAccess.deniedTitle,
+      body: t.folderAccess.deniedBody,
+      actions: [
+        if (Platform.isMacOS)
+          _PromptButton(
+            label: t.folderAccess.openSystemSettings,
+            onTap: openFullDiskAccessSettings,
+          ),
+      ],
+    );
+  }
+}
+
+class _LoadErrorNotice extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const _LoadErrorNotice({required this.message, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return _PermissionNotice(
+      title: t.folderAccess.errorTitle,
+      body: message,
+      actions: [_PromptButton(label: t.folderAccess.retry, onTap: onRetry)],
     );
   }
 }

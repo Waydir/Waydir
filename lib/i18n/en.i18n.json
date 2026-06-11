@@ -684,6 +684,19 @@
     "accessDeniedBody": "macOS protects the Trash folder. Grant Waydir Full Disk Access in System Settings, then relaunch the app.",
     "openSystemSettings": "Open System Settings"
   },
+  "fullDiskAccess": {
+    "title": "Grant Full Disk Access",
+    "body": "Waydir works best with Full Disk Access — it lets you browse every folder without macOS asking for permission each time. Open System Settings, enable Waydir under Full Disk Access, then relaunch the app.",
+    "openSettings": "Open System Settings",
+    "later": "Later"
+  },
+  "folderAccess": {
+    "deniedTitle": "Can't access this folder",
+    "deniedBody": "The system is blocking access to this folder. On macOS, grant Waydir Full Disk Access in System Settings, then relaunch the app.",
+    "openSystemSettings": "Open System Settings",
+    "retry": "Try Again",
+    "errorTitle": "Couldn't open this folder"
+  },
   "toolbar": {
     "back": "Back",
     "forward": "Forward",
