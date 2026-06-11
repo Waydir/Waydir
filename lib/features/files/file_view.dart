@@ -409,40 +409,6 @@ class _FileListState extends State<FileList> {
           if (mounted) _reportPageRows();
         });
 
-        if (widget.files.isEmpty) {
-          return DropRegion(
-            formats: [Formats.fileUri, formatLocalFile],
-            hitTestBehavior: HitTestBehavior.opaque,
-            onDropOver: (event) =>
-                DragHintController.instance.mode.value == DragMode.move
-                ? DropOperation.move
-                : DropOperation.copy,
-            onPerformDrop: (event) async {
-              final paths = await pathsFromSession(event.session);
-              final move =
-                  DragHintController.instance.mode.value == DragMode.move;
-              if (paths.isNotEmpty) {
-                widget.onDropFiles?.call(
-                  paths,
-                  widget.currentPath,
-                  move: move,
-                );
-              }
-            },
-            child: GestureDetector(
-              onTap: widget.onBackgroundTap,
-              onSecondaryTapUp: widget.onBackgroundContextMenu != null
-                  ? (d) => widget.onBackgroundContextMenu!(d.globalPosition)
-                  : null,
-              behavior: HitTestBehavior.opaque,
-              child: _EmptyState(
-                isSearching: widget.recursiveResults,
-                onCloseSearch: widget.onCloseSearch,
-              ),
-            ),
-          );
-        }
-
         final columns = _visibleColumns();
         final columnWidths = _computeColumnWidths(context, columns);
         final recursive = widget.recursiveResults;
@@ -545,9 +511,7 @@ class _FileListState extends State<FileList> {
                                         : DropOperation.copy;
                                   },
                                   onDropLeave: (_) => _clearDrag(),
-                                  onDropEnded: (_) {
-                                    _clearDrag();
-                                  },
+                                  onDropEnded: (_) => _clearDrag(),
                                   onPerformDrop: (event) async {
                                     final pos = event.position.local;
                                     final index = _rowAt(pos);
@@ -692,6 +656,19 @@ class _FileListState extends State<FileList> {
                     controller: _scrollController,
                   ),
                 ),
+                if (widget.files.isEmpty)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      ignoring: !widget.recursiveResults,
+                      child: ColoredBox(
+                        color: AppColors.bg,
+                        child: _EmptyState(
+                          isSearching: widget.recursiveResults,
+                          onCloseSearch: widget.onCloseSearch,
+                        ),
+                      ),
+                    ),
+                  ),
                 if (_isDragOver)
                   Positioned.fill(
                     child: IgnorePointer(
