@@ -2697,6 +2697,21 @@ class Translations$fileView$columns$en {
 
 	/// en: 'Location'
 	String get location => 'Location';
+
+	/// en: 'Kind'
+	String get kind => 'Kind';
+
+	/// en: 'Date created'
+	String get dateCreated => 'Date created';
+
+	/// en: 'Permissions'
+	String get permissions => 'Permissions';
+
+	/// en: 'Owner'
+	String get owner => 'Owner';
+
+	/// en: 'Configure columns'
+	String get configure => 'Configure columns';
 }
 
 // Path: sidebar.connectDialog
@@ -3521,6 +3536,11 @@ extension on Translations {
 			'fileView.columns.size' => 'Size',
 			'fileView.columns.dateModified' => 'Date modified',
 			'fileView.columns.location' => 'Location',
+			'fileView.columns.kind' => 'Kind',
+			'fileView.columns.dateCreated' => 'Date created',
+			'fileView.columns.permissions' => 'Permissions',
+			'fileView.columns.owner' => 'Owner',
+			'fileView.columns.configure' => 'Configure columns',
 			'sidebar.places' => 'Places',
 			'sidebar.devices' => 'Devices',
 			'sidebar.home' => 'Home',

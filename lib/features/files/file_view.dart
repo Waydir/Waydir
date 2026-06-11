@@ -11,6 +11,7 @@ import '../../i18n/strings.g.dart';
 import '../../core/fs/file_sort.dart';
 import '../../core/models/file_entry.dart';
 import '../../core/settings/settings_store.dart';
+import '../../ui/overlays/context_menu.dart';
 import '../../ui/theme/app_theme.dart';
 import '../../ui/theme/app_text_styles.dart';
 import '../../utils/drag_drop.dart';
@@ -45,6 +46,94 @@ const _kRowPaddingRight = 10.0;
 const _kNameMinWidth = 160.0;
 const _kColumnGap = 16.0;
 const _kHeaderHeight = 24.0;
+
+/// Optional, user-toggleable file-list columns (Name and the recursive-search
+/// Location column are not part of this set). Order here is the display order.
+enum FileColumn { size, date, kind, created, permissions, owner }
+
+String fileColumnLabel(FileColumn col) {
+  final c = t.fileView.columns;
+  switch (col) {
+    case FileColumn.size:
+      return c.size;
+    case FileColumn.date:
+      return c.dateModified;
+    case FileColumn.kind:
+      return c.kind;
+    case FileColumn.created:
+      return c.dateCreated;
+    case FileColumn.permissions:
+      return c.permissions;
+    case FileColumn.owner:
+      return c.owner;
+  }
+}
+
+SortKey fileColumnSortKey(FileColumn col) {
+  switch (col) {
+    case FileColumn.size:
+      return SortKey.size;
+    case FileColumn.date:
+      return SortKey.date;
+    case FileColumn.kind:
+      return SortKey.kind;
+    case FileColumn.created:
+      return SortKey.created;
+    case FileColumn.permissions:
+      return SortKey.permissions;
+    case FileColumn.owner:
+      return SortKey.owner;
+  }
+}
+
+String fileColumnText(
+  FileColumn col,
+  FileEntry e, {
+  required String dateFmt,
+  required bool recentDatesRelative,
+}) {
+  final isFolder = e.type == FileItemType.folder;
+  switch (col) {
+    case FileColumn.size:
+      return isFolder ? '--' : formatBytes(e.size);
+    case FileColumn.date:
+      return _formatDateBy(
+        e.modified,
+        dateFmt,
+        recentDatesRelative: recentDatesRelative,
+      );
+    case FileColumn.kind:
+      return e.kind;
+    case FileColumn.created:
+      return _formatDateBy(
+        e.created,
+        dateFmt,
+        recentDatesRelative: recentDatesRelative,
+      );
+    case FileColumn.permissions:
+      return e.permissionsString;
+    case FileColumn.owner:
+      return e.ownerName;
+  }
+}
+
+Signal<bool> fileColumnSignal(FileColumn col) {
+  final s = SettingsStore.instance;
+  switch (col) {
+    case FileColumn.size:
+      return s.showColumnSize;
+    case FileColumn.date:
+      return s.showColumnDate;
+    case FileColumn.kind:
+      return s.showColumnKind;
+    case FileColumn.created:
+      return s.showColumnCreated;
+    case FileColumn.permissions:
+      return s.showColumnPermissions;
+    case FileColumn.owner:
+      return s.showColumnOwner;
+  }
+}
 
 class FileList extends StatefulWidget {
   final List<FileEntry> files;
@@ -135,31 +224,56 @@ class _FileListState extends State<FileList> {
     return tp.width;
   }
 
-  ({double size, double date}) _computeColumnWidths(BuildContext context) {
+  List<FileColumn> _visibleColumns() => [
+    for (final col in FileColumn.values)
+      if (fileColumnSignal(col).value) col,
+  ];
+
+  Map<FileColumn, double> _computeColumnWidths(
+    BuildContext context,
+    List<FileColumn> columns,
+  ) {
     final muted = context.txt.muted;
-
-    String longestSize = '';
-    for (final e in widget.files) {
-      if (e.type == FileItemType.folder) continue;
-      final s = formatBytes(e.size);
-      if (s.length > longestSize.length) longestSize = s;
+    final headerStyle = context.txt.fieldLabel;
+    final widths = <FileColumn, double>{};
+    for (final col in columns) {
+      var longest = fileColumnLabel(col);
+      for (final e in widget.files) {
+        final v = fileColumnText(
+          col,
+          e,
+          dateFmt: _dateFmt,
+          recentDatesRelative: _recentDatesRelative,
+        );
+        if (v.length > longest.length) longest = v;
+      }
+      final cellW = _measureWidth(longest, muted);
+      final headerW = _measureWidth(fileColumnLabel(col), headerStyle) + 14;
+      widths[col] = math.max(cellW, headerW).ceilToDouble() + 8;
     }
-    if (longestSize.isEmpty) longestSize = '--';
+    return widths;
+  }
 
-    String longestDate = '';
-    for (final e in widget.files) {
-      final d = _formatDateBy(
-        e.modified,
-        _dateFmt,
-        recentDatesRelative: _recentDatesRelative,
-      );
-      if (d.length > longestDate.length) longestDate = d;
-    }
-
-    final sizeW = _measureWidth(longestSize, muted);
-    final dateW = _measureWidth(longestDate, muted);
-
-    return (size: sizeW.ceilToDouble() + 8, date: dateW.ceilToDouble() + 8);
+  void _openColumnMenu(BuildContext context, Offset position) {
+    showContextMenu(
+      context: context,
+      position: position,
+      items: [
+        for (final col in FileColumn.values)
+          ContextMenuItem(
+            icon: WaydirIconsRegular.columns,
+            label: fileColumnLabel(col),
+            action: col.name,
+            isToggle: true,
+            toggleSignal: fileColumnSignal(col),
+          ),
+      ],
+      onSelect: (action) {
+        final col = FileColumn.values.firstWhere((c) => c.name == action);
+        final s = fileColumnSignal(col);
+        s.value = !s.value;
+      },
+    );
   }
 
   String? _relativeParent(String entryPath, String currentPath) {
@@ -329,7 +443,8 @@ class _FileListState extends State<FileList> {
           );
         }
 
-        final columnWidths = _computeColumnWidths(context);
+        final columns = _visibleColumns();
+        final columnWidths = _computeColumnWidths(context, columns);
         final recursive = widget.recursiveResults;
 
         return LayoutBuilder(
@@ -337,11 +452,13 @@ class _FileListState extends State<FileList> {
             _viewportWidth = constraints.maxWidth;
 
             final iconSlot = 16 * _scale + 6;
+            final optionalCols = columns.fold<double>(
+              0,
+              (sum, col) => sum + columnWidths[col]! + _kColumnGap,
+            );
             final fixedCols =
                 iconSlot +
-                columnWidths.size +
-                columnWidths.date +
-                _kColumnGap +
+                optionalCols +
                 (recursive ? _kLocationWidth + _kColumnGap : 0);
             final rowChrome =
                 _listHorizontalPadding * 2 +
@@ -381,11 +498,13 @@ class _FileListState extends State<FileList> {
                                     recursive: recursive,
                                     leadingWidth: iconSlot,
                                     nameWidth: nameWidth,
-                                    sizeWidth: columnWidths.size,
-                                    dateWidth: columnWidths.date,
+                                    columns: columns,
+                                    columnWidths: columnWidths,
                                     sortColumn: widget.sortColumn,
                                     sortAscending: widget.sortAscending,
                                     onSortColumn: widget.onSortColumn,
+                                    onConfigureColumns: (pos) =>
+                                        _openColumnMenu(context, pos),
                                   ),
                                 ),
                                 SizedBox(
@@ -536,10 +655,8 @@ class _FileListState extends State<FileList> {
                                                     onMenuAction:
                                                         widget.onMenuAction,
                                                     recursive: recursive,
-                                                    sizeWidth:
-                                                        columnWidths.size,
-                                                    dateWidth:
-                                                        columnWidths.date,
+                                                    columns: columns,
+                                                    columnWidths: columnWidths,
                                                     location: recursive
                                                         ? _compactLocation(
                                                             widget
@@ -602,20 +719,22 @@ class _ListHeader extends StatelessWidget {
   final bool recursive;
   final double leadingWidth;
   final double nameWidth;
-  final double sizeWidth;
-  final double dateWidth;
+  final List<FileColumn> columns;
+  final Map<FileColumn, double> columnWidths;
   final SortKey sortColumn;
   final bool sortAscending;
   final void Function(SortKey key)? onSortColumn;
+  final void Function(Offset globalPosition)? onConfigureColumns;
   const _ListHeader({
     this.recursive = false,
     this.leadingWidth = 22,
     this.nameWidth = 0,
-    this.sizeWidth = 0,
-    this.dateWidth = 0,
+    this.columns = const [],
+    this.columnWidths = const {},
     this.sortColumn = SortKey.name,
     this.sortAscending = true,
     this.onSortColumn,
+    this.onConfigureColumns,
   });
 
   Widget _sortable(
@@ -668,7 +787,10 @@ class _ListHeader extends StatelessWidget {
       decoration: BoxDecoration(color: AppColors.bg),
       child: Row(
         children: [
-          SizedBox(width: leadingWidth),
+          SizedBox(
+            width: leadingWidth,
+            child: _ConfigureColumnsButton(onTap: onConfigureColumns),
+          ),
           SizedBox(
             width: nameWidth,
             child: _sortable(
@@ -691,28 +813,55 @@ class _ListHeader extends StatelessWidget {
             ),
             const SizedBox(width: 16),
           ],
-          ...[
+          for (final col in columns) ...[
             SizedBox(
-              width: sizeWidth,
+              width: columnWidths[col] ?? 0,
               child: _sortable(
                 context,
-                t.fileView.columns.size,
-                SortKey.size,
+                fileColumnLabel(col),
+                fileColumnSortKey(col),
                 headerStyle,
               ),
             ),
             const SizedBox(width: 16),
-            SizedBox(
-              width: dateWidth,
-              child: _sortable(
-                context,
-                t.fileView.columns.dateModified,
-                SortKey.date,
-                headerStyle,
-              ),
-            ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _ConfigureColumnsButton extends StatefulWidget {
+  final void Function(Offset globalPosition)? onTap;
+  const _ConfigureColumnsButton({this.onTap});
+
+  @override
+  State<_ConfigureColumnsButton> createState() =>
+      _ConfigureColumnsButtonState();
+}
+
+class _ConfigureColumnsButtonState extends State<_ConfigureColumnsButton> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapDown: widget.onTap == null
+            ? null
+            : (d) => widget.onTap!(d.globalPosition),
+        child: Tooltip(
+          message: t.fileView.columns.configure,
+          child: Icon(
+            WaydirIconsRegular.columns,
+            size: 13,
+            color: _hovered ? AppColors.fg : AppColors.fgSubtle,
+          ),
+        ),
       ),
     );
   }
@@ -736,8 +885,8 @@ class _ListRow extends StatefulWidget {
   final FileMenuActionCallback? onMenuAction;
   final bool recursive;
   final double nameWidth;
-  final double sizeWidth;
-  final double dateWidth;
+  final List<FileColumn> columns;
+  final Map<FileColumn, double> columnWidths;
   final double rowHeight;
   final double iconSize;
   final String dateFmt;
@@ -763,8 +912,8 @@ class _ListRow extends StatefulWidget {
     this.onMenuAction,
     this.recursive = false,
     this.nameWidth = 0,
-    this.sizeWidth = 0,
-    this.dateWidth = 0,
+    this.columns = const [],
+    this.columnWidths = const {},
     this.rowHeight = _kRowHeightComfortable,
     this.iconSize = 16,
     this.dateFmt = 'locale',
@@ -889,6 +1038,30 @@ class _ListRowState extends State<_ListRow> {
       return Border(left: BorderSide(color: AppColors.accent, width: 2));
     }
     return null;
+  }
+
+  List<Widget> _buildColumnCells(BuildContext context, FileEntry e) {
+    final muted = context.txt.muted;
+    return [
+      for (final col in widget.columns) ...[
+        SizedBox(
+          width: widget.columnWidths[col] ?? 0,
+          child: Text(
+            fileColumnText(
+              col,
+              e,
+              dateFmt: widget.dateFmt,
+              recentDatesRelative: widget.recentDatesRelative,
+            ),
+            maxLines: 1,
+            softWrap: false,
+            overflow: TextOverflow.clip,
+            style: muted,
+          ),
+        ),
+        const SizedBox(width: 16),
+      ],
+    ];
   }
 
   void _handleTap() {
@@ -1144,33 +1317,7 @@ class _ListRowState extends State<_ListRow> {
                   ),
                   const SizedBox(width: 16),
                 ],
-                ...[
-                  SizedBox(
-                    width: widget.sizeWidth,
-                    child: Text(
-                      isFolder ? '--' : formatBytes(e.size),
-                      maxLines: 1,
-                      softWrap: false,
-                      overflow: TextOverflow.clip,
-                      style: context.txt.muted,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  SizedBox(
-                    width: widget.dateWidth,
-                    child: Text(
-                      _formatDateBy(
-                        e.modified,
-                        widget.dateFmt,
-                        recentDatesRelative: widget.recentDatesRelative,
-                      ),
-                      maxLines: 1,
-                      softWrap: false,
-                      overflow: TextOverflow.clip,
-                      style: context.txt.muted,
-                    ),
-                  ),
-                ],
+                ..._buildColumnCells(context, e),
               ],
             ),
           ),
@@ -1243,33 +1390,7 @@ class _ListRowState extends State<_ListRow> {
                   ),
                   const SizedBox(width: 16),
                 ],
-                ...[
-                  SizedBox(
-                    width: widget.sizeWidth,
-                    child: Text(
-                      isFolder ? '--' : formatBytes(e.size),
-                      maxLines: 1,
-                      softWrap: false,
-                      overflow: TextOverflow.clip,
-                      style: context.txt.muted,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  SizedBox(
-                    width: widget.dateWidth,
-                    child: Text(
-                      _formatDateBy(
-                        e.modified,
-                        widget.dateFmt,
-                        recentDatesRelative: widget.recentDatesRelative,
-                      ),
-                      maxLines: 1,
-                      softWrap: false,
-                      overflow: TextOverflow.clip,
-                      style: context.txt.muted,
-                    ),
-                  ),
-                ],
+                ..._buildColumnCells(context, e),
               ],
             ),
           ),
