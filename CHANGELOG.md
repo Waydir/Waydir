@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Copying, pasting and dragging files into an empty folder now works. ([@fwitkowski17](https://github.com/fwitkowski17))
+
 ## [0.14.0] - 2026-06-10
 
 ### Added
