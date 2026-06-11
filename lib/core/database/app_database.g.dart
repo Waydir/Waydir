@@ -471,6 +471,96 @@ class $AppSettingsTable extends AppSettings
     requiredDuringInsert: false,
     defaultValue: const Constant(1.0),
   );
+  static const VerificationMeta _showColumnSizeMeta = const VerificationMeta(
+    'showColumnSize',
+  );
+  @override
+  late final GeneratedColumn<bool> showColumnSize = GeneratedColumn<bool>(
+    'show_column_size',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("show_column_size" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _showColumnDateMeta = const VerificationMeta(
+    'showColumnDate',
+  );
+  @override
+  late final GeneratedColumn<bool> showColumnDate = GeneratedColumn<bool>(
+    'show_column_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("show_column_date" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _showColumnKindMeta = const VerificationMeta(
+    'showColumnKind',
+  );
+  @override
+  late final GeneratedColumn<bool> showColumnKind = GeneratedColumn<bool>(
+    'show_column_kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("show_column_kind" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _showColumnCreatedMeta = const VerificationMeta(
+    'showColumnCreated',
+  );
+  @override
+  late final GeneratedColumn<bool> showColumnCreated = GeneratedColumn<bool>(
+    'show_column_created',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("show_column_created" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _showColumnPermissionsMeta =
+      const VerificationMeta('showColumnPermissions');
+  @override
+  late final GeneratedColumn<bool> showColumnPermissions =
+      GeneratedColumn<bool>(
+        'show_column_permissions',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("show_column_permissions" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
+  static const VerificationMeta _showColumnOwnerMeta = const VerificationMeta(
+    'showColumnOwner',
+  );
+  @override
+  late final GeneratedColumn<bool> showColumnOwner = GeneratedColumn<bool>(
+    'show_column_owner',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("show_column_owner" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -508,6 +598,12 @@ class $AppSettingsTable extends AppSettings
     rememberFolderState,
     rememberFolderSort,
     fileListScale,
+    showColumnSize,
+    showColumnDate,
+    showColumnKind,
+    showColumnCreated,
+    showColumnPermissions,
+    showColumnOwner,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -806,6 +902,60 @@ class $AppSettingsTable extends AppSettings
         ),
       );
     }
+    if (data.containsKey('show_column_size')) {
+      context.handle(
+        _showColumnSizeMeta,
+        showColumnSize.isAcceptableOrUnknown(
+          data['show_column_size']!,
+          _showColumnSizeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('show_column_date')) {
+      context.handle(
+        _showColumnDateMeta,
+        showColumnDate.isAcceptableOrUnknown(
+          data['show_column_date']!,
+          _showColumnDateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('show_column_kind')) {
+      context.handle(
+        _showColumnKindMeta,
+        showColumnKind.isAcceptableOrUnknown(
+          data['show_column_kind']!,
+          _showColumnKindMeta,
+        ),
+      );
+    }
+    if (data.containsKey('show_column_created')) {
+      context.handle(
+        _showColumnCreatedMeta,
+        showColumnCreated.isAcceptableOrUnknown(
+          data['show_column_created']!,
+          _showColumnCreatedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('show_column_permissions')) {
+      context.handle(
+        _showColumnPermissionsMeta,
+        showColumnPermissions.isAcceptableOrUnknown(
+          data['show_column_permissions']!,
+          _showColumnPermissionsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('show_column_owner')) {
+      context.handle(
+        _showColumnOwnerMeta,
+        showColumnOwner.isAcceptableOrUnknown(
+          data['show_column_owner']!,
+          _showColumnOwnerMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -955,6 +1105,30 @@ class $AppSettingsTable extends AppSettings
         DriftSqlType.double,
         data['${effectivePrefix}file_list_scale'],
       )!,
+      showColumnSize: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}show_column_size'],
+      )!,
+      showColumnDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}show_column_date'],
+      )!,
+      showColumnKind: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}show_column_kind'],
+      )!,
+      showColumnCreated: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}show_column_created'],
+      )!,
+      showColumnPermissions: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}show_column_permissions'],
+      )!,
+      showColumnOwner: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}show_column_owner'],
+      )!,
     );
   }
 
@@ -1000,6 +1174,12 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
   final bool rememberFolderState;
   final bool rememberFolderSort;
   final double fileListScale;
+  final bool showColumnSize;
+  final bool showColumnDate;
+  final bool showColumnKind;
+  final bool showColumnCreated;
+  final bool showColumnPermissions;
+  final bool showColumnOwner;
   const AppSetting({
     required this.id,
     required this.themeMode,
@@ -1036,6 +1216,12 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     required this.rememberFolderState,
     required this.rememberFolderSort,
     required this.fileListScale,
+    required this.showColumnSize,
+    required this.showColumnDate,
+    required this.showColumnKind,
+    required this.showColumnCreated,
+    required this.showColumnPermissions,
+    required this.showColumnOwner,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1077,6 +1263,12 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     map['remember_folder_state'] = Variable<bool>(rememberFolderState);
     map['remember_folder_sort'] = Variable<bool>(rememberFolderSort);
     map['file_list_scale'] = Variable<double>(fileListScale);
+    map['show_column_size'] = Variable<bool>(showColumnSize);
+    map['show_column_date'] = Variable<bool>(showColumnDate);
+    map['show_column_kind'] = Variable<bool>(showColumnKind);
+    map['show_column_created'] = Variable<bool>(showColumnCreated);
+    map['show_column_permissions'] = Variable<bool>(showColumnPermissions);
+    map['show_column_owner'] = Variable<bool>(showColumnOwner);
     return map;
   }
 
@@ -1117,6 +1309,12 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       rememberFolderState: Value(rememberFolderState),
       rememberFolderSort: Value(rememberFolderSort),
       fileListScale: Value(fileListScale),
+      showColumnSize: Value(showColumnSize),
+      showColumnDate: Value(showColumnDate),
+      showColumnKind: Value(showColumnKind),
+      showColumnCreated: Value(showColumnCreated),
+      showColumnPermissions: Value(showColumnPermissions),
+      showColumnOwner: Value(showColumnOwner),
     );
   }
 
@@ -1179,6 +1377,14 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       ),
       rememberFolderSort: serializer.fromJson<bool>(json['rememberFolderSort']),
       fileListScale: serializer.fromJson<double>(json['fileListScale']),
+      showColumnSize: serializer.fromJson<bool>(json['showColumnSize']),
+      showColumnDate: serializer.fromJson<bool>(json['showColumnDate']),
+      showColumnKind: serializer.fromJson<bool>(json['showColumnKind']),
+      showColumnCreated: serializer.fromJson<bool>(json['showColumnCreated']),
+      showColumnPermissions: serializer.fromJson<bool>(
+        json['showColumnPermissions'],
+      ),
+      showColumnOwner: serializer.fromJson<bool>(json['showColumnOwner']),
     );
   }
   @override
@@ -1224,6 +1430,12 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       'rememberFolderState': serializer.toJson<bool>(rememberFolderState),
       'rememberFolderSort': serializer.toJson<bool>(rememberFolderSort),
       'fileListScale': serializer.toJson<double>(fileListScale),
+      'showColumnSize': serializer.toJson<bool>(showColumnSize),
+      'showColumnDate': serializer.toJson<bool>(showColumnDate),
+      'showColumnKind': serializer.toJson<bool>(showColumnKind),
+      'showColumnCreated': serializer.toJson<bool>(showColumnCreated),
+      'showColumnPermissions': serializer.toJson<bool>(showColumnPermissions),
+      'showColumnOwner': serializer.toJson<bool>(showColumnOwner),
     };
   }
 
@@ -1263,6 +1475,12 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     bool? rememberFolderState,
     bool? rememberFolderSort,
     double? fileListScale,
+    bool? showColumnSize,
+    bool? showColumnDate,
+    bool? showColumnKind,
+    bool? showColumnCreated,
+    bool? showColumnPermissions,
+    bool? showColumnOwner,
   }) => AppSetting(
     id: id ?? this.id,
     themeMode: themeMode ?? this.themeMode,
@@ -1301,6 +1519,12 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     rememberFolderState: rememberFolderState ?? this.rememberFolderState,
     rememberFolderSort: rememberFolderSort ?? this.rememberFolderSort,
     fileListScale: fileListScale ?? this.fileListScale,
+    showColumnSize: showColumnSize ?? this.showColumnSize,
+    showColumnDate: showColumnDate ?? this.showColumnDate,
+    showColumnKind: showColumnKind ?? this.showColumnKind,
+    showColumnCreated: showColumnCreated ?? this.showColumnCreated,
+    showColumnPermissions: showColumnPermissions ?? this.showColumnPermissions,
+    showColumnOwner: showColumnOwner ?? this.showColumnOwner,
   );
   AppSetting copyWithCompanion(AppSettingsCompanion data) {
     return AppSetting(
@@ -1399,6 +1623,24 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       fileListScale: data.fileListScale.present
           ? data.fileListScale.value
           : this.fileListScale,
+      showColumnSize: data.showColumnSize.present
+          ? data.showColumnSize.value
+          : this.showColumnSize,
+      showColumnDate: data.showColumnDate.present
+          ? data.showColumnDate.value
+          : this.showColumnDate,
+      showColumnKind: data.showColumnKind.present
+          ? data.showColumnKind.value
+          : this.showColumnKind,
+      showColumnCreated: data.showColumnCreated.present
+          ? data.showColumnCreated.value
+          : this.showColumnCreated,
+      showColumnPermissions: data.showColumnPermissions.present
+          ? data.showColumnPermissions.value
+          : this.showColumnPermissions,
+      showColumnOwner: data.showColumnOwner.present
+          ? data.showColumnOwner.value
+          : this.showColumnOwner,
     );
   }
 
@@ -1439,7 +1681,13 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           ..write('searchMode: $searchMode, ')
           ..write('rememberFolderState: $rememberFolderState, ')
           ..write('rememberFolderSort: $rememberFolderSort, ')
-          ..write('fileListScale: $fileListScale')
+          ..write('fileListScale: $fileListScale, ')
+          ..write('showColumnSize: $showColumnSize, ')
+          ..write('showColumnDate: $showColumnDate, ')
+          ..write('showColumnKind: $showColumnKind, ')
+          ..write('showColumnCreated: $showColumnCreated, ')
+          ..write('showColumnPermissions: $showColumnPermissions, ')
+          ..write('showColumnOwner: $showColumnOwner')
           ..write(')'))
         .toString();
   }
@@ -1481,6 +1729,12 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     rememberFolderState,
     rememberFolderSort,
     fileListScale,
+    showColumnSize,
+    showColumnDate,
+    showColumnKind,
+    showColumnCreated,
+    showColumnPermissions,
+    showColumnOwner,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -1520,7 +1774,13 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           other.searchMode == this.searchMode &&
           other.rememberFolderState == this.rememberFolderState &&
           other.rememberFolderSort == this.rememberFolderSort &&
-          other.fileListScale == this.fileListScale);
+          other.fileListScale == this.fileListScale &&
+          other.showColumnSize == this.showColumnSize &&
+          other.showColumnDate == this.showColumnDate &&
+          other.showColumnKind == this.showColumnKind &&
+          other.showColumnCreated == this.showColumnCreated &&
+          other.showColumnPermissions == this.showColumnPermissions &&
+          other.showColumnOwner == this.showColumnOwner);
 }
 
 class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
@@ -1559,6 +1819,12 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
   final Value<bool> rememberFolderState;
   final Value<bool> rememberFolderSort;
   final Value<double> fileListScale;
+  final Value<bool> showColumnSize;
+  final Value<bool> showColumnDate;
+  final Value<bool> showColumnKind;
+  final Value<bool> showColumnCreated;
+  final Value<bool> showColumnPermissions;
+  final Value<bool> showColumnOwner;
   const AppSettingsCompanion({
     this.id = const Value.absent(),
     this.themeMode = const Value.absent(),
@@ -1595,6 +1861,12 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.rememberFolderState = const Value.absent(),
     this.rememberFolderSort = const Value.absent(),
     this.fileListScale = const Value.absent(),
+    this.showColumnSize = const Value.absent(),
+    this.showColumnDate = const Value.absent(),
+    this.showColumnKind = const Value.absent(),
+    this.showColumnCreated = const Value.absent(),
+    this.showColumnPermissions = const Value.absent(),
+    this.showColumnOwner = const Value.absent(),
   });
   AppSettingsCompanion.insert({
     this.id = const Value.absent(),
@@ -1632,6 +1904,12 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.rememberFolderState = const Value.absent(),
     this.rememberFolderSort = const Value.absent(),
     this.fileListScale = const Value.absent(),
+    this.showColumnSize = const Value.absent(),
+    this.showColumnDate = const Value.absent(),
+    this.showColumnKind = const Value.absent(),
+    this.showColumnCreated = const Value.absent(),
+    this.showColumnPermissions = const Value.absent(),
+    this.showColumnOwner = const Value.absent(),
   });
   static Insertable<AppSetting> custom({
     Expression<int>? id,
@@ -1669,6 +1947,12 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Expression<bool>? rememberFolderState,
     Expression<bool>? rememberFolderSort,
     Expression<double>? fileListScale,
+    Expression<bool>? showColumnSize,
+    Expression<bool>? showColumnDate,
+    Expression<bool>? showColumnKind,
+    Expression<bool>? showColumnCreated,
+    Expression<bool>? showColumnPermissions,
+    Expression<bool>? showColumnOwner,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1716,6 +2000,13 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       if (rememberFolderSort != null)
         'remember_folder_sort': rememberFolderSort,
       if (fileListScale != null) 'file_list_scale': fileListScale,
+      if (showColumnSize != null) 'show_column_size': showColumnSize,
+      if (showColumnDate != null) 'show_column_date': showColumnDate,
+      if (showColumnKind != null) 'show_column_kind': showColumnKind,
+      if (showColumnCreated != null) 'show_column_created': showColumnCreated,
+      if (showColumnPermissions != null)
+        'show_column_permissions': showColumnPermissions,
+      if (showColumnOwner != null) 'show_column_owner': showColumnOwner,
     });
   }
 
@@ -1755,6 +2046,12 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Value<bool>? rememberFolderState,
     Value<bool>? rememberFolderSort,
     Value<double>? fileListScale,
+    Value<bool>? showColumnSize,
+    Value<bool>? showColumnDate,
+    Value<bool>? showColumnKind,
+    Value<bool>? showColumnCreated,
+    Value<bool>? showColumnPermissions,
+    Value<bool>? showColumnOwner,
   }) {
     return AppSettingsCompanion(
       id: id ?? this.id,
@@ -1796,6 +2093,13 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       rememberFolderState: rememberFolderState ?? this.rememberFolderState,
       rememberFolderSort: rememberFolderSort ?? this.rememberFolderSort,
       fileListScale: fileListScale ?? this.fileListScale,
+      showColumnSize: showColumnSize ?? this.showColumnSize,
+      showColumnDate: showColumnDate ?? this.showColumnDate,
+      showColumnKind: showColumnKind ?? this.showColumnKind,
+      showColumnCreated: showColumnCreated ?? this.showColumnCreated,
+      showColumnPermissions:
+          showColumnPermissions ?? this.showColumnPermissions,
+      showColumnOwner: showColumnOwner ?? this.showColumnOwner,
     );
   }
 
@@ -1917,6 +2221,26 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     if (fileListScale.present) {
       map['file_list_scale'] = Variable<double>(fileListScale.value);
     }
+    if (showColumnSize.present) {
+      map['show_column_size'] = Variable<bool>(showColumnSize.value);
+    }
+    if (showColumnDate.present) {
+      map['show_column_date'] = Variable<bool>(showColumnDate.value);
+    }
+    if (showColumnKind.present) {
+      map['show_column_kind'] = Variable<bool>(showColumnKind.value);
+    }
+    if (showColumnCreated.present) {
+      map['show_column_created'] = Variable<bool>(showColumnCreated.value);
+    }
+    if (showColumnPermissions.present) {
+      map['show_column_permissions'] = Variable<bool>(
+        showColumnPermissions.value,
+      );
+    }
+    if (showColumnOwner.present) {
+      map['show_column_owner'] = Variable<bool>(showColumnOwner.value);
+    }
     return map;
   }
 
@@ -1957,7 +2281,13 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
           ..write('searchMode: $searchMode, ')
           ..write('rememberFolderState: $rememberFolderState, ')
           ..write('rememberFolderSort: $rememberFolderSort, ')
-          ..write('fileListScale: $fileListScale')
+          ..write('fileListScale: $fileListScale, ')
+          ..write('showColumnSize: $showColumnSize, ')
+          ..write('showColumnDate: $showColumnDate, ')
+          ..write('showColumnKind: $showColumnKind, ')
+          ..write('showColumnCreated: $showColumnCreated, ')
+          ..write('showColumnPermissions: $showColumnPermissions, ')
+          ..write('showColumnOwner: $showColumnOwner')
           ..write(')'))
         .toString();
   }
@@ -5251,6 +5581,12 @@ typedef $$AppSettingsTableCreateCompanionBuilder =
       Value<bool> rememberFolderState,
       Value<bool> rememberFolderSort,
       Value<double> fileListScale,
+      Value<bool> showColumnSize,
+      Value<bool> showColumnDate,
+      Value<bool> showColumnKind,
+      Value<bool> showColumnCreated,
+      Value<bool> showColumnPermissions,
+      Value<bool> showColumnOwner,
     });
 typedef $$AppSettingsTableUpdateCompanionBuilder =
     AppSettingsCompanion Function({
@@ -5289,6 +5625,12 @@ typedef $$AppSettingsTableUpdateCompanionBuilder =
       Value<bool> rememberFolderState,
       Value<bool> rememberFolderSort,
       Value<double> fileListScale,
+      Value<bool> showColumnSize,
+      Value<bool> showColumnDate,
+      Value<bool> showColumnKind,
+      Value<bool> showColumnCreated,
+      Value<bool> showColumnPermissions,
+      Value<bool> showColumnOwner,
     });
 
 class $$AppSettingsTableFilterComposer
@@ -5472,6 +5814,36 @@ class $$AppSettingsTableFilterComposer
 
   ColumnFilters<double> get fileListScale => $composableBuilder(
     column: $table.fileListScale,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get showColumnSize => $composableBuilder(
+    column: $table.showColumnSize,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get showColumnDate => $composableBuilder(
+    column: $table.showColumnDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get showColumnKind => $composableBuilder(
+    column: $table.showColumnKind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get showColumnCreated => $composableBuilder(
+    column: $table.showColumnCreated,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get showColumnPermissions => $composableBuilder(
+    column: $table.showColumnPermissions,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get showColumnOwner => $composableBuilder(
+    column: $table.showColumnOwner,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -5659,6 +6031,36 @@ class $$AppSettingsTableOrderingComposer
     column: $table.fileListScale,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get showColumnSize => $composableBuilder(
+    column: $table.showColumnSize,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get showColumnDate => $composableBuilder(
+    column: $table.showColumnDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get showColumnKind => $composableBuilder(
+    column: $table.showColumnKind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get showColumnCreated => $composableBuilder(
+    column: $table.showColumnCreated,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get showColumnPermissions => $composableBuilder(
+    column: $table.showColumnPermissions,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get showColumnOwner => $composableBuilder(
+    column: $table.showColumnOwner,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$AppSettingsTableAnnotationComposer
@@ -5834,6 +6236,36 @@ class $$AppSettingsTableAnnotationComposer
     column: $table.fileListScale,
     builder: (column) => column,
   );
+
+  GeneratedColumn<bool> get showColumnSize => $composableBuilder(
+    column: $table.showColumnSize,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get showColumnDate => $composableBuilder(
+    column: $table.showColumnDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get showColumnKind => $composableBuilder(
+    column: $table.showColumnKind,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get showColumnCreated => $composableBuilder(
+    column: $table.showColumnCreated,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get showColumnPermissions => $composableBuilder(
+    column: $table.showColumnPermissions,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get showColumnOwner => $composableBuilder(
+    column: $table.showColumnOwner,
+    builder: (column) => column,
+  );
 }
 
 class $$AppSettingsTableTableManager
@@ -5902,6 +6334,12 @@ class $$AppSettingsTableTableManager
                 Value<bool> rememberFolderState = const Value.absent(),
                 Value<bool> rememberFolderSort = const Value.absent(),
                 Value<double> fileListScale = const Value.absent(),
+                Value<bool> showColumnSize = const Value.absent(),
+                Value<bool> showColumnDate = const Value.absent(),
+                Value<bool> showColumnKind = const Value.absent(),
+                Value<bool> showColumnCreated = const Value.absent(),
+                Value<bool> showColumnPermissions = const Value.absent(),
+                Value<bool> showColumnOwner = const Value.absent(),
               }) => AppSettingsCompanion(
                 id: id,
                 themeMode: themeMode,
@@ -5938,6 +6376,12 @@ class $$AppSettingsTableTableManager
                 rememberFolderState: rememberFolderState,
                 rememberFolderSort: rememberFolderSort,
                 fileListScale: fileListScale,
+                showColumnSize: showColumnSize,
+                showColumnDate: showColumnDate,
+                showColumnKind: showColumnKind,
+                showColumnCreated: showColumnCreated,
+                showColumnPermissions: showColumnPermissions,
+                showColumnOwner: showColumnOwner,
               ),
           createCompanionCallback:
               ({
@@ -5976,6 +6420,12 @@ class $$AppSettingsTableTableManager
                 Value<bool> rememberFolderState = const Value.absent(),
                 Value<bool> rememberFolderSort = const Value.absent(),
                 Value<double> fileListScale = const Value.absent(),
+                Value<bool> showColumnSize = const Value.absent(),
+                Value<bool> showColumnDate = const Value.absent(),
+                Value<bool> showColumnKind = const Value.absent(),
+                Value<bool> showColumnCreated = const Value.absent(),
+                Value<bool> showColumnPermissions = const Value.absent(),
+                Value<bool> showColumnOwner = const Value.absent(),
               }) => AppSettingsCompanion.insert(
                 id: id,
                 themeMode: themeMode,
@@ -6012,6 +6462,12 @@ class $$AppSettingsTableTableManager
                 rememberFolderState: rememberFolderState,
                 rememberFolderSort: rememberFolderSort,
                 fileListScale: fileListScale,
+                showColumnSize: showColumnSize,
+                showColumnDate: showColumnDate,
+                showColumnKind: showColumnKind,
+                showColumnCreated: showColumnCreated,
+                showColumnPermissions: showColumnPermissions,
+                showColumnOwner: showColumnOwner,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

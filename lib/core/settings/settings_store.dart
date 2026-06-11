@@ -46,6 +46,12 @@ class SettingsStore {
   final rememberFolderState = signal<bool>(true);
   final rememberFolderSort = signal<bool>(true);
   final fileListScale = signal<double>(1.0);
+  final showColumnSize = signal<bool>(true);
+  final showColumnDate = signal<bool>(true);
+  final showColumnKind = signal<bool>(false);
+  final showColumnCreated = signal<bool>(false);
+  final showColumnPermissions = signal<bool>(false);
+  final showColumnOwner = signal<bool>(false);
   final shortcutBindings = signal<Map<String, KeyChord>>({});
 
   late final AppDatabase _db;
@@ -100,6 +106,12 @@ class SettingsStore {
     rememberFolderState.value = row.rememberFolderState;
     rememberFolderSort.value = row.rememberFolderSort;
     fileListScale.value = row.fileListScale;
+    showColumnSize.value = row.showColumnSize;
+    showColumnDate.value = row.showColumnDate;
+    showColumnKind.value = row.showColumnKind;
+    showColumnCreated.value = row.showColumnCreated;
+    showColumnPermissions.value = row.showColumnPermissions;
+    showColumnOwner.value = row.showColumnOwner;
     final shortcutRows = await _db.getShortcutBindings();
     final bindings = <String, KeyChord>{};
     for (final row in shortcutRows) {
@@ -192,6 +204,12 @@ class SettingsStore {
         rememberFolderState.value;
         rememberFolderSort.value;
         fileListScale.value;
+        showColumnSize.value;
+        showColumnDate.value;
+        showColumnKind.value;
+        showColumnCreated.value;
+        showColumnPermissions.value;
+        showColumnOwner.value;
         if (!_loaded) return;
         _scheduleSave();
       }),
@@ -241,6 +259,12 @@ class SettingsStore {
           rememberFolderState: Value(rememberFolderState.value),
           rememberFolderSort: Value(rememberFolderSort.value),
           fileListScale: Value(fileListScale.value),
+          showColumnSize: Value(showColumnSize.value),
+          showColumnDate: Value(showColumnDate.value),
+          showColumnKind: Value(showColumnKind.value),
+          showColumnCreated: Value(showColumnCreated.value),
+          showColumnPermissions: Value(showColumnPermissions.value),
+          showColumnOwner: Value(showColumnOwner.value),
         ),
       );
     } catch (_) {}

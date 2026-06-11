@@ -57,6 +57,18 @@ class AppSettings extends Table {
   BoolColumn get rememberFolderSort =>
       boolean().withDefault(const Constant(true))();
   RealColumn get fileListScale => real().withDefault(const Constant(1.0))();
+  BoolColumn get showColumnSize =>
+      boolean().withDefault(const Constant(true))();
+  BoolColumn get showColumnDate =>
+      boolean().withDefault(const Constant(true))();
+  BoolColumn get showColumnKind =>
+      boolean().withDefault(const Constant(false))();
+  BoolColumn get showColumnCreated =>
+      boolean().withDefault(const Constant(false))();
+  BoolColumn get showColumnPermissions =>
+      boolean().withDefault(const Constant(false))();
+  BoolColumn get showColumnOwner =>
+      boolean().withDefault(const Constant(false))();
 }
 
 class SessionTabs extends Table {
@@ -184,7 +196,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 28;
+  int get schemaVersion => 29;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -306,6 +318,14 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 28) {
         await m.createTable(sidebarPrefs);
+      }
+      if (from < 29) {
+        await addSettingColumn(appSettings.showColumnSize);
+        await addSettingColumn(appSettings.showColumnDate);
+        await addSettingColumn(appSettings.showColumnKind);
+        await addSettingColumn(appSettings.showColumnCreated);
+        await addSettingColumn(appSettings.showColumnPermissions);
+        await addSettingColumn(appSettings.showColumnOwner);
       }
     },
   );
