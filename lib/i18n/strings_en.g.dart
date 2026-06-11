@@ -60,6 +60,8 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$fileView$en fileView = Translations$fileView$en.internal(_root);
 	late final Translations$sidebar$en sidebar = Translations$sidebar$en.internal(_root);
 	late final Translations$trash$en trash = Translations$trash$en.internal(_root);
+	late final Translations$fullDiskAccess$en fullDiskAccess = Translations$fullDiskAccess$en.internal(_root);
+	late final Translations$folderAccess$en folderAccess = Translations$folderAccess$en.internal(_root);
 	late final Translations$toolbar$en toolbar = Translations$toolbar$en.internal(_root);
 	late final Translations$notifications$en notifications = Translations$notifications$en.internal(_root);
 	late final Translations$search$en search = Translations$search$en.internal(_root);
@@ -1265,6 +1267,51 @@ class Translations$trash$en {
 
 	/// en: 'Open System Settings'
 	String get openSystemSettings => 'Open System Settings';
+}
+
+// Path: fullDiskAccess
+class Translations$fullDiskAccess$en {
+	Translations$fullDiskAccess$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Grant Full Disk Access'
+	String get title => 'Grant Full Disk Access';
+
+	/// en: 'Waydir works best with Full Disk Access — it lets you browse every folder without macOS asking for permission each time. Open System Settings, enable Waydir under Full Disk Access, then relaunch the app.'
+	String get body => 'Waydir works best with Full Disk Access — it lets you browse every folder without macOS asking for permission each time. Open System Settings, enable Waydir under Full Disk Access, then relaunch the app.';
+
+	/// en: 'Open System Settings'
+	String get openSettings => 'Open System Settings';
+
+	/// en: 'Later'
+	String get later => 'Later';
+}
+
+// Path: folderAccess
+class Translations$folderAccess$en {
+	Translations$folderAccess$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Can't access this folder'
+	String get deniedTitle => 'Can\'t access this folder';
+
+	/// en: 'The system is blocking access to this folder. On macOS, grant Waydir Full Disk Access in System Settings, then relaunch the app.'
+	String get deniedBody => 'The system is blocking access to this folder. On macOS, grant Waydir Full Disk Access in System Settings, then relaunch the app.';
+
+	/// en: 'Open System Settings'
+	String get openSystemSettings => 'Open System Settings';
+
+	/// en: 'Try Again'
+	String get retry => 'Try Again';
+
+	/// en: 'Couldn't open this folder'
+	String get errorTitle => 'Couldn\'t open this folder';
 }
 
 // Path: toolbar
@@ -3588,6 +3635,15 @@ extension on Translations {
 			'trash.accessDeniedTitle' => 'Trash needs Full Disk Access',
 			'trash.accessDeniedBody' => 'macOS protects the Trash folder. Grant Waydir Full Disk Access in System Settings, then relaunch the app.',
 			'trash.openSystemSettings' => 'Open System Settings',
+			'fullDiskAccess.title' => 'Grant Full Disk Access',
+			'fullDiskAccess.body' => 'Waydir works best with Full Disk Access — it lets you browse every folder without macOS asking for permission each time. Open System Settings, enable Waydir under Full Disk Access, then relaunch the app.',
+			'fullDiskAccess.openSettings' => 'Open System Settings',
+			'fullDiskAccess.later' => 'Later',
+			'folderAccess.deniedTitle' => 'Can\'t access this folder',
+			'folderAccess.deniedBody' => 'The system is blocking access to this folder. On macOS, grant Waydir Full Disk Access in System Settings, then relaunch the app.',
+			'folderAccess.openSystemSettings' => 'Open System Settings',
+			'folderAccess.retry' => 'Try Again',
+			'folderAccess.errorTitle' => 'Couldn\'t open this folder',
 			'toolbar.back' => 'Back',
 			'toolbar.forward' => 'Forward',
 			'toolbar.up' => 'Up',
