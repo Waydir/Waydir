@@ -63,6 +63,7 @@ flutter:
     - assets/icons/material/
     - assets/
     - docs/gifs/
+    - CHANGELOG.md
   fonts:
     - family: PhosphorRegular
       fonts:

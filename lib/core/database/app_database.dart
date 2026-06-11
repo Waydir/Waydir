@@ -72,6 +72,20 @@ class AppSettings extends Table {
   TextColumn get columnOrder => text().withDefault(
     const Constant('size,date,kind,created,permissions,owner'),
   )();
+  BoolColumn get quickLookUseSystemFont =>
+      boolean().withDefault(const Constant(true))();
+  TextColumn get quickLookFontFamily =>
+      text().withDefault(const Constant(''))();
+  IntColumn get quickLookFontSize =>
+      integer().withDefault(const Constant(13))();
+  RealColumn get quickLookLineHeight =>
+      real().withDefault(const Constant(1.5))();
+  BoolColumn get quickLookShowLineNumbers =>
+      boolean().withDefault(const Constant(false))();
+  BoolColumn get quickLookVimMode =>
+      boolean().withDefault(const Constant(false))();
+  BoolColumn get quickLookWrapLines =>
+      boolean().withDefault(const Constant(true))();
 }
 
 class SessionTabs extends Table {
@@ -199,7 +213,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 30;
+  int get schemaVersion => 32;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -332,6 +346,17 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 30) {
         await addSettingColumn(appSettings.columnOrder);
+      }
+      if (from < 31) {
+        await addSettingColumn(appSettings.quickLookUseSystemFont);
+        await addSettingColumn(appSettings.quickLookFontFamily);
+        await addSettingColumn(appSettings.quickLookFontSize);
+        await addSettingColumn(appSettings.quickLookLineHeight);
+        await addSettingColumn(appSettings.quickLookShowLineNumbers);
+        await addSettingColumn(appSettings.quickLookVimMode);
+      }
+      if (from < 32) {
+        await addSettingColumn(appSettings.quickLookWrapLines);
       }
     },
   );

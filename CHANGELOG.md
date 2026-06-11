@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Changelog viewer: open it from the Waydir menu to read all release notes rendered as Markdown.
+- Quick Look preferences: choose the editor font and line height, show line numbers, toggle line wrapping and enable a basic Vim mode for editing previews.
 - File list columns can be configured: toggle Size, Date modified, Kind, Date created, Permissions and Owner on or off, and drag to reorder them. Every column is sortable.
 - The path bar now expands `~` to the home folder. ([@fwitkowski17](https://github.com/fwitkowski17))
 - macOS: Waydir now prompts for Full Disk Access when needed. ([@fwitkowski17](https://github.com/fwitkowski17))
@@ -305,7 +307,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Custom dark theme and custom title bar.
 - Settings store with persistent user preferences.
 
-[Unreleased]: https://github.com/Waydir/Waydir/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/Waydir/Waydir/compare/v0.14.0...HEAD
+[0.14.0]: https://github.com/Waydir/Waydir/compare/v0.13.0...v0.14.0
+[0.13.0]: https://github.com/Waydir/Waydir/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/Waydir/Waydir/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/Waydir/Waydir/compare/v0.10.1...v0.11.0
 [0.10.1]: https://github.com/Waydir/Waydir/compare/v0.10.0...v0.10.1
@@ -313,8 +317,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [0.9.1]: https://github.com/Waydir/Waydir/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/Waydir/Waydir/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/Waydir/Waydir/compare/v0.7.0...v0.8.0
-[0.7.0]: https://github.com/Waydir/Waydir/compare/v0.6.0...v0.7.0
+[0.7.0]: https://github.com/Waydir/Waydir/compare/v0.6.1...v0.7.0
+[0.6.1]: https://github.com/Waydir/Waydir/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/Waydir/Waydir/compare/v0.5.1...v0.6.0
+[0.5.1]: https://github.com/Waydir/Waydir/compare/v0.5.0...v0.5.1
+[0.5.0]: https://github.com/Waydir/Waydir/compare/v0.4.1...v0.5.0
+[0.4.1]: https://github.com/Waydir/Waydir/compare/v0.4.0...v0.4.1
+[0.4.0]: https://github.com/Waydir/Waydir/compare/v0.3.1...v0.4.0
+[0.3.1]: https://github.com/Waydir/Waydir/compare/v0.3.0...v0.3.1
+[0.3.0]: https://github.com/Waydir/Waydir/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Waydir/Waydir/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/Waydir/Waydir/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/Waydir/Waydir/releases/tag/v0.1.0

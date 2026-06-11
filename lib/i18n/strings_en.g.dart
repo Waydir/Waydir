@@ -50,6 +50,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$preferences$en preferences = Translations$preferences$en.internal(_root);
 	late final Translations$update$en update = Translations$update$en.internal(_root);
 	late final Translations$appMenu$en appMenu = Translations$appMenu$en.internal(_root);
+	late final Translations$changelog$en changelog = Translations$changelog$en.internal(_root);
 	late final Translations$help$en help = Translations$help$en.internal(_root);
 	late final Translations$keybindings$en keybindings = Translations$keybindings$en.internal(_root);
 	late final Translations$commandPalette$en commandPalette = Translations$commandPalette$en.internal(_root);
@@ -502,6 +503,7 @@ class Translations$preferences$en {
 	late final Translations$preferences$plugins$en plugins = Translations$preferences$plugins$en.internal(_root);
 	late final Translations$preferences$general$en general = Translations$preferences$general$en.internal(_root);
 	late final Translations$preferences$terminal$en terminal = Translations$preferences$terminal$en.internal(_root);
+	late final Translations$preferences$quickLook$en quickLook = Translations$preferences$quickLook$en.internal(_root);
 	late final Translations$preferences$appearance$en appearance = Translations$preferences$appearance$en.internal(_root);
 	late final Translations$preferences$bookmarks$en bookmarks = Translations$preferences$bookmarks$en.internal(_root);
 	late final Translations$preferences$diagnostics$en diagnostics = Translations$preferences$diagnostics$en.internal(_root);
@@ -642,11 +644,29 @@ class Translations$appMenu$en {
 	/// en: 'Help'
 	String get help => 'Help';
 
+	/// en: 'Changelog'
+	String get changelog => 'Changelog';
+
 	/// en: 'Star on GitHub'
 	String get starOnGithub => 'Star on GitHub';
 
 	/// en: 'Quit'
 	String get quit => 'Quit';
+}
+
+// Path: changelog
+class Translations$changelog$en {
+	Translations$changelog$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Changelog'
+	String get title => 'Changelog';
+
+	/// en: 'Could not load the changelog.'
+	String get loadError => 'Could not load the changelog.';
 }
 
 // Path: help
@@ -942,6 +962,15 @@ class Translations$quickLook$en {
 
 	/// en: 'Could not save file'
 	String get saveError => 'Could not save file';
+
+	/// en: 'NORMAL'
+	String get vimNormal => 'NORMAL';
+
+	/// en: 'INSERT'
+	String get vimInsert => 'INSERT';
+
+	/// en: 'VISUAL'
+	String get vimVisual => 'VISUAL';
 
 	/// en: 'Accessed'
 	String get accessed => 'Accessed';
@@ -2086,6 +2115,9 @@ class Translations$preferences$categories$en {
 	/// en: 'Terminal'
 	String get terminal => 'Terminal';
 
+	/// en: 'Quick Look'
+	String get quickLook => 'Quick Look';
+
 	/// en: 'Bookmarks'
 	String get bookmarks => 'Bookmarks';
 
@@ -2343,6 +2375,69 @@ class Translations$preferences$terminal$en {
 
 	/// en: 'Open in Terminal'
 	String get externalSection => 'Open in Terminal';
+}
+
+// Path: preferences.quickLook
+class Translations$preferences$quickLook$en {
+	Translations$preferences$quickLook$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Quick Look'
+	String get title => 'Quick Look';
+
+	/// en: 'Editor font, line numbers and modal editing in the Quick Look preview.'
+	String get subtitle => 'Editor font, line numbers and modal editing in the Quick Look preview.';
+
+	/// en: 'Editor font'
+	String get fontSection => 'Editor font';
+
+	/// en: 'Editor'
+	String get editorSection => 'Editor';
+
+	/// en: 'Use system font'
+	String get useSystemFont => 'Use system font';
+
+	/// en: 'Render the editor with the system monospace font.'
+	String get useSystemFontHint => 'Render the editor with the system monospace font.';
+
+	/// en: 'Font family'
+	String get fontFamily => 'Font family';
+
+	/// en: 'Pick an installed monospace font.'
+	String get fontFamilyHint => 'Pick an installed monospace font.';
+
+	/// en: 'Font size'
+	String get fontSize => 'Font size';
+
+	/// en: 'Text size in the Quick Look editor.'
+	String get fontSizeHint => 'Text size in the Quick Look editor.';
+
+	/// en: 'Line height'
+	String get lineHeight => 'Line height';
+
+	/// en: 'Vertical spacing between editor lines.'
+	String get lineHeightHint => 'Vertical spacing between editor lines.';
+
+	/// en: 'Show line numbers'
+	String get showLineNumbers => 'Show line numbers';
+
+	/// en: 'Display a line-number gutter in the editor.'
+	String get showLineNumbersHint => 'Display a line-number gutter in the editor.';
+
+	/// en: 'Wrap lines'
+	String get wrapLines => 'Wrap lines';
+
+	/// en: 'Wrap long lines instead of scrolling horizontally.'
+	String get wrapLinesHint => 'Wrap long lines instead of scrolling horizontally.';
+
+	/// en: 'Vim mode'
+	String get vimMode => 'Vim mode';
+
+	/// en: 'Basic modal editing: movement, insert and simple edits.'
+	String get vimModeHint => 'Basic modal editing: movement, insert and simple edits.';
 }
 
 // Path: preferences.appearance
@@ -3186,6 +3281,7 @@ extension on Translations {
 			'preferences.categories.general' => 'General',
 			'preferences.categories.appearance' => 'Appearance',
 			'preferences.categories.terminal' => 'Terminal',
+			'preferences.categories.quickLook' => 'Quick Look',
 			'preferences.categories.bookmarks' => 'Bookmarks',
 			'preferences.categories.plugins' => 'Plugins',
 			'preferences.categories.diagnostics' => 'Diagnostics',
@@ -3263,6 +3359,24 @@ extension on Translations {
 			'preferences.terminal.shellHint' => 'Program the built-in terminal launches.',
 			'preferences.terminal.shellSystem' => 'System default',
 			'preferences.terminal.externalSection' => 'Open in Terminal',
+			'preferences.quickLook.title' => 'Quick Look',
+			'preferences.quickLook.subtitle' => 'Editor font, line numbers and modal editing in the Quick Look preview.',
+			'preferences.quickLook.fontSection' => 'Editor font',
+			'preferences.quickLook.editorSection' => 'Editor',
+			'preferences.quickLook.useSystemFont' => 'Use system font',
+			'preferences.quickLook.useSystemFontHint' => 'Render the editor with the system monospace font.',
+			'preferences.quickLook.fontFamily' => 'Font family',
+			'preferences.quickLook.fontFamilyHint' => 'Pick an installed monospace font.',
+			'preferences.quickLook.fontSize' => 'Font size',
+			'preferences.quickLook.fontSizeHint' => 'Text size in the Quick Look editor.',
+			'preferences.quickLook.lineHeight' => 'Line height',
+			'preferences.quickLook.lineHeightHint' => 'Vertical spacing between editor lines.',
+			'preferences.quickLook.showLineNumbers' => 'Show line numbers',
+			'preferences.quickLook.showLineNumbersHint' => 'Display a line-number gutter in the editor.',
+			'preferences.quickLook.wrapLines' => 'Wrap lines',
+			'preferences.quickLook.wrapLinesHint' => 'Wrap long lines instead of scrolling horizontally.',
+			'preferences.quickLook.vimMode' => 'Vim mode',
+			'preferences.quickLook.vimModeHint' => 'Basic modal editing: movement, insert and simple edits.',
 			'preferences.appearance.title' => 'Appearance',
 			'preferences.appearance.subtitle' => 'Defaults for how files and the sidebar are displayed.',
 			'preferences.appearance.themeSection' => 'Theme',
@@ -3387,8 +3501,11 @@ extension on Translations {
 			'update.bundleNotWritable' => 'Cannot write to bundle directory. Install the new version manually.',
 			'update.installerLaunchFailed' => ({required Object error}) => 'Failed to launch installer: ${error}',
 			'appMenu.help' => 'Help',
+			'appMenu.changelog' => 'Changelog',
 			'appMenu.starOnGithub' => 'Star on GitHub',
 			'appMenu.quit' => 'Quit',
+			'changelog.title' => 'Changelog',
+			'changelog.loadError' => 'Could not load the changelog.',
 			'help.title' => 'Features',
 			'help.menuLabel' => 'Features',
 			'help.demoComingSoon' => 'Demo coming soon',
@@ -3506,6 +3623,9 @@ extension on Translations {
 			'quickLook.saved' => 'Saved',
 			'quickLook.unsaved' => 'Unsaved',
 			'quickLook.saveError' => 'Could not save file',
+			'quickLook.vimNormal' => 'NORMAL',
+			'quickLook.vimInsert' => 'INSERT',
+			'quickLook.vimVisual' => 'VISUAL',
 			'quickLook.accessed' => 'Accessed',
 			'quickLook.changed' => 'Changed',
 			'quickLook.permissions' => 'Permissions',
@@ -3553,6 +3673,8 @@ extension on Translations {
 			'toast.renameAlreadyExists' => ({required Object name}) => 'An item named \'${name}\' already exists',
 			'toast.renameInvalidName' => 'Invalid name',
 			'toast.renameError' => ({required Object message}) => 'Could not rename: ${message}',
+			_ => null,
+		} ?? switch (path) {
 			'toast.multiRenameSuccess' => ({required Object count}) => 'Renamed ${count} files',
 			'toast.multiRenamePartial' => ({required Object succeeded, required Object total, required Object details}) => 'Renamed ${succeeded} of ${total} (${details})',
 			'toast.multiRenameCollisions' => ({required Object count}) => '${count} already existed',
@@ -3578,8 +3700,6 @@ extension on Translations {
 			'fileView.date.monthsAgo' => ({required Object count}) => '${count}mo ago',
 			'fileView.date.yearsAgo' => ({required Object count}) => '${count}y ago',
 			'fileView.columns.name' => 'Name',
-			_ => null,
-		} ?? switch (path) {
 			'fileView.columns.size' => 'Size',
 			'fileView.columns.dateModified' => 'Date modified',
 			'fileView.columns.location' => 'Location',
