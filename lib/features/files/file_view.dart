@@ -295,20 +295,6 @@ class _FileListState extends State<FileList> {
           if (mounted) _reportPageRows();
         });
 
-        if (widget.files.isEmpty) {
-          return GestureDetector(
-            onTap: widget.onBackgroundTap,
-            onSecondaryTapUp: widget.onBackgroundContextMenu != null
-                ? (d) => widget.onBackgroundContextMenu!(d.globalPosition)
-                : null,
-            behavior: HitTestBehavior.opaque,
-            child: _EmptyState(
-              isSearching: widget.recursiveResults,
-              onCloseSearch: widget.onCloseSearch,
-            ),
-          );
-        }
-
         final columnWidths = _computeColumnWidths(context);
         final recursive = widget.recursiveResults;
 
@@ -406,9 +392,7 @@ class _FileListState extends State<FileList> {
                                         : DropOperation.copy;
                                   },
                                   onDropLeave: (_) => _clearDrag(),
-                                  onDropEnded: (_) {
-                                    _clearDrag();
-                                  },
+                                  onDropEnded: (_) => _clearDrag(),
                                   onPerformDrop: (event) async {
                                     final pos = event.position.local;
                                     final index = _rowAt(pos);
@@ -555,6 +539,19 @@ class _FileListState extends State<FileList> {
                     controller: _scrollController,
                   ),
                 ),
+                if (widget.files.isEmpty)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      ignoring: !widget.recursiveResults,
+                      child: ColoredBox(
+                        color: AppColors.bg,
+                        child: _EmptyState(
+                          isSearching: widget.recursiveResults,
+                          onCloseSearch: widget.onCloseSearch,
+                        ),
+                      ),
+                    ),
+                  ),
                 if (_isDragOver)
                   Positioned.fill(
                     child: IgnorePointer(
