@@ -601,7 +601,7 @@ class _PathBarState extends State<_PathBar> {
     TextEditingValue value,
   ) async {
     if (!value.selection.isCollapsed) return const [];
-    final input = value.text.trim();
+    final input = PlatformPaths.expandTilde(value.text.trim());
     if (input.isEmpty) return const [];
     final parts = _PathInputParts.from(input);
     if (parts == null) return const [];
