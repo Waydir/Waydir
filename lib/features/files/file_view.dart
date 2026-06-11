@@ -11,7 +11,7 @@ import '../../i18n/strings.g.dart';
 import '../../core/fs/file_sort.dart';
 import '../../core/models/file_entry.dart';
 import '../../core/settings/settings_store.dart';
-import '../../ui/overlays/context_menu.dart';
+import '../../ui/overlays/popup_overlay.dart';
 import '../../ui/theme/app_theme.dart';
 import '../../ui/theme/app_text_styles.dart';
 import '../../utils/drag_drop.dart';
@@ -135,6 +135,29 @@ Signal<bool> fileColumnSignal(FileColumn col) {
   }
 }
 
+/// Parses the saved column order (a CSV of [FileColumn] names) into the full
+/// ordered list. Unknown ids are dropped and any column missing from the saved
+/// string is appended in declaration order, so newly added columns always show.
+List<FileColumn> parseColumnOrder(String csv) {
+  final byName = {for (final c in FileColumn.values) c.name: c};
+  final out = <FileColumn>[];
+  for (final id in csv.split(',')) {
+    final col = byName[id.trim()];
+    if (col != null && !out.contains(col)) out.add(col);
+  }
+  for (final c in FileColumn.values) {
+    if (!out.contains(c)) out.add(c);
+  }
+  return out;
+}
+
+String columnOrderToString(List<FileColumn> columns) =>
+    columns.map((c) => c.name).join(',');
+
+/// All optional columns in the user-defined display order.
+List<FileColumn> orderedColumns() =>
+    parseColumnOrder(SettingsStore.instance.columnOrder.value);
+
 class FileList extends StatefulWidget {
   final List<FileEntry> files;
   final String currentPath;
@@ -225,7 +248,7 @@ class _FileListState extends State<FileList> {
   }
 
   List<FileColumn> _visibleColumns() => [
-    for (final col in FileColumn.values)
+    for (final col in orderedColumns())
       if (fileColumnSignal(col).value) col,
   ];
 
@@ -255,24 +278,11 @@ class _FileListState extends State<FileList> {
   }
 
   void _openColumnMenu(BuildContext context, Offset position) {
-    showContextMenu(
+    showPopup(
       context: context,
       position: position,
-      items: [
-        for (final col in FileColumn.values)
-          ContextMenuItem(
-            icon: WaydirIconsRegular.columns,
-            label: fileColumnLabel(col),
-            action: col.name,
-            isToggle: true,
-            toggleSignal: fileColumnSignal(col),
-          ),
-      ],
-      onSelect: (action) {
-        final col = FileColumn.values.firstWhere((c) => c.name == action);
-        final s = fileColumnSignal(col);
-        s.value = !s.value;
-      },
+      width: 230,
+      builder: (_) => const _ColumnConfigMenu(),
     );
   }
 
@@ -766,7 +776,10 @@ class _ListHeader extends StatelessWidget {
         children: [
           SizedBox(
             width: leadingWidth,
-            child: _ConfigureColumnsButton(onTap: onConfigureColumns),
+            child: Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: _ConfigureColumnsButton(onTap: onConfigureColumns),
+            ),
           ),
           SizedBox(
             width: nameWidth,
@@ -833,13 +846,168 @@ class _ConfigureColumnsButtonState extends State<_ConfigureColumnsButton> {
             : (d) => widget.onTap!(d.globalPosition),
         child: Tooltip(
           message: t.fileView.columns.configure,
-          child: Icon(
-            WaydirIconsRegular.columns,
-            size: 13,
-            color: _hovered ? AppColors.fg : AppColors.fgSubtle,
+          child: Container(
+            height: 18,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: _hovered ? AppColors.bgHoverStrong : Colors.transparent,
+              borderRadius: BorderRadius.circular(3),
+            ),
+            child: Icon(
+              WaydirIconsRegular.slidersHorizontal,
+              size: 14,
+              color: _hovered ? AppColors.fg : AppColors.fgMuted,
+            ),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Popup that lets the user toggle optional file-list columns on/off and
+/// reorder them by dragging, mirroring the sidebar edit-mode interaction.
+class _ColumnConfigMenu extends StatelessWidget {
+  const _ColumnConfigMenu();
+
+  void _reorder(int oldIndex, int newIndex) {
+    final cols = orderedColumns();
+    if (oldIndex < 0 || oldIndex >= cols.length) return;
+    var to = newIndex.clamp(0, cols.length - 1);
+    if (to == oldIndex) return;
+    final moved = cols.removeAt(oldIndex);
+    cols.insert(to, moved);
+    SettingsStore.instance.columnOrder.value = columnOrderToString(cols);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 230,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: AppColors.bgSurface,
+        border: Border.all(color: AppColors.borderColor),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.5),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SignalBuilder(
+            builder: (context) {
+              final cols = orderedColumns();
+              return ReorderableListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                buildDefaultDragHandles: false,
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                itemCount: cols.length,
+                onReorderItem: _reorder,
+                itemBuilder: (context, index) {
+                  final col = cols[index];
+                  return _ColumnConfigRow(
+                    key: ValueKey(col),
+                    col: col,
+                    index: index,
+                  );
+                },
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ColumnConfigRow extends StatefulWidget {
+  final FileColumn col;
+  final int index;
+
+  const _ColumnConfigRow({super.key, required this.col, required this.index});
+
+  @override
+  State<_ColumnConfigRow> createState() => _ColumnConfigRowState();
+}
+
+class _ColumnConfigRowState extends State<_ColumnConfigRow> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final signal = fileColumnSignal(widget.col);
+    final visible = signal.value;
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => signal.value = !signal.value,
+        child: Container(
+          height: 30,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          color: _hovered ? AppColors.bgHoverStrong : Colors.transparent,
+          child: Row(
+            children: [
+              ReorderableDragStartListener(
+                index: widget.index,
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.grab,
+                  child: Icon(
+                    WaydirIconsRegular.list,
+                    size: 14,
+                    color: AppColors.fgSubtle,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  fileColumnLabel(widget.col),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.txt.body.copyWith(
+                    color: visible ? AppColors.fg : AppColors.fgMuted,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              _ColumnCheckbox(value: visible),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ColumnCheckbox extends StatelessWidget {
+  final bool value;
+
+  const _ColumnCheckbox({required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 14,
+      height: 14,
+      decoration: BoxDecoration(
+        color: value ? AppColors.accent : Colors.transparent,
+        border: Border.all(
+          color: value ? AppColors.accent : AppColors.borderColor,
+          width: 1,
+        ),
+      ),
+      child: value
+          ? Icon(WaydirIconsRegular.check, size: 10, color: Colors.white)
+          : null,
     );
   }
 }
