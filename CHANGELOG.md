@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Quick Look preferences: choose the editor font and line height, show line numbers, toggle line wrapping and enable a basic Vim mode for editing previews.
 - File list columns can be configured: toggle Size, Date modified, Kind, Date created, Permissions and Owner on or off, and drag to reorder them. Every column is sortable.
 - The path bar now expands `~` to the home folder. ([@fwitkowski17](https://github.com/fwitkowski17))
 - macOS: Waydir now prompts for Full Disk Access when needed. ([@fwitkowski17](https://github.com/fwitkowski17))
