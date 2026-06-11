@@ -296,15 +296,35 @@ class _FileListState extends State<FileList> {
         });
 
         if (widget.files.isEmpty) {
-          return GestureDetector(
-            onTap: widget.onBackgroundTap,
-            onSecondaryTapUp: widget.onBackgroundContextMenu != null
-                ? (d) => widget.onBackgroundContextMenu!(d.globalPosition)
-                : null,
-            behavior: HitTestBehavior.opaque,
-            child: _EmptyState(
-              isSearching: widget.recursiveResults,
-              onCloseSearch: widget.onCloseSearch,
+          return DropRegion(
+            formats: [Formats.fileUri, formatLocalFile],
+            hitTestBehavior: HitTestBehavior.opaque,
+            onDropOver: (event) =>
+                DragHintController.instance.mode.value == DragMode.move
+                ? DropOperation.move
+                : DropOperation.copy,
+            onPerformDrop: (event) async {
+              final paths = await pathsFromSession(event.session);
+              final move =
+                  DragHintController.instance.mode.value == DragMode.move;
+              if (paths.isNotEmpty) {
+                widget.onDropFiles?.call(
+                  paths,
+                  widget.currentPath,
+                  move: move,
+                );
+              }
+            },
+            child: GestureDetector(
+              onTap: widget.onBackgroundTap,
+              onSecondaryTapUp: widget.onBackgroundContextMenu != null
+                  ? (d) => widget.onBackgroundContextMenu!(d.globalPosition)
+                  : null,
+              behavior: HitTestBehavior.opaque,
+              child: _EmptyState(
+                isSearching: widget.recursiveResults,
+                onCloseSearch: widget.onCloseSearch,
+              ),
             ),
           );
         }
