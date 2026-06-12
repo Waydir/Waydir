@@ -19,6 +19,27 @@ Future<void> showChangelogDialog(BuildContext context) {
   );
 }
 
+String _releasesOnly(String raw) {
+  final lines = raw.split('\n');
+  final versionHeading = RegExp(r'^## \[\d+\.\d+\.\d+\]');
+  final refLink = RegExp(r'^\[.+\]: http');
+  final start = lines.indexWhere(versionHeading.hasMatch);
+  if (start < 0) return raw.trim();
+  var end = lines.length;
+  for (var i = start; i < lines.length; i++) {
+    if (refLink.hasMatch(lines[i])) {
+      end = i;
+      break;
+    }
+  }
+  final version = RegExp(r'\[(\d+\.\d+\.\d+)\]');
+  return lines
+      .sublist(start, end)
+      .map((line) => line.replaceFirstMapped(version, (m) => m[1]!))
+      .join('\n')
+      .trim();
+}
+
 void _openLink(String url) {
   final cmd = Platform.isWindows
       ? 'explorer'
@@ -54,7 +75,7 @@ class _ChangelogDialog extends StatelessWidget {
               child: Text(t.changelog.loadError, style: context.txt.bodyMuted),
             );
           }
-          return _ChangelogMarkdown(data: snapshot.data!);
+          return _ChangelogMarkdown(data: _releasesOnly(snapshot.data!));
         },
       ),
     );

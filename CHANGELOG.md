@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The path bar now expands environment variables: `%VAR%` on Windows and `$VAR`/`${VAR}` on Linux and macOS. ([#163](https://github.com/Waydir/Waydir/issues/163))
 - Command-line support: launch Waydir with folder paths and options to open straight to a location. Run `waydir --help` for details. ([#164](https://github.com/Waydir/Waydir/issues/164))
 
+### Changed
+- The changelog viewer now shows only released versions with cleaner headings.
+
 ## [0.15.0] - 2026-06-11
 
 ### Added
