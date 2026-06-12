@@ -150,4 +150,64 @@ void main() {
       expect(PlatformPaths.expandTilde('~/Docs'), r'C:\Users\tester\Docs');
     });
   });
+
+  group('PlatformPaths.expandEnvVars', () {
+    tearDown(() {
+      PlatformPaths.environmentOverrideForTesting = null;
+      PlatformPaths.isWindowsOverrideForTesting = null;
+    });
+
+    test('expands %VAR% on Windows, case-insensitively', () {
+      PlatformPaths.isWindowsOverrideForTesting = true;
+      PlatformPaths.environmentOverrideForTesting = {
+        'APPDATA': r'C:\Users\tester\AppData\Roaming',
+      };
+      expect(
+        PlatformPaths.expandEnvVars(r'%appdata%\Waydir'),
+        r'C:\Users\tester\AppData\Roaming\Waydir',
+      );
+      expect(
+        PlatformPaths.expandEnvVars('%APPDATA%'),
+        r'C:\Users\tester\AppData\Roaming',
+      );
+    });
+
+    test('leaves unknown %VAR% untouched on Windows', () {
+      PlatformPaths.isWindowsOverrideForTesting = true;
+      PlatformPaths.environmentOverrideForTesting = {};
+      expect(PlatformPaths.expandEnvVars(r'%nope%\x'), r'%nope%\x');
+    });
+
+    test('expands \$VAR and \${VAR} on Linux', () {
+      PlatformPaths.isWindowsOverrideForTesting = false;
+      PlatformPaths.environmentOverrideForTesting = {'HOME': '/home/tester'};
+      expect(
+        PlatformPaths.expandEnvVars(r'$HOME/Documents'),
+        '/home/tester/Documents',
+      );
+      expect(PlatformPaths.expandEnvVars(r'${HOME}/a'), '/home/tester/a');
+    });
+
+    test('does not treat %VAR% as a variable on Linux', () {
+      PlatformPaths.isWindowsOverrideForTesting = false;
+      PlatformPaths.environmentOverrideForTesting = {'HOME': '/home/tester'};
+      expect(PlatformPaths.expandEnvVars('%HOME%/x'), '%HOME%/x');
+    });
+
+    test('leaves unknown \$VAR untouched on Linux', () {
+      PlatformPaths.isWindowsOverrideForTesting = false;
+      PlatformPaths.environmentOverrideForTesting = {};
+      expect(PlatformPaths.expandEnvVars(r'$NOPE/x'), r'$NOPE/x');
+    });
+
+    test('leaves remote URIs and empty strings unchanged', () {
+      PlatformPaths.isWindowsOverrideForTesting = false;
+      PlatformPaths.environmentOverrideForTesting = {'X': 'y'};
+      expect(
+        PlatformPaths.expandEnvVars('smb://server/\$X'),
+        'smb://server/\$X',
+      );
+      expect(PlatformPaths.expandEnvVars(''), '');
+    });
+  });
 }

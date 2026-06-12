@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- The path bar now expands environment variables: `%VAR%` on Windows and `$VAR`/`${VAR}` on Linux and macOS. ([#163](https://github.com/Waydir/Waydir/issues/163))
+
 ## [0.15.0] - 2026-06-11
 
 ### Added

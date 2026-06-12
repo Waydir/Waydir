@@ -10,6 +10,7 @@ class PlatformPaths {
   static String? trashPathOverride;
   static bool? isWindowsOverrideForTesting;
   static String? homePathOverrideForTesting;
+  static Map<String, String>? environmentOverrideForTesting;
   static final p.Context _windowsPath = p.Context(style: p.Style.windows);
 
   static String get separator => Platform.pathSeparator;
@@ -307,6 +308,24 @@ class PlatformPaths {
       return join(homePath, path.substring(2));
     }
     return path;
+  }
+
+  static String expandEnvVars(String path) {
+    if (path.isEmpty || isRemoteUri(path)) return path;
+    final env = environmentOverrideForTesting ?? Platform.environment;
+    if (isWindows) {
+      return path.replaceAllMapped(RegExp(r'%([^%]+)%'), (m) {
+        final name = m[1]!.toLowerCase();
+        for (final e in env.entries) {
+          if (e.key.toLowerCase() == name) return e.value;
+        }
+        return m[0]!;
+      });
+    }
+    return path.replaceAllMapped(
+      RegExp(r'\$(?:\{([A-Za-z_][A-Za-z0-9_]*)\}|([A-Za-z_][A-Za-z0-9_]*))'),
+      (m) => env[m[1] ?? m[2]!] ?? m[0]!,
+    );
   }
 
   static String normalize(String path) {
