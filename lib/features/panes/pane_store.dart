@@ -20,6 +20,16 @@ class PaneStore {
          activeTabIndex: activeTabIndex,
        );
 
+  PaneStore.fromSpecs({
+    required OperationStore operationStore,
+    required List<TabSpec> specs,
+    int activeTabIndex = 0,
+  }) : tabs = TabsStore.fromSpecs(
+         operationStore: operationStore,
+         specs: specs,
+         activeTabIndex: activeTabIndex,
+       );
+
   void dispose() {
     tabs.dispose();
   }

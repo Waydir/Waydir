@@ -4,6 +4,12 @@ import '../navigation/navigation_store.dart';
 import '../operations/operation_store.dart';
 import 'tab_state.dart';
 
+class TabSpec {
+  final String path;
+  final String? select;
+  const TabSpec(this.path, [this.select]);
+}
+
 class TabsStore {
   final tabs = signal<List<TabState>>([]);
   final activeIndex = signal(0);
@@ -38,10 +44,29 @@ class TabsStore {
     activeIndex.value = activeTabIndex.clamp(0, tabs.value.length - 1);
   }
 
-  void addTab(String path, {bool activate = true}) {
+  TabsStore.fromSpecs({
+    required this.operationStore,
+    required List<TabSpec> specs,
+    int activeTabIndex = 0,
+  }) {
+    if (specs.isEmpty) {
+      addTab(PlatformPaths.homePath);
+      return;
+    }
+    for (final spec in specs) {
+      addTab(spec.path, activate: false, select: spec.select);
+    }
+    activeIndex.value = activeTabIndex.clamp(0, tabs.value.length - 1);
+  }
+
+  void addTab(String path, {bool activate = true, String? select}) {
     final tab = TabState(
       id: '${_idCounter++}',
-      store: NavigationStore(operationStore: operationStore, initialPath: path),
+      store: NavigationStore(
+        operationStore: operationStore,
+        initialPath: path,
+        initialSelect: select,
+      ),
     );
     tabs.value = [...tabs.value, tab];
     if (activate) {

@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'ui/window/window.dart';
 import 'app/app_info.dart';
+import 'app/launch_args.dart';
 import 'app/waydir_app.dart';
 import 'core/fs/fs_backend.dart';
 import 'core/fs/fs_worker_pool.dart';
@@ -22,6 +24,12 @@ void main(List<String> args) async {
   runZonedGuarded(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
+
+      LaunchArgs.parse(args);
+      if (LaunchArgs.options.showHelp) {
+        stdout.writeln(LaunchArgs.helpText);
+        exit(0);
+      }
 
       await AppLogger.instance.init();
 
@@ -47,6 +55,10 @@ void main(List<String> args) async {
       await SidebarStore.instance.load();
       await PluginSettingsStore.instance.load(SettingsStore.instance.db);
       await AppInfo.init();
+      if (LaunchArgs.options.showVersion) {
+        stdout.writeln('Waydir ${AppInfo.version.value}');
+        exit(0);
+      }
       const fakeVersion = String.fromEnvironment('WAYDIR_FAKE_VERSION');
       UpdateStore.init(
         currentVersion: fakeVersion.isNotEmpty

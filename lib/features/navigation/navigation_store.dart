@@ -54,6 +54,7 @@ class NavigationStore {
   final fileListFocusRequest = signal(0);
   final _trashEntries = <String, TrashEntry>{};
   int _loadToken = 0;
+  String? _pendingInitialSelect;
 
   /// Effective sort for the current folder (per-folder, falls back to the
   /// global defaults in [SettingsStore]).
@@ -311,11 +312,16 @@ class NavigationStore {
     () => clipboardPaths.value.isNotEmpty && clipboardMode.value != null,
   );
 
-  NavigationStore({required this.operationStore, String? initialPath}) {
+  NavigationStore({
+    required this.operationStore,
+    String? initialPath,
+    String? initialSelect,
+  }) {
     final startPath = initialPath ?? PlatformPaths.homePath;
     currentPath.value = startPath;
     history.value = [startPath];
     showHidden.value = SettingsStore.instance.showHiddenDefault.value;
+    _pendingInitialSelect = initialSelect;
     _loadSortFor(startPath);
     loadDirectory(startPath);
     _setupShowHiddenEffect();
@@ -992,7 +998,23 @@ class NavigationStore {
         .catchError((_) {});
   }
 
+  void _applyPendingSelect() {
+    final target = _pendingInitialSelect;
+    if (target == null) return;
+    _pendingInitialSelect = null;
+    final list = _vf;
+    final idx = list.indexWhere((f) => f.path == target);
+    batch(() {
+      selectedPaths.value = {target};
+      if (idx >= 0) {
+        cursorIndex.value = idx;
+        anchorIndex.value = idx;
+      }
+    });
+  }
+
   Future<void> _restoreFolderStateIfMatches(String path) async {
+    if (_pendingInitialSelect != null) return;
     final s = SettingsStore.instance;
     if (!s.rememberFolderState.value) return;
     _FolderState? state = _folderStateCache[path];
@@ -1206,6 +1228,7 @@ class NavigationStore {
         isLoading.value = false;
       });
       _restoreFolderStateIfMatches(path);
+      _applyPendingSelect();
       if (isTrashPath(path) || PlatformPaths.isNetworkPath(path)) {
         _watcher.stop();
       } else {

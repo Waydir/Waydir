@@ -7,6 +7,7 @@ import 'package:flutter/widgets.dart';
 import 'package:path/path.dart' as p;
 import 'package:signals/signals.dart';
 
+import '../../app/launch_args.dart';
 import '../../core/database/app_database.dart';
 import '../../core/logging/app_logger.dart';
 import '../../core/platform/platform_paths.dart';
@@ -18,6 +19,7 @@ import '../navigation/navigation_store.dart';
 import '../operations/operation_store.dart';
 import '../../ui/overlays/notification_store.dart';
 import '../../i18n/strings.g.dart';
+import '../tabs/tabs_store.dart';
 import 'pane_store.dart';
 import 'terminal_layout.dart';
 import 'terminal_tab.dart';
@@ -101,6 +103,12 @@ class ShellStore {
     final s = SettingsStore.instance;
     final db = s.db;
 
+    final launch = LaunchArgs.options;
+    if (launch.opensLocation) {
+      _buildLaunchSession(launch);
+      return;
+    }
+
     final savedTabs = s.restoreSession.value ? await db.getTabs() : const [];
 
     String initialPathFor() {
@@ -158,6 +166,39 @@ class ShellStore {
         ready.value = true;
       });
     }
+  }
+
+  void _buildLaunchSession(LaunchOptions launch) {
+    final specs = <TabSpec>[
+      for (final folder in launch.folders) TabSpec(folder),
+      if (launch.selectPath != null)
+        TabSpec(PlatformPaths.parentOf(launch.selectPath!), launch.selectPath),
+    ];
+    if (specs.isEmpty) specs.add(TabSpec(PlatformPaths.homePath));
+
+    final wantDual = launch.split && specs.length >= 2;
+    batch(() {
+      if (wantDual) {
+        panes.value = [
+          PaneStore.fromSpecs(
+            operationStore: operationStore,
+            specs: [specs.first, ...specs.skip(2)],
+          ),
+          PaneStore.fromSpecs(
+            operationStore: operationStore,
+            specs: [specs[1]],
+          ),
+        ];
+        isDual.value = true;
+      } else {
+        panes.value = [
+          PaneStore.fromSpecs(operationStore: operationStore, specs: specs),
+        ];
+        isDual.value = false;
+      }
+      activePaneIndex.value = 0;
+      ready.value = true;
+    });
   }
 
   void _wirePersistence() {
