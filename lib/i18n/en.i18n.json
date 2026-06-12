@@ -561,6 +561,7 @@
     "path": "Path",
     "location": "Location",
     "modified": "Modified",
+    "created": "Created",
     "typeFolder": "Folder",
     "typeFile": "File",
     "dimensions": "Dimensions",

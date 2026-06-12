@@ -1014,6 +1014,9 @@ class Translations$quickLook$en {
 	/// en: 'Modified'
 	String get modified => 'Modified';
 
+	/// en: 'Created'
+	String get created => 'Created';
+
 	/// en: 'Folder'
 	String get typeFolder => 'Folder';
 
@@ -3640,6 +3643,7 @@ extension on Translations {
 			'quickLook.path' => 'Path',
 			'quickLook.location' => 'Location',
 			'quickLook.modified' => 'Modified',
+			'quickLook.created' => 'Created',
 			'quickLook.typeFolder' => 'Folder',
 			'quickLook.typeFile' => 'File',
 			'quickLook.dimensions' => 'Dimensions',
@@ -3672,9 +3676,9 @@ extension on Translations {
 			'toast.taskErrors' => ({required Object label, required Object count}) => '${label} - ${count} errors',
 			'toast.renameAlreadyExists' => ({required Object name}) => 'An item named \'${name}\' already exists',
 			'toast.renameInvalidName' => 'Invalid name',
-			'toast.renameError' => ({required Object message}) => 'Could not rename: ${message}',
 			_ => null,
 		} ?? switch (path) {
+			'toast.renameError' => ({required Object message}) => 'Could not rename: ${message}',
 			'toast.multiRenameSuccess' => ({required Object count}) => 'Renamed ${count} files',
 			'toast.multiRenamePartial' => ({required Object succeeded, required Object total, required Object details}) => 'Renamed ${succeeded} of ${total} (${details})',
 			'toast.multiRenameCollisions' => ({required Object count}) => '${count} already existed',

@@ -3,13 +3,13 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart' as intl;
 import 'package:waydir/ui/icons/waydir_icons.dart' show WaydirIconsRegular;
 import 'package:signals/signals_flutter.dart';
 import 'package:super_drag_and_drop/super_drag_and_drop.dart';
 import '../../i18n/strings.g.dart';
 import '../../core/fs/file_sort.dart';
 import '../../core/models/file_entry.dart';
+import '../../core/platform/platform_paths.dart';
 import '../../core/settings/settings_store.dart';
 import '../../ui/overlays/popup_overlay.dart';
 import '../../ui/theme/app_theme.dart';
@@ -154,9 +154,21 @@ List<FileColumn> parseColumnOrder(String csv) {
 String columnOrderToString(List<FileColumn> columns) =>
     columns.map((c) => c.name).join(',');
 
+/// Whether [col] is meaningful on the current platform. Permissions and owner
+/// are POSIX concepts that Windows doesn't expose, so they're hidden there.
+bool columnAvailable(FileColumn col) {
+  if (PlatformPaths.isWindows &&
+      (col == FileColumn.permissions || col == FileColumn.owner)) {
+    return false;
+  }
+  return true;
+}
+
 /// All optional columns in the user-defined display order.
-List<FileColumn> orderedColumns() =>
-    parseColumnOrder(SettingsStore.instance.columnOrder.value);
+List<FileColumn> orderedColumns() => [
+  for (final col in parseColumnOrder(SettingsStore.instance.columnOrder.value))
+    if (columnAvailable(col)) col,
+];
 
 class FileList extends StatefulWidget {
   final List<FileEntry> files;
@@ -1615,61 +1627,7 @@ String _formatDateBy(
   DateTime d,
   String mode, {
   required bool recentDatesRelative,
-}) {
-  switch (mode) {
-    case 'locale':
-      if (recentDatesRelative && _isRecentDate(d)) return _formatRelative(d);
-      return _formatLocale(d);
-    case 'relative':
-      return _formatRelative(d);
-    case 'iso':
-    default:
-      return _formatIso(d);
-  }
-}
-
-bool _isRecentDate(DateTime d) {
-  final diff = DateTime.now().difference(d);
-  return !diff.isNegative && diff.inHours < 24;
-}
-
-String _formatIso(DateTime d) {
-  return '${d.year}-'
-      '${d.month.toString().padLeft(2, '0')}-'
-      '${d.day.toString().padLeft(2, '0')} '
-      '${d.hour.toString().padLeft(2, '0')}:'
-      '${d.minute.toString().padLeft(2, '0')}';
-}
-
-String _formatLocale(DateTime d) {
-  final locale = intl.Intl.canonicalizedLocale(
-    ui.PlatformDispatcher.instance.locale.toLanguageTag(),
-  );
-  try {
-    return intl.DateFormat.yMd(locale).add_jm().format(d);
-  } catch (_) {
-    return _formatIso(d);
-  }
-}
-
-String _formatRelative(DateTime d) {
-  final diff = DateTime.now().difference(d);
-  if (diff.inSeconds < 60) return t.fileView.date.justNow;
-  if (diff.inMinutes < 60) {
-    return t.fileView.date.minutesAgo(count: diff.inMinutes);
-  }
-  if (diff.inHours < 24) {
-    return t.fileView.date.hoursAgo(count: diff.inHours);
-  }
-  if (diff.inDays < 7) return t.fileView.date.daysAgo(count: diff.inDays);
-  if (diff.inDays < 30) {
-    return t.fileView.date.weeksAgo(count: (diff.inDays / 7).floor());
-  }
-  if (diff.inDays < 365) {
-    return t.fileView.date.monthsAgo(count: (diff.inDays / 30).floor());
-  }
-  return t.fileView.date.yearsAgo(count: (diff.inDays / 365).floor());
-}
+}) => formatEntryDate(d, mode, recentDatesRelative: recentDatesRelative);
 
 class _PinnedVerticalScrollbar extends StatelessWidget {
   final ScrollController controller;

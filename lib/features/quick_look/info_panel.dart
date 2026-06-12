@@ -8,6 +8,7 @@ import '../../core/fs/sftp_session_manager.dart';
 import '../../core/fs/waydir_core_loader.dart';
 import '../../core/models/file_entry.dart';
 import '../../core/platform/platform_paths.dart';
+import '../../core/settings/settings_store.dart';
 import '../../i18n/strings.g.dart';
 import '../../utils/format.dart';
 import '../../ui/theme/app_theme.dart';
@@ -15,6 +16,15 @@ import '../../ui/theme/app_text_styles.dart';
 import '../files/file_icons.dart';
 import 'quick_look_common.dart';
 import 'quick_look_io.dart';
+
+String _formatStatDate(DateTime d) {
+  final s = SettingsStore.instance;
+  return formatEntryDate(
+    d,
+    s.dateFormat.value,
+    recentDatesRelative: s.recentDatesRelative.value,
+  );
+}
 
 class SectionLabel extends StatelessWidget {
   final String text;
@@ -350,13 +360,14 @@ class _StatRows extends StatelessWidget {
           children: [
             PropRow(
               label: t.quickLook.accessed,
-              value: formatTimeAgo(stat.accessed),
+              value: _formatStatDate(stat.accessed),
             ),
             PropRow(
               label: t.quickLook.changed,
-              value: formatTimeAgo(stat.changed),
+              value: _formatStatDate(stat.changed),
             ),
-            PropRow(label: t.quickLook.permissions, value: stat.modeString()),
+            if (!PlatformPaths.isWindows)
+              PropRow(label: t.quickLook.permissions, value: stat.modeString()),
           ],
         );
       },
@@ -376,7 +387,8 @@ List<Widget> propertyRows(FileEntry e) {
           : e.extension.toUpperCase(),
     ),
     _SizeRows(entry: e),
-    PropRow(label: t.quickLook.modified, value: formatTimeAgo(e.modified)),
+    PropRow(label: t.quickLook.modified, value: _formatStatDate(e.modified)),
+    PropRow(label: t.quickLook.created, value: _formatStatDate(e.created)),
     const SizedBox(height: 16),
     SectionLabel(t.quickLook.sectionDetails),
     PropRow(label: t.quickLook.location, value: PlatformPaths.parentOf(e.path)),

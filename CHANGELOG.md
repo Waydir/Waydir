@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - The changelog viewer now shows only released versions with cleaner headings.
+- Quick Look now shows a Created date and formats dates using your date-format preference.
+
+### Fixed
+- Windows: the Permissions and Owner columns and the Quick Look permissions row, which are POSIX-only, are no longer shown.
 
 ## [0.15.0] - 2026-06-11
 
