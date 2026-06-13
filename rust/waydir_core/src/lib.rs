@@ -9,6 +9,7 @@ mod codec;
 mod enumerate;
 mod folder_scan;
 mod list;
+mod pdf;
 mod plugin;
 mod pty;
 mod search;
@@ -23,6 +24,7 @@ pub use folder_scan::{
     waydir_folder_scan_start, FolderScanSession,
 };
 pub use list::waydir_list;
+pub use pdf::{waydir_pdf_page_sizes, waydir_pdf_render};
 pub use plugin::{waydir_plugin_invoke, waydir_plugin_load, waydir_plugin_str_free};
 pub use pty::{
     waydir_pty_alive, waydir_pty_close, waydir_pty_open, waydir_pty_read, waydir_pty_resize,
@@ -54,7 +56,7 @@ pub unsafe extern "C" fn waydir_free(ptr: *mut u8, len: usize) {
 
 #[no_mangle]
 pub extern "C" fn waydir_core_abi() -> u32 {
-    14
+    16
 }
 
 #[no_mangle]

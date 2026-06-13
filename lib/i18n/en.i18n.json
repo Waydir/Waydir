@@ -564,6 +564,7 @@
     "contains": "Contains",
     "calculating": "Calculating…",
     "items": "$count items",
+    "pdfPages": "$count pages",
     "sectionDetails": "Details",
     "info": "Information",
     "name": "Name",

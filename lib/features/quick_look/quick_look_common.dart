@@ -5,6 +5,8 @@ import '../../ui/theme/app_text_styles.dart';
 
 const imageExts = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'};
 
+const pdfExts = {'pdf'};
+
 /// Extensions that are never useful to preview as text — route straight to
 /// properties without reading the file.
 const binaryExts = {
@@ -28,7 +30,6 @@ const binaryExts = {
   'lib',
   'class',
   'jar',
-  'pdf',
   'doc',
   'docx',
   'xls',

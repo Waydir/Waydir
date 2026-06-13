@@ -14,6 +14,7 @@ import '../../ui/theme/app_text_styles.dart';
 import 'code_editor.dart';
 import 'image_preview.dart';
 import 'info_panel.dart';
+import 'pdf_preview.dart';
 import 'quick_look_common.dart';
 import 'quick_look_io.dart';
 
@@ -167,7 +168,8 @@ class _QuickLookState extends State<_QuickLook> {
 
   static bool _defaultCompact(FileEntry? entry) {
     if (entry == null || entry.type == FileItemType.folder) return true;
-    return !imageExts.contains(entry.extension);
+    final ext = entry.extension;
+    return !imageExts.contains(ext) && !pdfExts.contains(ext);
   }
 
   void _setCompact(bool value) {
@@ -614,6 +616,11 @@ class _Body extends StatelessWidget {
       release();
       onCompactChanged(false);
       return _split(ImagePreview(path: e.realPath), e, showInfo: showInfo);
+    }
+    if (pdfExts.contains(e.extension)) {
+      release();
+      onCompactChanged(false);
+      return _split(PdfPreview(path: e.realPath), e, showInfo: showInfo);
     }
     if (binaryExts.contains(e.extension)) {
       release();

@@ -1011,6 +1011,9 @@ class Translations$quickLook$en {
 	/// en: '$count items'
 	String items({required Object count}) => '${count} items';
 
+	/// en: '$count pages'
+	String pdfPages({required Object count}) => '${count} pages';
+
 	/// en: 'Details'
 	String get sectionDetails => 'Details';
 
@@ -3691,6 +3694,7 @@ extension on Translations {
 			'quickLook.contains' => 'Contains',
 			'quickLook.calculating' => 'Calculating…',
 			'quickLook.items' => ({required Object count}) => '${count} items',
+			'quickLook.pdfPages' => ({required Object count}) => '${count} pages',
 			'quickLook.sectionDetails' => 'Details',
 			'quickLook.info' => 'Information',
 			'quickLook.name' => 'Name',
@@ -3720,9 +3724,9 @@ extension on Translations {
 			'quickLook.noExtension' => 'no extension',
 			'quickLook.sectionImage' => 'Image',
 			'quickLook.sectionText' => 'Text',
-			'quickLook.hintSwitchFile' => 'Switch file',
 			_ => null,
 		} ?? switch (path) {
+			'quickLook.hintSwitchFile' => 'Switch file',
 			'quickLook.hintClose' => 'Close',
 			'toast.copiedItems' => ({required Object count}) => 'Copied ${count} items',
 			'toast.cutItems' => ({required Object count}) => 'Cut ${count} items',

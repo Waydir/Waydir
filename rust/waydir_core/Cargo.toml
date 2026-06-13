@@ -21,6 +21,7 @@ uuid = { version = "1", features = ["v4"] }
 portable-pty = "0.9"
 mlua = { version = "0.11.6", features = ["lua54", "vendored", "serde"] }
 serde_json = "1"
+pdfium-render = "0.9.1"
 
 [profile.release]
 opt-level = 3

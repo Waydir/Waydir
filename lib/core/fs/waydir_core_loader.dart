@@ -133,6 +133,34 @@ typedef _AbiDart = int Function();
 typedef _StrNative = Pointer<Utf8> Function();
 typedef _StrDart = Pointer<Utf8> Function();
 
+// PDF
+
+typedef _PdfSizesNative =
+    Pointer<Uint8> Function(Pointer<Utf8>, Pointer<Utf8>, Pointer<IntPtr>);
+typedef _PdfSizesDart =
+    Pointer<Uint8> Function(Pointer<Utf8>, Pointer<Utf8>, Pointer<IntPtr>);
+
+typedef _PdfRenderNative =
+    Pointer<Uint8> Function(
+      Pointer<Utf8>,
+      Pointer<Utf8>,
+      Int32,
+      Int32,
+      Pointer<Int32>,
+      Pointer<Int32>,
+      Pointer<IntPtr>,
+    );
+typedef _PdfRenderDart =
+    Pointer<Uint8> Function(
+      Pointer<Utf8>,
+      Pointer<Utf8>,
+      int,
+      int,
+      Pointer<Int32>,
+      Pointer<Int32>,
+      Pointer<IntPtr>,
+    );
+
 // SFTP
 
 final class SftpStatStruct extends Struct {
@@ -291,6 +319,13 @@ class FolderScanPollResult {
   const FolderScanPollResult(this.bytes, this.items, this.done);
 }
 
+class PdfRenderedPage {
+  final int width;
+  final int height;
+  final Uint8List rgba;
+  const PdfRenderedPage(this.width, this.height, this.rgba);
+}
+
 class WaydirTrashFailure {
   final String path;
   final String message;
@@ -322,10 +357,11 @@ class NativeTrashItem {
 class WaydirCoreLoader {
   WaydirCoreLoader._();
 
-  static const int _requiredAbi = 14;
+  static const int _requiredAbi = 16;
 
   static DynamicLibrary? _cached;
   static bool _tried = false;
+  static String? _resolvedPath;
 
   static DynamicLibrary? load() {
     if (_tried) return _cached;
@@ -341,6 +377,7 @@ class WaydirCoreLoader {
           continue;
         }
         _cached = lib;
+        _resolvedPath = path;
         return lib;
       } catch (e) {
         failures.add('$path: $e');
@@ -1235,6 +1272,102 @@ class WaydirCoreLoader {
       'waydir_pty_close',
     );
     fn(id);
+  }
+
+  /// Full path to the vendored Pdfium library, resolved next to the loaded
+  /// `waydir_core`. Empty string when the core was found by bare name, letting
+  /// the native side fall back to a system-installed Pdfium.
+  static String _pdfiumPath() {
+    final core = _resolvedPath;
+    if (core == null || !core.contains(Platform.pathSeparator)) return '';
+    final name = Platform.isWindows
+        ? 'pdfium.dll'
+        : Platform.isMacOS
+        ? 'libpdfium.dylib'
+        : 'libpdfium.so';
+    return p.join(p.dirname(core), name);
+  }
+
+  /// Aspect ratio (height / width) of every page in [pdfPath]. Lets the UI
+  /// reserve each page's height before it is rendered, keeping the scrollbar
+  /// stable. Returns null on failure.
+  static List<double>? pdfPageAspects(String pdfPath) {
+    final lib = requireLib();
+    final fn = lib.lookupFunction<_PdfSizesNative, _PdfSizesDart>(
+      'waydir_pdf_page_sizes',
+    );
+    final free = lib.lookupFunction<_FreeNative, _FreeDart>('waydir_free');
+    final libPtr = _pdfiumPath().toNativeUtf8();
+    final pathPtr = pdfPath.toNativeUtf8();
+    final outLen = calloc<IntPtr>();
+    try {
+      final buf = fn(libPtr, pathPtr, outLen);
+      if (buf == nullptr) return null;
+      final len = outLen.value;
+      final bytes = Uint8List.fromList(buf.asTypedList(len));
+      free(buf, len);
+      final data = ByteData.sublistView(bytes);
+      final count = data.getUint32(0, Endian.big);
+      final aspects = <double>[];
+      var off = 4;
+      for (var i = 0; i < count && off + 8 <= bytes.length; i++) {
+        final w = data.getFloat32(off, Endian.big);
+        final h = data.getFloat32(off + 4, Endian.big);
+        off += 8;
+        aspects.add(w > 0 && h > 0 ? h / w : 1.414);
+      }
+      return aspects;
+    } catch (_) {
+      return null;
+    } finally {
+      calloc.free(libPtr);
+      calloc.free(pathPtr);
+      calloc.free(outLen);
+    }
+  }
+
+  /// Renders page [pageIndex] of [pdfPath] to an RGBA8888 buffer scaled to
+  /// [targetWidth]. Returns null on failure. Runs synchronously and blocks the
+  /// calling isolate, so callers should invoke it off the UI thread.
+  static PdfRenderedPage? pdfRenderPage(
+    String pdfPath,
+    int pageIndex,
+    int targetWidth,
+  ) {
+    final lib = requireLib();
+    final fn = lib.lookupFunction<_PdfRenderNative, _PdfRenderDart>(
+      'waydir_pdf_render',
+    );
+    final free = lib.lookupFunction<_FreeNative, _FreeDart>('waydir_free');
+    final libPtr = _pdfiumPath().toNativeUtf8();
+    final pathPtr = pdfPath.toNativeUtf8();
+    final outW = calloc<Int32>();
+    final outH = calloc<Int32>();
+    final outLen = calloc<IntPtr>();
+    try {
+      final buf = fn(
+        libPtr,
+        pathPtr,
+        pageIndex,
+        targetWidth,
+        outW,
+        outH,
+        outLen,
+      );
+      if (buf == nullptr) return null;
+      final len = outLen.value;
+      final copy = Uint8List.fromList(buf.asTypedList(len));
+      free(buf, len);
+      return PdfRenderedPage(outW.value, outH.value, copy);
+    } catch (_) {
+      return null;
+    } finally {
+      calloc.free(libPtr);
+      calloc.free(pathPtr);
+      calloc.free(outW);
+      calloc.free(outH);
+      calloc.free(outLen);
+    }
   }
 
   static List<String> _candidatePaths() {

@@ -447,14 +447,16 @@
 			);
 			inputPaths = (
 				"$(SRCROOT)/../third_party/waydir_core/macos/libwaydir_core.dylib",
+				"$(SRCROOT)/../third_party/waydir_core/macos/libpdfium.dylib",
 			);
 			name = "Bundle waydir_core";
 			outputPaths = (
 				"$(TARGET_BUILD_DIR)/$(FRAMEWORKS_FOLDER_PATH)/libwaydir_core.dylib",
+				"$(TARGET_BUILD_DIR)/$(FRAMEWORKS_FOLDER_PATH)/libpdfium.dylib",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -e\nSRC=\"${SRCROOT}/../third_party/waydir_core/macos/libwaydir_core.dylib\"\nDST_DIR=\"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\nDST=\"${DST_DIR}/libwaydir_core.dylib\"\nif [ ! -f \"$SRC\" ]; then\n  echo \"error: libwaydir_core.dylib not found at $SRC — run scripts/build_waydir_core.sh first\" >&2\n  exit 1\nfi\nmkdir -p \"$DST_DIR\"\ncp -f \"$SRC\" \"$DST\"\nif [ -n \"${EXPANDED_CODE_SIGN_IDENTITY:-}\" ]; then\n  codesign --force --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" --preserve-metadata=identifier,entitlements --timestamp=none \"$DST\"\nfi\n";
+			shellScript = "set -e\nSRC_DIR=\"${SRCROOT}/../third_party/waydir_core/macos\"\nDST_DIR=\"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\nif [ ! -f \"$SRC_DIR/libwaydir_core.dylib\" ]; then\n  echo \"error: libwaydir_core.dylib not found in $SRC_DIR — run scripts/build_waydir_core.sh first\" >&2\n  exit 1\nfi\nmkdir -p \"$DST_DIR\"\nfor SRC in \"$SRC_DIR\"/*.dylib; do\n  DST=\"$DST_DIR/$(basename \"$SRC\")\"\n  cp -f \"$SRC\" \"$DST\"\n  if [ -n \"${EXPANDED_CODE_SIGN_IDENTITY:-}\" ]; then\n    codesign --force --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" --preserve-metadata=identifier,entitlements --timestamp=none \"$DST\"\n  fi\ndone\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
