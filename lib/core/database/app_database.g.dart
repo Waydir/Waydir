@@ -514,7 +514,7 @@ class $AppSettingsTable extends AppSettings
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'CHECK ("show_column_kind" IN (0, 1))',
     ),
-    defaultValue: const Constant(false),
+    defaultValue: const Constant(true),
   );
   static const VerificationMeta _showColumnCreatedMeta = const VerificationMeta(
     'showColumnCreated',
@@ -571,7 +571,7 @@ class $AppSettingsTable extends AppSettings
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultValue: const Constant('size,date,kind,created,permissions,owner'),
+    defaultValue: const Constant('kind,size,date,created,permissions,owner'),
   );
   static const VerificationMeta _quickLookUseSystemFontMeta =
       const VerificationMeta('quickLookUseSystemFont');

@@ -69,6 +69,61 @@ void main() {
       expect(entry.extension, 'gz');
     });
 
+    test('kind returns folder label for folders', () {
+      final entry = FileEntry(
+        name: 'Projects',
+        path: '/home/user/Projects',
+        type: FileItemType.folder,
+        size: 4096,
+        modified: DateTime(2025, 1, 1),
+      );
+      expect(entry.kind, 'Folder');
+    });
+
+    test('kind returns descriptive labels for known extensions', () {
+      final entry = FileEntry(
+        name: 'photo.PNG',
+        path: '/home/user/photo.PNG',
+        type: FileItemType.file,
+        size: 2048,
+        modified: DateTime(2025, 1, 1),
+      );
+      expect(entry.kind, 'PNG image');
+    });
+
+    test('kind returns descriptive labels for special file names', () {
+      final entry = FileEntry(
+        name: 'Dockerfile',
+        path: '/home/user/Dockerfile',
+        type: FileItemType.file,
+        size: 512,
+        modified: DateTime(2025, 1, 1),
+      );
+      expect(entry.kind, 'Dockerfile');
+    });
+
+    test('kind falls back for unknown files', () {
+      final entry = FileEntry(
+        name: 'payload.custom',
+        path: '/home/user/payload.custom',
+        type: FileItemType.file,
+        size: 512,
+        modified: DateTime(2025, 1, 1),
+      );
+      expect(entry.kind, 'CUSTOM file');
+    });
+
+    test('kind returns file fallback without extension', () {
+      final entry = FileEntry(
+        name: 'payload',
+        path: '/home/user/payload',
+        type: FileItemType.file,
+        size: 512,
+        modified: DateTime(2025, 1, 1),
+      );
+      expect(entry.kind, 'File');
+    });
+
     test('stores all properties correctly', () {
       final date = DateTime(2025, 6, 15, 10, 30);
       final entry = FileEntry(

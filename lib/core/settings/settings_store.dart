@@ -48,12 +48,12 @@ class SettingsStore {
   final fileListScale = signal<double>(1.0);
   final showColumnSize = signal<bool>(true);
   final showColumnDate = signal<bool>(true);
-  final showColumnKind = signal<bool>(false);
+  final showColumnKind = signal<bool>(true);
   final showColumnCreated = signal<bool>(false);
   final showColumnPermissions = signal<bool>(false);
   final showColumnOwner = signal<bool>(false);
   final columnOrder = signal<String>(
-    'size,date,kind,created,permissions,owner',
+    'kind,size,date,created,permissions,owner',
   );
   final quickLookUseSystemFont = signal<bool>(true);
   final quickLookFontFamily = signal<String>('');

@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import '../fs/passwd_lookup.dart';
 import '../platform/platform_paths.dart';
 import '../platform/win32_attributes.dart';
+import 'file_kind_names.dart';
 
 enum FileItemType { folder, file }
 
@@ -108,12 +109,9 @@ class FileEntry {
     return name.startsWith('.');
   }
 
-  /// Human label for the "Kind" column: folder, or the upper-cased extension,
-  /// falling back to a generic file label when there is no extension.
   String get kind {
-    if (type == FileItemType.folder) return 'folder';
-    final ext = extension;
-    return ext.isEmpty ? 'file' : ext.toUpperCase();
+    if (type == FileItemType.folder) return 'Folder';
+    return kindLabelForFile(name, extension);
   }
 
   /// Unix-style permission string (e.g. "drwxr-xr-x"), or "--" when [mode] is

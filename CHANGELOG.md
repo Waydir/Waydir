@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Command-line support: launch Waydir with folder paths and options to open straight to a location. Run `waydir --help` for details. ([#164](https://github.com/Waydir/Waydir/issues/164))
 
 ### Changed
+- The file list now shows descriptive Kind labels by default, with the default column order set to Name, Kind, Size, then Date.
 - Quick Look editor now uses a viewport-virtualized engine (re_editor), so editing stays fast even on very large files.
 - Quick Look now previews text files up to 32 MB (was 4 MB); syntax highlighting is skipped above 1 MB to keep large files instant.
 - The changelog viewer now shows only released versions with cleaner headings.
