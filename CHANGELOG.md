@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Command-line support: launch Waydir with folder paths and options to open straight to a location. Run `waydir --help` for details. ([#164](https://github.com/Waydir/Waydir/issues/164))
 
 ### Changed
-- Quick Look editor is much faster on large files: line metrics are cached, cursor movement no longer re-measures the whole file, and very large files render through a virtualized read-only viewer.
+- Quick Look editor now uses a viewport-virtualized engine (re_editor), so editing stays fast even on very large files.
 - The changelog viewer now shows only released versions with cleaner headings.
 - Quick Look now shows a Created date and formats dates using your date-format preference.
 

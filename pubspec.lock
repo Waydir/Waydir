@@ -421,6 +421,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.0"
+  isolate_contactor:
+    dependency: transitive
+    description:
+      name: isolate_contactor
+      sha256: "6ba8434ceb58238a1389d6365111a3efe7baa1c68a66f4db6d63d351cf6c3a0f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.1.0"
+  isolate_manager:
+    dependency: transitive
+    description:
+      name: isolate_manager
+      sha256: "22ed0c25f80ec3b5f21e3a55d060f4650afff33f27c2dff34c0f9409d5759ae5"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.1.5+1"
   json_annotation:
     dependency: transitive
     description:
@@ -685,6 +701,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.2.2"
+  re_editor:
+    dependency: "direct main"
+    description:
+      name: re_editor
+      sha256: "73e5daf7041b382c07ed707d5efd2d0a53851bb9eb6d6987260229ae0ed2f458"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.9.0"
+  re_highlight:
+    dependency: "direct main"
+    description:
+      name: re_highlight
+      sha256: "6c4ac3f76f939fb7ca9df013df98526634e17d8f7460e028bd23a035870024f2"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.3"
   recase:
     dependency: transitive
     description:
