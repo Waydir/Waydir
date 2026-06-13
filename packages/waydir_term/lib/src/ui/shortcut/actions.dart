@@ -26,9 +26,11 @@ class TerminalActions extends StatelessWidget {
           onInvoke: (intent) async {
             final data = await Clipboard.getData(Clipboard.kTextPlain);
             final text = data?.text;
-            if (text != null) {
+            if (text != null && text.isNotEmpty) {
               terminal.paste(text);
               controller.clearSelection();
+            } else {
+              terminal.charInput(0x76, ctrl: true);
             }
             return null;
           },

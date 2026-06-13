@@ -20,6 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Quick Look now shows a Created date and formats dates using your date-format preference.
 
 ### Fixed
+- Terminal: text lines no longer bleed above the panel into the widgets above it.
+- Terminal: Alt+letter shortcuts now send the lowercase key (for example Alt+v sends `ESC v`), so meta keybindings work.
+- Terminal: Ctrl+V now passes through to the running app when the clipboard holds an image, so it can handle the image paste itself.
 - Quick Look: Ctrl+S (Cmd+S) now saves edits in the editor.
 - Quick Look: the line-number gutter now always widens to fit the longest number.
 - Quick Look: line numbers now align with their lines on Windows.

@@ -205,7 +205,7 @@ class AltInputHandler implements TerminalInputHandler {
 
     if (key.index >= TerminalKey.keyA.index &&
         key.index <= TerminalKey.keyZ.index) {
-      final charCode = key.index - TerminalKey.keyA.index + 65;
+      final charCode = key.index - TerminalKey.keyA.index + 97;
       final input = [0x1b, charCode];
       return String.fromCharCodes(input);
     }
