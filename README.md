@@ -59,6 +59,16 @@ Native Rust core • Flutter UI • Keyboard-first
       <img src="docs/gifs/tabs.gif" alt="Tabs">
     </td>
   </tr>
+  <tr>
+    <td width="50%" align="center">
+      <b>Filter search</b><br>
+      <img src="docs/gifs/function_search.gif" alt="Filter search">
+    </td>
+    <td width="50%" align="center">
+      <b>Customization</b><br>
+      <img src="docs/gifs/customization.gif" alt="Customization">
+    </td>
+  </tr>
 </table>
 
 ## ✨ Highlights
