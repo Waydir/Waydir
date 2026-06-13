@@ -1432,6 +1432,9 @@ class Translations$search$en {
 	/// en: 'Filter…'
 	String get placeholder => 'Filter…';
 
+	/// en: 'kind:image size:>10mb modified:week'
+	String get filterPlaceholder => 'kind:image size:>10mb modified:week';
+
 	/// en: 'Subfolders'
 	String get subfolders => 'Subfolders';
 
@@ -1479,6 +1482,9 @@ class Translations$search$en {
 
 	/// en: 'Regex'
 	String get modeRegex => 'Regex';
+
+	/// en: 'Filter builder'
+	String get modeFilter => 'Filter builder';
 
 	/// en: 'Invalid glob pattern'
 	String get invalidGlob => 'Invalid glob pattern';
@@ -3822,6 +3828,7 @@ extension on Translations {
 			'notifications.empty' => 'No notifications yet',
 			'notifications.clear' => 'Clear',
 			'search.placeholder' => 'Filter…',
+			'search.filterPlaceholder' => 'kind:image size:>10mb modified:week',
 			'search.subfolders' => 'Subfolders',
 			'search.subfoldersShortcut' => 'Subfolders (Ctrl+Shift+F)',
 			'search.content' => 'Content',
@@ -3838,6 +3845,7 @@ extension on Translations {
 			'search.modeSubstring' => 'Substring',
 			'search.modeGlob' => 'Glob',
 			'search.modeRegex' => 'Regex',
+			'search.modeFilter' => 'Filter builder',
 			'search.invalidGlob' => 'Invalid glob pattern',
 			'search.invalidRegex' => 'Invalid regex',
 			'search.complete' => 'complete',

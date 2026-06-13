@@ -23,6 +23,7 @@ import '../../core/settings/settings_store.dart';
 import '../../i18n/strings.g.dart';
 import '../git/git_status_store.dart';
 import '../operations/operation_store.dart';
+import 'filter_query.dart';
 
 enum ClipboardMode { copy, cut }
 
@@ -256,8 +257,16 @@ class NavigationStore {
   late final visibleFiles = computed(() {
     final pending = pendingCreate.value;
     if (searchActive.value && (searchRecursive.value || searchContent.value)) {
+      var results = searchResults.value;
+      if (SettingsStore.instance.searchMode.value == filterSearchMode) {
+        final parsed = parseFilterQuery(searchQuery.value);
+        final filter = parsed.query;
+        results = filter == null
+            ? const []
+            : results.where((f) => filter.matches(f)).toList();
+      }
       final sorted = sortEntries(
-        searchResults.value,
+        results,
         key: sortKey.value,
         ascending: sortAscending.value,
         foldersFirst: foldersFirst.value,
@@ -271,11 +280,21 @@ class NavigationStore {
         : files.value.where((f) => !f.isHidden).toList();
     final q = searchQuery.value.trim();
     if (searchActive.value && q.isNotEmpty) {
-      final matcher = _localMatcher(q, _currentSearchMode());
-      if (matcher != null) {
-        list = list.where((f) => matcher(f.name)).toList();
+      if (SettingsStore.instance.searchMode.value == filterSearchMode) {
+        final parsed = parseFilterQuery(q);
+        final filter = parsed.query;
+        if (filter != null) {
+          list = list.where((f) => filter.matches(f)).toList();
+        } else {
+          list = const [];
+        }
       } else {
-        list = const [];
+        final matcher = _localMatcher(q, _currentSearchMode());
+        if (matcher != null) {
+          list = list.where((f) => matcher(f.name)).toList();
+        } else {
+          list = const [];
+        }
       }
     }
     list = sortEntries(
@@ -479,6 +498,7 @@ class NavigationStore {
 
   void toggleContent() {
     if (PlatformPaths.isSftpUri(currentPath.value)) return;
+    if (SettingsStore.instance.searchMode.value == filterSearchMode) return;
     final enabling = !searchContent.value;
     batch(() {
       searchContent.value = enabling;
@@ -494,21 +514,24 @@ class NavigationStore {
   }
 
   void cycleSearchMode() {
-    const order = ['substring', 'glob', 'regex'];
+    const order = ['substring', 'glob', 'regex', filterSearchMode];
     final s = SettingsStore.instance;
     final idx = order.indexOf(s.searchMode.value);
-    setSearchMode(order[(idx + 1) % order.length]);
+    setSearchMode(order[((idx < 0 ? 0 : idx) + 1) % order.length]);
   }
 
   void setSearchMode(String mode) {
     final s = SettingsStore.instance;
     if (mode == 'glob' && searchContent.value) return;
     if (s.searchMode.value == mode) return;
-    s.searchMode.value = mode;
-    searchPatternError.value = validateSearchPattern(
-      searchQuery.value.trim(),
-      _currentSearchMode(),
-    );
+    batch(() {
+      s.searchMode.value = mode;
+      if (mode == filterSearchMode) searchContent.value = false;
+      searchPatternError.value = validateSearchPattern(
+        searchQuery.value.trim(),
+        _currentSearchMode(),
+      );
+    });
     _scheduleSearchRestart();
   }
 
@@ -543,6 +566,9 @@ class NavigationStore {
 
   static String? validateSearchPattern(String query, SearchMode mode) {
     if (query.isEmpty) return null;
+    if (SettingsStore.instance.searchMode.value == filterSearchMode) {
+      return parseFilterQuery(query).error;
+    }
     switch (mode) {
       case SearchMode.substring:
         return null;
@@ -643,12 +669,22 @@ class NavigationStore {
       isSearching.value = false;
       return;
     }
+    final filter = SettingsStore.instance.searchMode.value == filterSearchMode
+        ? parseFilterQuery(q).query
+        : null;
+    final recursiveQuery = filter?.recursiveNameQuery ?? q;
+    if (recursiveQuery.isEmpty && filter == null) {
+      isSearching.value = false;
+      return;
+    }
     if (PlatformPaths.isSftpUri(root)) {
       if (searchContent.value) {
         isSearching.value = false;
         return;
       }
-      final matcher = _localMatcher(q, mode);
+      final matcher = filter != null && recursiveQuery.isEmpty
+          ? (_) => true
+          : _localMatcher(recursiveQuery, mode);
       if (matcher == null) {
         isSearching.value = false;
         return;
@@ -658,18 +694,20 @@ class NavigationStore {
         root: root,
         includeHidden: showHidden.value,
         matcher: matcher,
+        filter: filter,
       );
       return;
     }
     _searchHandle = RecursiveSearch.start(
       root: root,
-      query: q,
+      query: recursiveQuery,
       includeHidden: showHidden.value,
       mode: mode,
       content: searchContent.value,
       maxDepth: searchRecursive.value ? 0 : 1,
       onBatch: (b) {
-        acc.addAll(b.map(_logicalEntryFromPhysical));
+        final entries = b.map(_logicalEntryFromPhysical);
+        acc.addAll(filter == null ? entries : entries.where(filter.matches));
         _pendingSearchResults = acc;
         _scheduleSearchUiFlush();
       },
@@ -711,6 +749,7 @@ class NavigationStore {
     required String root,
     required bool includeHidden,
     required bool Function(String name) matcher,
+    required FilterQuery? filter,
   }) async {
     final acc = <FileEntry>[];
     var scanned = 0;
@@ -726,7 +765,7 @@ class NavigationStore {
       for (final entry in entries) {
         if (token != _searchToken) return;
         if (!includeHidden && entry.isHidden) continue;
-        if (matcher(entry.name)) {
+        if (matcher(entry.name) && (filter == null || filter.matches(entry))) {
           acc.add(entry);
           _pendingSearchResults = acc;
           _scheduleSearchUiFlush();

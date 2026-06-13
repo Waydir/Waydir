@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Search now has a Filter mode with query suggestions for kind, extension, size, date and hidden-file filters.
 - Quick Look: prompts to save, discard or cancel when closing the editor with unsaved changes.
 - Quick Look: relative line numbers option, showing distance from the current line.
 - Quick Look: option to turn off the statistics panel for multi-selection properties.

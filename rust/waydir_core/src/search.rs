@@ -17,6 +17,7 @@ const BINARY_SCAN_BYTES: usize = 8192;
 
 #[derive(Clone)]
 enum Matcher {
+    All,
     Substring(String),
     Glob {
         matcher: GlobMatcher,
@@ -67,6 +68,9 @@ impl Matcher {
                 ))),
             };
         }
+        if query.is_empty() {
+            return Some(Matcher::All);
+        }
         match mode {
             1 => {
                 let path_scope = query.contains('/') || query.contains("**");
@@ -82,6 +86,7 @@ impl Matcher {
 
     fn matches(&self, name: &str, rel_path: &Path, full_path: &Path, is_dir: bool) -> bool {
         match self {
+            Matcher::All => true,
             Matcher::Substring(q) => name.to_lowercase().contains(q),
             Matcher::Glob {
                 matcher,

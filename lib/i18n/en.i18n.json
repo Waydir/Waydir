@@ -756,6 +756,7 @@
   },
   "search": {
     "placeholder": "Filter…",
+    "filterPlaceholder": "kind:image size:>10mb modified:week",
     "subfolders": "Subfolders",
     "subfoldersShortcut": "Subfolders (Ctrl+Shift+F)",
     "content": "Content",
@@ -774,6 +775,7 @@
     "modeSubstring": "Substring",
     "modeGlob": "Glob",
     "modeRegex": "Regex",
+    "modeFilter": "Filter builder",
     "invalidGlob": "Invalid glob pattern",
     "invalidRegex": "Invalid regex",
     "complete": "complete",
