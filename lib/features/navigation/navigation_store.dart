@@ -440,7 +440,7 @@ class NavigationStore {
       showHidden.value;
       if (searchActive.value &&
           (searchRecursive.value || searchContent.value)) {
-        _restartRecursiveSearch();
+        _scheduleSearchRestart();
       }
     });
   }
@@ -707,12 +707,14 @@ class NavigationStore {
       content: searchContent.value,
       maxDepth: searchRecursive.value ? 0 : 1,
       onBatch: (b) {
+        if (token != _searchToken) return;
         final entries = b.map(_logicalEntryFromPhysical);
         acc.addAll(filter == null ? entries : entries.where(filter.matches));
         _pendingSearchResults = acc;
         _scheduleSearchUiFlush();
       },
       onProgress: (n, currentDir) {
+        if (token != _searchToken) return;
         batch(() {
           searchScannedDirs.value = n;
           if (currentDir != null) {
@@ -722,6 +724,7 @@ class NavigationStore {
         });
       },
       onDone: () {
+        if (token != _searchToken) return;
         _searchUiFlush?.cancel();
         _searchUiFlush = null;
         if (_pendingSearchResults != null) {
@@ -734,6 +737,7 @@ class NavigationStore {
         });
       },
       onError: (_) {
+        if (token != _searchToken) return;
         _searchUiFlush?.cancel();
         _searchUiFlush = null;
         _pendingSearchResults = null;
