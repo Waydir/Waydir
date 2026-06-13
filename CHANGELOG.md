@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Quick Look: the line-number gutter now always widens to fit the longest number.
+- Quick Look: line numbers now align with their lines on Windows.
 - Windows: the Permissions and Owner columns and the Quick Look permissions row, which are POSIX-only, are no longer shown.
 
 ## [0.15.0] - 2026-06-11

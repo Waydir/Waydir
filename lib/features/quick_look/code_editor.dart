@@ -723,11 +723,14 @@ class _CodeEditorState extends State<CodeEditor> {
             fontFamily: family,
             fontSize: fontSize,
             height: lineHeight,
+            leadingDistribution: TextLeadingDistribution.even,
             color: AppColors.fg,
           );
           final strut = StrutStyle(
+            fontFamily: family,
             fontSize: fontSize,
             height: lineHeight,
+            leadingDistribution: TextLeadingDistribution.even,
             forceStrutHeight: true,
           );
           return Column(
