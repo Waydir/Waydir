@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:signals/signals_flutter.dart';
@@ -78,8 +79,18 @@ class _CodeEditorState extends State<CodeEditor> {
   bool _dirty = false;
   bool _saving = false;
   String? _saveError;
-  int _caretLine = 0;
   int _lines = 1;
+
+  /// Caret line and editor status are surfaced through notifiers so cursor
+  /// movement repaints only the gutter/status bar instead of triggering a full
+  /// rebuild that would re-measure every line.
+  final _caretLine = ValueNotifier<int>(0);
+  final _statusTick = ValueNotifier<int>(0);
+  String _lastText = '';
+
+  /// Large files open in the virtualized read-only viewer; the user can opt into
+  /// the (heavier) editable view per file.
+  bool _forceEdit = false;
 
   late _VimMode _vim;
   String? _pending;
@@ -92,7 +103,17 @@ class _CodeEditorState extends State<CodeEditor> {
   bool _wrapLinesSnapshot = true;
   TextStyle? _measureStyleSnapshot;
 
+  /// Per-line layout cache, keyed by line text, valid for one metrics key
+  /// (font + size + line height + wrap + width). Avoids re-running TextPainter
+  /// for unchanged lines on every rebuild.
+  String _metricsKey = '';
+  double _cachedLineExtent = 0;
+  final _lineHeightCache = <String, double>{};
+  final _lineWidthCache = <String, double>{};
+
   static const _topPad = 10.0;
+  static const _virtualizeChars = 200 * 1024;
+  static const _virtualizeLines = 5000;
 
   @override
   void initState() {
@@ -106,6 +127,7 @@ class _CodeEditorState extends State<CodeEditor> {
       highlight: widget.initial.length <= maxHighlightChars,
     );
     _ctrl.text = widget.initial;
+    _lastText = widget.initial;
     _lines = '\n'.allMatches(widget.initial).length + 1;
     _ctrl.addListener(_onChanged);
     _focus.addListener(_onFocusChange);
@@ -121,39 +143,42 @@ class _CodeEditorState extends State<CodeEditor> {
     _focus.dispose();
     _vScroll.dispose();
     _hScroll.dispose();
+    _caretLine.dispose();
+    _statusTick.dispose();
     widget.editorActive.value = false;
     super.dispose();
   }
 
   void _onChanged() {
     final text = _ctrl.text;
-    final dirty = text != _savedText;
     final caret = _ctrl.selection.baseOffset.clamp(0, text.length);
+
+    // Caret line only needs a scan up to the cursor, and it drives nothing more
+    // than the gutter/status bar, so push it through the notifier without a
+    // rebuild.
     var line = 0;
+    for (var i = 0; i < caret && i < text.length; i++) {
+      if (text.codeUnitAt(i) == 0x0A) line++;
+    }
+    _caretLine.value = line;
+
+    if (text == _lastText) return; // caret-only move: nothing to re-measure.
+    _lastText = text;
+
+    final dirty = text != _savedText;
+    if (dirty != _dirty || _saveError != null) {
+      _dirty = dirty;
+      _saveError = null;
+      _statusTick.value++;
+    }
+
     var total = 0;
     for (var i = 0; i < text.length; i++) {
-      if (text.codeUnitAt(i) == 0x0A) {
-        if (i < caret) line++;
-        total++;
-      }
+      if (text.codeUnitAt(i) == 0x0A) total++;
     }
-    final lines = total + 1;
-    final settings = SettingsStore.instance;
-    final refreshLayout =
-        !settings.quickLookWrapLines.value ||
-        settings.quickLookShowLineNumbers.value;
-    if (dirty != _dirty ||
-        line != _caretLine ||
-        lines != _lines ||
-        _saveError != null ||
-        refreshLayout) {
-      setState(() {
-        _dirty = dirty;
-        _caretLine = line;
-        _lines = lines;
-        _saveError = null;
-      });
-    }
+    // A text edit always needs a rebuild to re-measure the changed line; the
+    // per-line cache keeps that cheap.
+    setState(() => _lines = total + 1);
   }
 
   Future<void> _save() async {
@@ -643,13 +668,26 @@ class _CodeEditorState extends State<CodeEditor> {
     _VimMode.visual => t.quickLook.vimVisual,
   };
 
-  double _lineExtent(TextStyle style, StrutStyle strut) {
-    final painter = TextPainter(
+  /// Drops the per-line layout caches whenever anything that affects line
+  /// measurement changes, and recomputes the uniform line/char metrics once.
+  void _ensureMetrics({
+    required TextStyle style,
+    required StrutStyle strut,
+    required bool wrapLines,
+    required double maxWidth,
+  }) {
+    final key =
+        '${style.fontFamily}|${style.fontSize}|${style.height}'
+        '|$wrapLines|${maxWidth.round()}';
+    if (key == _metricsKey) return;
+    _metricsKey = key;
+    _lineHeightCache.clear();
+    _lineWidthCache.clear();
+    _cachedLineExtent = (TextPainter(
       text: TextSpan(text: ' ', style: style),
       strutStyle: strut,
       textDirection: TextDirection.ltr,
-    )..layout();
-    return painter.height;
+    )..layout()).height;
   }
 
   double _measureTextWidth(String text, TextStyle style) {
@@ -662,6 +700,14 @@ class _CodeEditorState extends State<CodeEditor> {
     return painter.width;
   }
 
+  double _lineWidth(String line, TextStyle style) {
+    if (line.isEmpty) return 0;
+    return _lineWidthCache.putIfAbsent(
+      line,
+      () => _measureTextWidth(line, style),
+    );
+  }
+
   double _lineNumberWidth(int count, TextStyle style) {
     final digits = '$count'.length;
     final sample = List.filled(digits, '8').join();
@@ -671,7 +717,7 @@ class _CodeEditorState extends State<CodeEditor> {
   double _contentWidth(TextStyle style, double minWidth) {
     var maxWidth = 0.0;
     for (final line in _ctrl.text.split('\n')) {
-      final width = _measureTextWidth(line, style);
+      final width = _lineWidth(line, style);
       if (width > maxWidth) maxWidth = width;
     }
     return maxWidth > minWidth ? maxWidth : minWidth;
@@ -683,21 +729,23 @@ class _CodeEditorState extends State<CodeEditor> {
     required bool wrapLines,
     required double maxWidth,
   }) {
-    final lineExtent = _lineExtent(style, strut);
     final lines = _ctrl.text.split('\n');
     if (!wrapLines || maxWidth <= 0) {
-      return [for (var i = 0; i < lines.length; i++) lineExtent];
+      return List<double>.filled(lines.length, _cachedLineExtent);
     }
     return [
       for (final line in lines)
         if (line.isEmpty)
-          lineExtent
+          _cachedLineExtent
         else
-          (TextPainter(
-            text: TextSpan(text: line, style: style),
-            strutStyle: strut,
-            textDirection: TextDirection.ltr,
-          )..layout(maxWidth: maxWidth)).height,
+          _lineHeightCache.putIfAbsent(
+            line,
+            () => (TextPainter(
+              text: TextSpan(text: line, style: style),
+              strutStyle: strut,
+              textDirection: TextDirection.ltr,
+            )..layout(maxWidth: maxWidth)).height,
+          ),
     ];
   }
 
@@ -733,6 +781,33 @@ class _CodeEditorState extends State<CodeEditor> {
             leadingDistribution: TextLeadingDistribution.even,
             forceStrutHeight: true,
           );
+
+          // Large files are rendered through a virtualized read-only viewer that
+          // only builds the lines on screen, instead of laying out the whole
+          // document inside a single TextField.
+          final isLargeFile =
+              widget.initial.length > _virtualizeChars ||
+              _lines > _virtualizeLines;
+          if (isLargeFile && !_forceEdit) {
+            return _VirtualReadOnlyView(
+              text: _ctrl.text,
+              language: _ctrl.language,
+              vScroll: _vScroll,
+              hScroll: _hScroll,
+              baseStyle: baseStyle,
+              strut: strut,
+              wrapLines: wrapLines,
+              showLineNumbers: showLineNumbers,
+              charAdvance: _measureTextWidth('0', baseStyle),
+              lineNumberStyle: baseStyle.copyWith(color: AppColors.fgSubtle),
+              topPad: _topPad,
+              onEdit: () {
+                setState(() => _forceEdit = true);
+                _focus.requestFocus();
+              },
+            );
+          }
+
           return Column(
             children: [
               Expanded(
@@ -740,17 +815,24 @@ class _CodeEditorState extends State<CodeEditor> {
                   onKeyEvent: _onKey,
                   child: LayoutBuilder(
                     builder: (context, constraints) {
+                      _ensureMetrics(
+                        style: baseStyle,
+                        strut: strut,
+                        wrapLines: wrapLines,
+                        maxWidth:
+                            (constraints.maxWidth -
+                                    (showLineNumbers
+                                        ? _lineNumberWidth(_lines, baseStyle)
+                                        : 0.0) -
+                                    (showLineNumbers ? 8.0 : 16.0) -
+                                    16)
+                                .clamp(0.0, double.infinity),
+                      );
                       final lineNumberStyle = baseStyle.copyWith(
                         color: AppColors.fgSubtle,
                       );
-                      final maxLineNumber = relativeLineNumbers
-                          ? [
-                              _caretLine,
-                              _lines - 1 - _caretLine,
-                            ].reduce((a, b) => a > b ? a : b).clamp(0, _lines)
-                          : _lines;
                       final gutterWidth = showLineNumbers
-                          ? _lineNumberWidth(maxLineNumber, lineNumberStyle)
+                          ? _lineNumberWidth(_lines, lineNumberStyle)
                           : 0.0;
                       final paneWidth = (constraints.maxWidth - gutterWidth)
                           .clamp(0.0, double.infinity);
@@ -826,14 +908,17 @@ class _CodeEditorState extends State<CodeEditor> {
                 ),
               ),
               Container(height: 1, color: AppColors.bgDivider),
-              _StatusBar(
-                dirty: _dirty,
-                saving: _saving,
-                error: _saveError,
-                line: _caretLine + 1,
-                lineCount: _lines,
-                onSave: _save,
-                modeLabel: vimEnabled ? _vimLabel() : null,
+              AnimatedBuilder(
+                animation: Listenable.merge([_caretLine, _statusTick]),
+                builder: (context, _) => _StatusBar(
+                  dirty: _dirty,
+                  saving: _saving,
+                  error: _saveError,
+                  line: _caretLine.value + 1,
+                  lineCount: _lines,
+                  onSave: _save,
+                  modeLabel: vimEnabled ? _vimLabel() : null,
+                ),
               ),
             ],
           );
@@ -851,7 +936,7 @@ class _LineGutter extends StatelessWidget {
   final double topPad;
   final double width;
   final bool relative;
-  final int currentLine;
+  final ValueListenable<int> currentLine;
 
   const _LineGutter({
     required this.lineHeights,
@@ -864,14 +949,19 @@ class _LineGutter extends StatelessWidget {
     required this.currentLine,
   });
 
-  String _label(int index) {
+  String _label(int index, int caret) {
     if (!relative) return '${index + 1}';
-    final distance = (index - currentLine).abs();
-    return '$distance';
+    return '${(index - caret).abs()}';
   }
 
   @override
   Widget build(BuildContext context) {
+    // Absolute numbers never depend on the caret, so only listen to it when
+    // relative numbering is on - this keeps cursor movement from repainting the
+    // whole gutter in the common case.
+    final animation = relative
+        ? Listenable.merge([scroll, currentLine])
+        : scroll;
     return Container(
       width: width,
       padding: const EdgeInsets.only(right: 6),
@@ -882,9 +972,10 @@ class _LineGutter extends StatelessWidget {
         child: Padding(
           padding: EdgeInsets.only(top: topPad),
           child: AnimatedBuilder(
-            animation: scroll,
+            animation: animation,
             builder: (context, _) {
               final offset = scroll.hasClients ? scroll.offset : 0.0;
+              final caret = currentLine.value;
               return Transform.translate(
                 offset: Offset(0, -offset),
                 child: OverflowBox(
@@ -901,7 +992,7 @@ class _LineGutter extends StatelessWidget {
                           child: Align(
                             alignment: Alignment.topRight,
                             child: Text(
-                              _label(i),
+                              _label(i, caret),
                               textAlign: TextAlign.right,
                               style: style,
                               strutStyle: strutStyle,
@@ -915,6 +1006,271 @@ class _LineGutter extends StatelessWidget {
             },
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Read-only, viewport-virtualized renderer used for large files. Only the
+/// lines currently on screen are built and highlighted, so cost no longer
+/// scales with the size of the document.
+class _VirtualReadOnlyView extends StatefulWidget {
+  final String text;
+  final CodeLanguage? language;
+  final ScrollController vScroll;
+  final ScrollController hScroll;
+  final TextStyle baseStyle;
+  final StrutStyle strut;
+  final bool wrapLines;
+  final bool showLineNumbers;
+  final double charAdvance;
+  final TextStyle lineNumberStyle;
+  final double topPad;
+  final VoidCallback onEdit;
+
+  const _VirtualReadOnlyView({
+    required this.text,
+    required this.language,
+    required this.vScroll,
+    required this.hScroll,
+    required this.baseStyle,
+    required this.strut,
+    required this.wrapLines,
+    required this.showLineNumbers,
+    required this.charAdvance,
+    required this.lineNumberStyle,
+    required this.topPad,
+    required this.onEdit,
+  });
+
+  @override
+  State<_VirtualReadOnlyView> createState() => _VirtualReadOnlyViewState();
+}
+
+class _VirtualReadOnlyViewState extends State<_VirtualReadOnlyView> {
+  late List<String> _lines;
+  int _maxLen = 0;
+  final _spanCache = <int, List<InlineSpan>>{};
+
+  @override
+  void initState() {
+    super.initState();
+    _split();
+  }
+
+  @override
+  void didUpdateWidget(_VirtualReadOnlyView old) {
+    super.didUpdateWidget(old);
+    if (old.text != widget.text) {
+      _spanCache.clear();
+      _split();
+    } else if (old.language != widget.language ||
+        old.baseStyle != widget.baseStyle) {
+      _spanCache.clear();
+    }
+  }
+
+  void _split() {
+    _lines = widget.text.split('\n');
+    _maxLen = 0;
+    for (final line in _lines) {
+      if (line.length > _maxLen) _maxLen = line.length;
+    }
+  }
+
+  List<InlineSpan> _spansFor(int index) {
+    return _spanCache.putIfAbsent(index, () {
+      final line = _lines[index];
+      final lang = widget.language;
+      if (lang == null || line.isEmpty) {
+        return [TextSpan(text: line, style: widget.baseStyle)];
+      }
+      return highlightCode(line, lang, widget.baseStyle);
+    });
+  }
+
+  double get _gutterWidth {
+    if (!widget.showLineNumbers) return 0;
+    final digits = '${_lines.length}'.length;
+    return 22 + widget.charAdvance * digits;
+  }
+
+  Widget _row(int index, {required double textWidth}) {
+    final content = Text.rich(
+      TextSpan(children: _spansFor(index)),
+      style: widget.baseStyle,
+      strutStyle: widget.strut,
+      softWrap: widget.wrapLines,
+      overflow: TextOverflow.clip,
+    );
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (widget.showLineNumbers)
+          SizedBox(
+            width: _gutterWidth,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: Text(
+                '${index + 1}',
+                textAlign: TextAlign.right,
+                style: widget.lineNumberStyle,
+                strutStyle: widget.strut,
+              ),
+            ),
+          ),
+        SizedBox(width: textWidth, child: content),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Expanded(child: _buildViewport()),
+        Container(height: 1, color: AppColors.bgDivider),
+        _ReadOnlyBanner(onEdit: widget.onEdit),
+      ],
+    );
+  }
+
+  Widget _buildViewport() {
+    return Container(
+      color: AppColors.bg,
+      child: SelectionArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final lineExtent = (TextPainter(
+              text: TextSpan(text: ' ', style: widget.baseStyle),
+              strutStyle: widget.strut,
+              textDirection: TextDirection.ltr,
+            )..layout()).height;
+            final padding = EdgeInsets.only(
+              left: widget.showLineNumbers ? 8 : 16,
+              top: widget.topPad,
+              right: 16,
+              bottom: widget.topPad,
+            );
+
+            if (widget.wrapLines) {
+              final textWidth =
+                  (constraints.maxWidth - padding.horizontal - _gutterWidth)
+                      .clamp(0.0, double.infinity);
+              return Scrollbar(
+                controller: widget.vScroll,
+                child: ListView.builder(
+                  controller: widget.vScroll,
+                  padding: padding,
+                  itemCount: _lines.length,
+                  itemBuilder: (context, index) =>
+                      _row(index, textWidth: textWidth),
+                ),
+              );
+            }
+
+            final textWidth = _maxLen * widget.charAdvance + 8;
+            final totalWidth = (_gutterWidth + textWidth + padding.horizontal)
+                .clamp(constraints.maxWidth, double.infinity);
+            return Scrollbar(
+              controller: widget.hScroll,
+              child: SingleChildScrollView(
+                controller: widget.hScroll,
+                scrollDirection: Axis.horizontal,
+                child: SizedBox(
+                  width: totalWidth,
+                  child: Scrollbar(
+                    controller: widget.vScroll,
+                    child: ListView.builder(
+                      controller: widget.vScroll,
+                      padding: padding,
+                      itemExtent: lineExtent,
+                      itemCount: _lines.length,
+                      itemBuilder: (context, index) =>
+                          _row(index, textWidth: textWidth),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _ReadOnlyBanner extends StatefulWidget {
+  final VoidCallback onEdit;
+
+  const _ReadOnlyBanner({required this.onEdit});
+
+  @override
+  State<_ReadOnlyBanner> createState() => _ReadOnlyBannerState();
+}
+
+class _ReadOnlyBannerState extends State<_ReadOnlyBanner> {
+  bool _hover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 30,
+      color: AppColors.bgStatus,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      child: Row(
+        children: [
+          Icon(WaydirIconsRegular.info, size: 13, color: AppColors.fgMuted),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              t.quickLook.largeFileReadOnly,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.txt.caption.copyWith(color: AppColors.fgMuted),
+            ),
+          ),
+          const SizedBox(width: 12),
+          MouseRegion(
+            cursor: SystemMouseCursors.click,
+            onEnter: (_) => setState(() => _hover = true),
+            onExit: (_) => setState(() => _hover = false),
+            child: GestureDetector(
+              onTap: widget.onEdit,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: _hover
+                      ? AppColors.accent.withValues(alpha: 0.15)
+                      : Colors.transparent,
+                  border: Border.all(
+                    color: AppColors.accent.withValues(alpha: 0.5),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      WaydirIconsRegular.pencilSimple,
+                      size: 13,
+                      color: AppColors.accent,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      t.quickLook.editAnyway,
+                      style: context.txt.caption.copyWith(
+                        color: AppColors.accent,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

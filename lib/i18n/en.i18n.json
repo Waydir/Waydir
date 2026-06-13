@@ -548,6 +548,8 @@
     "saved": "Saved",
     "unsaved": "Unsaved",
     "saveError": "Could not save file",
+    "largeFileReadOnly": "Large file - opened read-only for speed",
+    "editAnyway": "Edit",
     "vimNormal": "NORMAL",
     "vimInsert": "INSERT",
     "vimVisual": "VISUAL",

@@ -963,6 +963,12 @@ class Translations$quickLook$en {
 	/// en: 'Could not save file'
 	String get saveError => 'Could not save file';
 
+	/// en: 'Large file - opened read-only for speed'
+	String get largeFileReadOnly => 'Large file - opened read-only for speed';
+
+	/// en: 'Edit'
+	String get editAnyway => 'Edit';
+
 	/// en: 'NORMAL'
 	String get vimNormal => 'NORMAL';
 
@@ -3642,6 +3648,8 @@ extension on Translations {
 			'quickLook.saved' => 'Saved',
 			'quickLook.unsaved' => 'Unsaved',
 			'quickLook.saveError' => 'Could not save file',
+			'quickLook.largeFileReadOnly' => 'Large file - opened read-only for speed',
+			'quickLook.editAnyway' => 'Edit',
 			'quickLook.vimNormal' => 'NORMAL',
 			'quickLook.vimInsert' => 'INSERT',
 			'quickLook.vimVisual' => 'VISUAL',
@@ -3686,10 +3694,10 @@ extension on Translations {
 			'toast.cutItems' => ({required Object count}) => 'Cut ${count} items',
 			'toast.selectionSaved' => ({required Object count, required Object path}) => 'Saved ${count} names to ${path}',
 			'toast.selectionLoaded' => ({required Object count}) => 'Selected ${count} visible items',
-			'toast.selectionLoadEmpty' => 'No visible items matched',
-			'toast.terminalUnavailable' => 'Terminal is unavailable: native core not loaded',
 			_ => null,
 		} ?? switch (path) {
+			'toast.selectionLoadEmpty' => 'No visible items matched',
+			'toast.terminalUnavailable' => 'Terminal is unavailable: native core not loaded',
 			'toast.selectionFileError' => ({required Object message}) => 'Selection file error: ${message}',
 			'toast.taskErrors' => ({required Object label, required Object count}) => '${label} - ${count} errors',
 			'toast.renameAlreadyExists' => ({required Object name}) => 'An item named \'${name}\' already exists',
