@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Quick Look: prompts to save, discard or cancel when closing the editor with unsaved changes.
 - Quick Look: relative line numbers option, showing distance from the current line.
 - Quick Look: option to turn off the statistics panel for multi-selection properties.
 - The path bar now expands environment variables: `%VAR%` on Windows and `$VAR`/`${VAR}` on Linux and macOS. ([#163](https://github.com/Waydir/Waydir/issues/163))
@@ -19,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Quick Look now shows a Created date and formats dates using your date-format preference.
 
 ### Fixed
+- Quick Look: Ctrl+S (Cmd+S) now saves edits in the editor.
 - Quick Look: the line-number gutter now always widens to fit the longest number.
 - Quick Look: line numbers now align with their lines on Windows.
 - Windows: the Permissions and Owner columns and the Quick Look permissions row, which are POSIX-only, are no longer shown.

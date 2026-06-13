@@ -19,6 +19,19 @@ import 'editor_languages.dart';
 
 enum _VimMode { normal, insert, visual }
 
+/// Lets the host observe unsaved state and trigger a save (e.g. to prompt
+/// before closing the preview).
+class CodeEditorController {
+  final dirty = ValueNotifier<bool>(false);
+  Future<bool> Function()? _save;
+
+  /// Saves if dirty. Returns true when there is nothing to save or the save
+  /// succeeded, false when the save failed.
+  Future<bool> save() async => (await _save?.call()) ?? true;
+
+  void dispose() => dirty.dispose();
+}
+
 /// Text/code preview editor. Backed by re_editor, which renders only the lines
 /// in the viewport, so editing stays fast regardless of file size.
 class CodeEditor extends StatefulWidget {
@@ -26,6 +39,7 @@ class CodeEditor extends StatefulWidget {
   final String extension;
   final String initial;
   final ValueNotifier<bool> editorActive;
+  final CodeEditorController? controller;
 
   const CodeEditor({
     super.key,
@@ -33,6 +47,7 @@ class CodeEditor extends StatefulWidget {
     required this.extension,
     required this.initial,
     required this.editorActive,
+    this.controller,
   });
 
   @override
@@ -61,15 +76,21 @@ class _CodeEditorState extends State<CodeEditor> {
     _vim = SettingsStore.instance.quickLookVimMode.value
         ? _VimMode.normal
         : _VimMode.insert;
+    widget.controller?._save = _save;
+    widget.controller?.dirty.value = false;
+    _ctrl.addListener(_syncDirty);
     _focus.addListener(_onFocusChange);
   }
 
   void _onFocusChange() => widget.editorActive.value = _focus.hasFocus;
 
+  void _syncDirty() => widget.controller?.dirty.value = _dirty;
+
   @override
   void dispose() {
     _focus.removeListener(_onFocusChange);
     _focus.dispose();
+    _ctrl.removeListener(_syncDirty);
     _ctrl.dispose();
     _scroll.dispose();
     widget.editorActive.value = false;
@@ -78,8 +99,8 @@ class _CodeEditorState extends State<CodeEditor> {
 
   bool get _dirty => !identical(_ctrl.value.codeLines, _savedRevision);
 
-  Future<void> _save() async {
-    if (_saving || !_dirty) return;
+  Future<bool> _save() async {
+    if (_saving || !_dirty) return true;
     final text = _ctrl.text;
     final revision = _ctrl.value.codeLines;
     setState(() => _saving = true);
@@ -92,18 +113,21 @@ class _CodeEditorState extends State<CodeEditor> {
       } else {
         await File(widget.path).writeAsString(text, flush: true);
       }
-      if (!mounted) return;
+      if (!mounted) return true;
       setState(() {
         _saving = false;
         _savedRevision = revision;
         _saveError = null;
       });
+      widget.controller?.dirty.value = _dirty;
+      return true;
     } catch (_) {
-      if (!mounted) return;
+      if (!mounted) return false;
       setState(() {
         _saving = false;
         _saveError = t.quickLook.saveError;
       });
+      return false;
     }
   }
 
@@ -114,10 +138,6 @@ class _CodeEditorState extends State<CodeEditor> {
     final mod =
         HardwareKeyboard.instance.isControlPressed ||
         HardwareKeyboard.instance.isMetaPressed;
-    if (mod && event.logicalKey == LogicalKeyboardKey.keyS) {
-      _save();
-      return KeyEventResult.handled;
-    }
     final vimEnabled = SettingsStore.instance.quickLookVimMode.value;
     if (!vimEnabled) return KeyEventResult.ignored;
     if (mod && event.logicalKey == LogicalKeyboardKey.keyR) {
@@ -341,6 +361,17 @@ class _CodeEditorState extends State<CodeEditor> {
           wordWrap: wrapLines,
           readOnly: readOnly,
           showCursorWhenReadOnly: readOnly,
+          // re_editor binds Ctrl/Cmd+S to a save intent but ships no action for
+          // it; provide ours so the shortcut actually writes the file.
+          shortcutOverrideActions: <Type, Action<Intent>>{
+            re.CodeShortcutSaveIntent:
+                CallbackAction<re.CodeShortcutSaveIntent>(
+                  onInvoke: (intent) {
+                    _save();
+                    return null;
+                  },
+                ),
+          },
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
           indicatorBuilder: showLineNumbers
               ? (context, editingController, chunkController, notifier) {

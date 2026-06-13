@@ -8,6 +8,7 @@ import '../../core/models/file_entry.dart';
 import '../../features/files/file_icons.dart';
 import '../../features/navigation/navigation_store.dart';
 import '../../i18n/strings.g.dart';
+import '../../ui/dialogs/dialog.dart';
 import '../../ui/theme/app_theme.dart';
 import '../../ui/theme/app_text_styles.dart';
 import 'code_editor.dart';
@@ -56,6 +57,7 @@ class _QuickLook extends StatefulWidget {
 class _QuickLookState extends State<_QuickLook> {
   final _focus = FocusNode();
   final _editorActive = ValueNotifier<bool>(false);
+  final _editorController = CodeEditorController();
   bool _compact = true;
   bool _showInfo = true;
   String? _presentationKey;
@@ -78,7 +80,36 @@ class _QuickLookState extends State<_QuickLook> {
   void dispose() {
     _focus.dispose();
     _editorActive.dispose();
+    _editorController.dispose();
     super.dispose();
+  }
+
+  /// Closes the preview, prompting first when the editor has unsaved changes.
+  Future<void> _requestClose() async {
+    if (!_editorController.dirty.value) {
+      Navigator.of(context).pop();
+      return;
+    }
+    final result = await showCustomDialog<String>(
+      context: context,
+      title: t.quickLook.unsavedTitle,
+      icon: WaydirIconsRegular.warning,
+      iconColor: AppColors.warning,
+      body: Text(
+        t.quickLook.unsavedMessage,
+        style: context.txt.row.copyWith(color: AppColors.fg),
+      ),
+      actions: [
+        DialogAction(label: t.quickLook.cancel, color: AppColors.fgMuted),
+        DialogAction(label: t.quickLook.discard, color: AppColors.danger),
+        DialogAction(label: t.quickLook.save, color: AppColors.accent),
+      ],
+    );
+    if (!mounted || result == null || result == t.quickLook.cancel) return;
+    if (result == t.quickLook.save && !await _editorController.save()) {
+      return; // save failed - keep the preview open
+    }
+    if (mounted) Navigator.of(context).pop();
   }
 
   bool _acceptCursorRepeat() {
@@ -103,7 +134,7 @@ class _QuickLookState extends State<_QuickLook> {
     if (event is! KeyDownEvent && !isRepeat) return KeyEventResult.ignored;
     final key = event.logicalKey;
     if (!isRepeat && key == LogicalKeyboardKey.escape) {
-      Navigator.of(context).pop();
+      _requestClose();
       return KeyEventResult.handled;
     }
 
@@ -120,7 +151,7 @@ class _QuickLookState extends State<_QuickLook> {
     }
 
     if (!isRepeat && AppShortcuts.matches('quick_look_close', key)) {
-      Navigator.of(context).pop();
+      _requestClose();
       return KeyEventResult.handled;
     }
     if (AppShortcuts.matches('quick_look_next_file', key) ||
@@ -207,7 +238,7 @@ class _QuickLookState extends State<_QuickLook> {
                 compact: true,
                 showInfo: true,
                 onToggleInfo: () {},
-                onClose: () => Navigator.of(context).pop(),
+                onClose: _requestClose,
               ),
               Container(height: 1, color: AppColors.bgDivider),
               Expanded(
@@ -229,7 +260,7 @@ class _QuickLookState extends State<_QuickLook> {
                 showInfo: _showInfo,
                 multiCount: entries.length,
                 onToggleInfo: () {},
-                onClose: () => Navigator.of(context).pop(),
+                onClose: _requestClose,
               ),
               Container(height: 1, color: AppColors.bgDivider),
               Expanded(child: MultiProperties(entries: entries)),
@@ -249,7 +280,7 @@ class _QuickLookState extends State<_QuickLook> {
                   compact: true,
                   showInfo: true,
                   onToggleInfo: () {},
-                  onClose: () => Navigator.of(context).pop(),
+                  onClose: _requestClose,
                 ),
                 Container(height: 1, color: AppColors.bgDivider),
                 Expanded(child: MultiProperties(entries: entries)),
@@ -266,13 +297,14 @@ class _QuickLookState extends State<_QuickLook> {
               compact: _compact,
               showInfo: _showInfo,
               onToggleInfo: () => setState(() => _showInfo = !_showInfo),
-              onClose: () => Navigator.of(context).pop(),
+              onClose: _requestClose,
             ),
             Container(height: 1, color: AppColors.bgDivider),
             Expanded(
               child: _Body(
                 entry: entry,
                 editorActive: _editorActive,
+                editorController: _editorController,
                 showInfo: _showInfo,
                 onCompactChanged: _setCompact,
               ),
@@ -554,12 +586,14 @@ Widget _split(Widget preview, FileEntry entry, {required bool showInfo}) {
 class _Body extends StatelessWidget {
   final FileEntry? entry;
   final ValueNotifier<bool> editorActive;
+  final CodeEditorController editorController;
   final bool showInfo;
   final ValueChanged<bool> onCompactChanged;
 
   const _Body({
     required this.entry,
     required this.editorActive,
+    required this.editorController,
     required this.showInfo,
     required this.onCompactChanged,
   });
@@ -589,6 +623,7 @@ class _Body extends StatelessWidget {
     return _ProbeLoader(
       entry: e,
       editorActive: editorActive,
+      editorController: editorController,
       showInfo: showInfo,
       onCompactChanged: onCompactChanged,
     );
@@ -598,12 +633,14 @@ class _Body extends StatelessWidget {
 class _ProbeLoader extends StatelessWidget {
   final FileEntry entry;
   final ValueNotifier<bool> editorActive;
+  final CodeEditorController editorController;
   final bool showInfo;
   final ValueChanged<bool> onCompactChanged;
 
   const _ProbeLoader({
     required this.entry,
     required this.editorActive,
+    required this.editorController,
     required this.showInfo,
     required this.onCompactChanged,
   });
@@ -628,6 +665,7 @@ class _ProbeLoader extends StatelessWidget {
                 extension: entry.extension,
                 initial: res.text,
                 editorActive: editorActive,
+                controller: editorController,
               ),
               entry,
               showInfo: showInfo,

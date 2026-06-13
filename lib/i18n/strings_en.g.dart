@@ -969,6 +969,18 @@ class Translations$quickLook$en {
 	/// en: 'Edit'
 	String get editAnyway => 'Edit';
 
+	/// en: 'Unsaved changes'
+	String get unsavedTitle => 'Unsaved changes';
+
+	/// en: 'You have unsaved changes. Save them before closing?'
+	String get unsavedMessage => 'You have unsaved changes. Save them before closing?';
+
+	/// en: 'Discard'
+	String get discard => 'Discard';
+
+	/// en: 'Cancel'
+	String get cancel => 'Cancel';
+
 	/// en: 'NORMAL'
 	String get vimNormal => 'NORMAL';
 
@@ -3650,6 +3662,10 @@ extension on Translations {
 			'quickLook.saveError' => 'Could not save file',
 			'quickLook.largeFileReadOnly' => 'Large file - opened read-only for speed',
 			'quickLook.editAnyway' => 'Edit',
+			'quickLook.unsavedTitle' => 'Unsaved changes',
+			'quickLook.unsavedMessage' => 'You have unsaved changes. Save them before closing?',
+			'quickLook.discard' => 'Discard',
+			'quickLook.cancel' => 'Cancel',
 			'quickLook.vimNormal' => 'NORMAL',
 			'quickLook.vimInsert' => 'INSERT',
 			'quickLook.vimVisual' => 'VISUAL',
@@ -3690,12 +3706,12 @@ extension on Translations {
 			'quickLook.sectionText' => 'Text',
 			'quickLook.hintSwitchFile' => 'Switch file',
 			'quickLook.hintClose' => 'Close',
+			_ => null,
+		} ?? switch (path) {
 			'toast.copiedItems' => ({required Object count}) => 'Copied ${count} items',
 			'toast.cutItems' => ({required Object count}) => 'Cut ${count} items',
 			'toast.selectionSaved' => ({required Object count, required Object path}) => 'Saved ${count} names to ${path}',
 			'toast.selectionLoaded' => ({required Object count}) => 'Selected ${count} visible items',
-			_ => null,
-		} ?? switch (path) {
 			'toast.selectionLoadEmpty' => 'No visible items matched',
 			'toast.terminalUnavailable' => 'Terminal is unavailable: native core not loaded',
 			'toast.selectionFileError' => ({required Object message}) => 'Selection file error: ${message}',
