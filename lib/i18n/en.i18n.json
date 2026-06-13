@@ -507,6 +507,7 @@
     "fileListZoomOut": "Zoom out file list",
     "fileListZoomReset": "Reset file list zoom",
     "toggleSidebar": "Toggle sidebar",
+    "toggleView": "Toggle list/grid view",
     "copy": "Copy",
     "cut": "Cut",
     "paste": "Paste",
@@ -747,6 +748,8 @@
     "operations": "Operations",
     "notifications": "Notifications",
     "search": "Search",
+    "listView": "List view",
+    "gridView": "Grid view",
     "more": "More"
   },
   "notifications": {

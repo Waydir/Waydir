@@ -78,6 +78,12 @@ mixin _WaydirKeyboardMixin
       return KeyEventResult.handled;
     }
 
+    if (AppShortcuts.matches('toggle_view', key)) {
+      final mode = SettingsStore.instance.fileViewMode;
+      mode.value = mode.value == 'grid' ? 'list' : 'grid';
+      return KeyEventResult.handled;
+    }
+
     if (AppShortcuts.matches('focus_path', key)) {
       _active.focusPathBar();
       return KeyEventResult.handled;

@@ -1170,6 +1170,17 @@ mixin _WaydirMenuMixin
                 ),
                 ContextMenuItem.divider,
                 ContextMenuItem(
+                  icon: WaydirIconsRegular.list,
+                  label: t.toolbar.listView,
+                  action: 'view_list',
+                ),
+                ContextMenuItem(
+                  icon: WaydirIconsRegular.squaresFour,
+                  label: t.toolbar.gridView,
+                  action: 'view_grid',
+                ),
+                ContextMenuItem.divider,
+                ContextMenuItem(
                   icon: WaydirIconsRegular.eye,
                   label: t.menu.showHidden,
                   action: 'toggle_hidden',
@@ -1181,6 +1192,10 @@ mixin _WaydirMenuMixin
                 switch (action) {
                   case 'toggle_dual':
                     _shell.toggleDual();
+                  case 'view_list':
+                    SettingsStore.instance.fileViewMode.value = 'list';
+                  case 'view_grid':
+                    SettingsStore.instance.fileViewMode.value = 'grid';
                   case 'toggle_hidden':
                     _toggleShowHiddenGlobal();
                 }
@@ -1284,6 +1299,18 @@ mixin _WaydirMenuMixin
             label: t.menu.dualPaneMode,
             onSelected: () {
               if (_shell.ready.value) _shell.toggleDual();
+            },
+          ),
+          PlatformMenuItem(
+            label: t.toolbar.listView,
+            onSelected: () {
+              SettingsStore.instance.fileViewMode.value = 'list';
+            },
+          ),
+          PlatformMenuItem(
+            label: t.toolbar.gridView,
+            onSelected: () {
+              SettingsStore.instance.fileViewMode.value = 'grid';
             },
           ),
           PlatformMenuItem(

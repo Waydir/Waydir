@@ -57,6 +57,7 @@ class AppSettings extends Table {
   BoolColumn get rememberFolderSort =>
       boolean().withDefault(const Constant(true))();
   RealColumn get fileListScale => real().withDefault(const Constant(1.0))();
+  TextColumn get fileViewMode => text().withDefault(const Constant('list'))();
   BoolColumn get showColumnSize =>
       boolean().withDefault(const Constant(true))();
   BoolColumn get showColumnDate =>
@@ -217,7 +218,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 34;
+  int get schemaVersion => 35;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -370,6 +371,9 @@ class AppDatabase extends _$AppDatabase {
         await customStatement(
           "UPDATE app_settings SET show_column_kind = 1, column_order = 'kind,size,date,created,permissions,owner' WHERE show_column_size = 1 AND show_column_date = 1 AND show_column_kind = 0 AND show_column_created = 0 AND show_column_permissions = 0 AND show_column_owner = 0 AND column_order = 'size,date,kind,created,permissions,owner'",
         );
+      }
+      if (from < 35) {
+        await addSettingColumn(appSettings.fileViewMode);
       }
     },
   );

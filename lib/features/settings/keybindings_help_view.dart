@@ -104,6 +104,7 @@ String _labelFor(ShortcutDef s) => switch (s.id) {
   'file_list_zoom_out' => t.keybindings.fileListZoomOut,
   'file_list_zoom_reset' => t.keybindings.fileListZoomReset,
   'toggle_sidebar' => t.keybindings.toggleSidebar,
+  'toggle_view' => t.keybindings.toggleView,
   'copy' => t.keybindings.copy,
   'cut' => t.keybindings.cut,
   'paste' => t.keybindings.paste,

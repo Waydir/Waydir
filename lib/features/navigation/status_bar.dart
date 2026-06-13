@@ -65,6 +65,8 @@ class StatusBar extends StatelessWidget {
             },
           ),
           const Spacer(),
+          const _StatusViewModeToggle(),
+          const SizedBox(width: 10),
           const _StatusZoomControl(),
           const SizedBox(width: 8),
           _StatusVersion(),
@@ -85,6 +87,89 @@ class StatusBar extends StatelessWidget {
       child: Text(
         '|',
         style: context.txt.row.copyWith(color: AppColors.fgSubtle),
+      ),
+    );
+  }
+}
+
+class _StatusViewModeToggle extends StatelessWidget {
+  const _StatusViewModeToggle();
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsStore.instance;
+    return SignalBuilder(
+      builder: (context) {
+        final grid = settings.fileViewMode.value == 'grid';
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _StatusViewModeButton(
+              icon: WaydirIconsRegular.list,
+              tooltip: t.toolbar.listView,
+              active: !grid,
+              onTap: () => settings.fileViewMode.value = 'list',
+            ),
+            _StatusViewModeButton(
+              icon: WaydirIconsRegular.squaresFour,
+              tooltip: t.toolbar.gridView,
+              active: grid,
+              onTap: () => settings.fileViewMode.value = 'grid',
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _StatusViewModeButton extends StatefulWidget {
+  final IconData icon;
+  final String tooltip;
+  final bool active;
+  final VoidCallback onTap;
+
+  const _StatusViewModeButton({
+    required this.icon,
+    required this.tooltip,
+    required this.active,
+    required this.onTap,
+  });
+
+  @override
+  State<_StatusViewModeButton> createState() => _StatusViewModeButtonState();
+}
+
+class _StatusViewModeButtonState extends State<_StatusViewModeButton> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = widget.active
+        ? AppColors.accent
+        : (_hovered ? AppColors.fg : AppColors.fgMuted);
+    return Tooltip(
+      message: widget.tooltip,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(
+          onTap: widget.onTap,
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            width: 22,
+            height: 20,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: widget.active
+                  ? AppColors.accent.withValues(alpha: 0.14)
+                  : (_hovered ? AppColors.bgHover : Colors.transparent),
+              borderRadius: BorderRadius.zero,
+            ),
+            child: Icon(widget.icon, size: 14, color: color),
+          ),
+        ),
       ),
     );
   }

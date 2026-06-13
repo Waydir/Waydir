@@ -834,6 +834,9 @@ class Translations$keybindings$en {
 	/// en: 'Toggle sidebar'
 	String get toggleSidebar => 'Toggle sidebar';
 
+	/// en: 'Toggle list/grid view'
+	String get toggleView => 'Toggle list/grid view';
+
 	/// en: 'Copy'
 	String get copy => 'Copy';
 
@@ -1398,6 +1401,12 @@ class Translations$toolbar$en {
 
 	/// en: 'Search'
 	String get search => 'Search';
+
+	/// en: 'List view'
+	String get listView => 'List view';
+
+	/// en: 'Grid view'
+	String get gridView => 'Grid view';
 
 	/// en: 'More'
 	String get more => 'More';
@@ -3629,6 +3638,7 @@ extension on Translations {
 			'keybindings.fileListZoomOut' => 'Zoom out file list',
 			'keybindings.fileListZoomReset' => 'Reset file list zoom',
 			'keybindings.toggleSidebar' => 'Toggle sidebar',
+			'keybindings.toggleView' => 'Toggle list/grid view',
 			'keybindings.copy' => 'Copy',
 			'keybindings.cut' => 'Cut',
 			'keybindings.paste' => 'Paste',
@@ -3711,9 +3721,9 @@ extension on Translations {
 			'quickLook.sectionImage' => 'Image',
 			'quickLook.sectionText' => 'Text',
 			'quickLook.hintSwitchFile' => 'Switch file',
-			'quickLook.hintClose' => 'Close',
 			_ => null,
 		} ?? switch (path) {
+			'quickLook.hintClose' => 'Close',
 			'toast.copiedItems' => ({required Object count}) => 'Copied ${count} items',
 			'toast.cutItems' => ({required Object count}) => 'Cut ${count} items',
 			'toast.selectionSaved' => ({required Object count, required Object path}) => 'Saved ${count} names to ${path}',
@@ -3823,6 +3833,8 @@ extension on Translations {
 			'toolbar.operations' => 'Operations',
 			'toolbar.notifications' => 'Notifications',
 			'toolbar.search' => 'Search',
+			'toolbar.listView' => 'List view',
+			'toolbar.gridView' => 'Grid view',
 			'toolbar.more' => 'More',
 			'notifications.title' => 'Notifications',
 			'notifications.empty' => 'No notifications yet',

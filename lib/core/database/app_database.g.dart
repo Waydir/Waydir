@@ -471,6 +471,18 @@ class $AppSettingsTable extends AppSettings
     requiredDuringInsert: false,
     defaultValue: const Constant(1.0),
   );
+  static const VerificationMeta _fileViewModeMeta = const VerificationMeta(
+    'fileViewMode',
+  );
+  @override
+  late final GeneratedColumn<String> fileViewMode = GeneratedColumn<String>(
+    'file_view_mode',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('list'),
+  );
   static const VerificationMeta _showColumnSizeMeta = const VerificationMeta(
     'showColumnSize',
   );
@@ -735,6 +747,7 @@ class $AppSettingsTable extends AppSettings
     rememberFolderState,
     rememberFolderSort,
     fileListScale,
+    fileViewMode,
     showColumnSize,
     showColumnDate,
     showColumnKind,
@@ -1049,6 +1062,15 @@ class $AppSettingsTable extends AppSettings
         ),
       );
     }
+    if (data.containsKey('file_view_mode')) {
+      context.handle(
+        _fileViewModeMeta,
+        fileViewMode.isAcceptableOrUnknown(
+          data['file_view_mode']!,
+          _fileViewModeMeta,
+        ),
+      );
+    }
     if (data.containsKey('show_column_size')) {
       context.handle(
         _showColumnSizeMeta,
@@ -1342,6 +1364,10 @@ class $AppSettingsTable extends AppSettings
         DriftSqlType.double,
         data['${effectivePrefix}file_list_scale'],
       )!,
+      fileViewMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}file_view_mode'],
+      )!,
       showColumnSize: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}show_column_size'],
@@ -1451,6 +1477,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
   final bool rememberFolderState;
   final bool rememberFolderSort;
   final double fileListScale;
+  final String fileViewMode;
   final bool showColumnSize;
   final bool showColumnDate;
   final bool showColumnKind;
@@ -1503,6 +1530,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     required this.rememberFolderState,
     required this.rememberFolderSort,
     required this.fileListScale,
+    required this.fileViewMode,
     required this.showColumnSize,
     required this.showColumnDate,
     required this.showColumnKind,
@@ -1560,6 +1588,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     map['remember_folder_state'] = Variable<bool>(rememberFolderState);
     map['remember_folder_sort'] = Variable<bool>(rememberFolderSort);
     map['file_list_scale'] = Variable<double>(fileListScale);
+    map['file_view_mode'] = Variable<String>(fileViewMode);
     map['show_column_size'] = Variable<bool>(showColumnSize);
     map['show_column_date'] = Variable<bool>(showColumnDate);
     map['show_column_kind'] = Variable<bool>(showColumnKind);
@@ -1620,6 +1649,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       rememberFolderState: Value(rememberFolderState),
       rememberFolderSort: Value(rememberFolderSort),
       fileListScale: Value(fileListScale),
+      fileViewMode: Value(fileViewMode),
       showColumnSize: Value(showColumnSize),
       showColumnDate: Value(showColumnDate),
       showColumnKind: Value(showColumnKind),
@@ -1698,6 +1728,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       ),
       rememberFolderSort: serializer.fromJson<bool>(json['rememberFolderSort']),
       fileListScale: serializer.fromJson<double>(json['fileListScale']),
+      fileViewMode: serializer.fromJson<String>(json['fileViewMode']),
       showColumnSize: serializer.fromJson<bool>(json['showColumnSize']),
       showColumnDate: serializer.fromJson<bool>(json['showColumnDate']),
       showColumnKind: serializer.fromJson<bool>(json['showColumnKind']),
@@ -1773,6 +1804,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       'rememberFolderState': serializer.toJson<bool>(rememberFolderState),
       'rememberFolderSort': serializer.toJson<bool>(rememberFolderSort),
       'fileListScale': serializer.toJson<double>(fileListScale),
+      'fileViewMode': serializer.toJson<String>(fileViewMode),
       'showColumnSize': serializer.toJson<bool>(showColumnSize),
       'showColumnDate': serializer.toJson<bool>(showColumnDate),
       'showColumnKind': serializer.toJson<bool>(showColumnKind),
@@ -1834,6 +1866,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     bool? rememberFolderState,
     bool? rememberFolderSort,
     double? fileListScale,
+    String? fileViewMode,
     bool? showColumnSize,
     bool? showColumnDate,
     bool? showColumnKind,
@@ -1888,6 +1921,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     rememberFolderState: rememberFolderState ?? this.rememberFolderState,
     rememberFolderSort: rememberFolderSort ?? this.rememberFolderSort,
     fileListScale: fileListScale ?? this.fileListScale,
+    fileViewMode: fileViewMode ?? this.fileViewMode,
     showColumnSize: showColumnSize ?? this.showColumnSize,
     showColumnDate: showColumnDate ?? this.showColumnDate,
     showColumnKind: showColumnKind ?? this.showColumnKind,
@@ -2006,6 +2040,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       fileListScale: data.fileListScale.present
           ? data.fileListScale.value
           : this.fileListScale,
+      fileViewMode: data.fileViewMode.present
+          ? data.fileViewMode.value
+          : this.fileViewMode,
       showColumnSize: data.showColumnSize.present
           ? data.showColumnSize.value
           : this.showColumnSize,
@@ -2095,6 +2132,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           ..write('rememberFolderState: $rememberFolderState, ')
           ..write('rememberFolderSort: $rememberFolderSort, ')
           ..write('fileListScale: $fileListScale, ')
+          ..write('fileViewMode: $fileViewMode, ')
           ..write('showColumnSize: $showColumnSize, ')
           ..write('showColumnDate: $showColumnDate, ')
           ..write('showColumnKind: $showColumnKind, ')
@@ -2154,6 +2192,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     rememberFolderState,
     rememberFolderSort,
     fileListScale,
+    fileViewMode,
     showColumnSize,
     showColumnDate,
     showColumnKind,
@@ -2210,6 +2249,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           other.rememberFolderState == this.rememberFolderState &&
           other.rememberFolderSort == this.rememberFolderSort &&
           other.fileListScale == this.fileListScale &&
+          other.fileViewMode == this.fileViewMode &&
           other.showColumnSize == this.showColumnSize &&
           other.showColumnDate == this.showColumnDate &&
           other.showColumnKind == this.showColumnKind &&
@@ -2265,6 +2305,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
   final Value<bool> rememberFolderState;
   final Value<bool> rememberFolderSort;
   final Value<double> fileListScale;
+  final Value<String> fileViewMode;
   final Value<bool> showColumnSize;
   final Value<bool> showColumnDate;
   final Value<bool> showColumnKind;
@@ -2317,6 +2358,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.rememberFolderState = const Value.absent(),
     this.rememberFolderSort = const Value.absent(),
     this.fileListScale = const Value.absent(),
+    this.fileViewMode = const Value.absent(),
     this.showColumnSize = const Value.absent(),
     this.showColumnDate = const Value.absent(),
     this.showColumnKind = const Value.absent(),
@@ -2370,6 +2412,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.rememberFolderState = const Value.absent(),
     this.rememberFolderSort = const Value.absent(),
     this.fileListScale = const Value.absent(),
+    this.fileViewMode = const Value.absent(),
     this.showColumnSize = const Value.absent(),
     this.showColumnDate = const Value.absent(),
     this.showColumnKind = const Value.absent(),
@@ -2423,6 +2466,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Expression<bool>? rememberFolderState,
     Expression<bool>? rememberFolderSort,
     Expression<double>? fileListScale,
+    Expression<String>? fileViewMode,
     Expression<bool>? showColumnSize,
     Expression<bool>? showColumnDate,
     Expression<bool>? showColumnKind,
@@ -2486,6 +2530,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       if (rememberFolderSort != null)
         'remember_folder_sort': rememberFolderSort,
       if (fileListScale != null) 'file_list_scale': fileListScale,
+      if (fileViewMode != null) 'file_view_mode': fileViewMode,
       if (showColumnSize != null) 'show_column_size': showColumnSize,
       if (showColumnDate != null) 'show_column_date': showColumnDate,
       if (showColumnKind != null) 'show_column_kind': showColumnKind,
@@ -2549,6 +2594,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Value<bool>? rememberFolderState,
     Value<bool>? rememberFolderSort,
     Value<double>? fileListScale,
+    Value<String>? fileViewMode,
     Value<bool>? showColumnSize,
     Value<bool>? showColumnDate,
     Value<bool>? showColumnKind,
@@ -2606,6 +2652,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       rememberFolderState: rememberFolderState ?? this.rememberFolderState,
       rememberFolderSort: rememberFolderSort ?? this.rememberFolderSort,
       fileListScale: fileListScale ?? this.fileListScale,
+      fileViewMode: fileViewMode ?? this.fileViewMode,
       showColumnSize: showColumnSize ?? this.showColumnSize,
       showColumnDate: showColumnDate ?? this.showColumnDate,
       showColumnKind: showColumnKind ?? this.showColumnKind,
@@ -2748,6 +2795,9 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     if (fileListScale.present) {
       map['file_list_scale'] = Variable<double>(fileListScale.value);
     }
+    if (fileViewMode.present) {
+      map['file_view_mode'] = Variable<String>(fileViewMode.value);
+    }
     if (showColumnSize.present) {
       map['show_column_size'] = Variable<bool>(showColumnSize.value);
     }
@@ -2851,6 +2901,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
           ..write('rememberFolderState: $rememberFolderState, ')
           ..write('rememberFolderSort: $rememberFolderSort, ')
           ..write('fileListScale: $fileListScale, ')
+          ..write('fileViewMode: $fileViewMode, ')
           ..write('showColumnSize: $showColumnSize, ')
           ..write('showColumnDate: $showColumnDate, ')
           ..write('showColumnKind: $showColumnKind, ')
@@ -6162,6 +6213,7 @@ typedef $$AppSettingsTableCreateCompanionBuilder =
       Value<bool> rememberFolderState,
       Value<bool> rememberFolderSort,
       Value<double> fileListScale,
+      Value<String> fileViewMode,
       Value<bool> showColumnSize,
       Value<bool> showColumnDate,
       Value<bool> showColumnKind,
@@ -6216,6 +6268,7 @@ typedef $$AppSettingsTableUpdateCompanionBuilder =
       Value<bool> rememberFolderState,
       Value<bool> rememberFolderSort,
       Value<double> fileListScale,
+      Value<String> fileViewMode,
       Value<bool> showColumnSize,
       Value<bool> showColumnDate,
       Value<bool> showColumnKind,
@@ -6415,6 +6468,11 @@ class $$AppSettingsTableFilterComposer
 
   ColumnFilters<double> get fileListScale => $composableBuilder(
     column: $table.fileListScale,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fileViewMode => $composableBuilder(
+    column: $table.fileViewMode,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6683,6 +6741,11 @@ class $$AppSettingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get fileViewMode => $composableBuilder(
+    column: $table.fileViewMode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get showColumnSize => $composableBuilder(
     column: $table.showColumnSize,
     builder: (column) => ColumnOrderings(column),
@@ -6938,6 +7001,11 @@ class $$AppSettingsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get fileViewMode => $composableBuilder(
+    column: $table.fileViewMode,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<bool> get showColumnSize => $composableBuilder(
     column: $table.showColumnSize,
     builder: (column) => column,
@@ -7085,6 +7153,7 @@ class $$AppSettingsTableTableManager
                 Value<bool> rememberFolderState = const Value.absent(),
                 Value<bool> rememberFolderSort = const Value.absent(),
                 Value<double> fileListScale = const Value.absent(),
+                Value<String> fileViewMode = const Value.absent(),
                 Value<bool> showColumnSize = const Value.absent(),
                 Value<bool> showColumnDate = const Value.absent(),
                 Value<bool> showColumnKind = const Value.absent(),
@@ -7137,6 +7206,7 @@ class $$AppSettingsTableTableManager
                 rememberFolderState: rememberFolderState,
                 rememberFolderSort: rememberFolderSort,
                 fileListScale: fileListScale,
+                fileViewMode: fileViewMode,
                 showColumnSize: showColumnSize,
                 showColumnDate: showColumnDate,
                 showColumnKind: showColumnKind,
@@ -7191,6 +7261,7 @@ class $$AppSettingsTableTableManager
                 Value<bool> rememberFolderState = const Value.absent(),
                 Value<bool> rememberFolderSort = const Value.absent(),
                 Value<double> fileListScale = const Value.absent(),
+                Value<String> fileViewMode = const Value.absent(),
                 Value<bool> showColumnSize = const Value.absent(),
                 Value<bool> showColumnDate = const Value.absent(),
                 Value<bool> showColumnKind = const Value.absent(),
@@ -7243,6 +7314,7 @@ class $$AppSettingsTableTableManager
                 rememberFolderState: rememberFolderState,
                 rememberFolderSort: rememberFolderSort,
                 fileListScale: fileListScale,
+                fileViewMode: fileViewMode,
                 showColumnSize: showColumnSize,
                 showColumnDate: showColumnDate,
                 showColumnKind: showColumnKind,

@@ -274,8 +274,18 @@ class WaydirIconsRegular {
     fontFamily: 'PhosphorRegular',
     matchTextDirection: true,
   );
+  static const IconData gridFour = IconData(
+    0xe296,
+    fontFamily: 'PhosphorRegular',
+    matchTextDirection: true,
+  );
   static const IconData hardDrive = IconData(
     0xe29e,
+    fontFamily: 'PhosphorRegular',
+    matchTextDirection: true,
+  );
+  static const IconData squaresFour = IconData(
+    0xe3e6,
     fontFamily: 'PhosphorRegular',
     matchTextDirection: true,
   );

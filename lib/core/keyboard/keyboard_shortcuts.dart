@@ -400,6 +400,14 @@ class AppShortcuts {
       ctrl: true,
     ),
     ShortcutDef(
+      id: 'toggle_view',
+      label: () => '',
+      group: ShortcutGroup.view,
+      key: LogicalKeyboardKey.keyG,
+      ctrl: true,
+      shift: true,
+    ),
+    ShortcutDef(
       id: 'switch_pane',
       label: () => '',
       group: ShortcutGroup.panes,

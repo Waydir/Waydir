@@ -241,6 +241,7 @@ class NavigationStore {
   final pathBarFocusRequest = signal(0);
   final searchPatternError = signal<String?>(null);
   final renameAttempt = signal(0);
+  final gridColumns = signal(1);
 
   SearchHandle? _searchHandle;
   Timer? _searchDebounce;
@@ -2509,13 +2510,21 @@ class NavigationStore {
     if (rows > 0) _pageRows = rows;
   }
 
+  void setGridColumns(int columns) {
+    if (columns > 0) gridColumns.value = columns;
+  }
+
   void moveCursor(int delta) {
+    final settings = SettingsStore.instance;
+    final step = settings.fileViewMode.value == 'grid' && delta.abs() == 1
+        ? delta * gridColumns.value.clamp(1, 1000)
+        : delta;
     if (_vf.isEmpty) return;
     if (cursorIndex.value < 0) {
-      _initCursor(delta > 0 ? 0 : _vf.length - 1);
+      _initCursor(step > 0 ? 0 : _vf.length - 1);
       return;
     }
-    final next = cursorIndex.value + delta;
+    final next = cursorIndex.value + step;
     if (next < 0 || next >= _vf.length) return;
     _applyCursorMove(next);
   }

@@ -14,6 +14,7 @@ import '../../features/files/file_view.dart'
         BackgroundContextMenuCallback,
         FileContextMenuCallback,
         FileMenuActionCallback;
+import '../../features/files/file_grid.dart' show FileGrid;
 import '../../features/files/rubber_band_layer.dart'
     show RubberBandSelectCallback;
 import '../git/git_status_bar.dart';
@@ -259,11 +260,36 @@ class _TabContent extends StatelessWidget {
                 ? store.clipboardPaths.value
                 : <String>{};
             final currentPath = store.currentPath.value;
+            final recursive =
+                store.searchActive.value && store.searchRecursive.value;
+            if (SettingsStore.instance.fileViewMode.value == 'grid') {
+              return FileGrid(
+                files: files,
+                currentPath: currentPath,
+                recursiveResults: recursive,
+                onSelect: store.onSelect,
+                onOpen: store.onOpen,
+                onBackgroundTap: store.onBackgroundTap,
+                onBackgroundContextMenu: onBackgroundContextMenu,
+                onContextMenu: onContextMenu,
+                onDropFiles: store.dropFiles,
+                selectedPaths: selected,
+                cursorIndex: cursorIndex,
+                cutPaths: cutPaths,
+                renamingPath: store.renamingPath.value,
+                renameAttempt: store.renameAttempt.value,
+                onRenameSubmit: store.commitRename,
+                onRenameCancel: store.cancelRename,
+                onCloseSearch: store.closeSearch,
+                onOpenInNewTab: onOpenInNewTab,
+                onPageRows: store.setPageRows,
+                onGridColumns: store.setGridColumns,
+              );
+            }
             return FileList(
               files: files,
               currentPath: currentPath,
-              recursiveResults:
-                  store.searchActive.value && store.searchRecursive.value,
+              recursiveResults: recursive,
               onSelect: store.onSelect,
               onOpen: store.onOpen,
               onBackgroundTap: store.onBackgroundTap,
