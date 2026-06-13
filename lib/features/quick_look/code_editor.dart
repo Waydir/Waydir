@@ -16,6 +16,7 @@ import '../../i18n/strings.g.dart';
 import '../../ui/theme/app_theme.dart';
 import '../../ui/theme/app_text_styles.dart';
 import 'editor_languages.dart';
+import 'quick_look_common.dart';
 
 enum _VimMode { normal, insert, visual }
 
@@ -56,6 +57,7 @@ class CodeEditor extends StatefulWidget {
 
 class _CodeEditorState extends State<CodeEditor> {
   late final re.CodeLineEditingController _ctrl;
+  late final bool _highlight = widget.initial.length <= maxHighlightChars;
   final _scroll = re.CodeScrollController();
   final _focus = FocusNode();
 
@@ -345,7 +347,7 @@ class _CodeEditorState extends State<CodeEditor> {
           cursorWidth: readOnly ? fontSize * 0.5 : 1.5,
           cursorLineColor: AppColors.fg.withValues(alpha: 0.04),
           chunkIndicatorColor: AppColors.fgSubtle,
-          codeTheme: lang == null
+          codeTheme: lang == null || !_highlight
               ? null
               : re.CodeHighlightTheme(
                   languages: {lang.id: lang.mode},

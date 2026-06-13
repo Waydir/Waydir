@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Quick Look editor now uses a viewport-virtualized engine (re_editor), so editing stays fast even on very large files.
+- Quick Look now previews text files up to 32 MB (was 4 MB); syntax highlighting is skipped above 1 MB to keep large files instant.
 - The changelog viewer now shows only released versions with cleaner headings.
 - Quick Look now shows a Created date and formats dates using your date-format preference.
 

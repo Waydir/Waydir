@@ -82,8 +82,8 @@ const binaryExts = {
   'msi',
   'appimage',
 };
-const maxTextBytes = 4 * 1024 * 1024;
-const maxHighlightChars = 200 * 1024;
+const maxTextBytes = 32 * 1024 * 1024;
+const maxHighlightChars = 1024 * 1024;
 const panelWidth = 300.0;
 
 class QlCentered extends StatelessWidget {
