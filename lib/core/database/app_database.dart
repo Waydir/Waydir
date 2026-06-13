@@ -82,9 +82,13 @@ class AppSettings extends Table {
       real().withDefault(const Constant(1.5))();
   BoolColumn get quickLookShowLineNumbers =>
       boolean().withDefault(const Constant(false))();
+  BoolColumn get quickLookRelativeLineNumbers =>
+      boolean().withDefault(const Constant(false))();
   BoolColumn get quickLookVimMode =>
       boolean().withDefault(const Constant(false))();
   BoolColumn get quickLookWrapLines =>
+      boolean().withDefault(const Constant(true))();
+  BoolColumn get quickLookShowStatistics =>
       boolean().withDefault(const Constant(true))();
 }
 
@@ -213,7 +217,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 32;
+  int get schemaVersion => 33;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -357,6 +361,10 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 32) {
         await addSettingColumn(appSettings.quickLookWrapLines);
+      }
+      if (from < 33) {
+        await addSettingColumn(appSettings.quickLookRelativeLineNumbers);
+        await addSettingColumn(appSettings.quickLookShowStatistics);
       }
     },
   );

@@ -716,6 +716,7 @@ class _CodeEditorState extends State<CodeEditor> {
           final fontSize = s.quickLookFontSize.value.toDouble();
           final lineHeight = s.quickLookLineHeight.value;
           final showLineNumbers = s.quickLookShowLineNumbers.value;
+          final relativeLineNumbers = s.quickLookRelativeLineNumbers.value;
           final wrapLines = s.quickLookWrapLines.value;
           final readOnly = vimEnabled && _vim != _VimMode.insert;
           final baseStyle = TextStyle(
@@ -739,8 +740,14 @@ class _CodeEditorState extends State<CodeEditor> {
                       final lineNumberStyle = baseStyle.copyWith(
                         color: AppColors.fgSubtle,
                       );
+                      final maxLineNumber = relativeLineNumbers
+                          ? [
+                              _caretLine,
+                              _lines - 1 - _caretLine,
+                            ].reduce((a, b) => a > b ? a : b).clamp(0, _lines)
+                          : _lines;
                       final gutterWidth = showLineNumbers
-                          ? _lineNumberWidth(_lines, lineNumberStyle)
+                          ? _lineNumberWidth(maxLineNumber, lineNumberStyle)
                           : 0.0;
                       final paneWidth = (constraints.maxWidth - gutterWidth)
                           .clamp(0.0, double.infinity);
@@ -789,6 +796,8 @@ class _CodeEditorState extends State<CodeEditor> {
                               strutStyle: strut,
                               topPad: _topPad,
                               width: gutterWidth,
+                              relative: relativeLineNumbers,
+                              currentLine: _caretLine,
                             ),
                           Expanded(
                             child: wrapLines
@@ -838,6 +847,8 @@ class _LineGutter extends StatelessWidget {
   final StrutStyle strutStyle;
   final double topPad;
   final double width;
+  final bool relative;
+  final int currentLine;
 
   const _LineGutter({
     required this.lineHeights,
@@ -846,7 +857,15 @@ class _LineGutter extends StatelessWidget {
     required this.strutStyle,
     required this.topPad,
     required this.width,
+    required this.relative,
+    required this.currentLine,
   });
+
+  String _label(int index) {
+    if (!relative) return '${index + 1}';
+    final distance = (index - currentLine).abs();
+    return '$distance';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -879,7 +898,7 @@ class _LineGutter extends StatelessWidget {
                           child: Align(
                             alignment: Alignment.topRight,
                             child: Text(
-                              '${i + 1}',
+                              _label(i),
                               textAlign: TextAlign.right,
                               style: style,
                               strutStyle: strutStyle,

@@ -245,10 +245,14 @@
       "lineHeightHint": "Vertical spacing between editor lines.",
       "showLineNumbers": "Show line numbers",
       "showLineNumbersHint": "Display a line-number gutter in the editor.",
+      "relativeLineNumbers": "Relative line numbers",
+      "relativeLineNumbersHint": "Show distance from the current line instead of absolute numbers.",
       "wrapLines": "Wrap lines",
       "wrapLinesHint": "Wrap long lines instead of scrolling horizontally.",
       "vimMode": "Vim mode",
-      "vimModeHint": "Basic modal editing: movement, insert and simple edits."
+      "vimModeHint": "Basic modal editing: movement, insert and simple edits.",
+      "showStatistics": "Show statistics",
+      "showStatisticsHint": "Compute size and type breakdowns when inspecting multiple items."
     },
     "appearance": {
       "title": "Appearance",

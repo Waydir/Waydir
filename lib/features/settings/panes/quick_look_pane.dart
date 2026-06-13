@@ -36,6 +36,8 @@ class _QuickLookPaneState extends State<QuickLookPane> {
     final fontSize = registry.byId('quickLook.fontSize');
     final lineHeight = registry.byId('quickLook.lineHeight');
     final showLineNumbers = registry.byId('quickLook.showLineNumbers');
+    final relativeLineNumbers = registry.byId('quickLook.relativeLineNumbers');
+    final showStatistics = registry.byId('quickLook.showStatistics');
     final wrapLines = registry.byId('quickLook.wrapLines');
     final vimMode = registry.byId('quickLook.vimMode');
 
@@ -59,8 +61,17 @@ class _QuickLookPaneState extends State<QuickLookPane> {
           title: t.preferences.quickLook.editorSection,
           children: [
             RegistrySettingRow(setting: showLineNumbers),
+            SignalBuilder(
+              builder: (_) {
+                if (showLineNumbers.value != true) {
+                  return const SizedBox.shrink();
+                }
+                return RegistrySettingRow(setting: relativeLineNumbers);
+              },
+            ),
             RegistrySettingRow(setting: wrapLines),
             RegistrySettingRow(setting: vimMode),
+            RegistrySettingRow(setting: showStatistics),
           ],
         ),
       ],

@@ -60,8 +60,10 @@ class SettingsStore {
   final quickLookFontSize = signal<int>(13);
   final quickLookLineHeight = signal<double>(1.5);
   final quickLookShowLineNumbers = signal<bool>(false);
+  final quickLookRelativeLineNumbers = signal<bool>(false);
   final quickLookVimMode = signal<bool>(false);
   final quickLookWrapLines = signal<bool>(true);
+  final quickLookShowStatistics = signal<bool>(true);
   final shortcutBindings = signal<Map<String, KeyChord>>({});
 
   late final AppDatabase _db;
@@ -128,8 +130,10 @@ class SettingsStore {
     quickLookFontSize.value = row.quickLookFontSize;
     quickLookLineHeight.value = row.quickLookLineHeight;
     quickLookShowLineNumbers.value = row.quickLookShowLineNumbers;
+    quickLookRelativeLineNumbers.value = row.quickLookRelativeLineNumbers;
     quickLookVimMode.value = row.quickLookVimMode;
     quickLookWrapLines.value = row.quickLookWrapLines;
+    quickLookShowStatistics.value = row.quickLookShowStatistics;
     final shortcutRows = await _db.getShortcutBindings();
     final bindings = <String, KeyChord>{};
     for (final row in shortcutRows) {
@@ -234,8 +238,10 @@ class SettingsStore {
         quickLookFontSize.value;
         quickLookLineHeight.value;
         quickLookShowLineNumbers.value;
+        quickLookRelativeLineNumbers.value;
         quickLookVimMode.value;
         quickLookWrapLines.value;
+        quickLookShowStatistics.value;
         if (!_loaded) return;
         _scheduleSave();
       }),
@@ -297,8 +303,12 @@ class SettingsStore {
           quickLookFontSize: Value(quickLookFontSize.value),
           quickLookLineHeight: Value(quickLookLineHeight.value),
           quickLookShowLineNumbers: Value(quickLookShowLineNumbers.value),
+          quickLookRelativeLineNumbers: Value(
+            quickLookRelativeLineNumbers.value,
+          ),
           quickLookVimMode: Value(quickLookVimMode.value),
           quickLookWrapLines: Value(quickLookWrapLines.value),
+          quickLookShowStatistics: Value(quickLookShowStatistics.value),
         ),
       );
     } catch (_) {}

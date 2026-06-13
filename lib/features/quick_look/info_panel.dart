@@ -781,6 +781,7 @@ class _MultiPropertiesState extends State<MultiProperties> {
 
   void _startTypeScan(List<FileEntry> folderEntries) {
     if (folderEntries.isEmpty) return;
+    if (!SettingsStore.instance.quickLookShowStatistics.value) return;
     final gen = ++_typeScanGen;
     _typeScanDone = false;
     unawaited(
@@ -911,6 +912,8 @@ class _MultiPropertiesState extends State<MultiProperties> {
 
     String live(String base) => allDone ? base : '$base · $calc';
 
+    final showStatistics = SettingsStore.instance.quickLookShowStatistics.value;
+
     return Container(
       color: AppColors.bgSidebar,
       child: Column(
@@ -933,41 +936,43 @@ class _MultiPropertiesState extends State<MultiProperties> {
               ],
             ),
           ),
-          Container(height: 1, color: AppColors.bgDivider),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SectionLabel(t.quickLook.sectionStatistics),
-                  Expanded(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Expanded(
-                          child: _StatisticsList(
-                            title: t.quickLook.sizeBreakdown,
-                            child: _StatisticsItems(items: largest),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _StatisticsList(
-                            title: t.quickLook.typeBreakdown,
-                            child: _TypeBreakdownItems(
-                              items: typeBreakdown,
-                              done: _typeScanDone,
+          if (showStatistics) ...[
+            Container(height: 1, color: AppColors.bgDivider),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SectionLabel(t.quickLook.sectionStatistics),
+                    Expanded(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(
+                            child: _StatisticsList(
+                              title: t.quickLook.sizeBreakdown,
+                              child: _StatisticsItems(items: largest),
                             ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _StatisticsList(
+                              title: t.quickLook.typeBreakdown,
+                              child: _TypeBreakdownItems(
+                                items: typeBreakdown,
+                                done: _typeScanDone,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );

@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Quick Look: relative line numbers option, showing distance from the current line.
+- Quick Look: option to turn off the statistics panel for multi-selection properties.
 - The path bar now expands environment variables: `%VAR%` on Windows and `$VAR`/`${VAR}` on Linux and macOS. ([#163](https://github.com/Waydir/Waydir/issues/163))
 - Command-line support: launch Waydir with folder paths and options to open straight to a location. Run `waydir --help` for details. ([#164](https://github.com/Waydir/Waydir/issues/164))
 
@@ -16,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Quick Look now shows a Created date and formats dates using your date-format preference.
 
 ### Fixed
+- Quick Look: the line-number gutter now always widens to fit the longest number.
 - Windows: the Permissions and Owner columns and the Quick Look permissions row, which are POSIX-only, are no longer shown.
 
 ## [0.15.0] - 2026-06-11

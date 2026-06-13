@@ -2430,6 +2430,12 @@ class Translations$preferences$quickLook$en {
 	/// en: 'Display a line-number gutter in the editor.'
 	String get showLineNumbersHint => 'Display a line-number gutter in the editor.';
 
+	/// en: 'Relative line numbers'
+	String get relativeLineNumbers => 'Relative line numbers';
+
+	/// en: 'Show distance from the current line instead of absolute numbers.'
+	String get relativeLineNumbersHint => 'Show distance from the current line instead of absolute numbers.';
+
 	/// en: 'Wrap lines'
 	String get wrapLines => 'Wrap lines';
 
@@ -2441,6 +2447,12 @@ class Translations$preferences$quickLook$en {
 
 	/// en: 'Basic modal editing: movement, insert and simple edits.'
 	String get vimModeHint => 'Basic modal editing: movement, insert and simple edits.';
+
+	/// en: 'Show statistics'
+	String get showStatistics => 'Show statistics';
+
+	/// en: 'Compute size and type breakdowns when inspecting multiple items.'
+	String get showStatisticsHint => 'Compute size and type breakdowns when inspecting multiple items.';
 }
 
 // Path: preferences.appearance
@@ -3376,10 +3388,14 @@ extension on Translations {
 			'preferences.quickLook.lineHeightHint' => 'Vertical spacing between editor lines.',
 			'preferences.quickLook.showLineNumbers' => 'Show line numbers',
 			'preferences.quickLook.showLineNumbersHint' => 'Display a line-number gutter in the editor.',
+			'preferences.quickLook.relativeLineNumbers' => 'Relative line numbers',
+			'preferences.quickLook.relativeLineNumbersHint' => 'Show distance from the current line instead of absolute numbers.',
 			'preferences.quickLook.wrapLines' => 'Wrap lines',
 			'preferences.quickLook.wrapLinesHint' => 'Wrap long lines instead of scrolling horizontally.',
 			'preferences.quickLook.vimMode' => 'Vim mode',
 			'preferences.quickLook.vimModeHint' => 'Basic modal editing: movement, insert and simple edits.',
+			'preferences.quickLook.showStatistics' => 'Show statistics',
+			'preferences.quickLook.showStatisticsHint' => 'Compute size and type breakdowns when inspecting multiple items.',
 			'preferences.appearance.title' => 'Appearance',
 			'preferences.appearance.subtitle' => 'Defaults for how files and the sidebar are displayed.',
 			'preferences.appearance.themeSection' => 'Theme',
@@ -3672,12 +3688,12 @@ extension on Translations {
 			'toast.selectionLoaded' => ({required Object count}) => 'Selected ${count} visible items',
 			'toast.selectionLoadEmpty' => 'No visible items matched',
 			'toast.terminalUnavailable' => 'Terminal is unavailable: native core not loaded',
+			_ => null,
+		} ?? switch (path) {
 			'toast.selectionFileError' => ({required Object message}) => 'Selection file error: ${message}',
 			'toast.taskErrors' => ({required Object label, required Object count}) => '${label} - ${count} errors',
 			'toast.renameAlreadyExists' => ({required Object name}) => 'An item named \'${name}\' already exists',
 			'toast.renameInvalidName' => 'Invalid name',
-			_ => null,
-		} ?? switch (path) {
 			'toast.renameError' => ({required Object message}) => 'Could not rename: ${message}',
 			'toast.multiRenameSuccess' => ({required Object count}) => 'Renamed ${count} files',
 			'toast.multiRenamePartial' => ({required Object succeeded, required Object total, required Object details}) => 'Renamed ${succeeded} of ${total} (${details})',
