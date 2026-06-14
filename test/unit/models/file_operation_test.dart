@@ -251,5 +251,4 @@ void main() {
       expect(TaskLabel.progressText(task), '1.0 KB / 2.0 KB');
     });
   });
-
 }

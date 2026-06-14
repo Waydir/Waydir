@@ -24,11 +24,7 @@ void main() {
 
     test('different modifier does not match', () {
       const a = KeyChord(key: LogicalKeyboardKey.keyA, ctrl: true);
-      const b = KeyChord(
-        key: LogicalKeyboardKey.keyA,
-        ctrl: true,
-        shift: true,
-      );
+      const b = KeyChord(key: LogicalKeyboardKey.keyA, ctrl: true, shift: true);
       expect(a.sameChord(b), isFalse);
     });
 
@@ -129,7 +125,9 @@ void main() {
 
       expect(AppShortcuts.isOverridden('select_all'), isFalse);
       expect(
-        AppShortcuts.effectiveBinding('select_all').sameChord(def.defaultBinding),
+        AppShortcuts.effectiveBinding(
+          'select_all',
+        ).sameChord(def.defaultBinding),
         isTrue,
       );
     });
@@ -156,22 +154,29 @@ void main() {
       expect(AppShortcuts.isOverridden('select_all'), isFalse);
     });
 
-    test('non-overridden shortcuts remain at default after partial override', () {
-      AppShortcuts.applyOverrides({
-        'select_all': AppShortcuts.parseChord('ctrl+shift+a')!,
-      });
+    test(
+      'non-overridden shortcuts remain at default after partial override',
+      () {
+        AppShortcuts.applyOverrides({
+          'select_all': AppShortcuts.parseChord('ctrl+shift+a')!,
+        });
 
-      final refreshBinding = AppShortcuts.effectiveBinding('refresh');
-      expect(
-        refreshBinding.sameChord(AppShortcuts.getById('refresh').defaultBinding),
-        isTrue,
-      );
-    });
+        final refreshBinding = AppShortcuts.effectiveBinding('refresh');
+        expect(
+          refreshBinding.sameChord(
+            AppShortcuts.getById('refresh').defaultBinding,
+          ),
+          isTrue,
+        );
+      },
+    );
   });
 
   group('AppShortcuts.conflictFor', () {
     test('returns conflicting def when another action uses the same chord', () {
-      final selectAllBinding = AppShortcuts.getById('select_all').defaultBinding;
+      final selectAllBinding = AppShortcuts.getById(
+        'select_all',
+      ).defaultBinding;
 
       final conflict = AppShortcuts.conflictFor(selectAllBinding, 'new_tab');
 
@@ -265,11 +270,14 @@ void main() {
       expect(AppShortcuts.tryGetById('plugin:test:other'), isNotNull);
     });
 
-    test('built-in shortcuts still accessible after plugin shortcuts are set', () {
-      AppShortcuts.setPluginShortcuts([pluginDef]);
+    test(
+      'built-in shortcuts still accessible after plugin shortcuts are set',
+      () {
+        AppShortcuts.setPluginShortcuts([pluginDef]);
 
-      expect(AppShortcuts.tryGetById('select_all'), isNotNull);
-    });
+        expect(AppShortcuts.tryGetById('select_all'), isNotNull);
+      },
+    );
   });
 
   group('ShortcutDef.defaultBinding', () {

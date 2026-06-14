@@ -43,7 +43,12 @@ void main() {
     final officeTypes = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
     final execTypes = ['exe', 'dll', 'so', 'dylib'];
 
-    for (final ext in [...archiveTypes, ...mediaTypes, ...officeTypes, ...execTypes]) {
+    for (final ext in [
+      ...archiveTypes,
+      ...mediaTypes,
+      ...officeTypes,
+      ...execTypes,
+    ]) {
       test('.$ext routes to binary fallback', () {
         expect(binaryExts.contains(ext), isTrue);
       });

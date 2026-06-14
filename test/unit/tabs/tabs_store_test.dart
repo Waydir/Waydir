@@ -109,30 +109,33 @@ void main() {
   });
 
   group('TabsStore.closeTab', () {
-    test('shifts activeIndex left when closing a tab before the active one', () {
-      final activeId = _tabs.activeTab.value.id;
+    test(
+      'shifts activeIndex left when closing a tab before the active one',
+      () {
+        final activeId = _tabs.activeTab.value.id;
 
-      _tabs.closeTab(_tabs.tabs.value.first.id);
+        _tabs.closeTab(_tabs.tabs.value.first.id);
 
-      expect(_tabs.tabs.value.length, 2);
-      expect(_tabs.activeTab.value.id, activeId);
-      expect(_tabs.activeIndex.value, 0);
-    });
+        expect(_tabs.tabs.value.length, 2);
+        expect(_tabs.activeTab.value.id, activeId);
+        expect(_tabs.activeIndex.value, 0);
+      },
+    );
 
-    test('moves activeIndex to last when closing the last tab while active', () {
-      _tabs.selectTab(2);
+    test(
+      'moves activeIndex to last when closing the last tab while active',
+      () {
+        _tabs.selectTab(2);
 
-      _tabs.closeTab(_tabs.tabs.value[2].id);
+        _tabs.closeTab(_tabs.tabs.value[2].id);
 
-      expect(_tabs.tabs.value.length, 2);
-      expect(_tabs.activeIndex.value, 1);
-    });
+        expect(_tabs.tabs.value.length, 2);
+        expect(_tabs.activeIndex.value, 1);
+      },
+    );
 
     test('does not close the last remaining tab', () {
-      final store = TabsStore.fromPaths(
-        operationStore: _ops,
-        paths: ['/only'],
-      );
+      final store = TabsStore.fromPaths(operationStore: _ops, paths: ['/only']);
       addTearDown(store.dispose);
 
       store.closeTab(store.tabs.value.first.id);

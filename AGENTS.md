@@ -7,10 +7,12 @@ Desktop file manager built with Flutter/Dart. Fast, minimal, dark theme, keyboar
 Feature-driven structure:
 
 - `lib/core/` - cross-cutting services: `archive`, `clipboard`, `database`, `fs`, `keyboard`, `logging`, `models`, `open`, `platform`, `settings`, `terminal`
-- `lib/features/` - feature modules: `drives`, `files`, `git`, `navigation`, `operations`, `panes`, `quick_look`, `settings`, `tabs`
+- `lib/features/` - feature modules: `drives`, `files`, `git`, `navigation`, `operations`, `panes`, `plugins`, `quick_look`, `settings`, `tabs`
 - `lib/ui/` - shared UI: `chrome`, `dialogs`, `icons`, `overlays`, `theme`, `widgets`, `window`
 - `lib/app/` - main app widget and page
+- `lib/utils/` - small helpers: `drag_drop`, `format`
 - `lib/i18n/` - translations (slang); currently English only
+- `docs/` - `plugins.md` plugin authoring guide, plus `examples/`, `screenshots/`, `gifs/`
 - `rust/waydir_core/` - native Rust core (cdylib) for path-heavy work (listing, search, trash)
 - `third_party/waydir_core/{linux,windows,macos}/` - vendored prebuilt native libs loaded at runtime via `lib/core/fs/waydir_core_loader.dart`
 - `test/unit/`, `test/integration/`, `test/support/` - tests split by kind, not a strict mirror of `lib/`
@@ -26,6 +28,7 @@ Each feature has its own folder with views and store.
 - **drift + sqlite3** - persistent state in `lib/core/database/app_database.dart`; regenerate with build_runner after schema changes
 - **Custom window chrome** - `bitsdojo_window`-based custom title bar in `lib/ui/chrome/` and `lib/ui/window/`
 - **slang** for i18n - translations in `lib/i18n/*.i18n.json`, generated via `slang_build_runner`
+- **FFI plugins** - `lib/features/plugins/` loads plugins through the native core via FFI (`plugin_ffi.dart`); authoring guide in `docs/plugins.md`
 
 ## Signals usage
 
@@ -37,6 +40,7 @@ Each feature has its own folder with views and store.
 
 ## Commands
 
+- `scripts/check.sh` - **run after every change**: builds native core if missing, then `dart format` + `flutter analyze` + full `flutter test`
 - `dart format .` - format code
 - `flutter analyze` - static analysis
 - `flutter test` - run tests
@@ -63,7 +67,10 @@ Each feature has its own folder with views and store.
 
 ## Rules
 
+- After any change: run `dart format .` to reformat, then `scripts/check.sh` and make sure it passes
 - No code comments
 - No unnecessary dependencies
 - Tests split into `unit/` and `integration/` under `test/`
+- Integration tests must start with `@Tags(<String>['integration'])` on line 1 so they pick up the 2x timeout from `dart_test.yaml` and the tag filters
+- Integration tests need the native `waydir_core` library; build it with `scripts/build_waydir_core.sh` (or just run `scripts/check.sh`) or they fail with "Native waydir_core not found"
 - Translation keys in English

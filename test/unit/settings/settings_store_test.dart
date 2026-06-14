@@ -28,13 +28,19 @@ void main() {
     test('increase clamps at the maximum size', () {
       store.terminalFontSize.value = SettingsStore.terminalFontSizes.last;
       store.increaseTerminalFontSize();
-      expect(store.terminalFontSize.value, SettingsStore.terminalFontSizes.last);
+      expect(
+        store.terminalFontSize.value,
+        SettingsStore.terminalFontSizes.last,
+      );
     });
 
     test('decrease clamps at the minimum size', () {
       store.terminalFontSize.value = SettingsStore.terminalFontSizes.first;
       store.decreaseTerminalFontSize();
-      expect(store.terminalFontSize.value, SettingsStore.terminalFontSizes.first);
+      expect(
+        store.terminalFontSize.value,
+        SettingsStore.terminalFontSizes.first,
+      );
     });
 
     test('reset returns to the default size', () {
@@ -52,18 +58,24 @@ void main() {
       expect(store.terminalFontSize.value, 20);
     });
 
-    test('decrease from a value between steps snaps to previous valid size', () {
-      store.terminalFontSize.value = 17;
-      store.decreaseTerminalFontSize();
-      expect(store.terminalFontSize.value, 16);
-    });
+    test(
+      'decrease from a value between steps snaps to previous valid size',
+      () {
+        store.terminalFontSize.value = 17;
+        store.decreaseTerminalFontSize();
+        expect(store.terminalFontSize.value, 16);
+      },
+    );
 
-    test('decrease from a value above the list maximum snaps to second-to-last', () {
-      store.terminalFontSize.value = 99;
-      store.decreaseTerminalFontSize();
-      final sizes = SettingsStore.terminalFontSizes;
-      expect(store.terminalFontSize.value, sizes[sizes.length - 2]);
-    });
+    test(
+      'decrease from a value above the list maximum snaps to second-to-last',
+      () {
+        store.terminalFontSize.value = 99;
+        store.decreaseTerminalFontSize();
+        final sizes = SettingsStore.terminalFontSizes;
+        expect(store.terminalFontSize.value, sizes[sizes.length - 2]);
+      },
+    );
   });
 
   group('SettingsStore file list scale stepping', () {
