@@ -1,9 +1,9 @@
 import 'package:waydir/ui/icons/waydir_icons.dart';
 import '../../core/fs/file_sort.dart';
-import '../../core/platform/platform_paths.dart';
 import '../../i18n/strings.g.dart';
 import '../../ui/overlays/context_menu.dart';
 import '../navigation/navigation_store.dart';
+import 'file_view.dart';
 
 const sortKeyActionPrefix = 'sort_key:';
 const sortAscendingAction = 'sort_dir:asc';
@@ -24,14 +24,9 @@ List<ContextMenuItem> buildSortMenuItems(NavigationStore store) {
 
   return [
     keyItem(c.name, SortKey.name),
-    keyItem(c.size, SortKey.size),
-    keyItem(c.dateModified, SortKey.date),
-    keyItem(c.kind, SortKey.kind),
-    keyItem(c.dateCreated, SortKey.created),
-    if (!PlatformPaths.isWindows) ...[
-      keyItem(c.permissions, SortKey.permissions),
-      keyItem(c.owner, SortKey.owner),
-    ],
+    for (final col in orderedColumns())
+      if (fileColumnSignal(col).value)
+        keyItem(fileColumnLabel(col), fileColumnSortKey(col)),
     ContextMenuItem.divider,
     ContextMenuItem(
       icon: ascending ? WaydirIconsRegular.check : WaydirIconsRegular.caretUp,
