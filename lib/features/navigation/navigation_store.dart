@@ -82,8 +82,10 @@ class NavigationStore {
     if (PlatformPaths.isSmbUri(path)) {
       final physical = await _resolvePhysicalDestination(path);
       if (physical == null) return null;
+
       return ArchivePath.resolve(physical);
     }
+
     return ArchivePath.resolve(path);
   }
 
@@ -100,12 +102,15 @@ class NavigationStore {
           return result.physicalPath;
         case ResolveError(:final message):
           loadError.value = message;
+
           return null;
         case ResolveUnsupported():
           loadError.value = t.errors.sftpNotSupported;
+
           return null;
         case ResolveAuthenticationRequired():
           loadError.value = t.errors.authenticationRequired;
+
           return null;
       }
     }
@@ -118,12 +123,15 @@ class NavigationStore {
         return result.physicalPath;
       case ResolveError(:final message):
         loadError.value = message;
+
         return null;
       case ResolveUnsupported():
         loadError.value = t.errors.smbNotSupportedOnPlatform;
+
         return null;
       case ResolveAuthenticationRequired():
         loadError.value = t.errors.authenticationRequired;
+
         return null;
     }
   }
@@ -137,6 +145,7 @@ class NavigationStore {
         credentials.password.isEmpty) {
       return result;
     }
+
     return LocationResolver.resolveWithCredentials(logical, credentials);
   }
 
@@ -147,6 +156,7 @@ class NavigationStore {
     if (credentials == null || credentials.username.trim().isEmpty) {
       return result;
     }
+
     return LocationResolver.resolveSftpWithCredentials(logical, credentials);
   }
 
@@ -180,6 +190,7 @@ class NavigationStore {
     switch (result) {
       case SmbShareListOk(:final shares):
         final now = DateTime.now();
+
         return [
           for (final s in shares)
             FileEntry(
@@ -207,6 +218,7 @@ class NavigationStore {
     switch (result) {
       case SmbShareListOk(:final shares):
         final now = DateTime.now();
+
         return [
           for (final s in shares)
             FileEntry(
@@ -275,6 +287,7 @@ class NavigationStore {
         naturalSort: SettingsStore.instance.naturalSort.value,
         sortFolders: SettingsStore.instance.sortFolders.value,
       );
+
       return pending != null ? [pending, ...sorted] : sorted;
     }
     var list = showHidden.value
@@ -307,6 +320,7 @@ class NavigationStore {
       naturalSort: SettingsStore.instance.naturalSort.value,
       sortFolders: SettingsStore.instance.sortFolders.value,
     );
+
     return pending != null ? [pending, ...list] : list;
   });
   late final folderCount = computed(
@@ -326,6 +340,7 @@ class NavigationStore {
         if (f.path == sel.first) return f;
       }
     }
+
     return null;
   });
   late final selectedCount = computed(() => selectedPaths.value.length);
@@ -367,6 +382,7 @@ class NavigationStore {
       s.foldersFirst.value;
       if (first) {
         first = false;
+
         return;
       }
       // Defaults changed in Preferences: reapply for the current folder
@@ -561,16 +577,19 @@ class NavigationStore {
     switch (mode) {
       case SearchMode.substring:
         final q = query.toLowerCase();
+
         return (name) => name.toLowerCase().contains(q);
       case SearchMode.regex:
         try {
           final r = RegExp(query);
+
           return r.hasMatch;
         } catch (e) {
           return null;
         }
       case SearchMode.glob:
         final r = _globToRegExp(query);
+
         return r?.hasMatch;
     }
   }
@@ -586,6 +605,7 @@ class NavigationStore {
       case SearchMode.regex:
         try {
           RegExp(query);
+
           return null;
         } catch (e) {
           return t.search.invalidRegex;
@@ -639,6 +659,7 @@ class NavigationStore {
       _searchDebounce = Timer(const Duration(milliseconds: 250), () {
         _restartRecursiveSearch();
       });
+
       return;
     }
     _restartRecursiveSearch();
@@ -672,12 +693,14 @@ class NavigationStore {
     searchPatternError.value = err;
     if (err != null) {
       isSearching.value = false;
+
       return;
     }
     final root = await _resolvePhysicalDestination(currentPath.value);
     if (token != _searchToken) return;
     if (root == null) {
       isSearching.value = false;
+
       return;
     }
     final filter = SettingsStore.instance.searchMode.value == filterSearchMode
@@ -686,11 +709,13 @@ class NavigationStore {
     final recursiveQuery = filter?.recursiveNameQuery ?? q;
     if (recursiveQuery.isEmpty && filter == null) {
       isSearching.value = false;
+
       return;
     }
     if (PlatformPaths.isSftpUri(root)) {
       if (searchContent.value) {
         isSearching.value = false;
+
         return;
       }
       final matcher = filter != null && recursiveQuery.isEmpty
@@ -698,6 +723,7 @@ class NavigationStore {
           : _localMatcher(recursiveQuery, mode);
       if (matcher == null) {
         isSearching.value = false;
+
         return;
       }
       _runSftpRecursiveSearch(
@@ -707,6 +733,7 @@ class NavigationStore {
         matcher: matcher,
         filter: filter,
       );
+
       return;
     }
     _searchHandle = RecursiveSearch.start(
@@ -819,6 +846,7 @@ class NavigationStore {
   FileEntry _logicalEntryFromPhysical(FileEntry entry) {
     final logical = LocationResolver.physicalToLogical(entry.path);
     if (logical == null) return entry;
+
     return FileEntry.raw(
       name: entry.name,
       path: logical,
@@ -848,7 +876,6 @@ class NavigationStore {
   Future<void> _ensureSftpConnectedAndNavigate(
     String logical, {
     bool addToHistory = true,
-    bool restoreState = false,
     String? enteredPath,
   }) async {
     batch(() {
@@ -861,7 +888,6 @@ class NavigationStore {
         _doNavigate(
           result.physicalPath,
           addToHistory: addToHistory,
-          restoreState: restoreState,
           enteredPath: enteredPath,
         );
       case ResolveError(:final message):
@@ -885,7 +911,6 @@ class NavigationStore {
   Future<void> _ensureSmbMountedAndNavigate(
     String logical, {
     bool addToHistory = true,
-    bool restoreState = false,
     String? enteredPath,
   }) async {
     final uri = LocationUri.parse(logical);
@@ -893,9 +918,9 @@ class NavigationStore {
       _doNavigate(
         logical,
         addToHistory: addToHistory,
-        restoreState: restoreState,
         enteredPath: enteredPath,
       );
+
       return;
     }
     batch(() {
@@ -908,7 +933,6 @@ class NavigationStore {
         _doNavigate(
           logical,
           addToHistory: addToHistory,
-          restoreState: restoreState,
           enteredPath: enteredPath,
         );
       case ResolveError(:final message):
@@ -939,21 +963,26 @@ class NavigationStore {
         if (PlatformPaths.isWindows) {
           if (uri.port != null) {
             loadError.value = t.errors.smbPortsNotSupportedOnWindows;
+
             return null;
           }
           final unc = uri.toWindowsUnc();
           if (unc == null) {
             loadError.value = t.errors.invalidSmbUri;
+
             return null;
           }
+
           return unc;
         }
+
         return null;
       case LocationScheme.sftp:
         // Asynchronously resolved via _ensureSftpConnectedAndNavigate.
         return null;
       case LocationScheme.other:
         loadError.value = t.errors.smbNotSupportedOnPlatform;
+
         return null;
       case LocationScheme.windowsUnc:
       case LocationScheme.local:
@@ -965,7 +994,6 @@ class NavigationStore {
   void navigateTo(
     String path, {
     bool addToHistory = true,
-    bool restoreState = false,
     String? enteredPath,
   }) {
     final uri = LocationUri.parse(path);
@@ -973,34 +1001,28 @@ class NavigationStore {
       _ensureSftpConnectedAndNavigate(
         path,
         addToHistory: addToHistory,
-        restoreState: restoreState,
         enteredPath: enteredPath,
       );
+
       return;
     }
     if (uri.scheme == LocationScheme.smb && !PlatformPaths.isWindows) {
       _ensureSmbMountedAndNavigate(
         path,
         addToHistory: addToHistory,
-        restoreState: restoreState,
         enteredPath: enteredPath,
       );
+
       return;
     }
     final resolved = _resolveForNavigationSync(path);
     if (resolved == null) return;
-    _doNavigate(
-      resolved,
-      addToHistory: addToHistory,
-      restoreState: restoreState,
-      enteredPath: enteredPath,
-    );
+    _doNavigate(resolved, addToHistory: addToHistory, enteredPath: enteredPath);
   }
 
   void _doNavigate(
     String resolved, {
     bool addToHistory = true,
-    bool restoreState = false,
     String? enteredPath,
   }) {
     final normalized = isTrashPath(resolved)
@@ -1124,6 +1146,7 @@ class NavigationStore {
           error: e,
           stack: st,
         );
+
         return;
       }
     }
@@ -1158,10 +1181,12 @@ class NavigationStore {
     final uri = LocationUri.parse(trimmed);
     if (uri.scheme == LocationScheme.sftp) {
       navigateTo(trimmed, enteredPath: trimmed);
+
       return true;
     }
     if (uri.scheme == LocationScheme.smb && !PlatformPaths.isWindows) {
       navigateTo(trimmed, enteredPath: trimmed);
+
       return true;
     }
     final resolved = _resolveForNavigationSync(trimmed);
@@ -1171,16 +1196,19 @@ class NavigationStore {
         : PlatformPaths.normalize(resolved);
     if (isTrashPath(normalized)) {
       navigateTo(normalized, enteredPath: trimmed);
+
       return true;
     }
     if (PlatformPaths.windowsUncServerRoot(normalized) != null) {
       navigateTo(normalized, enteredPath: trimmed);
+
       return true;
     }
 
     final type = FileSystemEntity.typeSync(normalized);
     if (type == FileSystemEntityType.directory) {
       navigateTo(normalized, enteredPath: trimmed);
+
       return true;
     }
     if (type == FileSystemEntityType.file ||
@@ -1190,41 +1218,37 @@ class NavigationStore {
         return false;
       }
       revealInFolder(normalized, enteredPath: trimmed);
+
       return true;
     }
+
     return false;
   }
 
   void goBack() {
     if (!canGoBack.value) return;
     historyIndex.value--;
-    navigateTo(
-      history.value[historyIndex.value],
-      addToHistory: false,
-      restoreState: true,
-    );
+    navigateTo(history.value[historyIndex.value], addToHistory: false);
   }
 
   void goForward() {
     if (!canGoForward.value) return;
     historyIndex.value++;
-    navigateTo(
-      history.value[historyIndex.value],
-      addToHistory: false,
-      restoreState: true,
-    );
+    navigateTo(history.value[historyIndex.value], addToHistory: false);
   }
 
   void goUp() async {
     if (isTrashView) {
       if (isTrashRoot) return;
       navigateTo(trashParentOf(currentPath.value));
+
       return;
     }
     final cur = currentPath.value;
     if (PlatformPaths.isSmbUri(cur)) {
       final parent = PlatformPaths.parentOf(cur);
       if (parent != cur) navigateTo(parent);
+
       return;
     }
     final parent = PlatformPaths.parentOf(cur);
@@ -1261,6 +1285,7 @@ class NavigationStore {
           });
           _restoreFolderStateIfMatches(path);
           _watcher.stop();
+
           return;
         }
         var physical = LocationResolver.logicalToPhysical(path);
@@ -1300,6 +1325,7 @@ class NavigationStore {
         });
         _restoreFolderStateIfMatches(path);
         _watcher.stop();
+
         return;
       } else {
         entries = await FileSystemService.listDirectory(path);
@@ -1335,6 +1361,7 @@ class NavigationStore {
           isLoading.value = false;
         });
         _watcher.stop();
+
         return;
       }
       if (e is FileSystemException && _isPermissionDenied(path)) {
@@ -1346,6 +1373,7 @@ class NavigationStore {
           isLoading.value = false;
         });
         _watcher.stop();
+
         return;
       }
       batch(() {
@@ -1367,16 +1395,19 @@ class NavigationStore {
   bool _isPermissionDenied(String path) {
     try {
       Directory(path).listSync(followLinks: false);
+
       return false;
     } on FileSystemException catch (e) {
       final code = e.osError?.errorCode;
       if (code == 1 || code == 13 || code == 5) return true;
       final msg = e.message.toLowerCase();
+
       return msg.contains('operation not permitted') ||
           msg.contains('permission denied') ||
           msg.contains('access is denied');
     } catch (e, st) {
       log.warn('navigation', 'permission probe failed', error: e, stack: st);
+
       return false;
     }
   }
@@ -1399,9 +1430,11 @@ class NavigationStore {
           ),
         );
       }
+
       return out;
     }
     final children = await TrashRepository.instance.listSub(path);
+
     return [
       for (final c in children)
         FileEntry(
@@ -1438,6 +1471,7 @@ class NavigationStore {
       final e = _trashEntries[p];
       if (e != null) entries.add(e);
     }
+
     return entries;
   }
 
@@ -1460,6 +1494,7 @@ class NavigationStore {
     gitStatus.watchPath(path);
     if (fullReload) {
       _onExternalChange(path);
+
       return;
     }
     try {
@@ -1522,6 +1557,7 @@ class NavigationStore {
       final key = PlatformPaths.isWindows ? name.toLowerCase() : name;
       if (seen.add(key)) out.add(e);
     }
+
     return out;
   }
 
@@ -1608,11 +1644,13 @@ class NavigationStore {
     final trimmed = newName.trim();
     if (trimmed.isEmpty) {
       cancelRename();
+
       return;
     }
 
     if (oldPath == kPendingCreatePath) {
       _commitCreate(trimmed);
+
       return;
     }
 
@@ -1628,12 +1666,14 @@ class NavigationStore {
         renamingPath.value = null;
         renameError.value = null;
       });
+
       return;
     }
 
     final isSmbRename = PlatformPaths.isSmbUri(oldPath);
     if (PlatformPaths.isSftpUri(oldPath)) {
       await _commitSftpRename(oldPath, trimmed);
+
       return;
     }
     final physicalOld = _physical(oldPath);
@@ -1652,6 +1692,7 @@ class NavigationStore {
         if (searchActive.value && searchRecursive.value) {
           final updated = searchResults.value.map((e) {
             if (e.path != oldPath) return e;
+
             return FileEntry(
               name: PlatformPaths.fileName(logicalNew),
               path: logicalNew,
@@ -1700,6 +1741,7 @@ class NavigationStore {
     if (!PlatformPaths.isValidFileName(newName)) {
       renameError.value = t.toast.renameInvalidName;
       renameAttempt.value = renameAttempt.value + 1;
+
       return;
     }
     if (PlatformPaths.fileName(oldPath) == newName) {
@@ -1707,6 +1749,7 @@ class NavigationStore {
         renamingPath.value = null;
         renameError.value = null;
       });
+
       return;
     }
     final parent = PlatformPaths.parentOf(oldPath);
@@ -1715,6 +1758,7 @@ class NavigationStore {
     if (await fs.exists(newPath)) {
       renameError.value = t.toast.renameAlreadyExists(name: newName);
       renameAttempt.value = renameAttempt.value + 1;
+
       return;
     }
     try {
@@ -1722,6 +1766,7 @@ class NavigationStore {
     } catch (e) {
       renameError.value = t.toast.renameError(message: e.toString());
       renameAttempt.value = renameAttempt.value + 1;
+
       return;
     }
     batch(() {
@@ -1760,6 +1805,7 @@ class NavigationStore {
 
     bool shouldStop() {
       cancelled = cancelled || (isCancelled?.call() ?? false);
+
       return cancelled;
     }
 
@@ -1811,6 +1857,7 @@ class NavigationStore {
         }
       });
     }
+
     return acc.freeze();
   }
 
@@ -1992,6 +2039,7 @@ class NavigationStore {
         }
         report(PlatformPaths.fileName(op.newPath));
       }
+
       return;
     }
 
@@ -2062,6 +2110,7 @@ class NavigationStore {
     if (!PlatformPaths.isValidFileName(name)) {
       renameError.value = t.toast.renameInvalidName;
       renameAttempt.value = renameAttempt.value + 1;
+
       return;
     }
     final dir = currentPath.value;
@@ -2077,6 +2126,7 @@ class NavigationStore {
     if (exists) {
       renameError.value = t.toast.renameAlreadyExists(name: name);
       renameAttempt.value = renameAttempt.value + 1;
+
       return;
     }
     try {
@@ -2084,6 +2134,7 @@ class NavigationStore {
     } catch (e) {
       renameError.value = t.toast.renameError(message: e.toString());
       renameAttempt.value = renameAttempt.value + 1;
+
       return;
     }
     batch(() {
@@ -2193,6 +2244,7 @@ class NavigationStore {
         return;
       }
       navigateTo(entry.path);
+
       return;
     }
     final loc = await _archiveLocationFor(entry.path);
@@ -2202,6 +2254,7 @@ class NavigationStore {
       } else {
         await FileSystemService.openArchiveEntry(loc);
       }
+
       return;
     }
     FileSystemService.openWithDefaultApp(entry.realPath);
@@ -2230,6 +2283,7 @@ class NavigationStore {
   List<String> selectedNamesForFile() {
     final selected = selectedPaths.value;
     if (selected.isEmpty) return const [];
+
     return [
       for (final entry in _vf)
         if (selected.contains(entry.path)) entry.name,
@@ -2247,6 +2301,7 @@ class NavigationStore {
         .toSet();
     if (wanted.isEmpty) {
       deselectAll();
+
       return 0;
     }
     final matched = <String>{};
@@ -2262,6 +2317,7 @@ class NavigationStore {
       cursorIndex.value = cursor;
       anchorIndex.value = cursor;
     });
+
     return matched.length;
   }
 
@@ -2290,6 +2346,7 @@ class NavigationStore {
             buf.write(RegExp.escape(ch));
         }
       }
+
       return buf.toString();
     });
     final RegExp re;
@@ -2300,6 +2357,7 @@ class NavigationStore {
     }
     final matched = _vf.where((f) => re.hasMatch(f.name)).toList();
     selectedPaths.value = Set<String>.from(matched.map((f) => f.path));
+
     return matched.length;
   }
 
@@ -2350,6 +2408,7 @@ class NavigationStore {
 
   List<FileEntry> get selectedEntries {
     final paths = selectedPaths.value;
+
     return _vf.where((f) => paths.contains(f.path)).toList();
   }
 
@@ -2375,6 +2434,7 @@ class NavigationStore {
         displayDir: currentPath.value,
         deleteInner: inner,
       );
+
       return;
     }
     final hasRemote = entries.any((e) => PlatformPaths.isRemoteUri(e.path));
@@ -2449,6 +2509,7 @@ class NavigationStore {
       if (parent == destination) return false;
       if (destination == s) return false;
       if (destination.startsWith('$s$sep')) return false;
+
       return true;
     }).toList();
     if (filtered.isEmpty) return;
@@ -2460,6 +2521,7 @@ class NavigationStore {
         addSources: _physicalList(filtered),
         addInner: archiveLoc.innerPath,
       );
+
       return;
     }
     final physicalDest = await _resolvePhysicalDestination(destination);
@@ -2476,6 +2538,7 @@ class NavigationStore {
     if (canPaste.value) return true;
     if (isTrashView) return false;
     final paths = await FileClipboard.readFilePaths();
+
     return paths.isNotEmpty;
   }
 
@@ -2507,6 +2570,7 @@ class NavigationStore {
       if (currentPath.value.startsWith('$s$sep')) {
         return false;
       }
+
       return true;
     }).toList();
 
@@ -2517,6 +2581,7 @@ class NavigationStore {
           clipboardMode.value = ClipboardMode.copy;
         });
       }
+
       return;
     }
 
@@ -2534,6 +2599,7 @@ class NavigationStore {
           clipboardMode.value = null;
         });
       }
+
       return;
     }
 
@@ -2578,6 +2644,7 @@ class NavigationStore {
     if (_vf.isEmpty) return;
     if (cursorIndex.value < 0) {
       _initCursor(step > 0 ? 0 : _vf.length - 1);
+
       return;
     }
     final next = cursorIndex.value + step;
@@ -2589,6 +2656,7 @@ class NavigationStore {
     if (_vf.isEmpty) return;
     if (cursorIndex.value < 0) {
       _initCursor(dir > 0 ? 0 : _vf.length - 1);
+
       return;
     }
     final step = (_pageRows * 0.8).floor().clamp(1, _pageRows);
