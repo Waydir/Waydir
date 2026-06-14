@@ -1,67 +1,123 @@
-# Writing Waydir plugins
+# Waydir Plugin Guide
 
-A plugin adds entries to Waydir's menus and shortcuts that run your own logic.
-Plugins are written in Lua. No build step - drop a folder in, reload, done.
+Waydir plugins are small Lua folders that add workflow actions to the file manager. They can add context menu items, top menu items, toolbar buttons, shortcuts, status bars, dialogs, background commands and queued file operations.
 
-This file is the compact reference shipped with the repository. Fuller plugin
-documentation is available at <https://waydir.dev/docs/plugins/>.
+No build step is required. Drop a folder into the plugins directory, reload plugins and the action is live.
 
-## What plugins can do
+## What You Can Build
 
-Plugins are meant for small workflow actions around the current file manager
-state. A plugin can add entries to:
+Good plugin ideas are small actions around the current folder or selection:
 
-- the selection context menu;
-- the background context menu for the current folder;
-- the top **Plugins** menu;
-- the location toolbar;
-- keyboard shortcuts.
-- global and per-pane status bars.
+| Idea | How it fits |
+|------|-------------|
+| Open current folder in an editor | Toolbar button or background context action using `waydir.exec` |
+| Compress selected files | Selection context action using `waydir.run_task` |
+| Create files from templates | Toolbar, menubar and shortcut action using `waydir.dialog` and `waydir.write_text` |
+| Show project metadata | Per-pane status bar using `waydir.register_bar` |
+| Run a backup command | Long task in Operations using `waydir.run_task({ operation = true })` |
+| Add custom copy or trash actions | Queued operations using `waydir.copy`, `waydir.move`, `waydir.trash` |
 
-Lua handles *when* an action is shown and *where* it runs. Heavy work can be
-delegated to external programs with `waydir.exec` or `waydir.run_task`, or to
-Waydir's own queued file operations with `waydir.copy`, `waydir.move`,
-`waydir.trash`, and related APIs.
+Plugins are not meant to replace full applications. Lua decides where an action appears and when it runs. Heavy work should be delegated to external commands or Waydir's queued file operations.
 
-Plugins can also register compact bars for continuously visible information:
-global bars render above Waydir's bottom status bar, and pane bars render with
-pane-local context above pane status strips such as Git.
+## Quick Start
 
-## Quick start
+Create this folder:
 
-A plugin is a folder with two files:
-
-```
-my-plugin/
+```text
+hello-waydir/
   manifest.json
   init.lua
 ```
 
-## Installing plugins
+`manifest.json`:
 
-Copy or unzip the whole plugin folder into Waydir's plugins directory. The
-folder itself must contain `manifest.json` and `init.lua` at the top level.
+```json
+{
+  "id": "hello-waydir",
+  "name": "Hello Waydir",
+  "version": "1.0.0",
+  "author": "you",
+  "description": "Shows a toast from the selection menu.",
+  "api_version": 2,
+  "permissions": []
+}
+```
 
-| OS | Path |
-|----|------|
-| Linux | `~/.config/waydir/plugins/` |
-| macOS / Windows | app support dir `/plugins/` |
+`init.lua`:
 
-The fastest way to find the correct directory is **Preferences -> Plugins ->
-Open plugins folder**. After copying the plugin, click **Reload plugins** or
-restart Waydir.
+```lua
+waydir.register({
+  id = "hello",
+  title = "Say hello",
+  icon = "bell",
+  run = function(ctx)
+    waydir.toast("Selected " .. ctx.count .. " item(s)")
+  end,
+})
+```
 
-Review the permissions shown in **Preferences -> Plugins** before trusting a
-plugin. `exec` allows external programs, and `fs` allows file reads/writes and
-queued file operations.
+Install it, reload plugins and right-click a selected file. You should see **Say hello** in the context menu.
 
-If a plugin does not show up, check that:
+## Install A Plugin
 
-- the directory is not nested one level too deep after extracting an archive;
-- `manifest.json` is valid JSON;
-- `api_version` is `2`;
-- the plugin is enabled;
-- the selected files match the action's `when` filter.
+Copy the whole plugin folder into Waydir's plugins directory. The folder itself must contain `manifest.json` and `init.lua` at the top level.
+
+| OS | Plugins directory |
+|----|-------------------|
+| Linux | `~/.config/waydir/plugins/` or `$XDG_CONFIG_HOME/waydir/plugins/` |
+| Windows | Application support directory, then `plugins/` |
+| macOS | Application support directory, then `plugins/` |
+
+The easiest way to find the exact path is **Preferences -> Plugins -> Open plugins folder**.
+
+After copying a plugin:
+
+1. Open **Preferences -> Plugins**.
+2. Click **Reload plugins**.
+3. Review the permissions shown for the plugin.
+4. Enable or configure it if needed.
+
+If a plugin does not appear, check these first:
+
+- The folder is not nested one level too deep after extracting an archive.
+- `manifest.json` is valid JSON.
+- `init.lua` exists next to `manifest.json`.
+- `api_version` is `2`.
+- The plugin is enabled.
+- The action's `when` filter matches the current selection.
+- The action shortcut does not conflict with a built-in shortcut or another plugin.
+
+## Plugin Anatomy
+
+A plugin has one manifest and one Lua entry file:
+
+```text
+my-plugin/
+  manifest.json
+  init.lua
+  icon.svg
+  helper-script.py
+```
+
+`manifest.json` describes the plugin. `init.lua` registers actions and bars. Extra files can be icons, scripts, templates or data files accessed through `ctx.plugin_dir`.
+
+Only registration should happen at the top level of `init.lua`. Actions run later through their `run(ctx)` function. Bars run later through `update(ctx)` and optional `click(ctx)` functions.
+
+## Runtime Model
+
+On reload, Waydir scans the plugins directory, reads each `manifest.json`, rejects unsupported API versions and runs `init.lua` once in a sandbox to collect contributions from `waydir.register` and `waydir.register_bar`.
+
+When a user invokes an action, Waydir starts a fresh Lua VM, runs the same `init.lua`, finds the matching action id, calls `run(ctx)` and applies the effects emitted through the `waydir.*` API.
+
+Status bars follow the same fresh-VM rule. Waydir calls `update(ctx)` on load, when the bar context changes and on the configured interval. Button clicks call `click(ctx)` when the bar defines one.
+
+| Area | Behavior |
+|------|----------|
+| API version | This build supports manifest `api_version` value `2`. |
+| Sandbox | Lua gets `table`, `string`, `math` and `waydir`. No `os`, `io` or `require`. |
+| Timeout | Lua load, action runs and bar updates are capped at 5 seconds. |
+| State | Lua globals do not persist between clicks. Use settings for durable state. |
+| Permissions | External commands need `exec`; file reads, writes and queued file operations need `fs`. |
 
 ## manifest.json
 
@@ -71,234 +127,377 @@ If a plugin does not show up, check that:
   "name": "My Plugin",
   "version": "1.0.0",
   "author": "you",
-  "description": "What it does, in one line.",
+  "description": "One sentence explaining what it adds.",
   "api_version": 2,
   "permissions": []
 }
 ```
 
-- `id` - unique, lowercase.
-- `api_version` - must be `2` for this build.
-- `permissions` - what the plugin is allowed to do. Users see this before they
-  trust the plugin, so ask for the least you need:
-  - `"exec"` - run external programs (`waydir.exec`, `waydir.run_task`).
-  - `"fs"` - read/write/list files and queue file operations.
+| Field | Required | Meaning |
+|-------|----------|---------|
+| `id` | No | Stable plugin id. If missing, Waydir uses the folder name. Use lowercase words separated by `-`. |
+| `name` | No | Human-readable name in Preferences. Defaults to the plugin id. |
+| `version` | No | Plugin version shown to users. Defaults to `0.0.0`. |
+| `author` | No | Author name. |
+| `description` | No | Short explanation shown in Preferences. |
+| `api_version` | Yes | Must be `2` for this Waydir build. |
+| `permissions` | No | List of permissions requested by the plugin. Defaults to no permissions. |
 
-  Leave empty if you only show toasts, notifications, or dialogs.
+Permissions:
 
-## init.lua
+| Permission | Allows |
+|------------|--------|
+| `exec` | `waydir.exec` and `waydir.run_task` |
+| `fs` | `waydir.read_text`, `write_text`, `mkdir`, `exists`, `list`, `file_size`, `copy`, `move`, `delete`, `trash` |
 
-Register one or more actions:
+Ask for the least permission you need. Users see permissions before trusting a plugin.
+
+## Register An Action
+
+Actions are registered with `waydir.register`:
 
 ```lua
 waydir.register({
-  id    = "to_webp",
-  title = "Convert to WebP",
-  when  = { extensions = { "png", "jpg", "jpeg" } },
+  id = "open_here",
+  title = "Open here in Code",
+  menu = "toolbar",
+  icon = "code",
   run = function(ctx)
-    for _, path in ipairs(ctx.paths) do
-      waydir.exec("cwebp", { path, "-o", path:gsub("%.%w+$", ".webp") })
+    waydir.exec("code", { ctx.dir })
+  end,
+})
+```
+
+Action fields:
+
+| Field | Type | Meaning |
+|-------|------|---------|
+| `id` | string | Unique action id inside this plugin. |
+| `title` | string | Label shown in menus, tooltips and keybindings. |
+| `run` | function | Function called when the action runs. Receives `ctx`. |
+| `menu` | string | `context`, `menubar` or `toolbar`. Defaults to `context`. |
+| `where` | list | Context menu surface. Use `{ "selection" }`, `{ "background" }` or both. Defaults to `{ "selection" }`. |
+| `group` | string | Context submenu label. Actions with the same group are nested together. |
+| `icon` | string | Built-in icon name or bundled `.svg` or `.png` path. |
+| `shortcut` | string | Chord such as `ctrl+shift+x` or `alt+f5`. |
+| `when` | table | Selection filter. Applies to selection context actions. |
+| `settings` | list | User-editable plugin settings schema. |
+
+Menu behavior:
+
+| `menu` | Where it appears | Context |
+|--------|------------------|---------|
+| `context` | Right-click menu | Uses `where` to decide selection or background. |
+| `menubar` | Top **Plugins** menu | Runs against the active folder and selection. |
+| `toolbar` | Location toolbar | Runs against the active folder. The `title` is the tooltip. |
+
+Shortcut behavior:
+
+- Shortcuts are listed under the Plugins section in keybindings help.
+- Shortcuts that conflict with built-in shortcuts are ignored.
+- Shortcuts that conflict with another plugin shortcut are ignored.
+- Use lowercase chord names like `ctrl+alt+n`, `ctrl+shift+x`, `alt+f5`.
+
+Supported modifier names:
+
+- `ctrl`, `control`, `cmd`, `command`, `meta`, `super`
+- `shift`
+- `alt`, `option`
+
+Supported keys include letters, digits, `f1` through `f12`, arrows, `space`, `enter`, `tab`, `escape`, `backspace`, `delete`, `home`, `end`, `pageup`, `pagedown`, `comma`, `period` and `slash`.
+
+## Invocation Context
+
+The `ctx` table tells your action where it is running:
+
+| Field | Meaning |
+|-------|---------|
+| `ctx.paths` | Selected paths as a Lua array. Empty for background actions with no selection. |
+| `ctx.count` | Number of selected paths. |
+| `ctx.dir` | Current folder. |
+| `ctx.plugin_dir` | Absolute path to your plugin folder. |
+| `ctx.settings` | Settings values, with defaults merged with saved user values. |
+| `ctx.form` | Dialog result after a `waydir.dialog` submit. |
+
+Example:
+
+```lua
+waydir.register({
+  id = "copy_paths",
+  title = "Show selected paths",
+  when = { min = 1 },
+  run = function(ctx)
+    waydir.notify({
+      title = "Selected paths",
+      message = table.concat(ctx.paths, "\n"),
+      level = "info",
+    })
+  end,
+})
+```
+
+## Selection Filters
+
+Use `when` to control when a selection action appears. All conditions must match.
+
+```lua
+when = {
+  types = { "file" },
+  extensions = { "png", "jpg", "jpeg" },
+  min = 1,
+  max = 20,
+  in_archive = false,
+}
+```
+
+| Field | Meaning |
+|-------|---------|
+| `types` | Allowed item types: `file`, `folder` or both. |
+| `extensions` | Allowed file extensions without dots. Matching is lowercase. |
+| `min` | Minimum selected items. Defaults to `1`. |
+| `max` | Maximum selected items. |
+| `in_archive` | `false` hides the action inside archives. `true` shows it only inside archives. |
+
+Omit `when` to show the action for any non-empty selection. For background actions, use `where = { "background" }`.
+
+## Dialogs
+
+`waydir.dialog` opens a modal form. It does not return a value immediately. When the user submits the form, Waydir runs the same action again with `ctx.form` filled.
+
+`submit_action` is kept in examples to make the intent obvious. Current Waydir builds always re-run the same action that opened the dialog.
+
+```lua
+waydir.register({
+  id = "new_file",
+  title = "New file...",
+  where = { "background" },
+  icon = "file-text",
+  run = function(ctx)
+    if not ctx.form then
+      waydir.dialog({
+        title = "New file",
+        fields = {
+          { id = "name", type = "input", label = "File name", default = "untitled.txt" },
+        },
+        submit_action = "new_file",
+      })
+      return
     end
-    waydir.toast(ctx.count .. " converted")
+
+    if not ctx.form.name or ctx.form.name == "" then
+      return
+    end
+
+    waydir.write_text(ctx.dir .. "/" .. ctx.form.name, "")
     waydir.refresh()
   end,
 })
 ```
 
-### Where an entry shows up
+Field types:
+
+| Type | UI |
+|------|----|
+| `text` | Text input. |
+| `input` | Text input. |
+| `password` | Obscured text input. |
+| `checkbox` | Boolean checkbox. |
+| `toggle` | Boolean checkbox. |
+| `bool` | Boolean checkbox. |
+| `select` | Dropdown. |
+| `dropdown` | Dropdown. |
+| `info` | Read-only text. |
+| `label` | Read-only text. |
+
+Field schema:
 
 | Field | Meaning |
 |-------|---------|
-| `menu` | `"context"` (right-click, default), `"menubar"` (top Plugins menu), or `"toolbar"` (icon button in the location bar) |
-| `where` | for context menus: `{ "selection" }` (default), `{ "background" }`, or both |
-| `group` | label of a context submenu; entries sharing a `group` nest under one cascading entry that opens on hover |
-| `icon` | shown on context, menubar and toolbar entries. Either a `.svg`/`.png` file relative to the plugin folder, or a named builtin glyph (see below). Unset/unknown falls back to a generic glyph |
-| `shortcut` | a key chord like `"ctrl+shift+x"` or `"alt+f5"` - listed under Keybindings |
+| `id` | Key used in `ctx.form` and `ctx.settings`. |
+| `type` | Field type. Defaults to `text`. |
+| `label` | Label shown to the user. |
+| `hint` | Placeholder for text inputs. |
+| `default` | Default value. |
+| `options` | Dropdown options for `select` and `dropdown`. |
 
-`"selection"` entries appear when files/folders are selected and the `when`
-filter matches. `"background"` entries appear on the empty-area right-click and
-act on the current folder (`ctx.dir`, with an empty `ctx.paths`). `"toolbar"`
-entries sit next to New Folder, are always visible, and also act on the current
-folder (`ctx.dir`); the `title` is their tooltip.
+Dropdown options can be strings or objects:
 
-Named builtin glyphs for `icon` (no image file needed): `archive`, `bell`,
-`arrow-clockwise`, `bookmark`, `bug`, `calendar`, `check`, `clipboard`,
-`clock`, `code`, `copy`, `desktop`, `download`, `eye`, `file`, `file-audio`,
-`file-code`, `file-image`, `file-pdf`, `file-text`, `file-zip`, `folder`,
-`folder-open`, `folder-plus`, `gear`, `git-branch`, `hard-drive`, `image`,
-`info`, `keyboard`, `list`, `magic-wand`, `music`, `note`, `palette`, `pencil`,
-`plus`, `refresh`, `ruler`, `scissors`, `search`, `sliders`, `terminal`,
-`trash`, `tree`, `usb`, `video`, `warning`.
+```lua
+options = {
+  "fast",
+  "best",
+  { value = "ultra", label = "Ultra compression" },
+}
+```
 
-## Status bars
+## Settings
 
-Register a bar with `waydir.register_bar`. The `update(ctx)` function is called
-on load, every `interval` seconds, and (unless `refresh_on_change = false`) when
-its context changes. Return `visible = false` to hide the bar for the current
-context.
+Declare `settings` on any action or bar. Waydir merges all fields from the plugin, renders them in **Preferences -> Plugins -> Configure** and injects saved values into `ctx.settings`.
+
+```lua
+waydir.register({
+  id = "convert",
+  title = "Convert image",
+  settings = {
+    { id = "quality", type = "input", label = "JPEG quality", default = "85" },
+    { id = "keep", type = "checkbox", label = "Keep original", default = true },
+    {
+      id = "mode",
+      type = "select",
+      label = "Mode",
+      options = { "fast", "best" },
+      default = "fast",
+    },
+  },
+  run = function(ctx)
+    local quality = (ctx.settings or {}).quality or "85"
+    waydir.toast("Quality: " .. quality)
+  end,
+})
+```
+
+Update one setting from Lua with `waydir.set_setting`:
+
+```lua
+waydir.set_setting("quality", "90")
+```
+
+Settings are stored per plugin id.
+
+## Status Bars
+
+Use `waydir.register_bar` for compact always-visible information.
+
+Waydir refreshes a bar when it is first shown, when its context changes and on its `interval`. Current builds always refresh on context changes.
 
 ```lua
 waydir.register_bar({
-  id = "project_status",
+  id = "project",
   scope = "pane",
   title = "Project",
   icon = "code",
   interval = 10,
-  refresh_on_change = true,
   update = function(ctx)
-    if not ctx.dir:match("/src") then
+    if not ctx.dir:match("src") then
       return { visible = false }
     end
+
     return {
       visible = true,
       items = {
         { type = "badge", text = "src", level = "info" },
         { type = "text", text = ctx.dir },
-        { type = "button", id = "refresh", action = "refresh", icon = "refresh", tooltip = "Refresh" },
+        { type = "button", id = "refresh", icon = "refresh", tooltip = "Refresh", action = "refresh" },
       },
     }
   end,
 })
 ```
 
+Bar fields:
+
+| Field | Type | Meaning |
+|-------|------|---------|
+| `id` | string | Unique bar id inside this plugin. |
+| `scope` | string | `global` or `pane`. Defaults to `global`. |
+| `title` | string | Label shown at the start of the bar. Defaults to `id`. |
+| `icon` | string | Built-in icon name or bundled image path. |
+| `interval` | number | Refresh interval in seconds. `0` disables periodic refresh. Values above `0` are clamped between 2 and 3600. |
+| `settings` | list | Optional settings schema. |
+| `update(ctx)` | function | Returns the current bar state. |
+| `click(ctx)` | function | Optional handler for button clicks. Receives `ctx.item_id`. |
+
+Bar context includes the normal `ctx.dir`, `ctx.paths`, `ctx.count`, `ctx.plugin_dir` and `ctx.settings` fields. It also includes:
+
 | Field | Meaning |
 |-------|---------|
-| `id` | bar id inside this plugin |
-| `scope` | `"global"` (above Waydir's bottom status bar) or `"pane"` (per pane, above pane status bars) |
-| `title` | label shown at the start of the bar |
-| `icon` | named builtin glyph or bundled image path |
-| `interval` | refresh cadence in seconds, clamped between 2 and 3600; `0` disables periodic refresh |
-| `refresh_on_change` | refresh when the context changes (folder, selection, active pane); defaults to `true` |
-| `settings` | optional schema merged with the plugin's normal settings |
-| `update(ctx)` | returns the current visible state |
-| `click(ctx)` | optional handler for button item clicks; receives `ctx.item_id` |
+| `ctx.scope` | `global` or `pane`. |
+| `ctx.pane` | Pane id for pane bars. Can be absent for global bars. |
+| `ctx.is_active` | `true` when the pane is active. |
+| `ctx.item_id` | Button id during `click(ctx)`. |
 
-Bar `ctx` includes the usual `ctx.dir`, `ctx.paths`, `ctx.count`,
-`ctx.plugin_dir`, and `ctx.settings`. It also includes `ctx.scope`,
-`ctx.pane`, and `ctx.is_active`.
+Bar state:
 
-`items` is a list of compact UI elements:
+| Field | Meaning |
+|-------|---------|
+| `visible` | Set to `false` to hide the bar for the current context. |
+| `items` | List of compact UI items. |
 
-| Item type | Fields |
-|-----------|--------|
+Item types:
+
+| Type | Fields |
+|------|--------|
 | `text` | `text`, optional `level` |
 | `badge` | `text`, optional `level` |
 | `icon` | `icon`, optional `level` |
 | `button` | `id`, optional `text`, `icon`, `tooltip`, `action` |
-| `separator` | no fields |
+| `separator` | No fields |
 
-`level` can be `info`, `success`, `warn`, or `error`. A button with
-`action = "refresh"` refreshes the bar without calling `click`.
+Levels: `info`, `success`, `warn`, `error`.
 
-### `when` - filter the selection
+Button behavior:
 
-A simple filter, all fields optional. The entry appears only when every
-condition holds for the selection (selection surface only).
+- A button with `action = "refresh"` refreshes the bar and does not call `click(ctx)`.
+- Other buttons call `click(ctx)` with `ctx.item_id` set to the button `id`.
+- If `click(ctx)` returns a bar state, Waydir applies it and then refreshes the bar.
 
-| Field | Meaning |
-|-------|---------|
-| `types` | `{"file"}`, `{"folder"}`, or both |
-| `extensions` | only these file extensions (no dot) |
-| `min` / `max` | bounds on how many items are selected |
-| `in_archive` | `false` to hide inside archives |
+## `waydir` API
 
-Omit `when` entirely to show the entry for any selection.
+### UI And State
 
-### `settings` - user-editable config
+| Function | Permission | Effect |
+|----------|------------|--------|
+| `waydir.toast(message)` | None | Shows a short toast. |
+| `waydir.notify({ title, message, level, persistent })` | None | Shows a notification. `level` can be `info`, `success`, `warn` or `error`. |
+| `waydir.dialog({ title, fields, submit_action })` | None | Opens a form and re-runs the same action with `ctx.form`. |
+| `waydir.set_setting(key, value)` | None | Persists one setting for this plugin. |
+| `waydir.refresh()` | None | Refreshes the active file list. |
+| `waydir.log(message)` | None | Writes to Waydir's plugin log channel. |
 
-Declare a schema; Waydir renders it under **Preferences -> Plugins ->
-Configure** and persists the values. They arrive as `ctx.settings`.
+### External Commands
 
-```lua
-settings = {
-  { id = "quality", type = "text",   label = "JPEG quality", default = "85" },
-  { id = "keep",    type = "checkbox", label = "Keep original", default = true },
-  { id = "mode",    type = "select", label = "Mode",
-    options = { "fast", "best" }, default = "fast" },
-},
-```
+| Function | Permission | Effect |
+|----------|------------|--------|
+| `waydir.exec(cmd, args)` | `exec` | Runs a short command and waits for it. Returns `stdout`, `stderr`, `exit_code`. |
+| `waydir.run_task(spec)` | `exec` | Starts a long-running process outside the Lua action. |
 
-Field `type` is one of `text`, `input`, `password`, `checkbox`, `select`. A
-`select` takes `options` (a list of strings, or `{value=, label=}` tables).
-
-### `run(ctx)` - what it does
-
-`ctx` is the invocation context:
-
-| Field | Meaning |
-|-------|---------|
-| `ctx.paths` | list of selected paths (empty on the background surface) |
-| `ctx.count` | how many |
-| `ctx.dir` | the current folder |
-| `ctx.plugin_dir` | your plugin's folder (to call bundled scripts) |
-| `ctx.settings` | your stored settings (schema defaults overlaid with saved values) |
-| `ctx.form` | dialog results, present only after a `waydir.dialog` round-trip |
-
-## `waydir` functions
-
-| Call | Permission | Effect |
-|------|------------|--------|
-| `waydir.toast(msg)` | - | brief message |
-| `waydir.notify({title, message, level, persistent})` | - | notification; `level` = info/success/warn/error |
-| `waydir.dialog({title, fields, submit_action})` | - | show a form, then re-run the action with `ctx.form` filled |
-| `waydir.set_setting(key, value)` | - | persist one of your settings |
-| `waydir.refresh()` | - | refresh the file list |
-| `waydir.log(msg)` | - | write to Waydir's log |
-| `waydir.exec(cmd, args)` | `exec` | run a program and wait, returning `stdout, stderr, exit_code` (short jobs; capped at 5s) |
-| `waydir.run_task({title, cmd, args, cwd, timeout, operation, pty, progress})` | `exec` | run a long program off the UI; progress via notification or Operations. `timeout` in seconds (default 600, max 21600) |
-| `waydir.read_text(path)` | `fs` | return a file's contents (capped at 4 MiB) |
-| `waydir.file_size(path)` | `fs` | return a file's byte size |
-| `waydir.write_text(path, text)` | `fs` | write a file |
-| `waydir.mkdir(path)` | `fs` | create a directory (and parents) |
-| `waydir.exists(path)` | `fs` | true if the path exists |
-| `waydir.list(path)` | `fs` | list a directory: `{ {name, path, is_dir}, ... }` |
-| `waydir.copy(src, destDir)` | `fs` | queue a copy into `destDir` (uses Waydir's operations) |
-| `waydir.move(src, destDir)` | `fs` | queue a move into `destDir` |
-| `waydir.delete(path)` | `fs` | queue a permanent delete |
-| `waydir.trash(path)` | `fs` | queue a move to trash |
-| `waydir.operation_start({id, title, total_bytes, total_files})` | - | create a custom Operations entry |
-| `waydir.operation_update(id, {progress, message, processed_bytes, total_bytes, bytes_per_second, processed_files, total_files})` | - | update a custom Operations entry |
-| `waydir.operation_finish(id, {success, cancelled, error})` | - | finish a custom Operations entry |
-
-### Dialogs (the `ctx.form` round-trip)
-
-`waydir.dialog` doesn't return a value - it shows a modal and, on submit,
-re-invokes the same action with `ctx.form` set. Branch on `ctx.form`:
+Use `waydir.exec` only for quick commands. Lua actions have a 5 second sandbox budget.
 
 ```lua
-run = function(ctx)
-  if not ctx.form then
-    waydir.dialog({
-      title = "Rename",
-      fields = { { id = "name", type = "input", label = "New name" } },
-      submit_action = "rename",
-    })
-    return
-  end
-  waydir.write_text(ctx.dir .. "/" .. ctx.form.name, "")
-end,
-```
-
-### Long jobs vs. quick commands
-
-`waydir.exec` runs inside the 5-second sandbox - fine for quick commands. It
-returns three values: stdout, stderr and exit code:
-
-```lua
-local out, err, code = waydir.exec("tailscale", { "file", "cp", "--targets" })
+local out, err, code = waydir.exec("git", { "branch", "--show-current" })
 if code == 0 then
-  waydir.toast(out)
+  waydir.toast("Branch: " .. out)
+else
+  waydir.notify({ title = "Git failed", message = err, level = "error" })
 end
 ```
 
-For anything slow, use `waydir.run_task`: it runs the process outside the
-sandbox and reports completion as a notification, without freezing the action.
+Use `waydir.run_task` for slow commands:
 
-To show a long command in the Operations panel instead of only as a
-notification, set `operation = true`. If the command only prints live progress
-when connected to a terminal, set `pty = true` (currently supported on Linux via
-the system `script` command). The optional `progress` table contains Dart regular
-expressions; the first capture group is used.
+```lua
+waydir.run_task({
+  title = "Backup",
+  cmd = "rsync",
+  args = { "-a", ctx.dir .. "/", "/backup/project/" },
+  cwd = ctx.dir,
+  timeout = 3600,
+})
+```
+
+`run_task` fields:
+
+| Field | Meaning |
+|-------|---------|
+| `title` | Title shown in notification or Operations. |
+| `cmd` | Executable name or path. |
+| `args` | List of string arguments. |
+| `cwd` | Optional working directory. |
+| `timeout` | Timeout in seconds. Defaults to 600. Maximum is 21600. |
+| `operation` | `true` shows the process in the Operations panel. |
+| `pty` | `true` asks Waydir to run through a PTY wrapper on Linux. Useful for commands that only print progress in a terminal. |
+| `progress` | Regex config for Operations progress parsing. |
+
+Progress parsing uses Dart regular expressions. The first capture group is used when present.
 
 ```lua
 waydir.run_task({
@@ -316,8 +515,26 @@ waydir.run_task({
 })
 ```
 
-Plugins can also manage custom Operations entries directly. `id` is scoped to
-the plugin, so separate plugins can reuse the same id safely.
+### File System
+
+| Function | Permission | Effect |
+|----------|------------|--------|
+| `waydir.read_text(path)` | `fs` | Reads UTF-8 text. Capped at 4 MiB. |
+| `waydir.write_text(path, text)` | `fs` | Writes UTF-8 text. |
+| `waydir.mkdir(path)` | `fs` | Creates a directory and parents. |
+| `waydir.exists(path)` | `fs` | Returns `true` if the path exists. |
+| `waydir.list(path)` | `fs` | Returns `{ { name, path, is_dir }, ... }`. |
+| `waydir.file_size(path)` | `fs` | Returns file size in bytes. |
+| `waydir.copy(src, dest_dir)` | `fs` | Queues a Waydir copy operation. |
+| `waydir.move(src, dest_dir)` | `fs` | Queues a Waydir move operation. |
+| `waydir.delete(path)` | `fs` | Queues a permanent delete after confirmation. |
+| `waydir.trash(path)` | `fs` | Queues move to trash, respecting delete confirmation settings. |
+
+Queued file operations appear in Waydir's Operations panel and use the same copy, move, delete and trash machinery as the UI.
+
+### Custom Operations
+
+Use custom Operations entries when your plugin does work itself and wants to report progress.
 
 ```lua
 waydir.operation_start({ id = "sync", title = "Sync", total_files = 10 })
@@ -329,41 +546,173 @@ waydir.operation_update("sync", {
 waydir.operation_finish("sync", { success = true })
 ```
 
-## Use any language for the heavy lifting
+| Function | Permission | Effect |
+|----------|------------|--------|
+| `waydir.operation_start({ id, title, total_bytes, total_files })` | None | Creates a custom Operations entry. |
+| `waydir.operation_update(id, spec)` | None | Updates progress, message, bytes and files. |
+| `waydir.operation_finish(id, spec)` | None | Marks the operation as successful, cancelled or failed. |
 
-Lua decides *when* and *where*; the real work can be any program you `exec`.
-Bundle a script next to `init.lua` and run it:
+`operation_update` fields:
+
+| Field | Meaning |
+|-------|---------|
+| `progress` | Number between `0` and `1`. |
+| `message` | Current file or status text. |
+| `processed_bytes` | Bytes processed. |
+| `total_bytes` | Total bytes. |
+| `bytes_per_second` | Current speed. |
+| `processed_files` | Files processed. |
+| `total_files` | Total files. |
+
+`operation_finish` fields:
+
+| Field | Meaning |
+|-------|---------|
+| `success` | Defaults to `true`. |
+| `cancelled` | Defaults to `false`. |
+| `error` | Error message for failed operations. |
+
+Operation ids are scoped to the plugin, so different plugins can reuse the same id safely.
+
+## Icons
+
+`icon` can be a built-in glyph name or a bundled image path.
+
+Bundled images:
 
 ```lua
-run = function(ctx)
-  waydir.run_task({
-    title = "Processing",
-    cmd = "python3",
-    args = { ctx.plugin_dir .. "/process.py", table.unpack(ctx.paths) },
-  })
-end
+icon = "icon.svg"
+icon = "assets/action.png"
 ```
 
-## Examples
+Built-in glyphs:
 
-Ready to copy from [examples/plugins/](examples/plugins/):
+```text
+archive, arrow-clockwise, bell, bookmark, bug, calendar, check, clipboard,
+clock, code, copy, desktop, download, eye, file, file-audio, file-code,
+file-image, file-pdf, file-text, file-zip, folder, folder-open,
+folder-plus, gear, git-branch, hard-drive, image, info, keyboard, list,
+magic-wand, music, note, palette, pencil, plus, refresh, ruler, scissors,
+search, sliders, terminal, trash, tree, usb, video, warning
+```
 
-- **selection-count** - shows how many items you selected. No permissions.
-- **backup-copy** - makes a `.bak` copy of each selected file. Uses `exec`.
-- **templates** - "New from template" surfaced as a toolbar button, a
-  background entry, two menubar actions and a shortcut. Uses a `select` dialog,
-  persists an author via `set_setting`, and writes boilerplate with `fs`. A full
-  tour of the v2 API.
-- **open-vscode** - toolbar button (and folder right-click entry) that opens the
-  current folder in VS Code. Uses `exec` and a `command` setting.
-- **sevenzip** - compress the selection or extract archives with `7z`. Uses
-  `exec` + `run_task`, a `group` submenu (quick .zip / .tar.gz + "Add to
-  archive…"), a `when` filter, and a dialog for custom name/format/level.
+Unknown icon names fall back to the default plugin glyph.
 
-## Notes
+## Sandbox And Runtime Rules
 
-- Each run starts fresh - don't rely on Lua globals persisting between clicks.
-- A long-running `run` won't freeze Waydir, but it is capped at 5 seconds. Use
-  `waydir.run_task` for slow work.
-- The sandbox has no `os`, `io`, or `require`. Use `waydir.read_text` /
-  `waydir.write_text` / `waydir.exec` for anything that touches the system.
+Waydir runs plugins in a restricted Lua sandbox:
+
+- Available standard libraries: `table`, `string`, `math`.
+- Not available: `os`, `io`, `require`.
+- Each load, action run and bar update gets a fresh Lua VM.
+- Do not rely on Lua globals persisting between clicks.
+- Top-level code should only register actions and bars.
+- Action and bar Lua execution has a 5 second budget.
+- Use `waydir.run_task` for slow external work.
+- Use `ctx.plugin_dir` to call bundled helper scripts or read bundled files.
+- `exec` and `fs` APIs fail unless the manifest requests the matching permission.
+
+## Patterns
+
+### Background Action
+
+```lua
+waydir.register({
+  id = "open_terminal_here",
+  title = "Open external terminal here",
+  where = { "background" },
+  icon = "terminal",
+  run = function(ctx)
+    waydir.exec("x-terminal-emulator", { "--working-directory", ctx.dir })
+  end,
+})
+```
+
+### Toolbar Button
+
+```lua
+waydir.register({
+  id = "open_code",
+  title = "Open in VS Code",
+  menu = "toolbar",
+  icon = "code",
+  run = function(ctx)
+    waydir.exec("code", { ctx.dir })
+  end,
+})
+```
+
+### Context Submenu
+
+```lua
+local group = "Image tools"
+
+waydir.register({
+  id = "webp",
+  title = "Convert to WebP",
+  group = group,
+  icon = "image",
+  when = { types = { "file" }, extensions = { "png", "jpg", "jpeg" } },
+  run = function(ctx)
+    for _, path in ipairs(ctx.paths) do
+      waydir.run_task({
+        title = "Convert " .. path,
+        cmd = "cwebp",
+        args = { path, "-o", path .. ".webp" },
+      })
+    end
+  end,
+})
+```
+
+### Helper Script
+
+```lua
+waydir.register({
+  id = "process",
+  title = "Process with helper",
+  when = { min = 1 },
+  run = function(ctx)
+    local args = { ctx.plugin_dir .. "/process.py" }
+    for _, path in ipairs(ctx.paths) do
+      args[#args + 1] = path
+    end
+    waydir.run_task({
+      title = "Processing",
+      cmd = "python3",
+      args = args,
+      cwd = ctx.dir,
+      operation = true,
+    })
+  end,
+})
+```
+
+## Examples In This Repository
+
+Ready-to-copy examples live in [examples/plugins/](examples/plugins/):
+
+| Example | Shows |
+|---------|-------|
+| `selection-count` | Tiny no-permission action using `ctx.count` and `waydir.toast`. |
+| `backup-copy` | External command action using `exec`. |
+| `open-vscode` | Toolbar and folder action with a configurable command. |
+| `templates` | Toolbar, background menu, top menu, shortcut, settings, dialog and `fs`. |
+| `sevenzip` | Context submenu, filters, dialogs, `run_task`, compression and extraction. |
+
+## Troubleshooting
+
+| Symptom | Check |
+|---------|-------|
+| Plugin is not listed | Folder must contain `manifest.json` and `init.lua` directly. |
+| Load error says unsupported API | Set `api_version` to `2`. |
+| Action is missing from context menu | Check `where`, `menu`, `when`, current selection and archive state. |
+| Shortcut does nothing | Check for conflicts with built-in shortcuts or another plugin. |
+| `exec permission not granted` | Add `"exec"` to `permissions`. |
+| `fs permission not granted` | Add `"fs"` to `permissions`. |
+| Command works in terminal but not plugin | Use an absolute command path, configure `cwd`, or check PATH differences. |
+| Long command times out | Use `waydir.run_task` and set a suitable `timeout`. |
+| Progress does not update | Use `operation = true`, check regex capture groups and try `pty = true` on Linux. |
+| Dialog submits but nothing happens | Branch on `ctx.form` after the form is submitted. |
+
+Use `waydir.log("message")` while developing. Plugin failures are also surfaced in **Preferences -> Plugins** or as notifications.

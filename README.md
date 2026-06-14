@@ -16,8 +16,6 @@ Built for people who move through files all day and do not want the UI to get in
   -
   <a href="#install"><b>Install</b></a>
   -
-  <a href="#first-5-minutes"><b>First 5 minutes</b></a>
-  -
   <a href="docs/plugins.md"><b>Plugins</b></a>
   -
   <a href="CHANGELOG.md"><b>Changelog</b></a>
@@ -154,22 +152,6 @@ Download the `.exe` installer or portable `.zip` from [Releases](https://github.
 Download the `.dmg` package from [Releases](https://github.com/Waydir/Waydir/releases), open it and drag Waydir to Applications.
 
 macOS is best-effort. Linux and Windows are the primary development and testing targets.
-
-## First 5 Minutes
-
-These are the fastest ways to feel how Waydir works:
-
-| Action | Shortcut or place |
-|--------|-------------------|
-| Preview the selected file | `Space` |
-| Toggle the built-in terminal | `Ctrl+Backtick` |
-| Search inside the current location | Search from the file pane |
-| Filter files with suggestions | Use filter mode and query by kind, extension, size, date or hidden state |
-| Work across folders | Open dual-pane mode and copy or move between panes |
-| Add repeatable actions | Preferences -> Plugins |
-| Open Waydir from a shell | `waydir <folder>` |
-
-Waydir is designed so the mouse is optional. Most commands are available from shortcuts, context menus and the command surfaces in the UI.
 
 ## Features
 
