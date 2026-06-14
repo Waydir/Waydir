@@ -26,6 +26,7 @@ import '../core/update/update_store.dart';
 import '../features/checksum/checksum_dialog.dart';
 import '../features/help/help_dialog.dart';
 import '../features/update/update_dialog.dart';
+import '../features/navigation/bookmark_store.dart';
 import '../features/navigation/navigation_store.dart';
 import '../features/navigation/sidebar.dart';
 import '../features/navigation/status_bar.dart';
