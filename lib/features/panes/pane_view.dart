@@ -289,6 +289,7 @@ class _TabContent extends StatelessWidget {
                 onOpenInNewTab: onOpenInNewTab,
                 onPageRows: store.setPageRows,
                 onGridColumns: store.setGridColumns,
+                onRectSelect: onRectSelect,
               );
             }
 

@@ -179,8 +179,23 @@ mixin _WaydirKeyboardMixin
     }
 
     final store = _active;
+    final gridMode = SettingsStore.instance.fileViewMode.value == 'grid';
 
     if (isRepeat) {
+      if (gridMode && !ctrl && !alt && key == LogicalKeyboardKey.arrowRight) {
+        if (!_acceptCursorRepeat()) return KeyEventResult.handled;
+        store.moveCursorHorizontally(1);
+
+        return KeyEventResult.handled;
+      }
+
+      if (gridMode && !ctrl && !alt && key == LogicalKeyboardKey.arrowLeft) {
+        if (!_acceptCursorRepeat()) return KeyEventResult.handled;
+        store.moveCursorHorizontally(-1);
+
+        return KeyEventResult.handled;
+      }
+
       if (AppShortcuts.matchesIgnoreShift('cursor_down', key)) {
         if (!_acceptCursorRepeat()) return KeyEventResult.handled;
         store.moveCursor(1);
@@ -365,6 +380,20 @@ mixin _WaydirKeyboardMixin
 
     if (AppShortcuts.matchesIgnoreShift('delete', key)) {
       _confirmAndDelete(forcePermanent: shift);
+
+      return KeyEventResult.handled;
+    }
+
+    if (gridMode && !ctrl && !alt && key == LogicalKeyboardKey.arrowRight) {
+      _lastCursorRepeatAt = null;
+      store.moveCursorHorizontally(1);
+
+      return KeyEventResult.handled;
+    }
+
+    if (gridMode && !ctrl && !alt && key == LogicalKeyboardKey.arrowLeft) {
+      _lastCursorRepeatAt = null;
+      store.moveCursorHorizontally(-1);
 
       return KeyEventResult.handled;
     }

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,6 +17,7 @@ import '../../utils/drag_drop.dart';
 import '../../utils/format.dart';
 import '../operations/drag_hint.dart';
 import 'file_icons.dart';
+import 'rubber_band_layer.dart' show RubberBandLayer, RubberBandSelectCallback;
 import 'file_view.dart'
     show
         BackgroundContextMenuCallback,
@@ -29,9 +31,6 @@ import 'file_view.dart'
 
 const _kGridDoubleTapMs = 300;
 
-// Base metrics at 100% scale. Everything below is multiplied by the user's
-// file list scale (0.5x - 2.0x) so the grid zooms uniformly: tile, thumbnail,
-// labels and spacing all grow or shrink together.
 const _kGridBaseTileWidth = 152.0;
 const _kGridBaseThumb = 80.0;
 const _kGridGap = 12.0;
@@ -43,14 +42,30 @@ const _kCaptionGap = 4.0;
 const _kCaptionBlock = 18.0;
 const _kTileBorder = 1.0;
 
-double _gridTileHeight(double scale) =>
-    ((_kGridBaseThumb +
-                    _kThumbGap +
-                    _kNameBlock +
-                    _kCaptionGap +
-                    _kCaptionBlock +
-                    _kTilePadding * 2) *
-                scale +
+double _gridDensityFactor(bool compact) => compact ? 0.9 : 1.0;
+
+double _gridTilePadding(double scale, bool compact) =>
+    (compact ? 6.0 : _kTilePadding) * scale;
+
+double _gridThumbGap(double scale, bool compact) =>
+    (compact ? 6.0 : _kThumbGap) * scale;
+
+double _gridNameBlock(double scale, bool compact) =>
+    (compact ? 32.0 : _kNameBlock) * scale;
+
+double _gridCaptionGap(double scale, bool compact) =>
+    (compact ? 2.0 : _kCaptionGap) * scale;
+
+double _gridCaptionBlock(double scale, bool compact) =>
+    (compact ? 16.0 : _kCaptionBlock) * scale;
+
+double _gridTileHeight(double scale, bool compact) =>
+    (_kGridBaseThumb * scale * _gridDensityFactor(compact) +
+            _gridThumbGap(scale, compact) +
+            _gridNameBlock(scale, compact) +
+            _gridCaptionGap(scale, compact) +
+            _gridCaptionBlock(scale, compact) +
+            _gridTilePadding(scale, compact) * 2 +
             _kTileBorder * 2)
         .ceilToDouble();
 
@@ -75,6 +90,7 @@ class FileGrid extends StatefulWidget {
   final ValueChanged<int>? onPageRows;
   final ValueChanged<int>? onGridColumns;
   final VoidCallback? onBackgroundTap;
+  final RubberBandSelectCallback? onRectSelect;
 
   const FileGrid({
     super.key,
@@ -98,6 +114,7 @@ class FileGrid extends StatefulWidget {
     this.onPageRows,
     this.onGridColumns,
     this.onBackgroundTap,
+    this.onRectSelect,
   });
 
   @override
@@ -112,6 +129,10 @@ class _FileGridState extends State<FileGrid> {
   int _lastColumns = 0;
   int _lastRows = 0;
   double _tileHeight = _kGridBaseThumb;
+  double _tileWidth = _kGridBaseTileWidth;
+  double _crossAxisGap = _kGridGap;
+  double _mainAxisGap = _kGridGap;
+  double _gridPadding = _kGridPadding;
 
   @override
   void didUpdateWidget(covariant FileGrid oldWidget) {
@@ -128,23 +149,38 @@ class _FileGridState extends State<FileGrid> {
     super.dispose();
   }
 
-  int _indexAt(Offset localPosition, double tileWidth, int columns) {
-    final y = localPosition.dy + _scrollController.offset - _kGridPadding;
-    final x = localPosition.dx - _kGridPadding;
+  int _indexAt(Offset localPosition, int columns) {
+    final y = localPosition.dy + _scrollController.offset - _gridPadding;
+    final x = localPosition.dx - _gridPadding;
     if (x < 0 || y < 0) return -1;
-    final col = (x / (tileWidth + _kGridGap)).floor();
-    final row = (y / (_tileHeight + _kGridGap)).floor();
+    final col = (x / (_tileWidth + _crossAxisGap)).floor();
+    final row = (y / (_tileHeight + _mainAxisGap)).floor();
     if (col < 0 || col >= columns || row < 0) return -1;
-    final inCol = x - col * (tileWidth + _kGridGap);
-    final inRow = y - row * (_tileHeight + _kGridGap);
-    if (inCol > tileWidth || inRow > _tileHeight) return -1;
+    final inCol = x - col * (_tileWidth + _crossAxisGap);
+    final inRow = y - row * (_tileHeight + _mainAxisGap);
+    if (inCol > _tileWidth || inRow > _tileHeight) return -1;
     final index = row * columns + col;
 
     return index >= 0 && index < widget.files.length ? index : -1;
   }
 
-  void _updateHover(Offset localPosition, double tileWidth, int columns) {
-    final index = _indexAt(localPosition, tileWidth, columns);
+  Set<String> _pathsInRect(Rect rect, int columns) {
+    if (columns <= 0 || widget.files.isEmpty) return const {};
+    final paths = <String>{};
+    for (var index = 0; index < widget.files.length; index++) {
+      final row = index ~/ columns;
+      final col = index % columns;
+      final left = _gridPadding + col * (_tileWidth + _crossAxisGap);
+      final top = _gridPadding + row * (_tileHeight + _mainAxisGap);
+      final tileRect = Rect.fromLTWH(left, top, _tileWidth, _tileHeight);
+      if (rect.overlaps(tileRect)) paths.add(widget.files[index].path);
+    }
+
+    return paths;
+  }
+
+  void _updateHover(Offset localPosition, int columns) {
+    final index = _indexAt(localPosition, columns);
     String? folder;
     if (index >= 0) {
       final entry = widget.files[index];
@@ -180,7 +216,7 @@ class _FileGridState extends State<FileGrid> {
         return;
       }
       final row = index ~/ _lastColumns;
-      final top = _kGridPadding + row * (_tileHeight + _kGridGap);
+      final top = _gridPadding + row * (_tileHeight + _mainAxisGap);
       final bottom = top + _tileHeight;
       final viewport = _scrollController.position.viewportDimension;
       final current = _scrollController.offset;
@@ -202,7 +238,7 @@ class _FileGridState extends State<FileGrid> {
   }
 
   void _reportMetrics(BoxConstraints constraints, int columns) {
-    final rows = (constraints.maxHeight / (_tileHeight + _kGridGap))
+    final rows = (constraints.maxHeight / (_tileHeight + _mainAxisGap))
         .floor()
         .clamp(1, 1 << 20);
     if (columns != _lastColumns) {
@@ -219,22 +255,37 @@ class _FileGridState extends State<FileGrid> {
   Widget build(BuildContext context) {
     return SignalBuilder(
       builder: (context) {
-        final scale = SettingsStore.instance.fileListScale.value;
-        final thumbSize = _kGridBaseThumb * scale;
-        final tileHeight = _gridTileHeight(scale);
+        final settings = SettingsStore.instance;
+        final scale = settings.fileListScale.value;
+        final compact = settings.rowDensity.value == 'compact';
+        final thumbSize = _kGridBaseThumb * scale * _gridDensityFactor(compact);
+        final tileHeight = _gridTileHeight(scale, compact);
+        final crossAxisGap = (settings.fileListHorizontalSpacing.value * 2)
+            .toDouble()
+            .clamp(2.0, 48.0);
+        final mainAxisGap = (settings.fileListVerticalSpacing.value * 2)
+            .toDouble()
+            .clamp(2.0, 48.0);
+        final gridPadding = math.max(crossAxisGap, mainAxisGap);
         _tileHeight = tileHeight;
+        _crossAxisGap = crossAxisGap;
+        _mainAxisGap = mainAxisGap;
+        _gridPadding = gridPadding;
 
         return LayoutBuilder(
           builder: (context, constraints) {
-            final available = (constraints.maxWidth - _kGridPadding * 2).clamp(
+            final available = (constraints.maxWidth - gridPadding * 2).clamp(
               1.0,
               double.infinity,
             );
-            final idealWidth = _kGridBaseTileWidth * scale;
-            final columns = (available / (idealWidth + _kGridGap))
+            final idealWidth =
+                _kGridBaseTileWidth * scale * _gridDensityFactor(compact);
+            final columns = (available / (idealWidth + crossAxisGap))
                 .round()
                 .clamp(1, 1000);
-            final tileWidth = (available - (columns - 1) * _kGridGap) / columns;
+            final tileWidth =
+                (available - (columns - 1) * crossAxisGap) / columns;
+            _tileWidth = tileWidth;
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) _reportMetrics(constraints, columns);
             });
@@ -246,7 +297,7 @@ class _FileGridState extends State<FileGrid> {
                   formats: [Formats.fileUri, formatLocalFile],
                   hitTestBehavior: HitTestBehavior.opaque,
                   onDropOver: (event) {
-                    _updateHover(event.position.local, tileWidth, columns);
+                    _updateHover(event.position.local, columns);
 
                     return DragHintController.instance.mode.value ==
                             DragMode.move
@@ -257,7 +308,7 @@ class _FileGridState extends State<FileGrid> {
                   onDropEnded: (_) => _clearDrag(),
                   onPerformDrop: (event) async {
                     final pos = event.position.local;
-                    final index = _indexAt(pos, tileWidth, columns);
+                    final index = _indexAt(pos, columns);
                     String? target;
                     if (index >= 0 &&
                         widget.files[index].type == FileItemType.folder) {
@@ -275,53 +326,67 @@ class _FileGridState extends State<FileGrid> {
                     }
                     _clearDrag();
                   },
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.translucent,
-                    onTap: widget.onBackgroundTap,
-                    onSecondaryTapUp: (details) {
-                      final index = _indexAt(
-                        details.localPosition,
-                        tileWidth,
-                        columns,
-                      );
-                      if (index < 0) {
-                        widget.onBackgroundTap?.call();
-                        widget.onBackgroundContextMenu?.call(
-                          details.globalPosition,
-                        );
-                      }
-                    },
-                    child: GridView.builder(
-                      controller: _scrollController,
-                      padding: const EdgeInsets.all(_kGridPadding),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: columns,
-                        mainAxisExtent: tileHeight,
-                        crossAxisSpacing: _kGridGap,
-                        mainAxisSpacing: _kGridGap,
-                      ),
-                      itemCount: widget.files.length,
-                      itemBuilder: (context, index) {
-                        final entry = widget.files[index];
-
-                        return _GridTile(
-                          entry: entry,
-                          index: index,
-                          scale: scale,
-                          thumbSize: thumbSize,
-                          selected: widget.selectedPaths.contains(entry.path),
-                          isCut: widget.cutPaths.contains(entry.path),
-                          isFolderDragOver: _hoveredFolderPath == entry.path,
-                          isRenaming: widget.renamingPath == entry.path,
-                          renameAttempt: widget.renameAttempt,
-                          onRenameSubmit: widget.onRenameSubmit,
-                          onRenameCancel: widget.onRenameCancel,
-                          onSelect: widget.onSelect,
-                          onOpen: widget.onOpen,
-                          onContextMenu: widget.onContextMenu,
-                          onOpenInNewTab: widget.onOpenInNewTab,
-                        );
+                  child: RubberBandLayer(
+                    scrollController: _scrollController,
+                    itemCount: widget.files.length,
+                    itemExtent: tileHeight + mainAxisGap,
+                    rowHeight: tileHeight,
+                    topPadding: gridPadding,
+                    pathAt: (i) => widget.files[i].path,
+                    rowAt: (localPosition) => _indexAt(localPosition, columns),
+                    pathsInRect: (rect) => _pathsInRect(rect, columns),
+                    onSelectionChanged: widget.onRectSelect,
+                    onBackgroundTap: widget.onBackgroundTap,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      onTap: widget.onBackgroundTap,
+                      onSecondaryTapUp: (details) {
+                        final index = _indexAt(details.localPosition, columns);
+                        if (index < 0) {
+                          widget.onBackgroundTap?.call();
+                          widget.onBackgroundContextMenu?.call(
+                            details.globalPosition,
+                          );
+                        }
                       },
+                      child: GridView.builder(
+                        controller: _scrollController,
+                        padding: EdgeInsets.all(gridPadding),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: columns,
+                          mainAxisExtent: tileHeight,
+                          crossAxisSpacing: crossAxisGap,
+                          mainAxisSpacing: mainAxisGap,
+                        ),
+                        itemCount: widget.files.length,
+                        itemBuilder: (context, index) {
+                          final entry = widget.files[index];
+
+                          return _GridTile(
+                            entry: entry,
+                            index: index,
+                            scale: scale,
+                            thumbSize: thumbSize,
+                            tilePadding: _gridTilePadding(scale, compact),
+                            thumbGap: _gridThumbGap(scale, compact),
+                            nameBlock: _gridNameBlock(scale, compact),
+                            captionGap: _gridCaptionGap(scale, compact),
+                            captionBlock: _gridCaptionBlock(scale, compact),
+                            selected: widget.selectedPaths.contains(entry.path),
+                            selectedPaths: widget.selectedPaths,
+                            isCut: widget.cutPaths.contains(entry.path),
+                            isFolderDragOver: _hoveredFolderPath == entry.path,
+                            isRenaming: widget.renamingPath == entry.path,
+                            renameAttempt: widget.renameAttempt,
+                            onRenameSubmit: widget.onRenameSubmit,
+                            onRenameCancel: widget.onRenameCancel,
+                            onSelect: widget.onSelect,
+                            onOpen: widget.onOpen,
+                            onContextMenu: widget.onContextMenu,
+                            onOpenInNewTab: widget.onOpenInNewTab,
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ),
@@ -364,7 +429,13 @@ class _GridTile extends StatefulWidget {
   final int index;
   final double scale;
   final double thumbSize;
+  final double tilePadding;
+  final double thumbGap;
+  final double nameBlock;
+  final double captionGap;
+  final double captionBlock;
   final bool selected;
+  final Set<String> selectedPaths;
   final bool isCut;
   final bool isFolderDragOver;
   final bool isRenaming;
@@ -381,7 +452,13 @@ class _GridTile extends StatefulWidget {
     required this.index,
     required this.scale,
     required this.thumbSize,
+    required this.tilePadding,
+    required this.thumbGap,
+    required this.nameBlock,
+    required this.captionGap,
+    required this.captionBlock,
     required this.selected,
+    required this.selectedPaths,
     required this.isCut,
     required this.isFolderDragOver,
     required this.isRenaming,
@@ -400,6 +477,7 @@ class _GridTile extends StatefulWidget {
 
 class _GridTileState extends State<_GridTile> {
   bool _hovered = false;
+  bool _dragging = false;
   DateTime? _lastTap;
   TextEditingController? _renameController;
   FocusNode? _renameFocusNode;
@@ -495,6 +573,94 @@ class _GridTileState extends State<_GridTile> {
     );
   }
 
+  List<String> _pathsToDrag() {
+    final selectedPaths = widget.selectedPaths.toList();
+    if (widget.selected && selectedPaths.isNotEmpty) return selectedPaths;
+
+    return [widget.entry.path];
+  }
+
+  DragItem _dragItemForPaths(List<String> paths) {
+    final item = DragItem(
+      localData: {'paths': paths},
+      suggestedName: paths.length == 1 ? widget.entry.name : null,
+    );
+    item.add(formatLocalFile(paths.join('\n')));
+    for (final path in paths) {
+      item.add(Formats.fileUri(Uri.file(path)));
+    }
+
+    return item;
+  }
+
+  Future<DragItem?> _provideDragItem(DragItemRequest request) async {
+    if (!widget.selected) {
+      widget.onSelect(
+        FileSelectionEvent(entry: widget.entry, index: widget.index),
+      );
+    }
+    final initialMode = HardwareKeyboard.instance.isAltPressed
+        ? DragMode.move
+        : DragMode.copy;
+
+    void updateDragging() {
+      final isDragging = request.session.dragging.value;
+      if (mounted) setState(() => _dragging = isDragging);
+      if (isDragging) DragHintController.instance.mode.value = initialMode;
+    }
+
+    request.session.dragging.addListener(updateDragging);
+    updateDragging();
+
+    return _dragItemForPaths(_pathsToDrag());
+  }
+
+  Widget _buildDragImage(BuildContext context, Widget child) {
+    final paths = _pathsToDrag();
+    final entry = widget.entry;
+
+    return Container(
+      width: 220,
+      height: 40,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: AppColors.bgSidebar,
+        borderRadius: BorderRadius.zero,
+        border: Border.all(color: AppColors.bgDivider),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.4),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          buildFileIcon(
+            name: entry.name,
+            ext: entry.extension,
+            isFolder: entry.type == FileItemType.folder,
+            size: 20,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              paths.length > 1
+                  ? t.fileView.movingItems(count: paths.length)
+                  : entry.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.txt.dialogTitle.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final entry = widget.entry;
@@ -525,7 +691,7 @@ class _GridTileState extends State<_GridTile> {
         ? Border.all(color: AppColors.accent.withValues(alpha: 0.7))
         : Border.all(color: Colors.transparent);
 
-    return MouseRegion(
+    final tile = MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
@@ -533,9 +699,9 @@ class _GridTileState extends State<_GridTile> {
         onTap: _handleTap,
         onSecondaryTapUp: _handleSecondaryTap,
         child: Opacity(
-          opacity: widget.isCut ? 0.45 : 1,
+          opacity: widget.isCut ? 0.45 : (_dragging ? 0.45 : 1),
           child: Container(
-            padding: EdgeInsets.all(_kTilePadding * scale),
+            padding: EdgeInsets.all(widget.tilePadding),
             decoration: BoxDecoration(
               color: bg,
               border: border,
@@ -548,12 +714,12 @@ class _GridTileState extends State<_GridTile> {
                   height: thumbSize,
                   child: _GridPreview(entry: entry, thumbSize: thumbSize),
                 ),
-                SizedBox(height: _kThumbGap * scale),
+                SizedBox(height: widget.thumbGap),
                 if (widget.isRenaming &&
                     _renameController != null &&
                     _renameFocusNode != null)
                   SizedBox(
-                    height: _kNameBlock * scale,
+                    height: widget.nameBlock,
                     child: TextField(
                       controller: _renameController,
                       focusNode: _renameFocusNode,
@@ -582,7 +748,7 @@ class _GridTileState extends State<_GridTile> {
                   )
                 else
                   SizedBox(
-                    height: _kNameBlock * scale,
+                    height: widget.nameBlock,
                     child: Center(
                       child: Text(
                         entry.name,
@@ -593,9 +759,9 @@ class _GridTileState extends State<_GridTile> {
                       ),
                     ),
                   ),
-                SizedBox(height: _kCaptionGap * scale),
+                SizedBox(height: widget.captionGap),
                 SizedBox(
-                  height: _kCaptionBlock * scale,
+                  height: widget.captionBlock,
                   child: Text(
                     entry.type == FileItemType.folder
                         ? entry.kind
@@ -611,6 +777,16 @@ class _GridTileState extends State<_GridTile> {
           ),
         ),
       ),
+    );
+
+    if (widget.isRenaming) return tile;
+
+    return DragItemWidget(
+      dragItemProvider: _provideDragItem,
+      allowedOperations: () => [DropOperation.copy, DropOperation.move],
+      canAddItemToExistingSession: true,
+      dragBuilder: _buildDragImage,
+      child: DraggableWidget(child: tile),
     );
   }
 }

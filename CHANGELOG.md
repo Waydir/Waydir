@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Quick Look: PDF preview.
 
 ### Fixed
+- Grid view now supports left/right arrow navigation, drag selection, file dragging and Appearance spacing/density settings.
 - Updates now verify downloaded files before installing.
 
 ## [0.16.0] - 2026-06-13

@@ -2636,6 +2636,28 @@ class NavigationStore {
     if (columns > 0) gridColumns.value = columns;
   }
 
+  void moveCursorHorizontally(int delta) {
+    final settings = SettingsStore.instance;
+    if (settings.fileViewMode.value != 'grid') {
+      moveCursor(delta);
+
+      return;
+    }
+    if (_vf.isEmpty || delta == 0) return;
+    if (cursorIndex.value < 0) {
+      _initCursor(delta > 0 ? 0 : _vf.length - 1);
+
+      return;
+    }
+    final columns = gridColumns.value.clamp(1, 1000);
+    final col = cursorIndex.value % columns;
+    if (delta < 0 && col == 0) return;
+    if (delta > 0 && col == columns - 1) return;
+    final next = cursorIndex.value + delta;
+    if (next < 0 || next >= _vf.length) return;
+    _applyCursorMove(next);
+  }
+
   void moveCursor(int delta) {
     final settings = SettingsStore.instance;
     final step = settings.fileViewMode.value == 'grid' && delta.abs() == 1

@@ -7,6 +7,7 @@ import '../../ui/theme/app_theme.dart';
 typedef RubberBandSelectCallback =
     void Function(Set<String> paths, {bool additive});
 typedef RubberBandStartPredicate = bool Function(Offset localPosition);
+typedef RubberBandRectResolver = Set<String> Function(Rect contentRect);
 
 class RubberBandLayer extends StatefulWidget {
   final ScrollController scrollController;
@@ -16,6 +17,7 @@ class RubberBandLayer extends StatefulWidget {
   final double topPadding;
   final String Function(int index) pathAt;
   final int Function(Offset localPosition) rowAt;
+  final RubberBandRectResolver? pathsInRect;
   final RubberBandStartPredicate? canStartSelectionAt;
   final RubberBandSelectCallback? onSelectionChanged;
   final VoidCallback? onBackgroundTap;
@@ -30,6 +32,7 @@ class RubberBandLayer extends StatefulWidget {
     this.topPadding = 0,
     required this.pathAt,
     required this.rowAt,
+    this.pathsInRect,
     this.canStartSelectionAt,
     required this.onSelectionChanged,
     this.onBackgroundTap,
@@ -70,6 +73,8 @@ class _RubberBandLayerState extends State<RubberBandLayer> {
   }
 
   Set<String> _pathsInRect(Rect rect) {
+    final resolver = widget.pathsInRect;
+    if (resolver != null) return resolver(rect);
     if (widget.itemCount == 0) return const {};
     final top = rect.top - widget.topPadding;
     final bottom = rect.bottom - widget.topPadding;
