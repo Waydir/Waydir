@@ -9,9 +9,8 @@ void main() {
 
   setUp(() {
     tmp = Directory.systemTemp.createTempSync('waydir_arcpath');
+    addTearDown(() => tmp.deleteSync(recursive: true));
   });
-
-  tearDown(() => tmp.deleteSync(recursive: true));
 
   test('isArchiveName matches simple and compound extensions', () {
     expect(ArchivePath.isArchiveName('foo.zip'), isTrue);
