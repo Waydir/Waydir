@@ -123,6 +123,7 @@ class _CodeEditorState extends State<CodeEditor> {
         _saveError = null;
       });
       widget.controller?.dirty.value = _dirty;
+
       return true;
     } catch (e, st) {
       log.error('quick-look', 'code editor save failed', error: e, stack: st);
@@ -131,6 +132,7 @@ class _CodeEditorState extends State<CodeEditor> {
         _saving = false;
         _saveError = t.quickLook.saveError;
       });
+
       return false;
     }
   }
@@ -146,16 +148,20 @@ class _CodeEditorState extends State<CodeEditor> {
     if (!vimEnabled) return KeyEventResult.ignored;
     if (mod && event.logicalKey == LogicalKeyboardKey.keyR) {
       _ctrl.redo();
+
       return KeyEventResult.handled;
     }
     if (_vim == _VimMode.insert) {
       if (event.logicalKey == LogicalKeyboardKey.escape) {
         setState(() => _vim = _VimMode.normal);
         _reattachInput();
+
         return KeyEventResult.handled;
       }
+
       return KeyEventResult.ignored;
     }
+
     return _handleVimNormal(event);
   }
 
@@ -181,6 +187,7 @@ class _CodeEditorState extends State<CodeEditor> {
         if (_vim == _VimMode.visual) _vim = _VimMode.normal;
       });
       _ctrl.cancelSelection();
+
       return KeyEventResult.handled;
     }
     final ch = event.character;
@@ -201,6 +208,7 @@ class _CodeEditorState extends State<CodeEditor> {
       } else if (op == 'y' && ch == 'y') {
         _yankLine();
       }
+
       return KeyEventResult.handled;
     }
 
@@ -281,6 +289,7 @@ class _CodeEditorState extends State<CodeEditor> {
       case 'v':
         setState(() => _vim = visual ? _VimMode.normal : _VimMode.visual);
     }
+
     return KeyEventResult.handled;
   }
 
@@ -372,6 +381,7 @@ class _CodeEditorState extends State<CodeEditor> {
                 CallbackAction<re.CodeShortcutSaveIntent>(
                   onInvoke: (intent) {
                     _save();
+
                     return null;
                   },
                 ),
@@ -466,6 +476,7 @@ class _StatusBar extends StatelessWidget {
       dot = AppColors.success;
       label = t.quickLook.saved;
     }
+
     return Container(
       height: 30,
       color: AppColors.bgStatus,
@@ -518,6 +529,7 @@ class _SaveButtonState extends State<_SaveButton> {
   @override
   Widget build(BuildContext context) {
     final color = widget.enabled ? AppColors.accent : AppColors.fgSubtle;
+
     return MouseRegion(
       cursor: widget.enabled
           ? SystemMouseCursors.click

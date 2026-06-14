@@ -86,12 +86,14 @@ class LocationResolver {
     final locations = _logicalToPhysical.keys.toList();
     locations.addAll(SftpSessionManager.activeRoots());
     locations.sort();
+
     return locations;
   }
 
   static void debugSetMappingForTests(String logicalRoot, String physicalRoot) {
     assert(() {
       _logicalToPhysical[logicalRoot] = physicalRoot;
+
       return true;
     }());
   }
@@ -99,6 +101,7 @@ class LocationResolver {
   static void debugClearMappingsForTests() {
     assert(() {
       _logicalToPhysical.clear();
+
       return true;
     }());
   }
@@ -113,9 +116,11 @@ class LocationResolver {
           : '$physicalRoot/';
       if (physical.startsWith(prefix)) {
         final sub = physical.substring(prefix.length);
+
         return '${entry.key}/$sub';
       }
     }
+
     return _gvfsPathToLogical(physical);
   }
 
@@ -128,9 +133,11 @@ class LocationResolver {
       final prefix = '$logicalRoot/';
       if (logical.startsWith(prefix)) {
         final sub = logical.substring(prefix.length);
+
         return p.join(entry.value, sub);
       }
     }
+
     return null;
   }
 
@@ -146,6 +153,7 @@ class LocationResolver {
     final uri = LocationUri.parse(logical);
     if (uri.scheme == LocationScheme.sftp) {
       SftpSessionManager.closeRoot(SftpSessionManager.rootOf(uri));
+
       return;
     }
     if (uri.scheme != LocationScheme.smb) return;
@@ -163,6 +171,7 @@ class LocationResolver {
       if (result.exitCode == 0) {
         _logicalToPhysical.remove(root);
       }
+
       return;
     }
     if (PlatformPaths.isMacOS) {
@@ -176,6 +185,7 @@ class LocationResolver {
           );
       if (physical == null) {
         _logicalToPhysical.remove(root);
+
         return;
       }
       final result = await Process.run('diskutil', ['unmount', physical]);
@@ -193,6 +203,7 @@ class LocationResolver {
           );
         }
       }
+
       return;
     }
   }
@@ -211,6 +222,7 @@ class LocationResolver {
     }
     buf.write('/');
     buf.write(uri.share);
+
     return buf.toString();
   }
 
@@ -230,6 +242,7 @@ class LocationResolver {
           if (unc == null) {
             return ResolveError(t.errors.invalidSmbUri);
           }
+
           return ResolveSuccess(unc);
         }
         if (PlatformPaths.isLinux) {
@@ -238,6 +251,7 @@ class LocationResolver {
         if (PlatformPaths.isMacOS) {
           return _resolveSmbMacOS(uri);
         }
+
         return const ResolveUnsupported();
       case LocationScheme.sftp:
         return _resolveSftp(uri);
@@ -258,6 +272,7 @@ class LocationResolver {
     if (PlatformPaths.isMacOS) {
       return _resolveSmbMacOS(uri, credentials: credentials);
     }
+
     return resolve(input);
   }
 
@@ -267,6 +282,7 @@ class LocationResolver {
   ) async {
     final uri = LocationUri.parse(input);
     if (uri.scheme != LocationScheme.sftp) return resolve(input);
+
     return _resolveSftp(uri, credentials: credentials);
   }
 
@@ -306,6 +322,7 @@ class LocationResolver {
               : uri.path!.startsWith('/')
               ? uri.path!
               : '/${uri.path}';
+
           return ResolveSuccess(
             SftpSessionManager.logicalPathForSession(
               host: host,
@@ -323,6 +340,7 @@ class LocationResolver {
   static bool _sftpHasExplicitPath(String raw) {
     final lower = raw.toLowerCase();
     if (!lower.startsWith('sftp://')) return false;
+
     return raw.substring('sftp://'.length).contains('/');
   }
 
@@ -379,6 +397,7 @@ class LocationResolver {
         return const ResolveAuthenticationRequired();
       }
       final msg = mountErr.isNotEmpty ? mountErr : t.errors.gioMountFailed;
+
       return ResolveError(msg);
     }
 
@@ -390,6 +409,7 @@ class LocationResolver {
     if (mountPoint == null) {
       return ResolveError(t.errors.smbMountedShareNotFound);
     }
+
     return _resolvedSmbPath(uri, mountPoint);
   }
 
@@ -416,6 +436,7 @@ class LocationResolver {
     final exitCode = await process.exitCode;
     await stdoutSub.cancel();
     await stderrSub.cancel();
+
     return ProcessResult(
       process.pid,
       exitCode,
@@ -503,10 +524,12 @@ class LocationResolver {
       if (credentials == null && authLike) {
         return const ResolveAuthenticationRequired();
       }
+
       return ResolveError(
         err.isNotEmpty ? err : t.errors.mountSmbfsFailed(code: result.exitCode),
       );
     }
+
     return _resolvedSmbPath(uri, mountPoint);
   }
 
@@ -518,6 +541,7 @@ class LocationResolver {
       candidate = '/Volumes/$safeShare-$n';
       n++;
     }
+
     return candidate;
   }
 
@@ -554,8 +578,10 @@ class LocationResolver {
       final tail = line.substring(onIdx + 4);
       final parenIdx = tail.lastIndexOf(' (');
       final mountPath = parenIdx < 0 ? tail : tail.substring(0, parenIdx);
+
       return mountPath;
     }
+
     return null;
   }
 
@@ -574,6 +600,7 @@ class LocationResolver {
     final fullPath = (sub == null || sub.isEmpty)
         ? mountPoint
         : p.join(mountPoint, sub.replaceAll('\\', '/'));
+
     return ResolveSuccess(fullPath);
   }
 
@@ -588,6 +615,7 @@ class LocationResolver {
           error: e,
           stack: st,
         );
+
         return true;
       }
     });
@@ -617,8 +645,10 @@ class LocationResolver {
       final entryPort = attrs['port'];
       final wantedPort = port?.toString();
       if (entryPort != wantedPort) continue;
+
       return entry.path;
     }
+
     return null;
   }
 
@@ -655,6 +685,7 @@ class LocationResolver {
       buf.write('/');
       buf.write(tail.substring(slash + 1).replaceAll(p.separator, '/'));
     }
+
     return buf.toString();
   }
 
@@ -667,6 +698,7 @@ class LocationResolver {
     } catch (e, st) {
       log.warn('locations', 'failed to read process uid', error: e, stack: st);
     }
+
     return null;
   }
 }

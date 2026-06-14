@@ -257,6 +257,7 @@ class FilterQuery {
     if (modified != null && !modified!.matches(entry.modified, n)) return false;
     if (created != null && !created!.matches(entry.created, n)) return false;
     if (hidden != null && entry.isHidden != hidden) return false;
+
     return true;
   }
 }
@@ -295,6 +296,7 @@ class DateFilter {
         return !date.isBefore(today);
       case 'yesterday':
         final start = today.subtract(const Duration(days: 1));
+
         return !date.isBefore(start) && date.isBefore(today);
       case 'week':
         return !date.isBefore(now.subtract(const Duration(days: 7)));
@@ -430,12 +432,14 @@ List<FilterSuggestion> filterSuggestions(String input, int cursorOffset) {
           ),
         )
         .toList();
+
     return matches.take(8).toList();
   }
   final key = token.substring(0, colon);
   final value = token.substring(colon + 1);
   final values = _valuesForKey(key);
   if (values.isEmpty) return const [];
+
   return values
       .where((v) => v.startsWith(value))
       .map((v) => FilterSuggestion('$key:$v', '$key:$v', _detailForKey(key)))
@@ -458,6 +462,7 @@ String applyFilterSuggestion(
   final replacement = suggestion.trailingSpace
       ? '${suggestion.replacement} '
       : suggestion.replacement;
+
   return after.isEmpty ? '$before$replacement' : '$before$replacement$after';
 }
 
@@ -470,6 +475,7 @@ String applyFilterSuggestion(
   while (end < input.length && !input.codeUnitAt(end)._isWhitespace) {
     end++;
   }
+
   return (start, end);
 }
 
@@ -493,6 +499,7 @@ SizeFilter? _parseSize(String value) {
     'tb' => 1024 * 1024 * 1024 * 1024,
     _ => 1,
   };
+
   return SizeFilter(op, (amount * multiplier).round());
 }
 
@@ -500,6 +507,7 @@ bool _matchesKind(FileEntry entry, String kind) {
   if (kind == 'folder') return entry.type == FileItemType.folder;
   if (entry.type == FileItemType.folder) return false;
   final ext = entry.extension;
+
   return switch (kind) {
     'image' => _imageExtensions.contains(ext),
     'document' => _documentExtensions.contains(ext),
@@ -518,6 +526,7 @@ bool _matchesKind(FileEntry entry, String kind) {
 
 bool _isCodeFileName(String name) {
   final lower = name.toLowerCase();
+
   return lower == 'dockerfile' ||
       lower == 'containerfile' ||
       lower == 'makefile' ||

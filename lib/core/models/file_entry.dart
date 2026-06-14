@@ -84,6 +84,7 @@ class FileEntry {
 
   factory FileEntry.fromFileSystemEntity(FileSystemEntity entity) {
     final stat = entity.statSync();
+
     return FileEntry(
       name: PlatformPaths.fileName(entity.path),
       path: entity.path,
@@ -99,6 +100,7 @@ class FileEntry {
     if (type == FileItemType.folder) return '';
     final dotIndex = name.lastIndexOf('.');
     if (dotIndex < 0) return '';
+
     return name.substring(dotIndex + 1).toLowerCase();
   }
 
@@ -106,11 +108,13 @@ class FileEntry {
     if (PlatformPaths.isWindows) {
       return name.startsWith('.') || isHiddenOnWindows(path);
     }
+
     return name.startsWith('.');
   }
 
   String get kind {
     if (type == FileItemType.folder) return 'Folder';
+
     return kindLabelForFile(name, extension);
   }
 
@@ -124,6 +128,7 @@ class FileEntry {
     for (var shift = 8; shift >= 0; shift--) {
       sb.write((mode & (1 << shift)) != 0 ? flags[shift % 3] : '-');
     }
+
     return sb.toString();
   }
 
@@ -171,6 +176,7 @@ class FileEntryCodec {
       b.add(nameB);
       b.add(pathB);
     }
+
     return b.toBytes();
   }
 
@@ -179,6 +185,7 @@ class FileEntryCodec {
     if (view.getUint32(0) != _magic) {
       throw const FormatException('bad FileEntry blob');
     }
+
     return view.getUint32(4);
   }
 
@@ -221,6 +228,7 @@ class FileEntryCodec {
         ),
       );
     }
+
     return out;
   }
 }

@@ -33,6 +33,7 @@ String _releasesOnly(String raw) {
     }
   }
   final version = RegExp(r'\[(\d+\.\d+\.\d+)\]');
+
   return lines
       .sublist(start, end)
       .map((line) => line.replaceFirstMapped(version, (m) => m[1]!))
@@ -75,6 +76,7 @@ class _ChangelogDialog extends StatelessWidget {
               child: Text(t.changelog.loadError, style: context.txt.bodyMuted),
             );
           }
+
           return _ChangelogMarkdown(data: _releasesOnly(snapshot.data!));
         },
       ),

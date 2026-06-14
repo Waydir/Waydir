@@ -30,12 +30,14 @@ class SwapInstaller {
     ]);
     if (extract.exitCode != 0) {
       staging.deleteSync(recursive: true);
+
       return false;
     }
 
     final stagingRoot = _flattenSingleChild(staging);
     if (!File(p.join(stagingRoot.path, 'waydir')).existsSync()) {
       staging.deleteSync(recursive: true);
+
       return false;
     }
 
@@ -47,6 +49,7 @@ class SwapInstaller {
     );
     await Process.run('chmod', ['+x', script.path]);
     await Process.start(script.path, const [], mode: ProcessStartMode.detached);
+
     return true;
   }
 
@@ -68,12 +71,14 @@ class SwapInstaller {
     ]);
     if (extract.exitCode != 0) {
       staging.deleteSync(recursive: true);
+
       return false;
     }
 
     final stagingRoot = _flattenSingleChild(staging);
     if (!File(p.join(stagingRoot.path, 'waydir.exe')).existsSync()) {
       staging.deleteSync(recursive: true);
+
       return false;
     }
 
@@ -103,16 +108,19 @@ class SwapInstaller {
       mode: ProcessStartMode.detached,
       workingDirectory: bundleDir.parent.path,
     );
+
     return true;
   }
 
   static Directory _resolveLinuxBundleDir() {
     final exe = _resolvedExe();
+
     return Directory(p.dirname(exe));
   }
 
   static Directory _resolveWindowsBundleDir() {
     final exe = _resolvedExe();
+
     return Directory(p.dirname(exe));
   }
 
@@ -126,6 +134,7 @@ class SwapInstaller {
         error: e,
         stack: st,
       );
+
       return Platform.resolvedExecutable;
     }
   }
@@ -135,9 +144,11 @@ class SwapInstaller {
       final probe = File(p.join(dir.path, '.waydir-write-probe'));
       probe.writeAsStringSync('x');
       probe.deleteSync();
+
       return true;
     } catch (e, st) {
       log.warn('update', 'bundle write probe failed', error: e, stack: st);
+
       return false;
     }
   }
@@ -150,6 +161,7 @@ class SwapInstaller {
     if (entries.length == 1 && entries.first is Directory) {
       return entries.first as Directory;
     }
+
     return staging;
   }
 
@@ -174,6 +186,7 @@ sleep 3
 rm -rf "\$OLD" 2>/dev/null
 rm -- "\$0" 2>/dev/null
 ''');
+
     return script;
   }
 
@@ -247,6 +260,7 @@ try {
   exit 1
 }
 ''');
+
     return script;
   }
 }

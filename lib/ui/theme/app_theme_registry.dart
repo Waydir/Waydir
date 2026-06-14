@@ -57,6 +57,7 @@ class AppThemeRegistry {
         ),
       );
     }
+
     return defaultTheme;
   }
 
@@ -65,6 +66,7 @@ class AppThemeRegistry {
     try {
       if (!await dir.exists()) {
         await dir.create(recursive: true);
+
         return;
       }
       await for (final entity in dir.list()) {
@@ -122,6 +124,7 @@ class AppThemeRegistry {
             path: file.path,
           ),
         );
+
         return;
       }
       _themes.add(theme);

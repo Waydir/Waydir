@@ -87,6 +87,7 @@ class AppTextField extends StatelessWidget {
     if (height != null) {
       return SizedBox(height: height, child: field);
     }
+
     return field;
   }
 }

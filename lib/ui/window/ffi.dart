@@ -62,6 +62,7 @@ final GetSizeD _getSize = _lib.lookupFunction<GetSizeC, GetSizeD>(
   final hp = calloc<Int32>();
   try {
     _getSize(wp, hp);
+
     return (width: wp.value, height: hp.value);
   } finally {
     calloc.free(wp);

@@ -93,6 +93,7 @@ class _ChecksumDialogState extends State<_ChecksumDialog> {
         _result = null;
         _copied = false;
       });
+
       return;
     }
     final generation = ++_generation;
@@ -133,6 +134,7 @@ class _ChecksumDialogState extends State<_ChecksumDialog> {
   bool get _matches {
     final result = _result;
     if (result == null) return false;
+
     return ChecksumService.matches(
       algorithm: _algorithm,
       expected: _expectedCtrl.text,
@@ -143,14 +145,17 @@ class _ChecksumDialogState extends State<_ChecksumDialog> {
   @override
   Widget build(BuildContext context) {
     final result = _result;
+
     return Focus(
       autofocus: true,
       onKeyEvent: (_, event) {
         if (event is KeyDownEvent &&
             event.logicalKey == LogicalKeyboardKey.escape) {
           Navigator.of(context).pop();
+
           return KeyEventResult.handled;
         }
+
         return KeyEventResult.ignored;
       },
       child: AppModal(

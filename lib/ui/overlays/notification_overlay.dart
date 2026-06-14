@@ -21,6 +21,7 @@ class NotificationOverlay extends StatelessWidget {
         final visible = items.length > maxVisible
             ? items.sublist(items.length - maxVisible)
             : items;
+
         return Positioned(
           top: 8,
           right: 8,
@@ -238,6 +239,7 @@ class _ApplyToAllCheckboxState extends State<_ApplyToAllCheckbox> {
   @override
   Widget build(BuildContext context) {
     final color = _hovered ? AppColors.fg : AppColors.fgMuted;
+
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),
@@ -305,6 +307,7 @@ class _ActionButtonState extends State<_ActionButton> {
   @override
   Widget build(BuildContext context) {
     final color = widget.action.color ?? AppColors.accent;
+
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),

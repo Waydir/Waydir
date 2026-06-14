@@ -143,15 +143,19 @@ mixin _WaydirStateBase on State<WaydirShell> {
     ctx.visitAncestorElements((el) {
       if (el.widget is EditableText) {
         found = true;
+
         return false;
       }
+
       return true;
     });
+
     return found;
   }
 
   bool _isModalRouteOnTop() {
     final navigator = Navigator.maybeOf(context);
+
     return navigator != null && navigator.canPop();
   }
 
@@ -159,6 +163,7 @@ mixin _WaydirStateBase on State<WaydirShell> {
     for (final tab in _shell.terminals.value) {
       if (tab.focusNode.hasFocus) return true;
     }
+
     return false;
   }
 

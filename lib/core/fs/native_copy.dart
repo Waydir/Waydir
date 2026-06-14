@@ -61,6 +61,7 @@ class NativeCopy {
         stack: st,
       );
     }
+
     return null;
   }
 
@@ -86,6 +87,7 @@ class NativeCopy {
           ? FastCopyResult.done
           : FastCopyResult.unsupported;
     }
+
     return FastCopyResult.unsupported;
   }
 
@@ -112,9 +114,11 @@ class NativeCopy {
           );
         }
       }
+
       return ok;
     } catch (e, st) {
       log.warn('fs.copy', 'mac clonefile failed', error: e, stack: st);
+
       return false;
     } finally {
       calloc.free(s);
@@ -146,6 +150,7 @@ class NativeCopy {
         error: e,
         stack: st,
       );
+
       return FastCopyResult.unsupported;
     }
 
@@ -170,6 +175,7 @@ class NativeCopy {
           // Partial fail: undo reported bytes so the portable fallback,
           // which recopies the whole file, does not double-count.
           if (emitted > 0) onProgress?.call(-emitted);
+
           return FastCopyResult.unsupported; // EXDEV/ENOSYS → fall back.
         }
         if (n == 0) break; // unexpected short source.
@@ -185,9 +191,11 @@ class NativeCopy {
           }
         }
       }
+
       return remaining == 0 ? FastCopyResult.done : FastCopyResult.unsupported;
     } catch (e, st) {
       log.warn('fs.copy', 'linux copy_file_range failed', error: e, stack: st);
+
       return FastCopyResult.unsupported;
     } finally {
       if (fdIn >= 0) {

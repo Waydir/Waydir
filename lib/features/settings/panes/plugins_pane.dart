@@ -45,6 +45,7 @@ class _PluginsPaneState extends State<PluginsPane> {
       builder: (context) {
         final plugins = PluginStore.instance.plugins.value;
         final disabled = PluginSettingsStore.instance.disabled.value;
+
         return SettingsPaneScaffold(
           children: [
             Text(t.preferences.plugins.title, style: context.txt.dialogTitle),
@@ -134,6 +135,7 @@ class _PluginRow extends StatelessWidget {
     final dim = hasError || !plugin.enabled || userDisabled;
     final canConfigure =
         loadable && !userDisabled && plugin.settingsSchema.isNotEmpty;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: Opacity(
@@ -277,6 +279,7 @@ class _BtnState extends State<_Btn> {
     final fg = !enabled
         ? AppColors.fgMuted.withValues(alpha: 0.5)
         : (_hovered ? AppColors.fg : AppColors.fgMuted);
+
     return MouseRegion(
       cursor: enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
       onEnter: (_) => setState(() => _hovered = true),

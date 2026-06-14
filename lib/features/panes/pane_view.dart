@@ -101,6 +101,7 @@ class PaneView extends StatelessWidget {
               SignalBuilder(
                 builder: (_) {
                   final tabStore = pane.tabs.activeTab.value.store;
+
                   return PaneLocationBar(
                     store: tabStore,
                     onMultiRename: onMultiRename == null
@@ -121,6 +122,7 @@ class PaneView extends StatelessWidget {
                   builder: (_) {
                     final idx = pane.tabs.activeIndex.value;
                     final tabs = pane.tabs.tabs.value;
+
                     return IndexedStack(
                       index: idx,
                       children: [
@@ -156,6 +158,7 @@ class PaneView extends StatelessWidget {
                     'dir': store.currentPath.value,
                     'paths': paths,
                   };
+
                   return PluginBarHost(
                     hostId: 'pane:$terminalSlot',
                     bars: bars,
@@ -171,6 +174,7 @@ class PaneView extends StatelessWidget {
                   final gitStore = pane.tabs.activeTab.value.store.gitStatus;
                   final status = gitStore.status.value;
                   if (status == null) return const SizedBox.shrink();
+
                   return GitStatusBar(status: status, store: gitStore);
                 },
               ),
@@ -238,6 +242,7 @@ class _TabContent extends StatelessWidget {
             ),
           );
         }
+
         return SignalBuilder(
           builder: (context) {
             if (store.trashAccessDenied.value) {
@@ -286,6 +291,7 @@ class _TabContent extends StatelessWidget {
                 onGridColumns: store.setGridColumns,
               );
             }
+
             return FileList(
               files: files,
               currentPath: currentPath,
@@ -412,6 +418,7 @@ class _TerminalPanelState extends State<_TerminalPanel> {
       } else {
         widget.onReturnFocusToFiles?.call();
       }
+
       return KeyEventResult.handled;
     }
     if (event is KeyDownEvent &&
@@ -420,6 +427,7 @@ class _TerminalPanelState extends State<_TerminalPanel> {
         !HardwareKeyboard.instance.isAltPressed &&
         event.physicalKey == PhysicalKeyboardKey.keyT) {
       widget.onNewTab?.call(widget.slot);
+
       return KeyEventResult.handled;
     }
     if (event is KeyDownEvent &&
@@ -428,6 +436,7 @@ class _TerminalPanelState extends State<_TerminalPanel> {
         !HardwareKeyboard.instance.isAltPressed &&
         event.physicalKey == PhysicalKeyboardKey.keyW) {
       widget.onCloseTab?.call(widget.active.id);
+
       return KeyEventResult.handled;
     }
     if (event is KeyDownEvent &&
@@ -436,6 +445,7 @@ class _TerminalPanelState extends State<_TerminalPanel> {
         !HardwareKeyboard.instance.isAltPressed &&
         event.physicalKey == PhysicalKeyboardKey.pageDown) {
       widget.onCycleTab?.call(widget.slot, 1);
+
       return KeyEventResult.handled;
     }
     if (event is KeyDownEvent &&
@@ -444,6 +454,7 @@ class _TerminalPanelState extends State<_TerminalPanel> {
         !HardwareKeyboard.instance.isAltPressed &&
         event.physicalKey == PhysicalKeyboardKey.pageUp) {
       widget.onCycleTab?.call(widget.slot, -1);
+
       return KeyEventResult.handled;
     }
     if (event is KeyDownEvent &&
@@ -453,17 +464,21 @@ class _TerminalPanelState extends State<_TerminalPanel> {
       final key = event.physicalKey;
       if (key == PhysicalKeyboardKey.equal) {
         settings.increaseTerminalFontSize();
+
         return KeyEventResult.handled;
       }
       if (key == PhysicalKeyboardKey.minus) {
         settings.decreaseTerminalFontSize();
+
         return KeyEventResult.handled;
       }
       if (key == PhysicalKeyboardKey.digit0) {
         settings.resetTerminalFontSize();
+
         return KeyEventResult.handled;
       }
     }
+
     return KeyEventResult.ignored;
   }
 
@@ -495,6 +510,7 @@ class _TerminalPanelState extends State<_TerminalPanel> {
                 final settings = SettingsStore.instance;
                 final useSystem = settings.terminalUseSystemFont.value;
                 final family = settings.terminalFontFamily.value.trim();
+
                 return TerminalView(
                   widget.active.session.terminal,
                   focusNode: widget.active.focusNode,
@@ -524,6 +540,7 @@ class _TerminalPanelState extends State<_TerminalPanel> {
 
 TerminalTheme _appTerminalTheme() {
   final c = AppColors.terminal;
+
   return TerminalTheme(
     cursor: AppColors.accent,
     selection: AppColors.accent.withValues(alpha: 0.30),
@@ -579,6 +596,7 @@ class _TerminalHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final fg = focused ? AppColors.fg : AppColors.fgMuted;
+
     return Opacity(
       opacity: focused ? 1.0 : 0.55,
       child: Container(
@@ -601,6 +619,7 @@ class _TerminalHeader extends StatelessWidget {
                 onReorderItem: (from, to) => onReorderTab?.call(slot, from, to),
                 itemBuilder: (context, index) {
                   final tab = tabs[index];
+
                   return ReorderableDragStartListener(
                     key: ValueKey('terminal-tab:${tab.id}'),
                     index: index,
@@ -662,6 +681,7 @@ class _TerminalTabChipState extends State<_TerminalTabChip> {
     final active = widget.active;
     final foreign = widget.foreign;
     final fg = active ? AppColors.fg : AppColors.fgMuted;
+
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),
@@ -919,6 +939,7 @@ class _PromptButtonState extends State<_PromptButton> {
   @override
   Widget build(BuildContext context) {
     final bg = _hovered ? AppColors.accentHover : AppColors.accent;
+
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),

@@ -159,6 +159,7 @@ class _KeybindingsHelpDialogState extends State<_KeybindingsHelpDialog> {
         result.putIfAbsent(s.group, () => []).add(s);
       }
     }
+
     return [
       for (final g in _groupOrder)
         if (result.containsKey(g)) (g, result[g]!),
@@ -320,6 +321,7 @@ class _ShortcutList extends StatelessWidget {
         items.add(_ShortcutRow(def: entry));
       }
     }
+
     return ListView(padding: EdgeInsets.zero, children: items);
   }
 }
@@ -367,6 +369,7 @@ class _ShortcutRowState extends State<_ShortcutRow> {
     return SignalBuilder(
       builder: (context) {
         SettingsStore.instance.shortcutBindings.value;
+
         return MouseRegion(
           onEnter: (_) => setState(() => _hovered = true),
           onExit: (_) => setState(() => _hovered = false),
@@ -433,6 +436,7 @@ class _ShortcutActions extends StatelessWidget {
         ),
       );
     }
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -478,6 +482,7 @@ class _ShortcutIconButtonState extends State<_ShortcutIconButton> {
     final color = !widget.enabled
         ? AppColors.fgSubtle.withValues(alpha: 0.45)
         : (_hovered ? AppColors.fg : AppColors.fgMuted);
+
     return Tooltip(
       message: widget.tooltip,
       child: MouseRegion(
@@ -541,6 +546,7 @@ class _ShortcutCaptureDialogState extends State<_ShortcutCaptureDialog> {
     final key = event.logicalKey;
     if (key == LogicalKeyboardKey.escape) {
       Navigator.of(context).pop();
+
       return KeyEventResult.handled;
     }
     if (kModifierKeys.contains(key)) return KeyEventResult.handled;
@@ -556,12 +562,14 @@ class _ShortcutCaptureDialogState extends State<_ShortcutCaptureDialog> {
         _candidate = chord;
         _error = t.keybindings.conflict(action: _labelFor(conflict));
       });
+
       return KeyEventResult.handled;
     }
     SettingsStore.instance.setShortcutBinding(widget.def.id, chord).then((_) {
       if (!mounted) return;
       Navigator.of(context).pop();
     });
+
     return KeyEventResult.handled;
   }
 
@@ -667,6 +675,7 @@ class _KeyBadge extends StatelessWidget {
       }
       widgets.add(_KeyCap(text: parts[i]));
     }
+
     return widgets;
   }
 }

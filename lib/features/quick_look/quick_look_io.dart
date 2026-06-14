@@ -39,6 +39,7 @@ Future<Uint8List> readHead(String path, int maxBytes) async {
   await for (final chunk in stream) {
     builder.add(chunk);
   }
+
   return builder.takeBytes();
 }
 
@@ -51,6 +52,7 @@ Future<QlSection?> imageInfo(FileEntry e) async {
     final tags = await readExifFromBytes(bytes);
     String? tag(String k) {
       final v = tags[k]?.printable.trim();
+
       return (v == null || v.isEmpty) ? null : v;
     }
 
@@ -77,9 +79,11 @@ Future<QlSection?> imageInfo(FileEntry e) async {
     if (dt != null) rows.add(MapEntry(t.quickLook.dateTaken, dt));
   } catch (e, st) {
     log.warn('quick-look', 'image metadata read failed', error: e, stack: st);
+
     return null;
   }
   if (rows.isEmpty) return null;
+
   return (title: t.quickLook.sectionImage, rows: rows);
 }
 
@@ -111,9 +115,11 @@ Future<Probe> probeFile(FileEntry entry) async {
     if (scanLen > 0 && suspicious / scanLen > 0.1) {
       return const Probe(QlKind.binary);
     }
+
     return Probe(QlKind.text, text: utf8.decode(bytes, allowMalformed: true));
   } catch (e, st) {
     log.warn('quick-look', 'file preview read failed', error: e, stack: st);
+
     return Probe(QlKind.error, note: t.quickLook.readError);
   }
 }

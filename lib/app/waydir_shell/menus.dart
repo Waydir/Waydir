@@ -28,6 +28,7 @@ mixin _WaydirMenuMixin
         ],
         onSelect: _handleBackgroundMenuAction,
       );
+
       return;
     }
     final canPaste = await store.hasPasteableFiles();
@@ -88,6 +89,7 @@ mixin _WaydirMenuMixin
     final store = _active;
     if (action.startsWith('plugin:')) {
       _runPluginAction(action, background: true);
+
       return;
     }
     switch (action) {
@@ -108,6 +110,7 @@ mixin _WaydirMenuMixin
 
   List<ContextMenuItem> _backgroundPluginItems() {
     final contributions = PluginStore.instance.backgroundContributions();
+
     return [
       for (final c in contributions)
         ContextMenuItem(
@@ -245,6 +248,7 @@ mixin _WaydirMenuMixin
         items: binItems,
         onSelect: _handleMenuAction,
       );
+
       return;
     }
 
@@ -396,6 +400,7 @@ mixin _WaydirMenuMixin
         );
       }
     }
+
     return items;
   }
 
@@ -458,6 +463,7 @@ mixin _WaydirMenuMixin
   String _cleanPluginError(String? raw) {
     if (raw == null) return '';
     final firstLine = raw.split('\n').first.trim();
+
     return firstLine.replaceFirst(RegExp(r'^runtime error:\s*'), '');
   }
 
@@ -567,6 +573,7 @@ mixin _WaydirMenuMixin
   ) {
     final id = effect.data['id'] as String?;
     if (id == null || id.trim().isEmpty) return null;
+
     return '${contribution.pluginId}:${id.trim()}';
   }
 
@@ -664,6 +671,7 @@ mixin _WaydirMenuMixin
         DialogAction(label: actionLabel, color: AppColors.danger),
       ],
     );
+
     return result == actionLabel;
   }
 
@@ -681,6 +689,7 @@ mixin _WaydirMenuMixin
     final cwd = effect.data['cwd'] as String?;
     if (effect.data['operation'] == true) {
       await _runPluginOperationTask(effect, cmd, args, cwd, title);
+
       return;
     }
     final notifId =
@@ -706,6 +715,7 @@ mixin _WaydirMenuMixin
         onTimeout: () {
           timedOut = true;
           process.kill();
+
           return -1;
         },
       );
@@ -820,6 +830,7 @@ mixin _WaydirMenuMixin
         onTimeout: () {
           timedOut = true;
           process?.kill();
+
           return -1;
         },
       );
@@ -852,6 +863,7 @@ mixin _WaydirMenuMixin
     for (final task in _operationStore.tasks.value) {
       if (task.id == id) return task;
     }
+
     return null;
   }
 
@@ -863,6 +875,7 @@ mixin _WaydirMenuMixin
     if (timedOut) return t.preferences.plugins.taskTimeout;
     final detail = stderrTail.toString().trim();
     if (detail.isNotEmpty) return detail;
+
     return t.preferences.plugins.taskFailed(code: exitCode);
   }
 
@@ -901,18 +914,21 @@ mixin _WaydirMenuMixin
     if (pattern == null || pattern.isEmpty) return null;
     final match = RegExp(pattern).firstMatch(line);
     if (match == null) return null;
+
     return (match.groupCount >= 1 ? match.group(1) : match.group(0))?.trim();
   }
 
   double? _regexDouble(String line, String? pattern) {
     final value = _regexString(line, pattern);
     if (value == null) return null;
+
     return double.tryParse(value);
   }
 
   int? _regexByteAmount(String line, String? pattern) {
     final value = _regexString(line, pattern);
     if (value == null) return null;
+
     return _parsePluginByteAmount(value);
   }
 
@@ -940,6 +956,7 @@ mixin _WaydirMenuMixin
     for (var i = 0; i < power; i++) {
       multiplier *= base;
     }
+
     return (value * multiplier).round();
   }
 
@@ -949,6 +966,7 @@ mixin _WaydirMenuMixin
   String _pluginShellQuote(String value) {
     if (value.isEmpty) return "''";
     if (RegExp(r'^[A-Za-z0-9_@%+=:,./-]+$').hasMatch(value)) return value;
+
     return "'${value.replaceAll("'", "'\"'\"'")}'";
   }
 
@@ -961,6 +979,7 @@ mixin _WaydirMenuMixin
     final secs = (effect.data['timeout'] as num?)?.toInt();
     if (secs == null || secs <= 0) return _pluginTaskTimeout;
     final requested = Duration(seconds: secs);
+
     return requested > _pluginTaskTimeoutMax
         ? _pluginTaskTimeoutMax
         : requested;
@@ -974,6 +993,7 @@ mixin _WaydirMenuMixin
   }) async {
     if (depth >= _maxPluginDialogDepth) {
       log.warn('plugins', 'dialog depth limit reached for ${c.fullActionId}');
+
       return;
     }
     final spec = (effect.data['dialog'] as Map?)?.cast<String, dynamic>();
@@ -1030,6 +1050,7 @@ mixin _WaydirMenuMixin
     final cached = _openWithCache[key];
     if (cached != null) return cached;
     _warmOpenWith(entry.realPath, key);
+
     return [_openItem, _chooserItem];
   }
 
@@ -1160,6 +1181,7 @@ mixin _WaydirMenuMixin
         final store = _active;
         final selectedCount = store.selectedCount.value;
         final hasVisibleFiles = store.visibleFiles.value.isNotEmpty;
+
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1258,6 +1280,7 @@ mixin _WaydirMenuMixin
   Widget? _buildPluginMenu() {
     final contributions = PluginStore.instance.menubarContributions();
     if (contributions.isEmpty) return null;
+
     return TitleMenuButton(
       label: t.preferences.plugins.title,
       items: [
@@ -1296,6 +1319,7 @@ mixin _WaydirMenuMixin
     final store = _shell.ready.value ? _active : null;
     final selectedCount = store?.selectedCount.value ?? 0;
     final hasVisibleFiles = store?.visibleFiles.value.isNotEmpty ?? false;
+
     return [
       PlatformMenu(
         label: t.menu.view,
@@ -1379,6 +1403,7 @@ mixin _WaydirMenuMixin
   PlatformMenu? _platformPluginMenu() {
     final contributions = PluginStore.instance.menubarContributions();
     if (contributions.isEmpty) return null;
+
     return PlatformMenu(
       label: t.preferences.plugins.title,
       menus: [

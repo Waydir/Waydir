@@ -33,6 +33,7 @@ class AppDirs {
       dir = (await getApplicationSupportDirectory()).path;
     }
     await Directory(dir).create(recursive: true);
+
     return dir;
   }
 
@@ -52,6 +53,7 @@ class AppDirs {
     final base = await support();
     final dir = p.join(base, name);
     await Directory(dir).create(recursive: true);
+
     return dir;
   }
 }

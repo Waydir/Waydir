@@ -55,6 +55,7 @@ class _RubberBandLayerState extends State<RubberBandLayer> {
 
   Rect get _contentRect {
     if (_startContent == null || _currentContent == null) return Rect.zero;
+
     return Rect.fromPoints(_startContent!, _currentContent!);
   }
 
@@ -85,6 +86,7 @@ class _RubberBandLayerState extends State<RubberBandLayer> {
         paths.add(widget.pathAt(i));
       }
     }
+
     return paths;
   }
 
@@ -98,6 +100,7 @@ class _RubberBandLayerState extends State<RubberBandLayer> {
 
   bool _setsEqual(Set<String> a, Set<String> b) {
     if (a.length != b.length) return false;
+
     return a.containsAll(b);
   }
 
@@ -108,6 +111,7 @@ class _RubberBandLayerState extends State<RubberBandLayer> {
       (_) {
         if (!_active) {
           _autoScrollTimer?.cancel();
+
           return;
         }
         final y = _currentLocalY;
@@ -206,6 +210,7 @@ class _RubberBandLayerState extends State<RubberBandLayer> {
     final w = right - left;
     final h = bottom - top;
     if (w < 1 || h < 1) return const SizedBox.shrink();
+
     return Positioned(
       left: left,
       top: top,
@@ -227,6 +232,7 @@ class _RubberBandLayerState extends State<RubberBandLayer> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final viewportHeight = constraints.maxHeight;
+
         return Listener(
           behavior: HitTestBehavior.translucent,
           onPointerDown: _handlePointerDown,

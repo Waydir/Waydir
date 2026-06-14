@@ -16,6 +16,7 @@ class TabStrip extends StatelessWidget {
     return SignalBuilder(
       builder: (context) {
         final tabs = tabsStore.tabs.value;
+
         return Container(
           height: 30,
           decoration: BoxDecoration(
@@ -33,6 +34,7 @@ class TabStrip extends StatelessWidget {
                   onReorderItem: tabsStore.reorderTab,
                   itemBuilder: (context, index) {
                     final tab = tabs[index];
+
                     return ReorderableDragStartListener(
                       key: ValueKey('tab:${tab.id}'),
                       index: index,

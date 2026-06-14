@@ -98,9 +98,11 @@ class _StatusViewModeToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = SettingsStore.instance;
+
     return SignalBuilder(
       builder: (context) {
         final grid = settings.fileViewMode.value == 'grid';
+
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -148,6 +150,7 @@ class _StatusViewModeButtonState extends State<_StatusViewModeButton> {
     final color = widget.active
         ? AppColors.accent
         : (_hovered ? AppColors.fg : AppColors.fgMuted);
+
     return Tooltip(
       message: widget.tooltip,
       child: MouseRegion(
@@ -181,10 +184,12 @@ class _StatusZoomControl extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = SettingsStore.instance;
+
     return SignalBuilder(
       builder: (context) {
         final scale = settings.fileListScale.value;
         final percent = (scale * 100).round();
+
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -248,6 +253,7 @@ class _ZoomGlyphButtonState extends State<_ZoomGlyphButton> {
     final color = !widget.enabled
         ? AppColors.fgSubtle
         : (_hovered ? AppColors.fg : AppColors.fgMuted);
+
     return Tooltip(
       message: widget.tooltip,
       child: MouseRegion(
@@ -361,6 +367,7 @@ class _StatusNotificationsButton extends StatelessWidget {
     return SignalBuilder(
       builder: (context) {
         final count = notificationStore.history.value.length;
+
         return _StatusIconButton(
           icon: WaydirIconsRegular.bell,
           tooltip: t.toolbar.notifications,
@@ -395,6 +402,7 @@ class _StatusIconButtonState extends State<_StatusIconButton> {
   @override
   Widget build(BuildContext context) {
     final iconColor = _hovered ? AppColors.fg : AppColors.fgMuted;
+
     return Tooltip(
       message: widget.tooltip,
       child: MouseRegion(

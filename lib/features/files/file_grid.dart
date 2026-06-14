@@ -139,6 +139,7 @@ class _FileGridState extends State<FileGrid> {
     final inRow = y - row * (_tileHeight + _kGridGap);
     if (inCol > tileWidth || inRow > _tileHeight) return -1;
     final index = row * columns + col;
+
     return index >= 0 && index < widget.files.length ? index : -1;
   }
 
@@ -222,6 +223,7 @@ class _FileGridState extends State<FileGrid> {
         final thumbSize = _kGridBaseThumb * scale;
         final tileHeight = _gridTileHeight(scale);
         _tileHeight = tileHeight;
+
         return LayoutBuilder(
           builder: (context, constraints) {
             final available = (constraints.maxWidth - _kGridPadding * 2).clamp(
@@ -237,6 +239,7 @@ class _FileGridState extends State<FileGrid> {
               if (mounted) _reportMetrics(constraints, columns);
             });
             _revealSelectedTile();
+
             return Stack(
               children: [
                 DropRegion(
@@ -244,6 +247,7 @@ class _FileGridState extends State<FileGrid> {
                   hitTestBehavior: HitTestBehavior.opaque,
                   onDropOver: (event) {
                     _updateHover(event.position.local, tileWidth, columns);
+
                     return DragHintController.instance.mode.value ==
                             DragMode.move
                         ? DropOperation.move
@@ -299,6 +303,7 @@ class _FileGridState extends State<FileGrid> {
                       itemCount: widget.files.length,
                       itemBuilder: (context, index) {
                         final entry = widget.files[index];
+
                         return _GridTile(
                           entry: entry,
                           index: index,
@@ -474,6 +479,7 @@ class _GridTileState extends State<_GridTile> {
         now.difference(_lastTap!).inMilliseconds < _kGridDoubleTapMs) {
       _lastTap = null;
       widget.onOpen(widget.entry);
+
       return;
     }
     _lastTap = now;
@@ -518,6 +524,7 @@ class _GridTileState extends State<_GridTile> {
         : selected
         ? Border.all(color: AppColors.accent.withValues(alpha: 0.7))
         : Border.all(color: Colors.transparent);
+
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
@@ -620,6 +627,7 @@ class _GridPreview extends StatelessWidget {
     final thumbnail = !isFolder && _isThumbnailable(entry)
         ? _ImageThumbnail(entry: entry, thumbSize: thumbSize)
         : null;
+
     return Center(
       child:
           thumbnail ??
@@ -643,6 +651,7 @@ class _ImageThumbnail extends StatelessWidget {
   Widget build(BuildContext context) {
     final file = File(entry.realPath);
     final cache = (thumbSize * 2.2).round().clamp(96, 360);
+
     return DecoratedBox(
       decoration: BoxDecoration(border: Border.all(color: AppColors.bgDivider)),
       child: ClipRect(

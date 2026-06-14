@@ -19,6 +19,7 @@ Widget buildFileIcon({
         height: size,
       );
     }
+
     return Icon(
       WaydirIconsFill.folder,
       size: size,

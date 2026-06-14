@@ -30,6 +30,7 @@ Future<MultiRenameResult?> showMultiRenameDialog({
   required List<FileEntry> entries,
 }) {
   if (entries.isEmpty) return Future.value(null);
+
   return showDialog<MultiRenameResult>(
     context: context,
     barrierColor: Colors.black.withValues(alpha: 0.4),
@@ -101,6 +102,7 @@ class _MultiRenameBodyState extends State<_MultiRenameBody> {
   List<String> get _previews {
     return List.generate(widget.entries.length, (i) {
       final entry = widget.entries[i];
+
       return switch (_mode) {
         _RenameMode.template => _applyTemplate(_templateCtrl.text, entry, i),
         _RenameMode.findReplace => _applyFindReplace(
@@ -116,6 +118,7 @@ class _MultiRenameBodyState extends State<_MultiRenameBody> {
   String _applyTemplate(String template, FileEntry entry, int index) {
     final stem = _stem(entry);
     final ext = _ext(entry);
+
     return _expandTokens(template, stem, ext, index);
   }
 
@@ -144,6 +147,7 @@ class _MultiRenameBodyState extends State<_MultiRenameBody> {
         newName = _replaceIgnoreCase(entry.name, find, expandedReplace);
       }
     }
+
     return newName;
   }
 
@@ -160,6 +164,7 @@ class _MultiRenameBodyState extends State<_MultiRenameBody> {
       start = idx + find.length;
     }
     buf.write(source.substring(start));
+
     return buf.toString();
   }
 
@@ -167,6 +172,7 @@ class _MultiRenameBodyState extends State<_MultiRenameBody> {
     final today = DateTime.now();
     final date =
         '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+
     return template
         .replaceAll('[FILENAME]', stem)
         .replaceAll('[EXT]', ext)
@@ -178,12 +184,14 @@ class _MultiRenameBodyState extends State<_MultiRenameBody> {
   String _stem(FileEntry entry) {
     if (entry.type == FileItemType.folder) return entry.name;
     final dotIdx = entry.name.lastIndexOf('.');
+
     return dotIdx > 0 ? entry.name.substring(0, dotIdx) : entry.name;
   }
 
   String _ext(FileEntry entry) {
     if (entry.type == FileItemType.folder) return '';
     final dotIdx = entry.name.lastIndexOf('.');
+
     return dotIdx > 0 ? entry.name.substring(dotIdx) : '';
   }
 
@@ -195,6 +203,7 @@ class _MultiRenameBodyState extends State<_MultiRenameBody> {
     for (final name in previews) {
       if (!seen.add(name.toLowerCase())) dupes.add(name.toLowerCase());
     }
+
     return dupes;
   }
 
@@ -203,6 +212,7 @@ class _MultiRenameBodyState extends State<_MultiRenameBody> {
     for (var i = 0; i < widget.entries.length; i++) {
       if (previews[i].trim() != widget.entries[i].name) n++;
     }
+
     return n;
   }
 
@@ -214,6 +224,7 @@ class _MultiRenameBodyState extends State<_MultiRenameBody> {
       if (name.trim() == widget.entries[i].name) continue;
       if (_isInvalid(name) || dupes.contains(name.toLowerCase())) n++;
     }
+
     return n;
   }
 
@@ -265,8 +276,10 @@ class _MultiRenameBodyState extends State<_MultiRenameBody> {
         if (event is KeyDownEvent &&
             event.logicalKey == LogicalKeyboardKey.escape) {
           Navigator.of(context).pop();
+
           return KeyEventResult.handled;
         }
+
         return KeyEventResult.ignored;
       },
       child: AppModal(
@@ -497,6 +510,7 @@ class _MultiRenameBodyState extends State<_MultiRenameBody> {
                       final invalid = changed && _isInvalid(newName);
                       final isDupe =
                           changed && dupes.contains(newName.toLowerCase());
+
                       return _TableRow(
                         before: entry.name,
                         after: newName,

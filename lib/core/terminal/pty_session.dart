@@ -20,6 +20,7 @@ Duration nextPollInterval({
 }) {
   if (active) return min;
   final next = current * 2;
+
   return next > max ? max : next;
 }
 
@@ -83,6 +84,7 @@ class PtySession {
     };
 
     _schedule();
+
     return true;
   }
 
@@ -112,6 +114,7 @@ class PtySession {
       final cb = _onExit;
       _onExit = null;
       cb?.call();
+
       return;
     }
     _interval = nextPollInterval(current: _interval, active: hadData);

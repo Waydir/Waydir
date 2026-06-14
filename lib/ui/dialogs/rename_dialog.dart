@@ -85,8 +85,10 @@ class _RenameDialogState extends State<_RenameDialog> {
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
     if (event.logicalKey == LogicalKeyboardKey.escape) {
       _cancel();
+
       return KeyEventResult.handled;
     }
+
     return KeyEventResult.ignored;
   }
 

@@ -205,5 +205,6 @@ String kindLabelForFile(String name, String extension) {
   final extensionKind = _kindNames[extension];
   if (extensionKind != null) return extensionKind;
   if (extension.isEmpty) return 'File';
+
   return '${extension.toUpperCase()} file';
 }

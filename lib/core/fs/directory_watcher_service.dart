@@ -33,6 +33,7 @@ class DirectoryWatcherService {
   void watch(String path, DirectoryChangeCallback onChange) {
     if (_watchedPath == path && _subscription != null) {
       _onChange = onChange;
+
       return;
     }
     stop();
@@ -79,6 +80,7 @@ class DirectoryWatcherService {
   void _accumulate(FileSystemEvent event) {
     if (event is FileSystemMoveEvent) {
       _fullReload = true;
+
       return;
     }
     _pending.add(event.path);

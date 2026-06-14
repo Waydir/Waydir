@@ -115,16 +115,20 @@ class _HelpDialogState extends State<_HelpDialog> {
     final key = event.logicalKey;
     if (key == LogicalKeyboardKey.escape) {
       Navigator.of(context).pop();
+
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.arrowDown) {
       _select((_selectedIndex + 1) % _pages.length);
+
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.arrowUp) {
       _select((_selectedIndex - 1 + _pages.length) % _pages.length);
+
       return KeyEventResult.handled;
     }
+
     return KeyEventResult.ignored;
   }
 

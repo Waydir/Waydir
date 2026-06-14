@@ -580,6 +580,7 @@ class AppDatabase extends _$AppDatabase {
   Future<AppSetting> getSettings() {
     return (select(appSettings)..limit(1)).getSingleOrNull().then((row) {
       if (row != null) return row;
+
       return into(appSettings).insertReturning(AppSettingsCompanion.insert());
     });
   }
@@ -621,6 +622,7 @@ class AppDatabase extends _$AppDatabase {
       bookmarks,
     )..addColumns([maxOrder])).getSingleOrNull();
     final nextOrder = (row?.read(maxOrder) ?? -1) + 1;
+
     return into(bookmarks).insertReturning(
       BookmarksCompanion.insert(
         orderIndex: nextOrder,

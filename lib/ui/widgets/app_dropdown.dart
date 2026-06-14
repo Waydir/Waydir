@@ -83,12 +83,14 @@ class _AppDropdownState<T> extends State<AppDropdown<T>> {
     for (final item in widget.items) {
       if (item.value == widget.value) return item;
     }
+
     return null;
   }
 
   @override
   Widget build(BuildContext context) {
     final selected = _selectedItem();
+
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),
@@ -210,6 +212,7 @@ class _MenuTileState<T> extends State<_MenuTile<T>> {
     final fg = (_hovered || widget.isSelected)
         ? AppColors.fg
         : AppColors.fgMuted;
+
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),

@@ -34,6 +34,7 @@ class UpdateStore {
     if (i == null) {
       throw StateError('UpdateStore.init() must be called before instance');
     }
+
     return i;
   }
 
@@ -62,6 +63,7 @@ class UpdateStore {
   late final updateAvailable = computed(() {
     final r = latestRelease.value;
     if (r == null) return false;
+
     return _isNewer(r.version, currentVersion);
   });
 
@@ -102,6 +104,7 @@ class UpdateStore {
       latestRelease.value = release;
       if (release == null) {
         status.value = UpdateStatus.upToDate;
+
         return;
       }
       if (_isNewer(release.version, currentVersion)) {
@@ -123,6 +126,7 @@ class UpdateStore {
     if (asset == null) {
       errorMessage.value = t.update.noMatch;
       status.value = UpdateStatus.error;
+
       return;
     }
     status.value = UpdateStatus.downloading;
@@ -212,8 +216,10 @@ class UpdateStore {
           if (!ok) {
             errorMessage.value = t.update.bundleNotWritable;
             status.value = UpdateStatus.error;
+
             return false;
           }
+
           return true;
         case InstallFormat.windowsInstaller:
           await Process.start(
@@ -221,19 +227,23 @@ class UpdateStore {
             const [],
             mode: ProcessStartMode.detached,
           );
+
           return true;
         case InstallFormat.windowsPortable:
           final ok = await SwapInstaller.installWindowsPortable(file);
           if (!ok) {
             errorMessage.value = t.update.bundleNotWritable;
             status.value = UpdateStatus.error;
+
             return false;
           }
+
           return true;
         case InstallFormat.macDmg:
           await Process.start('open', [
             file.path,
           ], mode: ProcessStartMode.detached);
+
           return true;
         case InstallFormat.linuxDeb:
         case InstallFormat.linuxRpm:
@@ -244,6 +254,7 @@ class UpdateStore {
     } catch (e) {
       errorMessage.value = t.update.installerLaunchFailed(error: e);
       status.value = UpdateStatus.error;
+
       return false;
     }
   }
@@ -281,6 +292,7 @@ class UpdateStore {
     )) {
       return null;
     }
+
     return expected;
   }
 
@@ -322,6 +334,7 @@ class UpdateStore {
       for (final a in assets) {
         if (test(a.name.toLowerCase())) return a;
       }
+
       return null;
     }
 
@@ -361,6 +374,7 @@ class UpdateStore {
     if (a.pre != null && b.pre != null) {
       return a.pre!.compareTo(b.pre!) > 0;
     }
+
     return false;
   }
 
@@ -370,6 +384,7 @@ class UpdateStore {
     final core = dash < 0 ? noBuild : noBuild.substring(0, dash);
     final pre = dash < 0 ? null : noBuild.substring(dash + 1);
     final parts = core.split('.');
+
     return _Version([
       for (var i = 0; i < 3; i++)
         i < parts.length ? (int.tryParse(parts[i]) ?? 0) : 0,

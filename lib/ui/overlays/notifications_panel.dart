@@ -65,6 +65,7 @@ class _NotificationsPanelBody extends StatelessWidget {
                   builder: (context) {
                     final has = store.history.value.any((n) => n.dismissible);
                     if (!has) return const SizedBox.shrink();
+
                     return _ClearButton(onTap: () => store.clearHistory());
                   },
                 ),
@@ -85,6 +86,7 @@ class _NotificationsPanelBody extends StatelessWidget {
                 );
               }
               final reversed = items.reversed.toList();
+
               return Flexible(
                 child: ListView.separated(
                   shrinkWrap: true,
@@ -160,6 +162,7 @@ class _NotificationTileState extends State<_NotificationTile> {
   Widget build(BuildContext context) {
     final n = widget.notification;
     final accent = n.accentColor ?? AppColors.accent;
+
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
@@ -265,6 +268,7 @@ class _InlineCheckboxState extends State<_InlineCheckbox> {
   @override
   Widget build(BuildContext context) {
     final color = _hovered ? AppColors.fg : AppColors.fgMuted;
+
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),
@@ -320,6 +324,7 @@ class _PanelActionButtonState extends State<_PanelActionButton> {
   @override
   Widget build(BuildContext context) {
     final color = widget.action.color ?? AppColors.accent;
+
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),

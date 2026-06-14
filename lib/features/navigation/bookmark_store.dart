@@ -34,6 +34,7 @@ class BookmarkStore {
   bool containsPath(String path) {
     final storedPath = _storedPathFor(path);
     if (storedPath == null) return false;
+
     return bookmarks.value.any((b) => b.path == storedPath);
   }
 
@@ -44,6 +45,7 @@ class BookmarkStore {
     if (existing != null) {
       await _db.deleteBookmark(existing.id);
       await load();
+
       return;
     }
     final uri = LocationUri.parse(storedPath);
@@ -60,8 +62,10 @@ class BookmarkStore {
       final logical = LocationResolver.physicalToLogical(normalized);
       if (logical != null) return logical;
       if (!Directory(normalized).existsSync()) return null;
+
       return normalized;
     }
+
     return uri.raw;
   }
 

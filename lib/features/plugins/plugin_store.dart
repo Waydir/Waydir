@@ -25,6 +25,7 @@ class PluginStore {
     for (final p in plugins.value) {
       if (p.manifest.id == pluginId) return p;
     }
+
     return null;
   }
 
@@ -39,6 +40,7 @@ class PluginStore {
       }
     }
     out.addAll(PluginSettingsStore.instance.valuesFor(pluginId));
+
     return out;
   }
 
@@ -275,6 +277,7 @@ class PluginStore {
       if (!c.showsOn('selection')) continue;
       if (c.when.matches(entries, _isInArchive)) out.add(c);
     }
+
     return out;
   }
 
@@ -326,6 +329,7 @@ class PluginStore {
         if (c.fullActionId == fullActionId) return c;
       }
     }
+
     return null;
   }
 
@@ -354,6 +358,7 @@ class PluginStore {
         PluginEffect('error', {'message': 'native core unavailable'}),
       ];
     }
+
     return _parseEffectsResponse(raw);
   }
 
@@ -374,6 +379,7 @@ class PluginStore {
         effects: const [],
       );
     }
+
     return _parseBarResponse(raw);
   }
 
@@ -396,6 +402,7 @@ class PluginStore {
         effects: const [],
       );
     }
+
     return _parseBarResponse(raw);
   }
 
@@ -416,6 +423,7 @@ class PluginStore {
       if (parsed['ok'] != true) {
         final message = parsed['error']?.toString() ?? 'unknown error';
         log.error('plugins', 'invoke failed: $message');
+
         return [
           PluginEffect('error', {'message': message}),
         ];
@@ -425,9 +433,11 @@ class PluginStore {
         final m = (e as Map).cast<String, dynamic>();
         effects.add(PluginEffect(m['type'] as String? ?? '', m));
       }
+
       return effects;
     } catch (e) {
       log.error('plugins', 'invoke parse: $e');
+
       return [
         PluginEffect('error', {'message': 'invalid plugin response'}),
       ];
@@ -440,6 +450,7 @@ class PluginStore {
       if (parsed['ok'] != true) {
         final message = parsed['error']?.toString() ?? 'unknown error';
         log.error('plugins', 'bar invoke failed: $message');
+
         return PluginBarInvokeResult(
           state: PluginBarState.error(message),
           effects: [
@@ -452,6 +463,7 @@ class PluginStore {
         final m = (e as Map).cast<String, dynamic>();
         effects.add(PluginEffect(m['type'] as String? ?? '', m));
       }
+
       return PluginBarInvokeResult(
         state: parsed.containsKey('state')
             ? PluginBarState.fromJson(parsed['state'])
@@ -460,6 +472,7 @@ class PluginStore {
       );
     } catch (e) {
       log.error('plugins', 'bar invoke parse: $e');
+
       return PluginBarInvokeResult(
         state: PluginBarState.error('invalid plugin response'),
         effects: [

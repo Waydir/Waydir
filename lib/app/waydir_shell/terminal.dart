@@ -13,6 +13,7 @@ mixin _WaydirTerminalMixin on State<WaydirShell>, _WaydirStateBase {
     if (visible) {
       _shell.setActiveTerminal(slot, active.id);
       active.focusNode.requestFocus();
+
       return;
     }
     _shell.setTerminalVisible(slot, true);
@@ -38,6 +39,7 @@ mixin _WaydirTerminalMixin on State<WaydirShell>, _WaydirStateBase {
     final tab = _shell.openTerminal(slot, directory);
     if (tab == null) {
       showToast(context: context, message: t.toast.terminalUnavailable);
+
       return;
     }
     if (!_shell.terminalVisible.value[slot]) {
@@ -59,6 +61,7 @@ mixin _WaydirTerminalMixin on State<WaydirShell>, _WaydirStateBase {
     if (_shell.terminalVisible.value[slot]) {
       _shell.setTerminalVisible(slot, false);
       _restoreFocus();
+
       return;
     }
     if (_shell.isDual.value) _shell.setActivePane(slot);
@@ -76,6 +79,7 @@ mixin _WaydirTerminalMixin on State<WaydirShell>, _WaydirStateBase {
     if (tab == null) {
       showToast(context: context, message: t.toast.terminalUnavailable);
     }
+
     return tab;
   }
 

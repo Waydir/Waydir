@@ -16,6 +16,7 @@ Future<String?> showSelectPatternDialog(BuildContext context) {
     baseOffset: 0,
     extentOffset: controller.text.length,
   );
+
   return showDialog<String>(
     context: context,
     barrierColor: Colors.black.withValues(alpha: 0.4),

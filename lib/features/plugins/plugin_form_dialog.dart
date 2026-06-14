@@ -109,6 +109,7 @@ class _PluginFormBodyState extends State<_PluginFormBody> {
       case 'toggle':
       case 'bool':
         final value = _values[f.id] == true;
+
         return GestureDetector(
           onTap: () => setState(() => _values[f.id] = !value),
           behavior: HitTestBehavior.opaque,

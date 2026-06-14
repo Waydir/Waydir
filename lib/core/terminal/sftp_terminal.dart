@@ -26,12 +26,14 @@ class SftpTerminal {
     }
     args.add(target);
     args.add(_remoteShell(remote));
+
     return SftpTerminalCommand(program: 'ssh', args: args);
   }
 
   static String _remoteShell(String remotePath) {
     final dir = remotePath.isEmpty ? '/' : remotePath;
     final quoted = "'${dir.replaceAll("'", r"'\''")}'";
+
     return 'cd $quoted 2>/dev/null; exec "\${SHELL:-/bin/sh}" -l';
   }
 }

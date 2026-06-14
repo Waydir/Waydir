@@ -689,5 +689,6 @@ String _themeLabel(AppThemeDefinition theme) => switch (theme.id) {
 IconData _themeIcon(AppThemeDefinition theme) {
   if (theme.id == 'light') return WaydirIconsRegular.sun;
   if (theme.id == 'dark') return WaydirIconsRegular.moon;
+
   return WaydirIconsRegular.palette;
 }

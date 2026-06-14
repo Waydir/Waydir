@@ -226,11 +226,13 @@ class _SidebarState extends State<Sidebar> {
       username: uri.username,
     );
     if (result == null) return null;
+
     return SmbCredentials(username: result.username, password: result.password);
   }
 
   Future<SftpCredentials?> _requestSftpCredentials(String logical) async {
     final uri = LocationUri.parse(logical);
+
     return showSftpCredentialsDialog(
       context,
       title: uri.displayLabel,
@@ -648,6 +650,7 @@ class _SidebarState extends State<Sidebar> {
         );
       }
     }
+
     return ListView(
       controller: _scrollController,
       padding: EdgeInsets.zero,
@@ -683,6 +686,7 @@ class _SidebarState extends State<Sidebar> {
           SidebarStore.instance.reorderSections(oldIndex, newIndex),
       itemBuilder: (context, index) {
         final section = sections[index];
+
         return _EditSection(
           key: ValueKey('section:${section.id}'),
           section: section,
@@ -696,6 +700,7 @@ class _SidebarState extends State<Sidebar> {
   void _reorderItems(_SidebarSection section, int oldIndex, int newIndex) {
     if (section.id == sidebarSectionBookmarks) {
       _bookmarkStore.reorder(oldIndex, newIndex);
+
       return;
     }
     SidebarStore.instance.reorderItems(
@@ -709,6 +714,7 @@ class _SidebarState extends State<Sidebar> {
   List<_SidebarEntry> _favoriteEntries(String currentPath) {
     final entries = _favorites.map((item) {
       final isRecycleBin = isTrashPath(item.path);
+
       return _SidebarEntry(
         key: item.key!,
         item: item,
@@ -723,6 +729,7 @@ class _SidebarState extends State<Sidebar> {
         onDropFiles: (paths, {bool move = false}) {
           if (isRecycleBin) {
             widget.operationStore.enqueueTrash(paths);
+
             return;
           }
           widget.store.dropFiles(paths, item.path, move: move);
@@ -731,6 +738,7 @@ class _SidebarState extends State<Sidebar> {
             _showFolderMenu(item.path, position, isTrash: isRecycleBin),
       );
     }).toList();
+
     return SidebarStore.instance.orderItems(
       sidebarSectionFavorites,
       entries,
@@ -744,6 +752,7 @@ class _SidebarState extends State<Sidebar> {
       final isMounted = drive.isMounted;
       final label = drive.id == '/' ? t.sidebar.root : drive.label;
       final canUnmount = isMounted && drive.id != '/' && drive.isRemovable;
+
       return _SidebarEntry(
         key: drive.id,
         item: _SidebarItem(
@@ -767,6 +776,7 @@ class _SidebarState extends State<Sidebar> {
         onContextMenu: (position) => _showDriveMenu(drive, path, position),
       );
     }).toList();
+
     return SidebarStore.instance.orderItems(
       sidebarSectionDevices,
       entries,
@@ -831,6 +841,7 @@ class _SidebarState extends State<Sidebar> {
         ),
       );
     }
+
     return SidebarStore.instance.orderItems(
       sidebarSectionNetwork,
       entries,
@@ -850,6 +861,7 @@ class _SidebarState extends State<Sidebar> {
       final isMounted = uri.isLocal
           ? Directory(bookmark.path).existsSync()
           : true;
+
       return _SidebarEntry(
         key: 'bookmark:${bookmark.id}',
         item: _SidebarItem(bookmark.label, icon, bookmark.path),
@@ -869,6 +881,7 @@ class _SidebarState extends State<Sidebar> {
   Future<void> _onDriveTap(Drive drive, String path) async {
     if (drive.isMounted) {
       widget.store.navigateTo(path);
+
       return;
     }
     try {
@@ -1094,6 +1107,7 @@ class _SidebarDropTargetState extends State<_SidebarDropTarget> {
       hitTestBehavior: HitTestBehavior.opaque,
       onDropOver: (event) {
         if (!_dragOver) setState(() => _dragOver = true);
+
         return DropOperation.copy;
       },
       onDropLeave: (_) {
@@ -1141,6 +1155,7 @@ class _EditSection extends StatelessWidget {
     final sectionHidden = store.isSectionHidden(section.id);
     final allowItemHide = section.id != sidebarSectionBookmarks;
     final entries = section.entries;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: _sectionGap),
       child: Column(
@@ -1182,6 +1197,7 @@ class _EditSection extends StatelessWidget {
               onReorderItem: onReorderItem,
               itemBuilder: (context, index) {
                 final entry = entries[index];
+
                 return _EditRow(
                   key: ValueKey('item:${section.id}:${entry.key}'),
                   entry: entry,
@@ -1222,6 +1238,7 @@ class _EditRow extends StatelessWidget {
     final store = SidebarStore.instance;
     final itemHidden = allowHide && store.isItemHidden(scope, entry.key);
     final faded = dimmed || itemHidden;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 1),
       child: Opacity(
@@ -1384,6 +1401,7 @@ class _HeaderButtonState extends State<_HeaderButton> {
     final color = widget.active
         ? AppColors.fgAccent
         : (_hovered ? AppColors.fg : AppColors.fgMuted);
+
     return Tooltip(
       message: widget.tooltip,
       child: MouseRegion(
@@ -1673,6 +1691,7 @@ class _SidebarOperationsButtonState extends State<_SidebarOperationsButton> {
     if (task.status == TaskStatus.waitingConflicts) {
       return WaydirIconsRegular.warning;
     }
+
     return switch (task.type) {
       TaskType.copy => WaydirIconsRegular.copy,
       TaskType.move => WaydirIconsRegular.arrowRight,
@@ -1743,6 +1762,7 @@ class _ItemRowState extends State<_ItemRow> {
       hitTestBehavior: HitTestBehavior.opaque,
       onDropOver: (event) {
         if (!_dragOver) setState(() => _dragOver = true);
+
         return DragHintController.instance.mode.value == DragMode.move
             ? DropOperation.move
             : DropOperation.copy;
@@ -1777,6 +1797,7 @@ class _ItemRowState extends State<_ItemRow> {
               final row = widget.collapsed ? _railRow() : _expandedRow(context);
               final tooltipMessage = _tooltipMessage();
               if (tooltipMessage == null) return row;
+
               return Tooltip(
                 message: tooltipMessage,
                 waitDuration: const Duration(milliseconds: 400),
@@ -1793,11 +1814,13 @@ class _ItemRowState extends State<_ItemRow> {
     if (_dragOver) return AppColors.accent.withValues(alpha: 0.12);
     if (widget.isSelected) return AppColors.bgSelectedMuted;
     if (_hovered) return AppColors.bgHover;
+
     return Colors.transparent;
   }
 
   Color get _iconColor {
     if (widget.isSelected) return AppColors.fgAccent;
+
     return widget.isMounted
         ? AppColors.fg.withValues(alpha: 0.85)
         : AppColors.fgMuted;
@@ -1898,10 +1921,12 @@ class _ItemRowState extends State<_ItemRow> {
     final space = widget.space;
     if (space == null) {
       if (widget.collapsed) return widget.item.label;
+
       return widget.tooltip;
     }
 
     final usedPercent = (space.usedFraction * 100).toStringAsFixed(1);
+
     return [
       widget.item.label,
       '${t.sidebar.driveSpace.used}: ${formatBytes(space.usedBytes)} ($usedPercent%)',
@@ -1981,6 +2006,7 @@ class _DriveSpaceBar extends StatelessWidget {
         : used >= 0.75
         ? AppColors.warning
         : AppColors.success;
+
     return ClipRRect(
       borderRadius: BorderRadius.zero,
       child: SizedBox(

@@ -35,6 +35,7 @@ class _PdfPreviewState extends State<PdfPreview> {
   @override
   Widget build(BuildContext context) {
     final path = widget.path;
+
     return Container(
       color: AppColors.bg,
       width: double.infinity,
@@ -45,6 +46,7 @@ class _PdfPreviewState extends State<PdfPreview> {
             return await _pageAspectsInIsolate(path);
           } catch (e, st) {
             log.warn('quick-look', 'PDF page scan failed', error: e, stack: st);
+
             return null;
           }
         },
@@ -53,6 +55,7 @@ class _PdfPreviewState extends State<PdfPreview> {
           if (aspects == null || aspects.isEmpty) {
             return QlCentered(message: t.quickLook.noPreview);
           }
+
           return _PdfPageList(path: path, aspects: aspects);
         },
       ),
@@ -72,6 +75,7 @@ class _PdfPageList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dpr = MediaQuery.of(context).devicePixelRatio;
+
     return LayoutBuilder(
       builder: (context, c) {
         final logicalWidth = c.maxWidth - _pad * 2;
@@ -79,6 +83,7 @@ class _PdfPageList extends StatelessWidget {
           200,
           _maxRenderWidth,
         );
+
         return Stack(
           children: [
             // Per-page extents are known up front, so feeding them through
@@ -90,10 +95,12 @@ class _PdfPageList extends StatelessWidget {
               itemExtentBuilder: (index, _) {
                 if (index >= aspects.length) return null;
                 final last = index == aspects.length - 1;
+
                 return logicalWidth * aspects[index] + (last ? 0 : _gap);
               },
               itemBuilder: (context, index) {
                 final last = index == aspects.length - 1;
+
                 return Padding(
                   padding: EdgeInsets.only(bottom: last ? 0 : _gap),
                   child: _PdfPageItem(
@@ -173,6 +180,7 @@ class _PdfPageItemState extends State<_PdfPageItem> {
     if (!mounted || gen != _gen) return;
     if (page == null) {
       setState(() => _failed = true);
+
       return;
     }
     final completer = Completer<ui.Image>();
@@ -186,6 +194,7 @@ class _PdfPageItemState extends State<_PdfPageItem> {
     final image = await completer.future;
     if (!mounted || gen != _gen) {
       image.dispose();
+
       return;
     }
     setState(() {
@@ -197,6 +206,7 @@ class _PdfPageItemState extends State<_PdfPageItem> {
   @override
   Widget build(BuildContext context) {
     final image = _image;
+
     return Container(
       width: widget.logicalWidth,
       height: widget.logicalWidth * widget.aspect,

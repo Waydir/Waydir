@@ -73,6 +73,7 @@ class PluginSettingsStore {
       return jsonDecode(raw);
     } catch (e) {
       log.warn('plugins', 'bad stored setting: $e');
+
       return raw;
     }
   }

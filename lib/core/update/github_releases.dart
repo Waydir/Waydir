@@ -51,6 +51,7 @@ class GithubRelease {
 
   factory GithubRelease.fromJson(Map<String, dynamic> json) {
     final tag = json['tag_name'] as String? ?? '';
+
     return GithubRelease(
       tag: tag,
       version: _stripV(tag),
@@ -72,6 +73,7 @@ class GithubRelease {
 
   static String _stripV(String tag) {
     if (tag.startsWith('v') || tag.startsWith('V')) return tag.substring(1);
+
     return tag;
   }
 }
@@ -92,6 +94,7 @@ class GithubReleasesClient {
     if (compiled.isNotEmpty) return _stripTrailingSlash(compiled);
     final env = Platform.environment['WAYDIR_GITHUB_API_BASE'];
     if (env != null && env.isNotEmpty) return _stripTrailingSlash(env);
+
     return 'https://api.github.com';
   }
 
@@ -127,6 +130,7 @@ class GithubReleasesClient {
       final r = GithubRelease.fromJson(j);
       if (!r.prerelease) return r;
     }
+
     return null;
   }
 

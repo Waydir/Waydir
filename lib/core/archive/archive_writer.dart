@@ -53,6 +53,7 @@ ArchiveFormat? archiveFormatFromName(String name) {
       lower.endsWith('.epub')) {
     return ArchiveFormat.zip;
   }
+
   return null;
 }
 
@@ -113,6 +114,7 @@ class ArchiveWriter {
         out.add(_PlannedEntry(src, p.relative(src, from: base), false, size));
       }
     }
+
     return out;
   }
 
@@ -124,6 +126,7 @@ class ArchiveWriter {
   static int planWorkBytes(List<String> sources, ArchiveFormat format) {
     final planned = _plan(sources);
     final sourceBytes = planned.fold(0, (sum, entry) => sum + entry.size);
+
     return switch (format) {
       ArchiveFormat.zip => sourceBytes * 2,
       ArchiveFormat.tar => sourceBytes,
@@ -482,11 +485,13 @@ class ArchiveWriter {
       }
       total += entry.isDir ? 512 : _tarRecordSize(entry.size);
     }
+
     return total;
   }
 
   static int _tarRecordSize(int payloadSize) {
     final blocks = (payloadSize + 511) ~/ 512;
+
     return 512 + blocks * 512;
   }
 
@@ -495,6 +500,7 @@ class ArchiveWriter {
     void Function(int bytes)? onBytes,
   ) {
     if (onBytes == null) return input;
+
     return _ProgressInputStream(input, onBytes);
   }
 
@@ -525,6 +531,7 @@ class ArchiveWriter {
       );
     }
     count += planCount(addSources);
+
     return count;
   }
 
@@ -679,6 +686,7 @@ class _ProgressInputStream extends InputStream {
     final hadBytes = !_inner.isEOS;
     final byte = _inner.readByte();
     if (hadBytes) _onBytes(1);
+
     return byte;
   }
 
@@ -687,6 +695,7 @@ class _ProgressInputStream extends InputStream {
     final bytes = _inner.readBytes(count);
     final read = bytes.length;
     if (read > 0) _onBytes(read);
+
     return bytes;
   }
 
@@ -694,6 +703,7 @@ class _ProgressInputStream extends InputStream {
   Uint8List toUint8List([Uint8List? bytes]) {
     final out = _inner.toUint8List();
     if (out.isNotEmpty) _onBytes(out.length);
+
     return out;
   }
 }

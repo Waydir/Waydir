@@ -26,6 +26,7 @@ class TypicalApps {
         );
       }
     }
+
     return null;
   }
 
@@ -36,6 +37,7 @@ class TypicalApps {
     if (_audio.contains(e)) return _Category.audio;
     if (e == 'pdf') return _Category.pdf;
     if (_editor.contains(e)) return _Category.editor;
+
     return null;
   }
 
@@ -144,5 +146,6 @@ String? _whichOnPath(String cmd) {
     final f = p.join(dir, cmd);
     if (File(f).existsSync()) return f;
   }
+
   return null;
 }

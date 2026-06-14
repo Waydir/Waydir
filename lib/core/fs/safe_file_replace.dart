@@ -77,12 +77,14 @@ class SafeFileReplace {
     if (copyError != null) {
       Error.throwWithStackTrace(copyError, copyStack!);
     }
+
     return true;
   }
 
   static void replaceWithFile(String replacementPath, String destinationPath) {
     if (Platform.isWindows) {
       _replaceWindows(replacementPath, destinationPath);
+
       return;
     }
     File(replacementPath).renameSync(destinationPath);
@@ -195,6 +197,7 @@ class SafeFileReplace {
     if (error != null) {
       Error.throwWithStackTrace(error, stack!);
     }
+
     return completed;
   }
 
@@ -233,9 +236,11 @@ class SafeFileReplace {
     final nativePath = path.toNativeUtf8();
     try {
       final chmod = libc.lookupFunction<_ChmodNative, _ChmodDart>('chmod');
+
       return chmod(nativePath, permissions) == 0;
     } catch (e, st) {
       log.warn('fs.replace', 'native chmod failed', error: e, stack: st);
+
       return false;
     } finally {
       calloc.free(nativePath);
@@ -254,6 +259,7 @@ class SafeFileReplace {
       times[1].tvSec = modified.millisecondsSinceEpoch ~/ 1000;
       times[1].tvUsec = (modified.microsecondsSinceEpoch % 1000000);
       final utimes = libc.lookupFunction<_UtimesNative, _UtimesDart>('utimes');
+
       return utimes(nativePath, times) == 0;
     } catch (e, st) {
       log.warn(
@@ -262,6 +268,7 @@ class SafeFileReplace {
         error: e,
         stack: st,
       );
+
       return false;
     } finally {
       calloc.free(times);
@@ -273,9 +280,11 @@ class SafeFileReplace {
     if (Platform.isWindows) return null;
     try {
       if (Platform.isLinux) return DynamicLibrary.open('libc.so.6');
+
       return DynamicLibrary.process();
     } catch (e, st) {
       log.warn('fs.replace', 'libc open failed', error: e, stack: st);
+
       return null;
     }
   }
@@ -304,6 +313,7 @@ class SafeFileReplace {
   static String _fileName(String path) {
     final separator = Platform.pathSeparator;
     final split = path.lastIndexOf(separator);
+
     return split >= 0 ? path.substring(split + 1) : path;
   }
 }

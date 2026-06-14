@@ -25,6 +25,7 @@ class IconResolver {
     if (p.isAbsolute(icon)) {
       return File(icon).existsSync() ? icon : null;
     }
+
     return _cache.putIfAbsent(icon, () => _search(icon));
   }
 
@@ -50,6 +51,7 @@ class IconResolver {
           .map((d) => p.join(d, 'icons')),
       '/usr/share/pixmaps',
     ];
+
     return dirs.where((d) => Directory(d).existsSync()).toList();
   }
 
@@ -73,6 +75,7 @@ class IconResolver {
     for (final fallback in ['Adwaita', 'hicolor', 'gnome']) {
       if (!themes.contains(fallback)) themes.add(fallback);
     }
+
     return themes;
   }
 
@@ -121,6 +124,7 @@ class IconResolver {
         }
       }
     }
+
     return null;
   }
 }

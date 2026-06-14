@@ -7,6 +7,7 @@ class DriveSpace {
   int get usedBytes => totalBytes - freeBytes;
   double get usedFraction {
     if (totalBytes <= 0) return 0;
+
     return (usedBytes / totalBytes).clamp(0.0, 1.0);
   }
 

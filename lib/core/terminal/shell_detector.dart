@@ -21,6 +21,7 @@ class ShellDetector {
 
   static List<ShellOption> detect() {
     if (Platform.isWindows) return _detectWindows();
+
     return _detectUnix();
   }
 
@@ -33,6 +34,7 @@ class ShellDetector {
     for (final s in shells) {
       if (s.label.contains('PowerShell')) return s.path;
     }
+
     return shells.isEmpty ? '' : shells.first.path;
   }
 
@@ -75,6 +77,7 @@ class ShellDetector {
     ]) {
       add(p);
     }
+
     return out;
   }
 
@@ -101,6 +104,7 @@ class ShellDetector {
     );
     add(env['ComSpec'] ?? '$sysRoot\\System32\\cmd.exe', 'Command Prompt');
     add('$programFiles\\Git\\bin\\bash.exe', 'Git Bash');
+
     return out;
   }
 }

@@ -34,6 +34,7 @@ class OpenService {
       return p.extension(path).toLowerCase();
     }
     final mime = await _mime.resolve(path);
+
     return mime.value;
   }
 
@@ -47,6 +48,7 @@ class OpenService {
       if (app != null && !app.isSystemDefault) {
         try {
           await _apps.launch(app, [path]);
+
           return;
         } catch (e, st) {
           log.warn(
@@ -101,6 +103,7 @@ class OpenService {
         appExec: osDefault.exec,
         iconPath: osDefault.iconPath,
       );
+
       return osDefault.copyWith(isDefault: true);
     } catch (e, st) {
       log.warn(
@@ -109,6 +112,7 @@ class OpenService {
         error: e,
         stack: st,
       );
+
       return null;
     }
   }
@@ -153,6 +157,7 @@ class OpenService {
       for (final path in paths) {
         await _osOpenDefault(path);
       }
+
       return;
     }
     await _apps.launch(app, paths);
@@ -175,6 +180,7 @@ class OpenService {
   static Future<List<AppEntry>> _recentFor(MimeType mime) async {
     try {
       final rows = await SettingsStore.instance.db.getRecentApps(mime.value);
+
       return rows
           .map(
             (r) => AppEntry(
@@ -187,6 +193,7 @@ class OpenService {
           .toList();
     } catch (e, st) {
       log.warn('open', 'failed to load recent apps', error: e, stack: st);
+
       return const [];
     }
   }

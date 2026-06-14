@@ -39,6 +39,7 @@ class _ImagePreviewState extends State<ImagePreview> {
     await for (final chunk in stream) {
       builder.add(chunk);
     }
+
     return builder.takeBytes();
   }
 
@@ -51,6 +52,7 @@ class _ImagePreviewState extends State<ImagePreview> {
         builder: (context, c) {
           final vw = c.maxWidth;
           final vh = c.maxHeight;
+
           return Stack(
             children: [
               GestureDetector(
@@ -70,6 +72,7 @@ class _ImagePreviewState extends State<ImagePreview> {
                   final s = m.getMaxScaleOnAxis();
                   final tr = m.getTranslation();
                   final zoomed = s > 1.001;
+
                   return IgnorePointer(
                     child: Stack(
                       children: [
@@ -113,6 +116,7 @@ class _ImagePreviewState extends State<ImagePreview> {
         builder: (context, snapshot) {
           final data = snapshot.data;
           if (data == null) return const QlCentered.spinner();
+
           return Image.memory(
             data,
             fit: BoxFit.contain,
@@ -124,6 +128,7 @@ class _ImagePreviewState extends State<ImagePreview> {
         },
       );
     }
+
     return Image.file(
       File(widget.path),
       fit: BoxFit.contain,
@@ -131,6 +136,7 @@ class _ImagePreviewState extends State<ImagePreview> {
       gaplessPlayback: true,
       frameBuilder: (context, child, frame, wasSyncLoaded) {
         if (wasSyncLoaded || frame != null) return child;
+
         return const QlCentered.spinner();
       },
       errorBuilder: (_, _, _) => QlCentered(message: t.quickLook.noPreview),
@@ -158,6 +164,7 @@ class _ImagePreviewState extends State<ImagePreview> {
         child: _ScrollThumb(width: 5, height: thumbLen),
       );
     }
+
     return Positioned(
       left: thumbPos,
       bottom: 4,

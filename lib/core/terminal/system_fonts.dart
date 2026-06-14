@@ -30,6 +30,7 @@ class SystemFonts {
       return _fallback;
     }
     final sorted = families.where((f) => f != 'monospace').toList()..sort();
+
     return ['monospace', ...sorted];
   }
 
@@ -50,6 +51,7 @@ class SystemFonts {
         log.warn('terminal', 'font discovery failed', error: e, stack: st);
       }
     }
+
     return names.toList();
   }
 }

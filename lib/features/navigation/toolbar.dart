@@ -124,6 +124,7 @@ class _RightActions extends StatelessWidget {
         onPluginAction: onPluginAction,
       );
     }
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -131,6 +132,7 @@ class _RightActions extends StatelessWidget {
           SignalBuilder(
             builder: (context) {
               if (store.selectedCount.value < 2) return const SizedBox.shrink();
+
               return _ToolBtn(
                 WaydirIconsRegular.pencilSimple,
                 onMultiRename!,
@@ -143,6 +145,7 @@ class _RightActions extends StatelessWidget {
           builder: (context) {
             final path = store.currentPath.value;
             final bookmarked = BookmarkStore.instance.containsPath(path);
+
             return _ToolBtn(
               WaydirIconsRegular.bookmarkSimple,
               () => unawaited(BookmarkStore.instance.togglePath(path)),
@@ -171,6 +174,7 @@ class _RightActions extends StatelessWidget {
               PluginStore.instance.plugins.value;
               final tools = PluginStore.instance.toolbarContributions();
               if (tools.isEmpty) return const SizedBox.shrink();
+
               return Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -204,6 +208,7 @@ class _PluginToolButtonState extends State<_PluginToolButton> {
   @override
   Widget build(BuildContext context) {
     final iconPath = widget.contribution.iconPath;
+
     return Tooltip(
       message: widget.contribution.title,
       child: MouseRegion(
@@ -311,6 +316,7 @@ class _OverflowMenuButtonState extends State<_OverflowMenuButton> {
       onSelect: (action) {
         if (action.startsWith('plugin:')) {
           widget.onPluginAction?.call(action);
+
           return;
         }
         switch (action) {
@@ -408,6 +414,7 @@ class _ToolBtnState extends State<_ToolBtn> {
   Color get _iconColor {
     if (!widget.enabled) return AppColors.fgSubtle;
     if (widget.active) return AppColors.warning;
+
     return _hovered ? AppColors.fg : AppColors.fgMuted;
   }
 }
@@ -515,6 +522,7 @@ class _PathBarState extends State<_PathBar> {
     setState(() => _editing = false);
     if (text.isEmpty || text == widget.store.currentPath.value) {
       _controller.text = widget.store.currentPath.value;
+
       return;
     }
     final ok = await widget.store.navigateToEnteredPath(text);
@@ -539,6 +547,7 @@ class _PathBarState extends State<_PathBar> {
     final token = ++_suggestionToken;
     if (!_editing || !_focusNode.hasFocus) {
       _setSuggestions(const []);
+
       return;
     }
     unawaited(_loadSuggestions(token));
@@ -577,6 +586,7 @@ class _PathBarState extends State<_PathBar> {
     if (textLength == 0) return false;
     final selection = value.selection;
     if (!selection.isValid || selection.isCollapsed) return false;
+
     return selection.start == 0 && selection.end == textLength;
   }
 
@@ -585,6 +595,7 @@ class _PathBarState extends State<_PathBar> {
     if (!settings.isLoaded) return const [];
     try {
       final paths = await settings.db.getRecentEnteredPaths();
+
       return [
         for (final path in paths)
           _PathSuggestion(
@@ -600,6 +611,7 @@ class _PathBarState extends State<_PathBar> {
         error: e,
         stack: st,
       );
+
       return const [];
     }
   }
@@ -645,6 +657,7 @@ class _PathBarState extends State<_PathBar> {
         );
         if (suggestions.length >= _maxSuggestions) break;
       }
+
       return suggestions;
     } catch (e, st) {
       log.warn(
@@ -653,6 +666,7 @@ class _PathBarState extends State<_PathBar> {
         error: e,
         stack: st,
       );
+
       return const [];
     }
   }
@@ -661,12 +675,14 @@ class _PathBarState extends State<_PathBar> {
     if (PlatformPaths.isRemoteUri(a) || PlatformPaths.isRemoteUri(b)) {
       return a == b;
     }
+
     return PlatformPaths.normalize(a) == PlatformPaths.normalize(b);
   }
 
   void _showSuggestions() {
     if (_suggestionOverlay != null) {
       _suggestionOverlay!.markNeedsBuild();
+
       return;
     }
     _suggestionOverlay = OverlayEntry(
@@ -708,6 +724,7 @@ class _PathBarState extends State<_PathBar> {
 
   double get _suggestionWidth {
     final box = context.findRenderObject() as RenderBox?;
+
     return box?.size.width ?? 360;
   }
 
@@ -719,6 +736,7 @@ class _PathBarState extends State<_PathBar> {
       } else {
         _cancel();
       }
+
       return KeyEventResult.handled;
     }
     if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
@@ -727,6 +745,7 @@ class _PathBarState extends State<_PathBar> {
         _suggestionIndex = (_suggestionIndex + 1) % _suggestions.length;
       });
       _suggestionOverlay?.markNeedsBuild();
+
       return KeyEventResult.handled;
     }
     if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
@@ -736,6 +755,7 @@ class _PathBarState extends State<_PathBar> {
             (_suggestionIndex - 1 + _suggestions.length) % _suggestions.length;
       });
       _suggestionOverlay?.markNeedsBuild();
+
       return KeyEventResult.handled;
     }
     if (event.logicalKey == LogicalKeyboardKey.tab) {
@@ -743,13 +763,16 @@ class _PathBarState extends State<_PathBar> {
         return KeyEventResult.ignored;
       }
       _completeSuggestion(_suggestions[_suggestionIndex]);
+
       return KeyEventResult.handled;
     }
     if (event.logicalKey == LogicalKeyboardKey.enter ||
         event.logicalKey == LogicalKeyboardKey.numpadEnter) {
       unawaited(_submit());
+
       return KeyEventResult.handled;
     }
+
     return KeyEventResult.ignored;
   }
 
@@ -775,6 +798,7 @@ class _PathBarState extends State<_PathBar> {
     return SignalBuilder(
       builder: (context) {
         final path = widget.store.currentPath.value;
+
         return GestureDetector(
           onTap: _editing ? null : _startEditing,
           child: CompositedTransformTarget(
@@ -887,10 +911,12 @@ class _PathInputParts {
     if (_endsWithSeparator(input)) {
       final parent = _stripTrailingSeparators(input);
       if (parent.isEmpty) return const _PathInputParts(parent: '/', prefix: '');
+
       return _PathInputParts(parent: parent, prefix: '');
     }
     final parent = PlatformPaths.parentOf(input);
     if (parent.isEmpty || parent == '.') return null;
+
     return _PathInputParts(
       parent: parent,
       prefix: PlatformPaths.fileName(input),
@@ -899,6 +925,7 @@ class _PathInputParts {
 
   static bool _endsWithSeparator(String input) {
     if (input.endsWith('/')) return true;
+
     return PlatformPaths.isWindows && input.endsWith(r'\');
   }
 
@@ -915,6 +942,7 @@ class _PathInputParts {
     while (out.length > 1 && _endsWithSeparator(out)) {
       out = out.substring(0, out.length - 1);
     }
+
     return out;
   }
 }
@@ -985,6 +1013,7 @@ class _PathSuggestionPopupState extends State<_PathSuggestionPopup> {
     final suggestions = widget.suggestions;
     final highlightedIndex = widget.highlightedIndex;
     final onPointerDown = widget.onPointerDown;
+
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
@@ -1019,6 +1048,7 @@ class _PathSuggestionPopupState extends State<_PathSuggestionPopup> {
                 final suggestion = suggestions[index];
                 final highlighted = index == highlightedIndex;
                 final fg = highlighted ? AppColors.fg : AppColors.fgMuted;
+
                 return Listener(
                   onPointerDown: (_) => onPointerDown(suggestion),
                   child: Container(

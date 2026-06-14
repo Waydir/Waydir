@@ -19,6 +19,7 @@ class TabsStore {
     if (idx < 0 || idx >= list.length) {
       return list.first;
     }
+
     return list[idx];
   });
 
@@ -36,6 +37,7 @@ class TabsStore {
   }) {
     if (paths.isEmpty) {
       addTab(PlatformPaths.homePath);
+
       return;
     }
     for (final path in paths) {
@@ -51,6 +53,7 @@ class TabsStore {
   }) {
     if (specs.isEmpty) {
       addTab(PlatformPaths.homePath);
+
       return;
     }
     for (final spec in specs) {

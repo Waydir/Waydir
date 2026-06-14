@@ -33,6 +33,7 @@ class PluginManifest {
     String fallbackId,
   ) {
     final perms = json['permissions'];
+
     return PluginManifest(
       id: (json['id'] as String?)?.trim().isNotEmpty == true
           ? json['id'] as String
@@ -54,6 +55,7 @@ class PluginManifest {
     var bits = 0;
     if (permissions.contains('exec')) bits |= 1 << 0;
     if (permissions.contains('fs')) bits |= 1 << 1;
+
     return bits;
   }
 }
@@ -78,6 +80,7 @@ class PluginWhen {
     Set<String> strSet(dynamic v) => v is List
         ? v.whereType<String>().map((e) => e.toLowerCase()).toSet()
         : {};
+
     return PluginWhen(
       types: strSet(json['types']),
       extensions: strSet(json['extensions']),
@@ -99,6 +102,7 @@ class PluginWhen {
       }
       if (inArchive != null && inArchiveOf(e) != inArchive) return false;
     }
+
     return true;
   }
 }
@@ -123,6 +127,7 @@ class PluginFormField {
 
   factory PluginFormField.fromJson(Map<String, dynamic> json) {
     final rawOptions = json['options'];
+
     return PluginFormField(
       id: json['id'] as String? ?? '',
       type: (json['type'] as String? ?? 'text').toLowerCase(),
@@ -140,6 +145,7 @@ class PluginFormField {
 
   static List<PluginFormField> listFromJson(dynamic raw) {
     if (raw is! List) return const [];
+
     return raw
         .whereType<Map>()
         .map((e) => PluginFormField.fromJson(e.cast<String, dynamic>()))
@@ -158,12 +164,14 @@ class PluginFormOption {
     if (raw is Map) {
       final m = raw.cast<String, dynamic>();
       final value = (m['value'] ?? m['id'] ?? '').toString();
+
       return PluginFormOption(
         value: value,
         label: m['label'] as String? ?? value,
       );
     }
     final s = raw.toString();
+
     return PluginFormOption(value: s, label: s);
   }
 }
@@ -214,6 +222,7 @@ class PluginContribution implements PluginRuntimeTarget {
     if (ic.contains('/') || ic.endsWith('.svg') || ic.endsWith('.png')) {
       return p.isAbsolute(ic) ? ic : p.join(pluginDir, ic);
     }
+
     return null;
   }
 
@@ -263,6 +272,7 @@ class PluginBarContribution implements PluginRuntimeTarget {
     if (ic.contains('/') || ic.endsWith('.svg') || ic.endsWith('.png')) {
       return p.isAbsolute(ic) ? ic : p.join(pluginDir, ic);
     }
+
     return null;
   }
 
@@ -343,6 +353,7 @@ class PluginBarState {
     if (raw is! Map) return PluginBarState.hidden();
     final map = raw.cast<String, dynamic>();
     final itemsRaw = map['items'];
+
     return PluginBarState(
       visible: map['visible'] != false,
       items: itemsRaw is List
@@ -395,6 +406,7 @@ class LoadedPlugin {
         if (seen.add(f.id)) out.add(f);
       }
     }
+
     return out;
   }
 }

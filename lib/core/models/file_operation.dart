@@ -109,6 +109,7 @@ class FileTask {
 class TaskLabel {
   static String title(FileTask task) {
     final count = task.sources.length;
+
     return switch (task.type) {
       TaskType.copy when count == 1 => t.tasks.copyingSingle(
         name: p.basename(task.sources.first),
@@ -150,6 +151,7 @@ class TaskLabel {
     if (task.type == TaskType.plugin && task.status == TaskStatus.running) {
       return task.currentFile.isEmpty ? 'Running...' : task.currentFile;
     }
+
     return switch (task.status) {
       TaskStatus.queued => t.tasks.status.waiting,
       TaskStatus.preparing => t.tasks.status.scanning,
@@ -180,8 +182,10 @@ class TaskLabel {
       if (task.options['determinate'] == 'true') {
         return '${(task.progress * 100).round()}%';
       }
+
       return task.currentFile;
     }
+
     return t.tasks.status
         .running(
           current: '',
