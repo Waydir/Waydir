@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-06-14
+
 ### Added
 - Quick Look: PDF preview.
 - Sort menu (status bar button and right-click), so sorting works in grid view too.
@@ -347,7 +349,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Custom dark theme and custom title bar.
 - Settings store with persistent user preferences.
 
-[Unreleased]: https://github.com/Waydir/Waydir/compare/v0.16.0...HEAD
+[Unreleased]: https://github.com/Waydir/Waydir/compare/v0.17.0...HEAD
+[0.17.0]: https://github.com/Waydir/Waydir/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/Waydir/Waydir/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/Waydir/Waydir/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/Waydir/Waydir/compare/v0.13.0...v0.14.0
