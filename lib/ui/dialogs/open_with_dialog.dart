@@ -88,10 +88,11 @@ class _OpenWithBodyState extends State<_OpenWithBody> {
             : (options.recent.isNotEmpty
                   ? options.recent.first
                   : (all.isNotEmpty ? all.first : null)));
+
     return _LoadedOptions(options, all);
   }
 
-  Future<void> _confirm(OpenWithOptions options) async {
+  Future<void> _confirm() async {
     final app = _selected;
     if (app == null || _busy) return;
     setState(() {
@@ -148,6 +149,7 @@ class _OpenWithBodyState extends State<_OpenWithBody> {
               ),
             );
           }
+
           return _content(snap.data!);
         },
       ),
@@ -167,7 +169,7 @@ class _OpenWithBodyState extends State<_OpenWithBody> {
             app: a,
             selected: _selected == a,
             onTap: () => setState(() => _selected = a),
-            onDoubleTap: () => _confirm(o),
+            onDoubleTap: () => _confirm(),
           ),
         );
       }
@@ -239,7 +241,7 @@ class _OpenWithBodyState extends State<_OpenWithBody> {
             _PrimaryButton(
               label: t.openWith.open,
               enabled: _selected != null && !_busy,
-              onTap: () => _confirm(o),
+              onTap: () => _confirm(),
             ),
           ],
         ),
@@ -300,6 +302,7 @@ class _AppTileState extends State<_AppTile> {
         : _hovered
         ? AppColors.bgHoverStrong
         : Colors.transparent;
+
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),
@@ -353,6 +356,7 @@ class _DefaultCheckbox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = enabled ? AppColors.fg : AppColors.fgMuted;
+
     return Opacity(
       opacity: enabled ? 1 : 0.6,
       child: GestureDetector(
@@ -447,6 +451,7 @@ class _PrimaryButtonState extends State<_PrimaryButton> {
   @override
   Widget build(BuildContext context) {
     final enabled = widget.enabled;
+
     return MouseRegion(
       cursor: enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
       onEnter: (_) => setState(() => _hovered = true),

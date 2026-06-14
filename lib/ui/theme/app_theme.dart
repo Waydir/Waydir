@@ -67,6 +67,7 @@ class AppTheme {
     AppColors.setTheme(theme);
     final brightness = theme.brightness;
     final isDark = brightness == Brightness.dark;
+
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
@@ -137,7 +138,7 @@ class AppTheme {
         thickness: WidgetStateProperty.all(6),
         thumbVisibility: WidgetStateProperty.all(false),
       ),
-      extensions: [AppTextStyles.forBrightness(brightness)],
+      extensions: [AppTextStyles.forBrightness()],
       tooltipTheme: TooltipThemeData(
         decoration: BoxDecoration(
           color: AppColors.bgSurface,

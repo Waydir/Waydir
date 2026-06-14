@@ -14,10 +14,11 @@ mixin _WaydirKeyboardMixin
       return false;
     }
     _lastCursorRepeatAt = now;
+
     return true;
   }
 
-  KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
+  KeyEventResult _handleKeyEvent(FocusNode _, KeyEvent event) {
     final isRepeat = event is KeyRepeatEvent;
     if (event is! KeyDownEvent && !isRepeat) return KeyEventResult.ignored;
     if (!_shell.ready.value || _shell.activeStore.value == null) {
@@ -31,11 +32,13 @@ mixin _WaydirKeyboardMixin
 
     if (!_isModalRouteOnTop() && AppShortcuts.matches('preferences', key)) {
       _openPreferences();
+
       return KeyEventResult.handled;
     }
 
     if (!_isModalRouteOnTop() && key == LogicalKeyboardKey.f1) {
       _openHelp();
+
       return KeyEventResult.handled;
     }
 
@@ -48,6 +51,7 @@ mixin _WaydirKeyboardMixin
       } else {
         _focusTerminal();
       }
+
       return KeyEventResult.handled;
     }
 
@@ -58,59 +62,70 @@ mixin _WaydirKeyboardMixin
     for (final c in PluginStore.instance.shortcutContributions()) {
       if (AppShortcuts.matches(c.fullActionId, key)) {
         _runPluginAction(c.fullActionId);
+
         return KeyEventResult.handled;
       }
     }
 
     if (AppShortcuts.matches('toggle_dual', key)) {
       _shell.toggleDual();
+
       return KeyEventResult.handled;
     }
 
     if (AppShortcuts.matches('toggle_sidebar', key)) {
       final s = SettingsStore.instance.sidebarCollapsed;
       s.value = !s.value;
+
       return KeyEventResult.handled;
     }
 
     if (AppShortcuts.matches('toggle_hidden', key)) {
       _toggleShowHiddenGlobal();
+
       return KeyEventResult.handled;
     }
 
     if (AppShortcuts.matches('toggle_view', key)) {
       final mode = SettingsStore.instance.fileViewMode;
       mode.value = mode.value == 'grid' ? 'list' : 'grid';
+
       return KeyEventResult.handled;
     }
 
     if (AppShortcuts.matches('focus_path', key)) {
       _active.focusPathBar();
+
       return KeyEventResult.handled;
     }
 
     final settings = SettingsStore.instance;
     if (AppShortcuts.matches('file_list_zoom_in', key)) {
       settings.increaseFileListScale();
+
       return KeyEventResult.handled;
     }
     if (AppShortcuts.matches('file_list_zoom_out', key)) {
       settings.decreaseFileListScale();
+
       return KeyEventResult.handled;
     }
     if (AppShortcuts.matches('file_list_zoom_reset', key)) {
       settings.resetFileListScale();
+
       return KeyEventResult.handled;
     }
 
     if (AppShortcuts.matches('switch_pane', key) && _shell.isDual.value) {
       final idx = _shell.activePaneIndex.value;
       _shell.setActivePane(1 - idx);
+
       return KeyEventResult.handled;
     }
 
     if (AppShortcuts.matches('new_tab', key)) {
       _shell.activePane.value!.tabs.addTab(_active.currentPath.value);
+
       return KeyEventResult.handled;
     }
 
@@ -120,6 +135,7 @@ mixin _WaydirKeyboardMixin
       if (tabsStore.tabs.value.length > 1) {
         tabsStore.closeTab(tab.id);
       }
+
       return KeyEventResult.handled;
     }
 
@@ -128,6 +144,7 @@ mixin _WaydirKeyboardMixin
       final idx = tabsStore.activeIndex.value;
       final next = (idx + 1) % tabsStore.tabs.value.length;
       tabsStore.selectTab(next);
+
       return KeyEventResult.handled;
     }
 
@@ -137,6 +154,7 @@ mixin _WaydirKeyboardMixin
       final prev =
           (idx - 1 + tabsStore.tabs.value.length) % tabsStore.tabs.value.length;
       tabsStore.selectTab(prev);
+
       return KeyEventResult.handled;
     }
 
@@ -155,6 +173,7 @@ mixin _WaydirKeyboardMixin
       final digitIdx = digitKeys.indexOf(key);
       if (digitIdx >= 0) {
         _shell.activePane.value!.tabs.selectTab(digitIdx);
+
         return KeyEventResult.handled;
       }
     }
@@ -165,24 +184,28 @@ mixin _WaydirKeyboardMixin
       if (AppShortcuts.matchesIgnoreShift('cursor_down', key)) {
         if (!_acceptCursorRepeat()) return KeyEventResult.handled;
         store.moveCursor(1);
+
         return KeyEventResult.handled;
       }
 
       if (AppShortcuts.matchesIgnoreShift('cursor_up', key)) {
         if (!_acceptCursorRepeat()) return KeyEventResult.handled;
         store.moveCursor(-1);
+
         return KeyEventResult.handled;
       }
 
       if (AppShortcuts.matchesIgnoreShift('page_down', key)) {
         if (!_acceptCursorRepeat()) return KeyEventResult.handled;
         store.moveCursorByPage(1);
+
         return KeyEventResult.handled;
       }
 
       if (AppShortcuts.matchesIgnoreShift('page_up', key)) {
         if (!_acceptCursorRepeat()) return KeyEventResult.handled;
         store.moveCursorByPage(-1);
+
         return KeyEventResult.handled;
       }
 
@@ -191,41 +214,49 @@ mixin _WaydirKeyboardMixin
 
     if (AppShortcuts.matches('quick_look', key)) {
       _openQuickLook();
+
       return KeyEventResult.handled;
     }
 
     if (AppShortcuts.matches('help', key)) {
       _openHelp();
+
       return KeyEventResult.handled;
     }
 
     if (AppShortcuts.matches('recursive_search', key)) {
       store.openSearch(recursive: true);
+
       return KeyEventResult.handled;
     }
 
     if (AppShortcuts.matches('search', key)) {
       store.openSearch();
+
       return KeyEventResult.handled;
     }
 
     if (AppShortcuts.matches('close_search', key) && store.searchActive.value) {
       store.closeSearch();
+
       return KeyEventResult.handled;
     }
 
     if (AppShortcuts.matches('select_pattern', key)) {
       _openSelectPattern();
+
       return KeyEventResult.handled;
     }
 
     if (AppShortcuts.matches('save_selection', key)) {
       _saveSelectionToFile();
+
       return KeyEventResult.handled;
     }
 
     if (AppShortcuts.matches('load_selection', key)) {
       _loadSelectionFromFile();
+
       return KeyEventResult.handled;
     }
 
@@ -238,6 +269,7 @@ mixin _WaydirKeyboardMixin
           message: t.toast.copiedItems(count: count),
         );
       }
+
       return KeyEventResult.handled;
     }
 
@@ -250,37 +282,44 @@ mixin _WaydirKeyboardMixin
           message: t.toast.cutItems(count: count),
         );
       }
+
       return KeyEventResult.handled;
     }
 
     if (AppShortcuts.matches('paste', key)) {
       store.paste();
+
       return KeyEventResult.handled;
     }
 
     if (AppShortcuts.matches('open_item', key)) {
       store.openSelected();
+
       return KeyEventResult.handled;
     }
 
     if (AppShortcuts.matches('select_all', key)) {
       store.selectAll();
+
       return KeyEventResult.handled;
     }
 
     if (AppShortcuts.matches('deselect_all', key) &&
         !store.searchActive.value) {
       store.deselectAll();
+
       return KeyEventResult.handled;
     }
 
     if (AppShortcuts.matches('toggle_select', key)) {
       store.toggleSelectAndAdvance();
+
       return KeyEventResult.handled;
     }
 
     if (AppShortcuts.matches('go_up', key)) {
       store.goUp();
+
       return KeyEventResult.handled;
     }
 
@@ -290,60 +329,71 @@ mixin _WaydirKeyboardMixin
       } else {
         store.refresh();
       }
+
       return KeyEventResult.handled;
     }
 
     if (AppShortcuts.matches('new_folder', key)) {
       store.startCreate();
+
       return KeyEventResult.handled;
     }
 
     if (AppShortcuts.matches('dual_move', key) && _shell.isDual.value) {
       unawaited(_dualPaneTransfer(store, move: true));
+
       return KeyEventResult.handled;
     }
 
     if (AppShortcuts.matches('go_back', key)) {
       store.goBack();
+
       return KeyEventResult.handled;
     }
 
     if (AppShortcuts.matches('go_forward', key)) {
       store.goForward();
+
       return KeyEventResult.handled;
     }
 
     if (AppShortcuts.matches('refresh', key)) {
       store.refresh();
+
       return KeyEventResult.handled;
     }
 
     if (AppShortcuts.matchesIgnoreShift('delete', key)) {
       _confirmAndDelete(forcePermanent: shift);
+
       return KeyEventResult.handled;
     }
 
     if (AppShortcuts.matchesIgnoreShift('cursor_down', key)) {
       _lastCursorRepeatAt = null;
       store.moveCursor(1);
+
       return KeyEventResult.handled;
     }
 
     if (AppShortcuts.matchesIgnoreShift('cursor_up', key)) {
       _lastCursorRepeatAt = null;
       store.moveCursor(-1);
+
       return KeyEventResult.handled;
     }
 
     if (AppShortcuts.matchesIgnoreShift('page_down', key)) {
       _lastCursorRepeatAt = null;
       store.moveCursorByPage(1);
+
       return KeyEventResult.handled;
     }
 
     if (AppShortcuts.matchesIgnoreShift('page_up', key)) {
       _lastCursorRepeatAt = null;
       store.moveCursorByPage(-1);
+
       return KeyEventResult.handled;
     }
 
@@ -353,6 +403,7 @@ mixin _WaydirKeyboardMixin
       } else {
         store.startRename();
       }
+
       return KeyEventResult.handled;
     }
 
@@ -360,6 +411,7 @@ mixin _WaydirKeyboardMixin
       final ch = _typeAheadChar(event, key);
       if (ch != null) {
         _handleTypeAhead(store, ch);
+
         return KeyEventResult.handled;
       }
     }
@@ -377,6 +429,7 @@ mixin _WaydirKeyboardMixin
         key == LogicalKeyboardKey.enter) {
       return null;
     }
+
     return ch.toLowerCase();
   }
 
@@ -410,6 +463,7 @@ mixin _WaydirKeyboardMixin
       _typeAheadLetter = null;
       _typeAheadIndex = -1;
       _typeAheadLastAt = null;
+
       return;
     }
     _typeAheadLetter = ch;

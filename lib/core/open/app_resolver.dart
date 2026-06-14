@@ -47,6 +47,7 @@ abstract class AppResolver {
     if (Platform.isLinux) return LinuxAppResolver();
     if (Platform.isMacOS) return MacAppResolver();
     if (Platform.isWindows) return WindowsAppResolver();
+
     return _NullAppResolver();
   }
 }
@@ -86,6 +87,7 @@ class LinuxAppResolver implements AppResolver {
           ? dataDirs.split(':')
           : ['/usr/local/share', '/usr/share'],
     );
+
     return dirs.map((d) => p.join(d, 'applications')).toList();
   }
 
@@ -115,6 +117,7 @@ class LinuxAppResolver implements AppResolver {
         }
       }
     }
+
     return _cache = apps.values.toList();
   }
 
@@ -136,8 +139,10 @@ class LinuxAppResolver implements AppResolver {
         .toList();
     matches.sort((x, y) {
       if (x.isDefault != y.isDefault) return x.isDefault ? -1 : 1;
+
       return x.name.toLowerCase().compareTo(y.name.toLowerCase());
     });
+
     return matches;
   }
 
@@ -149,6 +154,7 @@ class LinuxAppResolver implements AppResolver {
         .map((a) => _toEntry(a))
         .toList();
     list.sort((x, y) => x.name.toLowerCase().compareTo(y.name.toLowerCase()));
+
     return list;
   }
 
@@ -165,6 +171,7 @@ class LinuxAppResolver implements AppResolver {
     } catch (e, st) {
       log.warn('open', 'xdg default app lookup failed', error: e, stack: st);
     }
+
     return null;
   }
 
@@ -214,6 +221,7 @@ class MacAppResolver implements AppResolver {
     final def = await defaultFor(mime, path);
     final all = await allApps();
     if (def == null) return all;
+
     return [def, ...all.where((a) => a.id != def.id)];
   }
 
@@ -237,6 +245,7 @@ class MacAppResolver implements AppResolver {
     }
     final list = apps.values.toList()
       ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+
     return _allCache = list;
   }
 
@@ -269,6 +278,7 @@ class MacAppResolver implements AppResolver {
     } catch (e, st) {
       log.warn('open', 'mac default app lookup failed', error: e, stack: st);
     }
+
     return null;
   }
 
@@ -284,9 +294,11 @@ class MacAppResolver implements AppResolver {
   Future<bool> _hasDuti() async {
     try {
       final r = await Process.run('which', ['duti']);
+
       return r.exitCode == 0;
     } catch (e, st) {
       log.warn('open', 'duti availability check failed', error: e, stack: st);
+
       return false;
     }
   }
@@ -318,9 +330,11 @@ class MacAppResolver implements AppResolver {
         appPath,
       ]);
       final out = (r.stdout as String).trim();
+
       return (out.isEmpty || out == '(null)') ? null : out;
     } catch (e, st) {
       log.warn('open', 'bundle id lookup failed', error: e, stack: st);
+
       return null;
     }
   }
@@ -331,6 +345,7 @@ class MacAppResolver implements AppResolver {
 class WindowsAppResolver implements AppResolver {
   String _ext(String path) {
     final e = p.extension(path);
+
     return e.isEmpty ? '' : e;
   }
 
@@ -349,8 +364,10 @@ class WindowsAppResolver implements AppResolver {
     final list = apps.values.toList();
     list.sort((a, b) {
       if (a.isDefault != b.isDefault) return a.isDefault ? -1 : 1;
+
       return a.name.toLowerCase().compareTo(b.name.toLowerCase());
     });
+
     return list;
   }
 
@@ -389,7 +406,7 @@ class WindowsAppResolver implements AppResolver {
         for (final line in (r.stdout as String).split('\n')) {
           final parts = line.trim().split('|');
           if (parts.length != 2) continue;
-          final name = parts[0].trim();
+          final name = parts.first.trim();
           final exe = parts[1].trim();
           if (name.isEmpty || exe.isEmpty || !File(exe).existsSync()) continue;
           apps.putIfAbsent(exe, () => AppEntry(id: exe, name: name, exec: exe));
@@ -400,6 +417,7 @@ class WindowsAppResolver implements AppResolver {
     }
     final list = apps.values.toList()
       ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+
     return _allCache = list;
   }
 
@@ -407,6 +425,7 @@ class WindowsAppResolver implements AppResolver {
   Future<AppEntry?> defaultFor(MimeType mime, String path) async {
     final ext = _ext(path);
     if (ext.isEmpty) return null;
+
     return _entryForAssoc(ext, isDefault: true);
   }
 
@@ -429,6 +448,7 @@ class WindowsAppResolver implements AppResolver {
         error: e,
         stack: st,
       );
+
       return null;
     }
     if ((exe == null || exe.isEmpty) && (command == null || command.isEmpty)) {
@@ -441,6 +461,7 @@ class WindowsAppResolver implements AppResolver {
         : (exe != null && exe.isNotEmpty)
         ? p.basenameWithoutExtension(exe)
         : assoc;
+
     return AppEntry(
       id: launchTarget,
       name: name,
@@ -460,6 +481,7 @@ class WindowsAppResolver implements AppResolver {
         if (shellOpenWithAppOnWindows(target, path)) continue;
         await _runCommandTemplate(target, [path]);
       }
+
       return;
     }
     // [target] is a command template such as `"C:\..\app.exe" "%1"`.
@@ -524,6 +546,7 @@ class WindowsAppResolver implements AppResolver {
       }
     }
     if (!substituted) out.addAll(paths);
+
     return out;
   }
 
@@ -538,6 +561,7 @@ class WindowsAppResolver implements AppResolver {
         'HKCR\\$ext\\OpenWithProgids',
       ]).timeout(const Duration(seconds: 5));
       if (r.exitCode != 0) return const [];
+
       return (r.stdout as String)
           .split('\n')
           .map((l) => l.trim())
@@ -552,6 +576,7 @@ class WindowsAppResolver implements AppResolver {
         error: e,
         stack: st,
       );
+
       return const [];
     }
   }

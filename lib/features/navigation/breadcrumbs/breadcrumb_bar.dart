@@ -36,7 +36,7 @@ class BreadcrumbBar extends StatelessWidget {
         final lastIdx = n - 1;
         final maxW = constraints.maxWidth;
 
-        double total = widths[0];
+        double total = widths.first;
         for (var i = 1; i < n; i++) {
           total += _caretBoxW + widths[i];
         }
@@ -53,7 +53,7 @@ class BreadcrumbBar extends StatelessWidget {
           );
         }
 
-        final rootW = widths[0];
+        final rootW = widths.first;
         double available =
             maxW - rootW - _caretBoxW - _ellipsisBoxW - _caretBoxW;
         if (available < 0) available = 0;
@@ -105,6 +105,7 @@ class BreadcrumbBar extends StatelessWidget {
       ellipsisOverflow: flexible,
       onTap: isLast ? null : () => onNavigate(crumbs[i].fullPath),
     );
+
     return flexible ? Flexible(child: segment) : segment;
   }
 
@@ -126,6 +127,7 @@ class BreadcrumbBar extends StatelessWidget {
       final iconExtra = c.icon != null ? _iconSize + _iconGap : 0;
       widths[i] = _segHPad * 2 + iconExtra + tp.width;
     }
+
     return widths;
   }
 }

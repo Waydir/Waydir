@@ -117,6 +117,7 @@ class OperationStore {
         error: e,
         stack: st,
       );
+
       return;
     }
     final sep = PlatformPaths.isSftpUri(destination)
@@ -189,6 +190,7 @@ class OperationStore {
       }
       out.add(s);
     }
+
     return out;
   }
 
@@ -311,6 +313,7 @@ class OperationStore {
     if (onCancel != null) _pluginCancelHandlers[task.id] = onCancel;
     _addTask(task);
     _showStartNotification(task);
+
     return task;
   }
 
@@ -386,6 +389,7 @@ class OperationStore {
         task.status == TaskStatus.cancelling) {
       if (task.status == TaskStatus.cancelling) {
         _startCancelWatchdog(task);
+
         return;
       }
       task.status = TaskStatus.cancelling;
@@ -393,6 +397,7 @@ class OperationStore {
       final pluginCancel = _pluginCancelHandlers.remove(id);
       if (pluginCancel != null) {
         pluginCancel();
+
         return;
       }
       if (task.type == TaskType.plugin) {
@@ -402,6 +407,7 @@ class OperationStore {
         _showFinishNotification(task);
         taskCompleted.value = task.id;
         _scheduleCleanup(task);
+
         return;
       }
       _currentWorker?.sendPort.send(CancelCommand());
@@ -567,7 +573,7 @@ class OperationStore {
     tasks.value = [...tasks.value, task];
   }
 
-  void _updateTask(FileTask task) {
+  void _updateTask(FileTask _) {
     tasks.value = [...tasks.value];
   }
 
@@ -689,6 +695,7 @@ class OperationStore {
           if (task.status == TaskStatus.cancelling) {
             _updateTask(task);
             handle.sendPort.send(CancelCommand());
+
             return;
           }
 
@@ -701,6 +708,7 @@ class OperationStore {
         } else if (msg is ConflictPromptMessage) {
           if (task.status == TaskStatus.cancelling) {
             handle.sendPort.send(CancelCommand());
+
             return;
           }
           _enqueueConflict(task, msg.conflict);
@@ -975,6 +983,7 @@ class OperationStore {
     final queue = _conflictQueues[task.id] ?? const <ConflictInfo>[];
     if (queue.isEmpty) {
       _dismissTaskConflictNotification(task.id);
+
       return;
     }
 
@@ -1099,6 +1108,7 @@ class OperationStore {
     });
 
     final workerPort = await completer.future;
+
     return _WorkerHandle(
       isolate,
       workerPort,
@@ -1120,12 +1130,14 @@ class OperationStore {
       final dest = _comparePath(destination);
       if (src == dest) return true;
       final prefix = src.endsWith('/') ? src : '$src/';
+
       return dest.startsWith(prefix);
     }
     final type = FileSystemEntity.typeSync(source, followLinks: false);
     if (type != FileSystemEntityType.directory) return false;
     final srcCanonical = _canonicalPath(source);
     final destCanonical = _canonicalPath(destination);
+
     return testDirIsParent(srcCanonical, destCanonical);
   }
 
@@ -1137,6 +1149,7 @@ class OperationStore {
         PlatformPaths.isSftpUri(destination)) {
       return Future.value(_wouldNestTransfer(source, destination));
     }
+
     return Isolate.run(() => _wouldNestTransfer(source, destination));
   }
 
@@ -1146,6 +1159,7 @@ class OperationStore {
     final dest = _comparePath(destCanonical);
     if (src == dest) return true;
     final prefix = src.endsWith(sep) ? src : '$src$sep';
+
     return dest.startsWith(prefix);
   }
 
@@ -1162,6 +1176,7 @@ class OperationStore {
         error: e,
         stack: st,
       );
+
       return p.normalize(p.absolute(path));
     }
   }
@@ -1173,6 +1188,7 @@ class OperationStore {
           .replaceFirst('sftp:/', 'sftp://');
     }
     final normalized = p.normalize(path);
+
     return PlatformPaths.isWindows ? normalized.toLowerCase() : normalized;
   }
 

@@ -24,7 +24,8 @@ class InstallFormatDetector {
     final exe = _resolveExe(Platform.resolvedExecutable);
     if (Platform.isLinux) return _detectLinux(exe);
     if (Platform.isWindows) return _detectWindows(exe);
-    if (Platform.isMacOS) return _detectMac(exe);
+    if (Platform.isMacOS) return _detectMac();
+
     return InstallFormat.unknown;
   }
 
@@ -38,6 +39,7 @@ class InstallFormatDetector {
         error: e,
         stack: st,
       );
+
       return path;
     }
   }
@@ -48,15 +50,18 @@ class InstallFormatDetector {
     }
     if (await _ownedByDpkg(exe)) return InstallFormat.linuxDeb;
     if (await _ownedByRpm(exe)) return InstallFormat.linuxRpm;
+
     return InstallFormat.linuxPortable;
   }
 
   static Future<bool> _ownedByDpkg(String exe) async {
     try {
       final r = await Process.run('dpkg', ['-S', exe]);
+
       return r.exitCode == 0 && (r.stdout as String).trim().isNotEmpty;
     } catch (e, st) {
       log.warn('update', 'dpkg ownership check failed', error: e, stack: st);
+
       return false;
     }
   }
@@ -64,10 +69,12 @@ class InstallFormatDetector {
   static Future<bool> _ownedByRpm(String exe) async {
     try {
       final r = await Process.run('rpm', ['-qf', exe]);
+
       return r.exitCode == 0 &&
           !(r.stdout as String).contains('not owned by any package');
     } catch (e, st) {
       log.warn('update', 'rpm ownership check failed', error: e, stack: st);
+
       return false;
     }
   }
@@ -79,10 +86,11 @@ class InstallFormatDetector {
         lower.contains(r'\appdata\local\programs\')) {
       return InstallFormat.windowsInstaller;
     }
+
     return InstallFormat.windowsPortable;
   }
 
-  static Future<InstallFormat> _detectMac(String exe) async {
+  static Future<InstallFormat> _detectMac() async {
     return InstallFormat.macDmg;
   }
 }

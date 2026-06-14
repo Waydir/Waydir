@@ -77,7 +77,8 @@ class FsWorkerPool {
 
   static final int _poolSize = () {
     final n = Platform.numberOfProcessors ~/ 2;
-    return n < 2 ? 2 : (n > 8 ? 8 : n);
+
+    return n.clamp(2, 8);
   }();
 
   final List<_FsWorker?> _workers = List.filled(_poolSize, null);
@@ -96,10 +97,12 @@ class FsWorkerPool {
     if (inFlight != null) return inFlight;
     final fut = _spawnWorker(slot);
     _spawning[slot] = fut;
+
     return fut
         .then((w) {
           _workers[slot] = w;
           _spawning[slot] = null;
+
           return w;
         })
         .catchError((e) {
@@ -176,6 +179,7 @@ class FsWorkerPool {
     worker.exitSub = exitPort.listen(
       (_) => _handleWorkerFailure(slot, StateError('FS worker exited')),
     );
+
     return worker;
   }
 
@@ -195,6 +199,7 @@ class FsWorkerPool {
       completer.completeError(StateError('FS worker died before dispatch'));
     }
     final result = await completer.future;
+
     return result as T;
   }
 
@@ -204,6 +209,7 @@ class FsWorkerPool {
     }
     final r = await _run<dynamic>(_Op.list, [PlatformPaths.listablePath(path)]);
     if (r is Uint8List) return FileEntryCodec.decode(r);
+
     return r as List<FileEntry>;
   }
 
@@ -211,6 +217,7 @@ class FsWorkerPool {
     if (PlatformPaths.isSftpUri(path)) {
       return const SftpFs().exists(path);
     }
+
     return _run<bool>(_Op.exists, [path]);
   }
 
@@ -218,6 +225,7 @@ class FsWorkerPool {
     if (PlatformPaths.isSftpUri(path)) {
       return const SftpFs().mkdir(path, recursive: true);
     }
+
     return _run<void>(_Op.mkdir, [path]);
   }
 
@@ -225,6 +233,7 @@ class FsWorkerPool {
     if (PlatformPaths.isSftpUri(path)) {
       return const SftpFs().stat(path);
     }
+
     return _run<FileEntry?>(_Op.stat, [path]);
   }
 
@@ -272,6 +281,7 @@ class FsWorkerPool {
     commandPort.listen((msg) {
       if (msg is SendPort) {
         replyPort = msg;
+
         return;
       }
       if (msg is _Request && replyPort != null) {
@@ -286,8 +296,8 @@ class FsWorkerPool {
   }
 
   static dynamic _execute(_Op op, List<dynamic> args) {
-    if (args.isNotEmpty && args[0] is String) {
-      final firstArg = args[0] as String;
+    if (args.isNotEmpty && args.first is String) {
+      final firstArg = args.first as String;
       if (firstArg.startsWith('smb://')) {
         throw FileSystemException(
           'FS worker received an unresolved smb:// URI; callers must '
@@ -298,7 +308,7 @@ class FsWorkerPool {
     }
     switch (op) {
       case _Op.list:
-        final path = args[0] as String;
+        final path = args.first as String;
         // Directory listing is native-only (Rust). No Dart fallback.
         final native = WaydirCoreLoader.listDir(path);
         if (native == null) {
@@ -307,22 +317,27 @@ class FsWorkerPool {
         if (FileEntryCodec.countOf(native) >= FileEntryCodec.threshold) {
           return native;
         }
+
         return FileEntryCodec.decode(native);
       case _Op.exists:
-        return Directory(args[0] as String).existsSync();
+        return Directory(args.first as String).existsSync();
       case _Op.mkdir:
-        Directory(args[0] as String).createSync(recursive: true);
+        Directory(args.first as String).createSync(recursive: true);
+
         return null;
       case _Op.stat:
-        final path = args[0] as String;
+        final path = args.first as String;
         final type = FileSystemEntity.typeSync(path, followLinks: false);
         if (type == FileSystemEntityType.notFound) return null;
-        final entity = type == FileSystemEntityType.directory
-            ? Directory(path) as FileSystemEntity
-            : (type == FileSystemEntityType.link ? Link(path) : File(path));
+        final FileSystemEntity entity = switch (type) {
+          FileSystemEntityType.directory => Directory(path),
+          FileSystemEntityType.link => Link(path),
+          _ => File(path),
+        };
+
         return FileEntry.fromFileSystemEntity(entity);
       case _Op.archiveList:
-        final archivePath = args[0] as String;
+        final archivePath = args.first as String;
         final innerPath = args[1] as String;
         final modified = FileStat.statSync(archivePath).modified;
         final all = ArchiveReader.listEntries(archivePath);
@@ -336,19 +351,22 @@ class FsWorkerPool {
           if (a.type != b.type) {
             return a.type == FileItemType.folder ? -1 : 1;
           }
+
           return a.nameLower.compareTo(b.nameLower);
         });
+
         return entries;
       case _Op.archiveExtract:
         ArchiveReader.extractEntry(
-          args[0] as String,
+          args.first as String,
           args[1] as String,
           args[2] as String,
         );
+
         return null;
       case _Op.archiveExtractTree:
         return ArchiveReader.extractTree(
-          args[0] as String,
+          args.first as String,
           args[1] as String,
           args[2] as String,
         );

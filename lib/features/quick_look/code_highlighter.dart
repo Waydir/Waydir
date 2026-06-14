@@ -455,7 +455,7 @@ List<TextSpan> highlightCode(String text, CodeLanguage lang, TextStyle base) {
   final groups = <String>{};
   if (lang.blockComment != null) {
     parts.add(
-      '(?<bc>${_esc(lang.blockComment![0])}[\\s\\S]*?'
+      '(?<bc>${_esc(lang.blockComment!.first)}[\\s\\S]*?'
       '${_esc(lang.blockComment![1])})',
     );
     groups.add('bc');
@@ -511,5 +511,6 @@ List<TextSpan> highlightCode(String text, CodeLanguage lang, TextStyle base) {
   if (last < text.length) {
     spans.add(TextSpan(text: text.substring(last), style: base));
   }
+
   return spans;
 }

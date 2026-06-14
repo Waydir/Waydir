@@ -184,6 +184,7 @@ class _BranchButton extends StatelessWidget {
   Widget build(BuildContext context) {
     // Detached HEAD is easy to commit into and lose — flag it clearly.
     final color = status.detached ? AppColors.warning : AppColors.fgAccent;
+
     return Flexible(
       fit: FlexFit.loose,
       child: InkWell(
@@ -272,7 +273,7 @@ class _StashButton extends StatelessWidget {
         final index = int.tryParse(parts[1]);
         if (index == null) return;
         final String? error;
-        switch (parts[0]) {
+        switch (parts.first) {
           case 'pop':
             error = await store.popStash(index);
           case 'apply':

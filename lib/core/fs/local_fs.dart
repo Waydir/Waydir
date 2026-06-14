@@ -25,6 +25,7 @@ class LocalFs implements FsBackend {
     if (native == null) {
       throw FileSystemException(t.errors.directoryNotReadable, path);
     }
+
     return FileEntryCodec.decode(native);
   }
 
@@ -32,15 +33,19 @@ class LocalFs implements FsBackend {
   Future<FileEntry?> stat(String path) async {
     final type = FileSystemEntity.typeSync(path, followLinks: false);
     if (type == FileSystemEntityType.notFound) return null;
-    final entity = type == FileSystemEntityType.directory
-        ? Directory(path) as FileSystemEntity
-        : (type == FileSystemEntityType.link ? Link(path) : File(path));
+    final FileSystemEntity entity = switch (type) {
+      FileSystemEntityType.directory => Directory(path),
+      FileSystemEntityType.link => Link(path),
+      _ => File(path),
+    };
+
     return FileEntry.fromFileSystemEntity(entity);
   }
 
   @override
   Future<bool> exists(String path) async {
     final type = await FileSystemEntity.type(path, followLinks: false);
+
     return type != FileSystemEntityType.notFound;
   }
 

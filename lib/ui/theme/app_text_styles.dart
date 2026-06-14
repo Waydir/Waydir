@@ -43,7 +43,7 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
 
   static const _systemFont = 'system-ui';
 
-  static AppTextStyles forBrightness(Brightness brightness) {
+  static AppTextStyles forBrightness() {
     return AppTextStyles(
       badge: TextStyle(
         fontSize: 9,
@@ -197,6 +197,7 @@ class AppTextStyles extends ThemeExtension<AppTextStyles> {
   @override
   AppTextStyles lerp(ThemeExtension<AppTextStyles>? other, double t) {
     if (other is! AppTextStyles) return this;
+
     return AppTextStyles(
       badge: TextStyle.lerp(badge, other.badge, t)!,
       micro: TextStyle.lerp(micro, other.micro, t)!,

@@ -22,11 +22,12 @@ class PasswdLookup {
         final parts = line.split(':');
         if (parts.length <= idField) continue;
         final id = int.tryParse(parts[idField]);
-        if (id != null) out[id] = parts[0];
+        if (id != null) out[id] = parts.first;
       }
     } catch (e, st) {
       log.warn('platform', 'passwd/group lookup failed', error: e, stack: st);
     }
+
     return out;
   }
 
@@ -36,6 +37,7 @@ class PasswdLookup {
       final name = users[uid];
       if (name != null) return name;
     }
+
     return uid == 0 ? '' : '$uid';
   }
 
@@ -45,6 +47,7 @@ class PasswdLookup {
       final name = groups[gid];
       if (name != null) return name;
     }
+
     return gid == 0 ? '' : '$gid';
   }
 }

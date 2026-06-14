@@ -34,6 +34,7 @@ Future<void> showQuickLook({
     },
     transitionBuilder: (context, animation, secondaryAnimation, child) {
       final curved = CurvedAnimation(parent: animation, curve: Curves.easeOut);
+
       return FadeTransition(
         opacity: curved,
         child: ScaleTransition(
@@ -89,6 +90,7 @@ class _QuickLookState extends State<_QuickLook> {
   Future<void> _requestClose() async {
     if (!_editorController.dirty.value) {
       Navigator.of(context).pop();
+
       return;
     }
     final result = await showCustomDialog<String>(
@@ -120,6 +122,7 @@ class _QuickLookState extends State<_QuickLook> {
       return false;
     }
     _lastCursorRepeatAt = now;
+
     return true;
   }
 
@@ -127,6 +130,7 @@ class _QuickLookState extends State<_QuickLook> {
     if (isRepeat && !_acceptCursorRepeat()) return KeyEventResult.handled;
     if (!isRepeat) _lastCursorRepeatAt = null;
     widget.store.moveCursor(delta);
+
     return KeyEventResult.handled;
   }
 
@@ -136,23 +140,28 @@ class _QuickLookState extends State<_QuickLook> {
     final key = event.logicalKey;
     if (!isRepeat && key == LogicalKeyboardKey.escape) {
       _requestClose();
+
       return KeyEventResult.handled;
     }
 
     if (_editorActive.value) {
       if (AppShortcuts.matches('quick_look_next_file_edit', key)) {
         _focus.requestFocus();
+
         return _stepCursor(1, isRepeat);
       }
       if (AppShortcuts.matches('quick_look_prev_file_edit', key)) {
         _focus.requestFocus();
+
         return _stepCursor(-1, isRepeat);
       }
+
       return KeyEventResult.ignored;
     }
 
     if (!isRepeat && AppShortcuts.matches('quick_look_close', key)) {
       _requestClose();
+
       return KeyEventResult.handled;
     }
     if (AppShortcuts.matches('quick_look_next_file', key) ||
@@ -163,12 +172,14 @@ class _QuickLookState extends State<_QuickLook> {
         AppShortcuts.matches('quick_look_prev_file_edit', key)) {
       return _stepCursor(-1, isRepeat);
     }
+
     return KeyEventResult.ignored;
   }
 
   static bool _defaultCompact(FileEntry? entry) {
     if (entry == null || entry.type == FileItemType.folder) return true;
     final ext = entry.extension;
+
     return !imageExts.contains(ext) && !pdfExts.contains(ext);
   }
 
@@ -192,6 +203,7 @@ class _QuickLookState extends State<_QuickLook> {
     final size = MediaQuery.of(context).size;
     final width = (size.width * 0.7).clamp(480.0, 1100.0);
     final height = (size.height * 0.78).clamp(360.0, 900.0);
+
     return Focus(
       focusNode: _focus,
       autofocus: true,
@@ -217,7 +229,7 @@ class _QuickLookState extends State<_QuickLook> {
             ),
             child: Column(
               children: [
-                Expanded(child: _buildContent(context)),
+                Expanded(child: _buildContent()),
                 Container(height: 1, color: AppColors.bgDivider),
                 _ShortcutBar(editorActive: _editorActive),
               ],
@@ -228,7 +240,7 @@ class _QuickLookState extends State<_QuickLook> {
     );
   }
 
-  Widget _buildContent(BuildContext context) {
+  Widget _buildContent() {
     return SignalBuilder(
       builder: (_) {
         final override = widget.explicitEntry;
@@ -254,6 +266,7 @@ class _QuickLookState extends State<_QuickLook> {
         final selected = widget.store.selectedPaths.value;
         if (selected.length > 1) {
           final entries = widget.store.selectedEntries;
+
           return Column(
             children: [
               _Header(
@@ -275,6 +288,7 @@ class _QuickLookState extends State<_QuickLook> {
               entries.first.type == FileItemType.folder) {
             final entry = entries.first;
             _syncPresentation(entry);
+
             return Column(
               children: [
                 _Header(
@@ -292,6 +306,7 @@ class _QuickLookState extends State<_QuickLook> {
         }
         final entry = widget.store.cursorEntry.value;
         _syncPresentation(entry);
+
         return Column(
           children: [
             _Header(
@@ -331,6 +346,7 @@ class _ShortcutBar extends StatelessWidget {
     final mods = parts.length > 1
         ? parts.sublist(0, parts.length - 1)
         : const <String>[];
+
     return [...mods, '↑', '↓'];
   }
 
@@ -360,6 +376,7 @@ class _ShortcutBar extends StatelessWidget {
                   label: t.quickLook.hintClose,
                 ),
               ];
+
         return Container(
           height: 30,
           color: AppColors.bgStatus,
@@ -431,6 +448,7 @@ class _Header extends StatelessWidget {
         ? t.quickLook.items(count: multiCount!)
         : e?.name ?? t.quickLook.noSelection;
     final hasPreview = !multi && e != null && !compact;
+
     return Container(
       height: 46,
       color: AppColors.bgSidebar,
@@ -506,6 +524,7 @@ class _HeaderButtonState extends State<_HeaderButton> {
         : _hover
         ? AppColors.fg
         : AppColors.fgMuted;
+
     return Tooltip(
       message: widget.tooltip,
       waitDuration: const Duration(milliseconds: 450),
@@ -572,6 +591,7 @@ class _CloseButtonState extends State<_CloseButton> {
 
 Widget _split(Widget preview, FileEntry entry, {required bool showInfo}) {
   if (!showInfo) return preview;
+
   return Row(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
@@ -610,23 +630,28 @@ class _Body extends StatelessWidget {
     if (e == null || e.type == FileItemType.folder) {
       release();
       onCompactChanged(true);
+
       return PropertiesOnly(entry: e);
     }
     if (imageExts.contains(e.extension)) {
       release();
       onCompactChanged(false);
+
       return _split(ImagePreview(path: e.realPath), e, showInfo: showInfo);
     }
     if (pdfExts.contains(e.extension)) {
       release();
       onCompactChanged(false);
+
       return _split(PdfPreview(path: e.realPath), e, showInfo: showInfo);
     }
     if (binaryExts.contains(e.extension)) {
       release();
       onCompactChanged(true);
+
       return PropertiesOnly(entry: e);
     }
+
     return _ProbeLoader(
       entry: e,
       editorActive: editorActive,
@@ -657,6 +682,7 @@ class _ProbeLoader extends StatelessWidget {
     void release() => WidgetsBinding.instance.addPostFrameCallback(
       (_) => editorActive.value = false,
     );
+
     return AsyncRetain<Probe>(
       cacheKey: entry.realPath,
       loader: () => probeFile(entry),
@@ -665,6 +691,7 @@ class _ProbeLoader extends StatelessWidget {
         switch (res.kind) {
           case QlKind.text:
             onCompactChanged(false);
+
             return _split(
               CodeEditor(
                 key: ValueKey(entry.realPath),
@@ -681,10 +708,12 @@ class _ProbeLoader extends StatelessWidget {
           case QlKind.tooLarge:
             release();
             onCompactChanged(true);
+
             return PropertiesOnly(entry: entry);
           case QlKind.error:
             release();
             onCompactChanged(true);
+
             return PropertiesOnly(entry: entry);
         }
       },
