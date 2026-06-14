@@ -447,6 +447,24 @@ class NavigationStore {
         );
   }
 
+  void setSortKey(SortKey key) {
+    if (sortKey.value == key) return;
+    sortKey.value = key;
+    _persistSort();
+  }
+
+  void setSortAscending(bool ascending) {
+    if (sortAscending.value == ascending) return;
+    sortAscending.value = ascending;
+    _persistSort();
+  }
+
+  void setFoldersFirst(bool value) {
+    if (foldersFirst.value == value) return;
+    foldersFirst.value = value;
+    _persistSort();
+  }
+
   /// Toggles direction when [key] is already active, otherwise switches to
   /// [key] ascending. Persists the choice for the current folder.
   void cycleSortColumn(SortKey key) {

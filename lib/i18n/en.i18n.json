@@ -55,7 +55,11 @@
     "compressTo": "Compress to $name",
     "compressOptions": "Add to Archive…",
     "multiRename": "Multi Rename…",
-    "verifyChecksum": "Verify Checksum…"
+    "verifyChecksum": "Verify Checksum…",
+    "sortBy": "Sort By",
+    "sortAscending": "Ascending",
+    "sortDescending": "Descending",
+    "sortFoldersFirst": "Folders First"
   },
   "multiRename": {
     "title": "Multi Rename",

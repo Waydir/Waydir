@@ -10,6 +10,7 @@ import 'package:waydir/ui/icons/waydir_icons.dart';
 import 'package:signals/signals_flutter.dart';
 import '../core/archive/archive_path.dart';
 import '../core/archive/archive_writer.dart';
+import '../core/fs/file_sort.dart';
 import '../core/fs/file_system_service.dart';
 import '../core/logging/app_logger.dart';
 import '../features/locations/location_resolver.dart';

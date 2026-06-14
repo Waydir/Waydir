@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Quick Look: PDF preview.
+- Sort menu in the background context menu, so sorting works in grid view too.
+- Appearance: "Show folders before files" toggle.
 
 ### Fixed
 - Grid view now supports left/right arrow navigation, drag selection, file dragging and Appearance spacing/density settings.

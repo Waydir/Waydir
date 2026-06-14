@@ -243,6 +243,18 @@ class Translations$menu$en {
 
 	/// en: 'Verify Checksum…'
 	String get verifyChecksum => 'Verify Checksum…';
+
+	/// en: 'Sort By'
+	String get sortBy => 'Sort By';
+
+	/// en: 'Ascending'
+	String get sortAscending => 'Ascending';
+
+	/// en: 'Descending'
+	String get sortDescending => 'Descending';
+
+	/// en: 'Folders First'
+	String get sortFoldersFirst => 'Folders First';
 }
 
 // Path: multiRename
@@ -3265,6 +3277,10 @@ extension on Translations {
 			'menu.compressOptions' => 'Add to Archive…',
 			'menu.multiRename' => 'Multi Rename…',
 			'menu.verifyChecksum' => 'Verify Checksum…',
+			'menu.sortBy' => 'Sort By',
+			'menu.sortAscending' => 'Ascending',
+			'menu.sortDescending' => 'Descending',
+			'menu.sortFoldersFirst' => 'Folders First',
 			'multiRename.title' => 'Multi Rename',
 			'multiRename.subtitle' => ({required Object count}) => '${count} items selected',
 			'multiRename.modeTemplate' => 'Template',
@@ -3726,12 +3742,12 @@ extension on Translations {
 			'quickLook.lines' => 'Lines',
 			'quickLook.characters' => 'Characters',
 			'quickLook.sectionGeneral' => 'General',
+			_ => null,
+		} ?? switch (path) {
 			'quickLook.sectionStatistics' => 'Statistics',
 			'quickLook.sizeBreakdown' => 'Size breakdown',
 			'quickLook.typeBreakdown' => 'Type breakdown',
 			'quickLook.noExtension' => 'no extension',
-			_ => null,
-		} ?? switch (path) {
 			'quickLook.sectionImage' => 'Image',
 			'quickLook.sectionText' => 'Text',
 			'quickLook.hintSwitchFile' => 'Switch file',
