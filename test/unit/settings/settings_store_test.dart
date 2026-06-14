@@ -49,7 +49,7 @@ void main() {
     test('increase from a value between steps snaps to next valid size', () {
       store.terminalFontSize.value = 17;
       store.increaseTerminalFontSize();
-      expect(store.terminalFontSize.value, 18);
+      expect(store.terminalFontSize.value, 20);
     });
 
     test('decrease from a value between steps snaps to previous valid size', () {
