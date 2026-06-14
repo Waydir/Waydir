@@ -17,6 +17,7 @@ class GeneralPane extends StatelessWidget {
     final confirmMove = registry.byId('general.confirmMove');
     final rememberFolderState = registry.byId('general.rememberFolderState');
     final rememberFolderSort = registry.byId('general.rememberFolderSort');
+    final typeAheadBuffer = registry.byId('general.typeAheadBuffer');
     final deleteKeyBehavior = registry.byId('general.deleteKeyBehavior');
 
     return SettingsPaneScaffold(
@@ -33,6 +34,7 @@ class GeneralPane extends StatelessWidget {
           children: [
             RegistrySettingRow(setting: rememberFolderState),
             RegistrySettingRow(setting: rememberFolderSort),
+            RegistrySettingRow(setting: typeAheadBuffer),
           ],
         ),
         SettingsSection(

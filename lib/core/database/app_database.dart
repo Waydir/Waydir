@@ -56,6 +56,8 @@ class AppSettings extends Table {
       boolean().withDefault(const Constant(true))();
   BoolColumn get rememberFolderSort =>
       boolean().withDefault(const Constant(true))();
+  BoolColumn get typeAheadBuffer =>
+      boolean().withDefault(const Constant(true))();
   RealColumn get fileListScale => real().withDefault(const Constant(1.0))();
   TextColumn get fileViewMode => text().withDefault(const Constant('list'))();
   BoolColumn get showColumnSize =>
@@ -218,7 +220,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 35;
+  int get schemaVersion => 36;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -374,6 +376,9 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 35) {
         await addSettingColumn(appSettings.fileViewMode);
+      }
+      if (from < 36) {
+        await addSettingColumn(appSettings.typeAheadBuffer);
       }
     },
   );

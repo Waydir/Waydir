@@ -172,6 +172,14 @@ class SettingsRegistry {
       searchTerms: const ['sort', 'folder', 'remember'],
       signal: SettingsStore.instance.rememberFolderSort,
     ),
+    ToggleSetting(
+      id: 'general.typeAheadBuffer',
+      category: SettingsCategory.general,
+      label: () => t.preferences.general.typeAheadBuffer,
+      hint: () => t.preferences.general.typeAheadBufferHint,
+      searchTerms: const ['type', 'ahead', 'jump', 'search', 'keyboard'],
+      signal: SettingsStore.instance.typeAheadBuffer,
+    ),
     ChoiceSetting<String>(
       id: 'general.deleteKeyBehavior',
       category: SettingsCategory.general,

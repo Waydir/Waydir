@@ -202,6 +202,8 @@
       "rememberFolderStateHint": "Restore the cursor and selected files when you return to a folder.",
       "rememberFolderSort": "Remember sort per folder",
       "rememberFolderSortHint": "Save and reuse the sort column and direction for each folder.",
+      "typeAheadBuffer": "Type-ahead multi-letter jump",
+      "typeAheadBufferHint": "Quickly typed letters combine into a search string to jump to a matching item; pausing resets it. When off, each letter cycles through items starting with that letter.",
       "deleteKeyBehavior": "Delete key behavior",
       "deleteKeyBehaviorHint": "What the Delete key does by default. Shift+Delete always deletes permanently.",
       "deleteKeyTrash": "Move to Trash",

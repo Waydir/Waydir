@@ -459,6 +459,21 @@ class $AppSettingsTable extends AppSettings
     ),
     defaultValue: const Constant(true),
   );
+  static const VerificationMeta _typeAheadBufferMeta = const VerificationMeta(
+    'typeAheadBuffer',
+  );
+  @override
+  late final GeneratedColumn<bool> typeAheadBuffer = GeneratedColumn<bool>(
+    'type_ahead_buffer',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("type_ahead_buffer" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
   static const VerificationMeta _fileListScaleMeta = const VerificationMeta(
     'fileListScale',
   );
@@ -746,6 +761,7 @@ class $AppSettingsTable extends AppSettings
     searchMode,
     rememberFolderState,
     rememberFolderSort,
+    typeAheadBuffer,
     fileListScale,
     fileViewMode,
     showColumnSize,
@@ -1050,6 +1066,15 @@ class $AppSettingsTable extends AppSettings
         rememberFolderSort.isAcceptableOrUnknown(
           data['remember_folder_sort']!,
           _rememberFolderSortMeta,
+        ),
+      );
+    }
+    if (data.containsKey('type_ahead_buffer')) {
+      context.handle(
+        _typeAheadBufferMeta,
+        typeAheadBuffer.isAcceptableOrUnknown(
+          data['type_ahead_buffer']!,
+          _typeAheadBufferMeta,
         ),
       );
     }
@@ -1360,6 +1385,10 @@ class $AppSettingsTable extends AppSettings
         DriftSqlType.bool,
         data['${effectivePrefix}remember_folder_sort'],
       )!,
+      typeAheadBuffer: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}type_ahead_buffer'],
+      )!,
       fileListScale: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}file_list_scale'],
@@ -1476,6 +1505,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
   final String searchMode;
   final bool rememberFolderState;
   final bool rememberFolderSort;
+  final bool typeAheadBuffer;
   final double fileListScale;
   final String fileViewMode;
   final bool showColumnSize;
@@ -1529,6 +1559,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     required this.searchMode,
     required this.rememberFolderState,
     required this.rememberFolderSort,
+    required this.typeAheadBuffer,
     required this.fileListScale,
     required this.fileViewMode,
     required this.showColumnSize,
@@ -1587,6 +1618,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     map['search_mode'] = Variable<String>(searchMode);
     map['remember_folder_state'] = Variable<bool>(rememberFolderState);
     map['remember_folder_sort'] = Variable<bool>(rememberFolderSort);
+    map['type_ahead_buffer'] = Variable<bool>(typeAheadBuffer);
     map['file_list_scale'] = Variable<double>(fileListScale);
     map['file_view_mode'] = Variable<String>(fileViewMode);
     map['show_column_size'] = Variable<bool>(showColumnSize);
@@ -1648,6 +1680,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       searchMode: Value(searchMode),
       rememberFolderState: Value(rememberFolderState),
       rememberFolderSort: Value(rememberFolderSort),
+      typeAheadBuffer: Value(typeAheadBuffer),
       fileListScale: Value(fileListScale),
       fileViewMode: Value(fileViewMode),
       showColumnSize: Value(showColumnSize),
@@ -1727,6 +1760,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
         json['rememberFolderState'],
       ),
       rememberFolderSort: serializer.fromJson<bool>(json['rememberFolderSort']),
+      typeAheadBuffer: serializer.fromJson<bool>(json['typeAheadBuffer']),
       fileListScale: serializer.fromJson<double>(json['fileListScale']),
       fileViewMode: serializer.fromJson<String>(json['fileViewMode']),
       showColumnSize: serializer.fromJson<bool>(json['showColumnSize']),
@@ -1803,6 +1837,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       'searchMode': serializer.toJson<String>(searchMode),
       'rememberFolderState': serializer.toJson<bool>(rememberFolderState),
       'rememberFolderSort': serializer.toJson<bool>(rememberFolderSort),
+      'typeAheadBuffer': serializer.toJson<bool>(typeAheadBuffer),
       'fileListScale': serializer.toJson<double>(fileListScale),
       'fileViewMode': serializer.toJson<String>(fileViewMode),
       'showColumnSize': serializer.toJson<bool>(showColumnSize),
@@ -1865,6 +1900,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     String? searchMode,
     bool? rememberFolderState,
     bool? rememberFolderSort,
+    bool? typeAheadBuffer,
     double? fileListScale,
     String? fileViewMode,
     bool? showColumnSize,
@@ -1920,6 +1956,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     searchMode: searchMode ?? this.searchMode,
     rememberFolderState: rememberFolderState ?? this.rememberFolderState,
     rememberFolderSort: rememberFolderSort ?? this.rememberFolderSort,
+    typeAheadBuffer: typeAheadBuffer ?? this.typeAheadBuffer,
     fileListScale: fileListScale ?? this.fileListScale,
     fileViewMode: fileViewMode ?? this.fileViewMode,
     showColumnSize: showColumnSize ?? this.showColumnSize,
@@ -2037,6 +2074,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       rememberFolderSort: data.rememberFolderSort.present
           ? data.rememberFolderSort.value
           : this.rememberFolderSort,
+      typeAheadBuffer: data.typeAheadBuffer.present
+          ? data.typeAheadBuffer.value
+          : this.typeAheadBuffer,
       fileListScale: data.fileListScale.present
           ? data.fileListScale.value
           : this.fileListScale,
@@ -2131,6 +2171,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           ..write('searchMode: $searchMode, ')
           ..write('rememberFolderState: $rememberFolderState, ')
           ..write('rememberFolderSort: $rememberFolderSort, ')
+          ..write('typeAheadBuffer: $typeAheadBuffer, ')
           ..write('fileListScale: $fileListScale, ')
           ..write('fileViewMode: $fileViewMode, ')
           ..write('showColumnSize: $showColumnSize, ')
@@ -2191,6 +2232,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     searchMode,
     rememberFolderState,
     rememberFolderSort,
+    typeAheadBuffer,
     fileListScale,
     fileViewMode,
     showColumnSize,
@@ -2248,6 +2290,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           other.searchMode == this.searchMode &&
           other.rememberFolderState == this.rememberFolderState &&
           other.rememberFolderSort == this.rememberFolderSort &&
+          other.typeAheadBuffer == this.typeAheadBuffer &&
           other.fileListScale == this.fileListScale &&
           other.fileViewMode == this.fileViewMode &&
           other.showColumnSize == this.showColumnSize &&
@@ -2304,6 +2347,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
   final Value<String> searchMode;
   final Value<bool> rememberFolderState;
   final Value<bool> rememberFolderSort;
+  final Value<bool> typeAheadBuffer;
   final Value<double> fileListScale;
   final Value<String> fileViewMode;
   final Value<bool> showColumnSize;
@@ -2357,6 +2401,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.searchMode = const Value.absent(),
     this.rememberFolderState = const Value.absent(),
     this.rememberFolderSort = const Value.absent(),
+    this.typeAheadBuffer = const Value.absent(),
     this.fileListScale = const Value.absent(),
     this.fileViewMode = const Value.absent(),
     this.showColumnSize = const Value.absent(),
@@ -2411,6 +2456,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.searchMode = const Value.absent(),
     this.rememberFolderState = const Value.absent(),
     this.rememberFolderSort = const Value.absent(),
+    this.typeAheadBuffer = const Value.absent(),
     this.fileListScale = const Value.absent(),
     this.fileViewMode = const Value.absent(),
     this.showColumnSize = const Value.absent(),
@@ -2465,6 +2511,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Expression<String>? searchMode,
     Expression<bool>? rememberFolderState,
     Expression<bool>? rememberFolderSort,
+    Expression<bool>? typeAheadBuffer,
     Expression<double>? fileListScale,
     Expression<String>? fileViewMode,
     Expression<bool>? showColumnSize,
@@ -2529,6 +2576,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
         'remember_folder_state': rememberFolderState,
       if (rememberFolderSort != null)
         'remember_folder_sort': rememberFolderSort,
+      if (typeAheadBuffer != null) 'type_ahead_buffer': typeAheadBuffer,
       if (fileListScale != null) 'file_list_scale': fileListScale,
       if (fileViewMode != null) 'file_view_mode': fileViewMode,
       if (showColumnSize != null) 'show_column_size': showColumnSize,
@@ -2593,6 +2641,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Value<String>? searchMode,
     Value<bool>? rememberFolderState,
     Value<bool>? rememberFolderSort,
+    Value<bool>? typeAheadBuffer,
     Value<double>? fileListScale,
     Value<String>? fileViewMode,
     Value<bool>? showColumnSize,
@@ -2651,6 +2700,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       searchMode: searchMode ?? this.searchMode,
       rememberFolderState: rememberFolderState ?? this.rememberFolderState,
       rememberFolderSort: rememberFolderSort ?? this.rememberFolderSort,
+      typeAheadBuffer: typeAheadBuffer ?? this.typeAheadBuffer,
       fileListScale: fileListScale ?? this.fileListScale,
       fileViewMode: fileViewMode ?? this.fileViewMode,
       showColumnSize: showColumnSize ?? this.showColumnSize,
@@ -2792,6 +2842,9 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     if (rememberFolderSort.present) {
       map['remember_folder_sort'] = Variable<bool>(rememberFolderSort.value);
     }
+    if (typeAheadBuffer.present) {
+      map['type_ahead_buffer'] = Variable<bool>(typeAheadBuffer.value);
+    }
     if (fileListScale.present) {
       map['file_list_scale'] = Variable<double>(fileListScale.value);
     }
@@ -2900,6 +2953,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
           ..write('searchMode: $searchMode, ')
           ..write('rememberFolderState: $rememberFolderState, ')
           ..write('rememberFolderSort: $rememberFolderSort, ')
+          ..write('typeAheadBuffer: $typeAheadBuffer, ')
           ..write('fileListScale: $fileListScale, ')
           ..write('fileViewMode: $fileViewMode, ')
           ..write('showColumnSize: $showColumnSize, ')
@@ -6212,6 +6266,7 @@ typedef $$AppSettingsTableCreateCompanionBuilder =
       Value<String> searchMode,
       Value<bool> rememberFolderState,
       Value<bool> rememberFolderSort,
+      Value<bool> typeAheadBuffer,
       Value<double> fileListScale,
       Value<String> fileViewMode,
       Value<bool> showColumnSize,
@@ -6267,6 +6322,7 @@ typedef $$AppSettingsTableUpdateCompanionBuilder =
       Value<String> searchMode,
       Value<bool> rememberFolderState,
       Value<bool> rememberFolderSort,
+      Value<bool> typeAheadBuffer,
       Value<double> fileListScale,
       Value<String> fileViewMode,
       Value<bool> showColumnSize,
@@ -6463,6 +6519,11 @@ class $$AppSettingsTableFilterComposer
 
   ColumnFilters<bool> get rememberFolderSort => $composableBuilder(
     column: $table.rememberFolderSort,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get typeAheadBuffer => $composableBuilder(
+    column: $table.typeAheadBuffer,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6736,6 +6797,11 @@ class $$AppSettingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get typeAheadBuffer => $composableBuilder(
+    column: $table.typeAheadBuffer,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<double> get fileListScale => $composableBuilder(
     column: $table.fileListScale,
     builder: (column) => ColumnOrderings(column),
@@ -6996,6 +7062,11 @@ class $$AppSettingsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<bool> get typeAheadBuffer => $composableBuilder(
+    column: $table.typeAheadBuffer,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<double> get fileListScale => $composableBuilder(
     column: $table.fileListScale,
     builder: (column) => column,
@@ -7152,6 +7223,7 @@ class $$AppSettingsTableTableManager
                 Value<String> searchMode = const Value.absent(),
                 Value<bool> rememberFolderState = const Value.absent(),
                 Value<bool> rememberFolderSort = const Value.absent(),
+                Value<bool> typeAheadBuffer = const Value.absent(),
                 Value<double> fileListScale = const Value.absent(),
                 Value<String> fileViewMode = const Value.absent(),
                 Value<bool> showColumnSize = const Value.absent(),
@@ -7205,6 +7277,7 @@ class $$AppSettingsTableTableManager
                 searchMode: searchMode,
                 rememberFolderState: rememberFolderState,
                 rememberFolderSort: rememberFolderSort,
+                typeAheadBuffer: typeAheadBuffer,
                 fileListScale: fileListScale,
                 fileViewMode: fileViewMode,
                 showColumnSize: showColumnSize,
@@ -7260,6 +7333,7 @@ class $$AppSettingsTableTableManager
                 Value<String> searchMode = const Value.absent(),
                 Value<bool> rememberFolderState = const Value.absent(),
                 Value<bool> rememberFolderSort = const Value.absent(),
+                Value<bool> typeAheadBuffer = const Value.absent(),
                 Value<double> fileListScale = const Value.absent(),
                 Value<String> fileViewMode = const Value.absent(),
                 Value<bool> showColumnSize = const Value.absent(),
@@ -7313,6 +7387,7 @@ class $$AppSettingsTableTableManager
                 searchMode: searchMode,
                 rememberFolderState: rememberFolderState,
                 rememberFolderSort: rememberFolderSort,
+                typeAheadBuffer: typeAheadBuffer,
                 fileListScale: fileListScale,
                 fileViewMode: fileViewMode,
                 showColumnSize: showColumnSize,

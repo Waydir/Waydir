@@ -46,6 +46,7 @@ class SettingsStore {
   final searchMode = signal<String>('substring');
   final rememberFolderState = signal<bool>(true);
   final rememberFolderSort = signal<bool>(true);
+  final typeAheadBuffer = signal<bool>(true);
   final fileListScale = signal<double>(1.0);
   final fileViewMode = signal<String>('list');
   final showColumnSize = signal<bool>(true);
@@ -119,6 +120,7 @@ class SettingsStore {
     searchMode.value = row.searchMode;
     rememberFolderState.value = row.rememberFolderState;
     rememberFolderSort.value = row.rememberFolderSort;
+    typeAheadBuffer.value = row.typeAheadBuffer;
     fileListScale.value = row.fileListScale;
     fileViewMode.value = row.fileViewMode;
     showColumnSize.value = row.showColumnSize;
@@ -228,6 +230,7 @@ class SettingsStore {
         searchMode.value;
         rememberFolderState.value;
         rememberFolderSort.value;
+        typeAheadBuffer.value;
         fileListScale.value;
         fileViewMode.value;
         showColumnSize.value;
@@ -294,6 +297,7 @@ class SettingsStore {
           searchMode: Value(searchMode.value),
           rememberFolderState: Value(rememberFolderState.value),
           rememberFolderSort: Value(rememberFolderSort.value),
+          typeAheadBuffer: Value(typeAheadBuffer.value),
           fileListScale: Value(fileListScale.value),
           fileViewMode: Value(fileViewMode.value),
           showColumnSize: Value(showColumnSize.value),

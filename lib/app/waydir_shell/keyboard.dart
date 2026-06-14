@@ -1,5 +1,17 @@
 part of '../waydir_shell.dart';
 
+const _digitKeys = [
+  LogicalKeyboardKey.digit1,
+  LogicalKeyboardKey.digit2,
+  LogicalKeyboardKey.digit3,
+  LogicalKeyboardKey.digit4,
+  LogicalKeyboardKey.digit5,
+  LogicalKeyboardKey.digit6,
+  LogicalKeyboardKey.digit7,
+  LogicalKeyboardKey.digit8,
+  LogicalKeyboardKey.digit9,
+];
+
 mixin _WaydirKeyboardMixin
     on
         State<WaydirShell>,
@@ -159,19 +171,16 @@ mixin _WaydirKeyboardMixin
     }
 
     if (ctrl) {
-      final digitKeys = [
-        LogicalKeyboardKey.digit1,
-        LogicalKeyboardKey.digit2,
-        LogicalKeyboardKey.digit3,
-        LogicalKeyboardKey.digit4,
-        LogicalKeyboardKey.digit5,
-        LogicalKeyboardKey.digit6,
-        LogicalKeyboardKey.digit7,
-        LogicalKeyboardKey.digit8,
-        LogicalKeyboardKey.digit9,
-      ];
-      final digitIdx = digitKeys.indexOf(key);
+      final digitIdx = _digitKeys.indexOf(key);
       if (digitIdx >= 0) {
+        if (shift) {
+          final bookmarks = BookmarkStore.instance.bookmarks.value;
+          if (digitIdx < bookmarks.length) {
+            _active.navigateTo(bookmarks[digitIdx].path);
+          }
+
+          return KeyEventResult.handled;
+        }
         _shell.activePane.value!.tabs.selectTab(digitIdx);
 
         return KeyEventResult.handled;
@@ -465,39 +474,57 @@ mixin _WaydirKeyboardMixin
   void _handleTypeAhead(NavigationStore store, String ch) {
     final files = store.visibleFiles.value;
     if (files.isEmpty) return;
+    final bufferEnabled = SettingsStore.instance.typeAheadBuffer.value;
     final now = DateTime.now();
     final lastAt = _typeAheadLastAt;
-    final sameLetter =
-        _typeAheadLetter == ch &&
-        lastAt != null &&
-        now.difference(lastAt) < _typeAheadResetAfter;
+    final withinWindow =
+        lastAt != null && now.difference(lastAt) < _typeAheadResetAfter;
+    final previous = withinWindow ? _typeAheadBuffer : '';
 
-    int startFrom;
-    if (sameLetter) {
-      startFrom = (_typeAheadIndex + 1) % files.length;
-    } else {
-      startFrom = 0;
+    int findFrom(String prefix, int start) {
+      for (int i = 0; i < files.length; i++) {
+        final idx = (start + i) % files.length;
+        if (files[idx].name.toLowerCase().startsWith(prefix)) return idx;
+      }
+
+      return -1;
     }
 
-    int found = -1;
-    for (int i = 0; i < files.length; i++) {
-      final idx = (startFrom + i) % files.length;
-      final name = files[idx].name.toLowerCase();
-      if (name.startsWith(ch)) {
-        found = idx;
-        break;
+    void commit(String buffer, int index) {
+      _typeAheadBuffer = buffer;
+      _typeAheadIndex = index;
+      _typeAheadLastAt = now;
+      store.jumpToIndex(index);
+    }
+
+    if (bufferEnabled && previous.isNotEmpty) {
+      final extended = previous + ch;
+      final hit = findFrom(extended, 0);
+      if (hit >= 0) {
+        commit(extended, hit);
+
+        return;
       }
     }
-    if (found < 0) {
-      _typeAheadLetter = null;
-      _typeAheadIndex = -1;
-      _typeAheadLastAt = null;
+
+    if (previous == ch) {
+      final hit = findFrom(ch, (_typeAheadIndex + 1) % files.length);
+      if (hit >= 0) {
+        commit(ch, hit);
+
+        return;
+      }
+    }
+
+    final fresh = findFrom(ch, 0);
+    if (fresh >= 0) {
+      commit(ch, fresh);
 
       return;
     }
-    _typeAheadLetter = ch;
-    _typeAheadIndex = found;
-    _typeAheadLastAt = now;
-    store.jumpToIndex(found);
+
+    _typeAheadBuffer = '';
+    _typeAheadIndex = -1;
+    _typeAheadLastAt = null;
   }
 }

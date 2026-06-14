@@ -2337,6 +2337,12 @@ class Translations$preferences$general$en {
 	/// en: 'Save and reuse the sort column and direction for each folder.'
 	String get rememberFolderSortHint => 'Save and reuse the sort column and direction for each folder.';
 
+	/// en: 'Type-ahead multi-letter jump'
+	String get typeAheadBuffer => 'Type-ahead multi-letter jump';
+
+	/// en: 'Quickly typed letters combine into a search string to jump to a matching item; pausing resets it. When off, each letter cycles through items starting with that letter.'
+	String get typeAheadBufferHint => 'Quickly typed letters combine into a search string to jump to a matching item; pausing resets it. When off, each letter cycles through items starting with that letter.';
+
 	/// en: 'Delete key behavior'
 	String get deleteKeyBehavior => 'Delete key behavior';
 
@@ -3403,6 +3409,8 @@ extension on Translations {
 			'preferences.general.rememberFolderStateHint' => 'Restore the cursor and selected files when you return to a folder.',
 			'preferences.general.rememberFolderSort' => 'Remember sort per folder',
 			'preferences.general.rememberFolderSortHint' => 'Save and reuse the sort column and direction for each folder.',
+			'preferences.general.typeAheadBuffer' => 'Type-ahead multi-letter jump',
+			'preferences.general.typeAheadBufferHint' => 'Quickly typed letters combine into a search string to jump to a matching item; pausing resets it. When off, each letter cycles through items starting with that letter.',
 			'preferences.general.deleteKeyBehavior' => 'Delete key behavior',
 			'preferences.general.deleteKeyBehaviorHint' => 'What the Delete key does by default. Shift+Delete always deletes permanently.',
 			'preferences.general.deleteKeyTrash' => 'Move to Trash',
@@ -3740,10 +3748,10 @@ extension on Translations {
 			'quickLook.dateTaken' => 'Date taken',
 			'quickLook.linePosition' => ({required Object line, required Object count}) => 'Ln ${line} / ${count}',
 			'quickLook.lines' => 'Lines',
-			'quickLook.characters' => 'Characters',
-			'quickLook.sectionGeneral' => 'General',
 			_ => null,
 		} ?? switch (path) {
+			'quickLook.characters' => 'Characters',
+			'quickLook.sectionGeneral' => 'General',
 			'quickLook.sectionStatistics' => 'Statistics',
 			'quickLook.sizeBreakdown' => 'Size breakdown',
 			'quickLook.typeBreakdown' => 'Type breakdown',

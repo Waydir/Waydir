@@ -27,7 +27,7 @@ mixin _WaydirStateBase on State<WaydirShell> {
   DateTime? _lastCursorRepeatAt;
   DateTime? _terminalInteractionAt;
 
-  String? _typeAheadLetter;
+  String _typeAheadBuffer = '';
   int _typeAheadIndex = -1;
   DateTime? _typeAheadLastAt;
 
