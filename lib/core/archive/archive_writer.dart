@@ -4,6 +4,7 @@ import 'package:archive/archive_io.dart';
 import 'package:path/path.dart' as p;
 
 import '../../i18n/strings.g.dart';
+import '../logging/app_logger.dart';
 import 'archive_reader.dart' show ArchiveReadException, ArchiveReader;
 
 enum ArchiveFormat { zip, tar, tarGz, tarBz2, tarXz }
@@ -82,7 +83,13 @@ class ArchiveWriter {
           if (!isDir) {
             try {
               size = File(e.path).lengthSync();
-            } catch (_) {
+            } catch (e, st) {
+              log.warn(
+                'archive',
+                'failed to read file size',
+                error: e,
+                stack: st,
+              );
               continue;
             }
           }
@@ -94,7 +101,13 @@ class ArchiveWriter {
         int size = 0;
         try {
           size = File(src).lengthSync();
-        } catch (_) {
+        } catch (e, st) {
+          log.warn(
+            'archive',
+            'failed to read source size',
+            error: e,
+            stack: st,
+          );
           continue;
         }
         out.add(_PlannedEntry(src, p.relative(src, from: base), false, size));
@@ -157,7 +170,14 @@ class ArchiveWriter {
             final stat = Directory(entry.absPath).statSync();
             af.mode = stat.mode;
             af.lastModTime = stat.modified.millisecondsSinceEpoch ~/ 1000;
-          } catch (_) {}
+          } catch (e, st) {
+            log.warn(
+              'archive',
+              'failed to stat directory entry',
+              error: e,
+              stack: st,
+            );
+          }
           encoder.add(af);
         } else {
           final name = _posix(entry.archiveName);
@@ -171,7 +191,14 @@ class ArchiveWriter {
               final stat = File(entry.absPath).statSync();
               af.mode = stat.mode;
               af.lastModTime = stat.modified.millisecondsSinceEpoch ~/ 1000;
-            } catch (_) {}
+            } catch (e, st) {
+              log.warn(
+                'archive',
+                'failed to stat file entry',
+                error: e,
+                stack: st,
+              );
+            }
             encoder.add(af, level: levelInt);
           } finally {
             inStream.closeSync();
@@ -183,15 +210,31 @@ class ArchiveWriter {
     } finally {
       try {
         encoder.endEncode();
-      } catch (_) {}
+      } catch (e, st) {
+        log.warn(
+          'archive',
+          'failed to finish zip encoder',
+          error: e,
+          stack: st,
+        );
+      }
       try {
         output.closeSync();
-      } catch (_) {}
+      } catch (e, st) {
+        log.warn('archive', 'failed to close zip output', error: e, stack: st);
+      }
       if (!ok) {
         try {
           final f = File(destPath);
           if (f.existsSync()) f.deleteSync();
-        } catch (_) {}
+        } catch (e, st) {
+          log.warn(
+            'archive',
+            'failed to remove incomplete archive',
+            error: e,
+            stack: st,
+          );
+        }
       }
     }
   }
@@ -214,7 +257,14 @@ class ArchiveWriter {
           final stat = Directory(entry.absPath).statSync();
           af.mode = stat.mode;
           af.lastModTime = stat.modified.millisecondsSinceEpoch ~/ 1000;
-        } catch (_) {}
+        } catch (e, st) {
+          log.warn(
+            'archive',
+            'failed to stat tar directory entry',
+            error: e,
+            stack: st,
+          );
+        }
         encoder.add(af);
       } else {
         final name = _posix(entry.archiveName);
@@ -228,7 +278,14 @@ class ArchiveWriter {
             final stat = File(entry.absPath).statSync();
             af.mode = stat.mode;
             af.lastModTime = stat.modified.millisecondsSinceEpoch ~/ 1000;
-          } catch (_) {}
+          } catch (e, st) {
+            log.warn(
+              'archive',
+              'failed to stat tar file entry',
+              error: e,
+              stack: st,
+            );
+          }
           encoder.add(af);
         } finally {
           inStream.closeSync();
@@ -270,7 +327,14 @@ class ArchiveWriter {
           } finally {
             try {
               output.closeSync();
-            } catch (_) {}
+            } catch (e, st) {
+              log.warn(
+                'archive',
+                'failed to close tar output',
+                error: e,
+                stack: st,
+              );
+            }
           }
         case ArchiveFormat.tarGz:
         case ArchiveFormat.tarBz2:
@@ -298,11 +362,25 @@ class ArchiveWriter {
         try {
           final f = File(destPath);
           if (f.existsSync() && f.path == stagedPath) f.deleteSync();
-        } catch (_) {}
+        } catch (e, st) {
+          log.warn(
+            'archive',
+            'failed to remove staged archive',
+            error: e,
+            stack: st,
+          );
+        }
       }
       try {
         tmpDir.deleteSync(recursive: true);
-      } catch (_) {}
+      } catch (e, st) {
+        log.warn(
+          'archive',
+          'failed to remove archive temp dir',
+          error: e,
+          stack: st,
+        );
+      }
     }
   }
 
@@ -324,7 +402,14 @@ class ArchiveWriter {
     } finally {
       try {
         tarOut.closeSync();
-      } catch (_) {}
+      } catch (e, st) {
+        log.warn(
+          'archive',
+          'failed to close intermediate tar',
+          error: e,
+          stack: st,
+        );
+      }
     }
     if (isCancelled != null && isCancelled()) return;
 
@@ -355,13 +440,34 @@ class ArchiveWriter {
     } finally {
       try {
         input.closeSync();
-      } catch (_) {}
+      } catch (e, st) {
+        log.warn(
+          'archive',
+          'failed to close compression input',
+          error: e,
+          stack: st,
+        );
+      }
       try {
         output.closeSync();
-      } catch (_) {}
+      } catch (e, st) {
+        log.warn(
+          'archive',
+          'failed to close compression output',
+          error: e,
+          stack: st,
+        );
+      }
       try {
         File(tarPath).deleteSync();
-      } catch (_) {}
+      } catch (e, st) {
+        log.warn(
+          'archive',
+          'failed to delete intermediate tar',
+          error: e,
+          stack: st,
+        );
+      }
     }
   }
 
@@ -410,7 +516,14 @@ class ArchiveWriter {
     var count = 0;
     try {
       count += ArchiveReader.listEntries(archivePath).length;
-    } catch (_) {}
+    } catch (e, st) {
+      log.warn(
+        'archive',
+        'failed to count existing archive entries',
+        error: e,
+        stack: st,
+      );
+    }
     count += planCount(addSources);
     return count;
   }
@@ -498,7 +611,14 @@ class ArchiveWriter {
     } finally {
       try {
         work.deleteSync(recursive: true);
-      } catch (_) {}
+      } catch (e, st) {
+        log.warn(
+          'archive',
+          'failed to remove archive edit temp dir',
+          error: e,
+          stack: st,
+        );
+      }
     }
   }
 }

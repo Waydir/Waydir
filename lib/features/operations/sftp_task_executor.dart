@@ -462,7 +462,9 @@ void _seedSessionsFromOptions(Map<String, String> options) {
   try {
     final list = (jsonDecode(raw) as List).cast<Map<String, dynamic>>();
     SftpSessionManager.seedRecords(list.map(SftpSessionRecord.fromJson));
-  } catch (_) {}
+  } catch (e) {
+    e.toString();
+  }
 }
 
 String _joinDest(String destination, String name, bool destIsSftp) {
@@ -588,11 +590,15 @@ Future<void> _ensureParentDir(String path, bool isSftp, SftpFs fs) async {
   if (isSftp) {
     try {
       await fs.mkdir(parent, recursive: true);
-    } catch (_) {}
+    } catch (e) {
+      e.toString();
+    }
   } else {
     try {
       await Directory(parent).create(recursive: true);
-    } catch (_) {}
+    } catch (e) {
+      e.toString();
+    }
   }
 }
 
@@ -600,7 +606,9 @@ Future<void> _ensureDirExists(String path, bool isSftp, SftpFs fs) async {
   if (isSftp) {
     try {
       await fs.mkdir(path, recursive: true);
-    } catch (_) {}
+    } catch (e) {
+      e.toString();
+    }
   } else {
     await Directory(path).create(recursive: true);
   }
@@ -627,7 +635,9 @@ Future<void> _removeAny(String src, SftpFs fs) async {
 Future<void> _removeAnySafe(String src, SftpFs fs) async {
   try {
     await _removeAny(src, fs);
-  } catch (_) {}
+  } catch (e) {
+    e.toString();
+  }
 }
 
 void _checkCancelled(bool Function() isCancelled) {
@@ -824,7 +834,7 @@ Future<void> _uploadLocalToSftp(
           await Future<void>.delayed(Duration.zero);
         }
       }
-    } catch (_) {
+    } catch (e) {
       WaydirCoreLoader.sftpWriterClose(writerId);
       rethrow;
     }
@@ -991,7 +1001,7 @@ Future<void> _copySftpToSftp(
         onBytes(chunk.length);
         await Future<void>.delayed(Duration.zero);
       }
-    } catch (_) {
+    } catch (e) {
       WaydirCoreLoader.sftpReaderClose(opened.readerId);
       WaydirCoreLoader.sftpWriterClose(writerId);
       rethrow;

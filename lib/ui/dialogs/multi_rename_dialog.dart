@@ -134,7 +134,7 @@ class _MultiRenameBodyState extends State<_MultiRenameBody> {
       try {
         final regex = RegExp(find, caseSensitive: _caseSensitive);
         newName = entry.name.replaceAll(regex, expandedReplace);
-      } catch (_) {
+      } catch (e) {
         newName = entry.name;
       }
     } else {

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:waydir/ui/icons/waydir_icons.dart';
 
 import '../../core/models/file_entry.dart';
+import '../../core/logging/app_logger.dart';
 import '../../core/open/open_service.dart';
 import '../../i18n/strings.g.dart';
 import '../theme/app_text_styles.dart';
@@ -58,7 +59,13 @@ class _OpenWithBodyState extends State<_OpenWithBody> {
       options = await OpenService.optionsFor(
         path,
       ).timeout(const Duration(seconds: 10));
-    } catch (_) {
+    } catch (e, st) {
+      log.warn(
+        'open-with',
+        'failed to load open-with options',
+        error: e,
+        stack: st,
+      );
       options = const OpenWithOptions(
         mime: MimeType.unknown,
         recent: [],
@@ -70,7 +77,8 @@ class _OpenWithBodyState extends State<_OpenWithBody> {
     List<AppEntry> all;
     try {
       all = await OpenService.allApps().timeout(const Duration(seconds: 12));
-    } catch (_) {
+    } catch (e, st) {
+      log.warn('open-with', 'failed to load app list', error: e, stack: st);
       all = const [];
     }
     _selected ??=
@@ -96,7 +104,13 @@ class _OpenWithBodyState extends State<_OpenWithBody> {
       }
       await OpenService.openWith(app, [widget.entry.realPath]);
       if (mounted) Navigator.of(context).pop();
-    } catch (_) {
+    } catch (e, st) {
+      log.error(
+        'open-with',
+        'failed to open selected app',
+        error: e,
+        stack: st,
+      );
       if (mounted) {
         setState(() {
           _busy = false;

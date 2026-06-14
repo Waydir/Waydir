@@ -10,6 +10,7 @@ import 'package:signals/signals_flutter.dart';
 import 'package:waydir/ui/icons/waydir_icons.dart';
 
 import '../../core/fs/sftp_fs.dart';
+import '../../core/logging/app_logger.dart';
 import '../../core/platform/platform_paths.dart';
 import '../../core/settings/settings_store.dart';
 import '../../i18n/strings.g.dart';
@@ -123,7 +124,8 @@ class _CodeEditorState extends State<CodeEditor> {
       });
       widget.controller?.dirty.value = _dirty;
       return true;
-    } catch (_) {
+    } catch (e, st) {
+      log.error('quick-look', 'code editor save failed', error: e, stack: st);
       if (!mounted) return false;
       setState(() {
         _saving = false;

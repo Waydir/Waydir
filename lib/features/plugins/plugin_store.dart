@@ -55,7 +55,6 @@ class PluginStore {
     }
     plugins.value = loaded;
     _syncShortcuts();
-    log.warn('plugins', 'loaded ${loaded.length} plugin(s) from $dirPath');
   }
 
   void _syncShortcuts() {

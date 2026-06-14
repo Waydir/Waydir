@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:waydir/ui/icons/waydir_icons.dart';
 import 'package:signals/signals_flutter.dart';
 import '../../core/fs/file_system_service.dart';
+import '../../core/logging/app_logger.dart';
 import '../../core/models/file_entry.dart';
 import '../../core/platform/platform_paths.dart';
 import '../../core/settings/settings_store.dart';
@@ -592,7 +593,13 @@ class _PathBarState extends State<_PathBar> {
             icon: WaydirIconsRegular.clockClockwise,
           ),
       ];
-    } catch (_) {
+    } catch (e, st) {
+      log.warn(
+        'navigation',
+        'recent path suggestions failed',
+        error: e,
+        stack: st,
+      );
       return const [];
     }
   }
@@ -639,7 +646,13 @@ class _PathBarState extends State<_PathBar> {
         if (suggestions.length >= _maxSuggestions) break;
       }
       return suggestions;
-    } catch (_) {
+    } catch (e, st) {
+      log.warn(
+        'navigation',
+        'folder path suggestions failed',
+        error: e,
+        stack: st,
+      );
       return const [];
     }
   }

@@ -5,6 +5,7 @@ import 'package:ffi/ffi.dart';
 import 'package:win32/win32.dart';
 
 import 'drive_model.dart';
+import '../../core/logging/app_logger.dart';
 import '../../core/platform/platform_paths.dart';
 import '../../i18n/strings.g.dart';
 
@@ -157,7 +158,8 @@ class _WindowsDriveService implements DriveService {
       if (result != 0) return null;
       final unc = remote.toDartString();
       return unc.isEmpty ? null : unc;
-    } catch (_) {
+    } catch (e, st) {
+      log.warn('drives', 'network drive lookup failed', error: e, stack: st);
       return null;
     } finally {
       free(local);
@@ -175,7 +177,13 @@ class _WindowsDriveService implements DriveService {
       final ok = GetDiskFreeSpaceEx(path, freeToCaller, total, free);
       if (ok == 0 || total.value <= 0) return null;
       return DriveSpace(totalBytes: total.value, freeBytes: free.value);
-    } catch (_) {
+    } catch (e, st) {
+      log.warn(
+        'drives',
+        'windows drive space lookup failed',
+        error: e,
+        stack: st,
+      );
       return null;
     } finally {
       calloc.free(path);
@@ -218,7 +226,8 @@ class _LinuxDriveService implements DriveService {
       }
 
       return drives;
-    } catch (e) {
+    } catch (e, st) {
+      log.warn('drives', 'linux drive discovery failed', error: e, stack: st);
       return [];
     }
   }
@@ -315,7 +324,14 @@ class _LinuxDriveService implements DriveService {
             'uid=${uidRes.stdout.toString().trim()},gid=${gidRes.stdout.toString().trim()}',
           ];
         }
-      } catch (_) {}
+      } catch (e, st) {
+        log.warn(
+          'drives',
+          'failed to read user ids for mount options',
+          error: e,
+          stack: st,
+        );
+      }
     }
 
     await _runSudoWithPassword(['mount', ...options, drive.id, mnt], password);
@@ -383,7 +399,14 @@ class _MacDriveService implements DriveService {
                   output.contains('Protocol: USB') ||
                   output.contains('Protocol:    USB');
             }
-          } catch (_) {}
+          } catch (e, st) {
+            log.warn(
+              'drives',
+              'mac removable drive detection failed',
+              error: e,
+              stack: st,
+            );
+          }
         }
 
         drives.add(
@@ -399,7 +422,8 @@ class _MacDriveService implements DriveService {
       }
 
       return drives;
-    } catch (_) {
+    } catch (e, st) {
+      log.warn('drives', 'mac drive discovery failed', error: e, stack: st);
       return [];
     }
   }
@@ -430,7 +454,8 @@ Future<DriveSpace?> _unixSpace(String path) async {
         .toList();
     if (lines.length < 2) return null;
     return _spaceFromDfParts(lines.last.trim().split(RegExp(r'\s+')));
-  } catch (_) {
+  } catch (e, st) {
+    log.warn('drives', 'drive space lookup failed', error: e, stack: st);
     return null;
   }
 }

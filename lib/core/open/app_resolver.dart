@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:path/path.dart' as p;
 
 import '../../i18n/strings.g.dart';
+import '../logging/app_logger.dart';
 import '../platform/win32_attributes.dart';
 import 'app_entry.dart';
 import 'desktop_entry.dart';
@@ -104,7 +105,14 @@ class LinuxAppResolver implements AppResolver {
           final entry = DesktopEntry.parse(await f.readAsString());
           if (entry == null || !entry.isLaunchable) continue;
           apps[id] = _LinuxApp(id, entry);
-        } catch (_) {}
+        } catch (e, st) {
+          log.warn(
+            'open',
+            'failed to parse desktop entry ${f.path}',
+            error: e,
+            stack: st,
+          );
+        }
       }
     }
     return _cache = apps.values.toList();
@@ -154,7 +162,9 @@ class LinuxAppResolver implements AppResolver {
       for (final a in all) {
         if (a.id == id) return _toEntry(a, isDefault: true);
       }
-    } catch (_) {}
+    } catch (e, st) {
+      log.warn('open', 'xdg default app lookup failed', error: e, stack: st);
+    }
     return null;
   }
 
@@ -256,7 +266,9 @@ class MacAppResolver implements AppResolver {
           );
         }
       }
-    } catch (_) {}
+    } catch (e, st) {
+      log.warn('open', 'mac default app lookup failed', error: e, stack: st);
+    }
     return null;
   }
 
@@ -273,7 +285,8 @@ class MacAppResolver implements AppResolver {
     try {
       final r = await Process.run('which', ['duti']);
       return r.exitCode == 0;
-    } catch (_) {
+    } catch (e, st) {
+      log.warn('open', 'duti availability check failed', error: e, stack: st);
       return false;
     }
   }
@@ -306,7 +319,8 @@ class MacAppResolver implements AppResolver {
       ]);
       final out = (r.stdout as String).trim();
       return (out.isEmpty || out == '(null)') ? null : out;
-    } catch (_) {
+    } catch (e, st) {
+      log.warn('open', 'bundle id lookup failed', error: e, stack: st);
       return null;
     }
   }
@@ -381,7 +395,9 @@ class WindowsAppResolver implements AppResolver {
           apps.putIfAbsent(exe, () => AppEntry(id: exe, name: name, exec: exe));
         }
       }
-    } catch (_) {}
+    } catch (e, st) {
+      log.warn('open', 'windows app enumeration failed', error: e, stack: st);
+    }
     final list = apps.values.toList()
       ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
     return _allCache = list;
@@ -406,7 +422,13 @@ class WindowsAppResolver implements AppResolver {
       exe = assocQueryStringOnWindows(assocStrExecutable, assoc);
       friendly = assocQueryStringOnWindows(assocStrFriendlyAppName, assoc);
       command = assocQueryStringOnWindows(assocStrCommand, assoc);
-    } catch (_) {
+    } catch (e, st) {
+      log.warn(
+        'open',
+        'windows association lookup failed',
+        error: e,
+        stack: st,
+      );
       return null;
     }
     if ((exe == null || exe.isEmpty) && (command == null || command.isEmpty)) {
@@ -453,9 +475,13 @@ class WindowsAppResolver implements AppResolver {
         argv.sublist(1),
         mode: ProcessStartMode.detached,
       );
-    } catch (_) {
-      // Last resort: let the shell open it with the default handler so the
-      // user at least sees the file rather than a crash.
+    } catch (e, st) {
+      log.warn(
+        'open',
+        'windows command template launch failed',
+        error: e,
+        stack: st,
+      );
       shellOpenOnWindows(paths.first);
     }
   }
@@ -519,7 +545,13 @@ class WindowsAppResolver implements AppResolver {
           .map((l) => l.split(RegExp(r'\s+')).first)
           .where((s) => s.isNotEmpty)
           .toList();
-    } catch (_) {
+    } catch (e, st) {
+      log.warn(
+        'open',
+        'windows OpenWithProgids lookup failed',
+        error: e,
+        stack: st,
+      );
       return const [];
     }
   }

@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:ffi/ffi.dart';
 
+import '../logging/app_logger.dart';
+
 // Linux open() flags (x86_64/arm64 share these values).
 const int _oRdonly = 0;
 const int _oWronly = 1;
@@ -51,7 +53,14 @@ class NativeCopy {
     try {
       if (Platform.isLinux) return DynamicLibrary.open('libc.so.6');
       if (Platform.isMacOS) return DynamicLibrary.process();
-    } catch (_) {}
+    } catch (e, st) {
+      log.warn(
+        'fs.copy',
+        'native copy library open failed',
+        error: e,
+        stack: st,
+      );
+    }
     return null;
   }
 
@@ -94,10 +103,18 @@ class NativeCopy {
       if (ok && onProgress != null) {
         try {
           onProgress(File(src).lengthSync());
-        } catch (_) {}
+        } catch (e, st) {
+          log.warn(
+            'fs.copy',
+            'fast copy progress stat failed',
+            error: e,
+            stack: st,
+          );
+        }
       }
       return ok;
-    } catch (_) {
+    } catch (e, st) {
+      log.warn('fs.copy', 'mac clonefile failed', error: e, stack: st);
       return false;
     } finally {
       calloc.free(s);
@@ -122,7 +139,13 @@ class NativeCopy {
     final int total;
     try {
       total = File(src).lengthSync();
-    } catch (_) {
+    } catch (e, st) {
+      log.warn(
+        'fs.copy',
+        'fast copy source length failed',
+        error: e,
+        stack: st,
+      );
       return FastCopyResult.unsupported;
     }
 
@@ -163,18 +186,23 @@ class NativeCopy {
         }
       }
       return remaining == 0 ? FastCopyResult.done : FastCopyResult.unsupported;
-    } catch (_) {
+    } catch (e, st) {
+      log.warn('fs.copy', 'linux copy_file_range failed', error: e, stack: st);
       return FastCopyResult.unsupported;
     } finally {
       if (fdIn >= 0) {
         try {
           close(fdIn);
-        } catch (_) {}
+        } catch (e, st) {
+          log.warn('fs.copy', 'failed to close input fd', error: e, stack: st);
+        }
       }
       if (fdOut >= 0) {
         try {
           close(fdOut);
-        } catch (_) {}
+        } catch (e, st) {
+          log.warn('fs.copy', 'failed to close output fd', error: e, stack: st);
+        }
       }
       calloc.free(sPtr);
       calloc.free(dPtr);

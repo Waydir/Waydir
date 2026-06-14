@@ -110,7 +110,13 @@ class OperationStore {
     final List<String> resolved;
     try {
       resolved = await FileSystemService.materializeArchiveSources(sources);
-    } catch (_) {
+    } catch (e, st) {
+      log.error(
+        'operation',
+        'failed to materialize archive sources',
+        error: e,
+        stack: st,
+      );
       return;
     }
     final sep = PlatformPaths.isSftpUri(destination)
@@ -439,7 +445,14 @@ class OperationStore {
         try {
           final f = File(dest);
           if (f.existsSync()) f.deleteSync();
-        } catch (_) {}
+        } catch (e, st) {
+          log.warn(
+            'operation',
+            'failed to remove cancelled archive',
+            error: e,
+            stack: st,
+          );
+        }
         _cleanupArchiveTempDirs(p.dirname(dest), '.waydir-archive-pack-');
       }
     } else if (task.type == TaskType.archiveEdit) {
@@ -459,10 +472,24 @@ class OperationStore {
         if (e is Directory && p.basename(e.path).startsWith(prefix)) {
           try {
             e.deleteSync(recursive: true);
-          } catch (_) {}
+          } catch (e, st) {
+            log.warn(
+              'operation',
+              'failed to remove archive temp dir',
+              error: e,
+              stack: st,
+            );
+          }
         }
       }
-    } catch (_) {}
+    } catch (e, st) {
+      log.warn(
+        'operation',
+        'failed to scan archive temp dirs',
+        error: e,
+        stack: st,
+      );
+    }
   }
 
   void resolveCurrentConflict(
@@ -796,14 +823,28 @@ class OperationStore {
             } else {
               entity.deleteSync();
             }
-          } catch (_) {}
+          } catch (e, st) {
+            log.warn(
+              'operation',
+              'failed to remove local temp file',
+              error: e,
+              stack: st,
+            );
+          }
           continue;
         }
         if (depth > 0 && entity is Directory) {
           _cleanupLocalTempFiles(entity.path, depth: depth - 1);
         }
       }
-    } catch (_) {}
+    } catch (e, st) {
+      log.warn(
+        'operation',
+        'failed to scan local temp files',
+        error: e,
+        stack: st,
+      );
+    }
   }
 
   bool _shouldExecuteSftp(FileTask task) {
@@ -1114,7 +1155,13 @@ class OperationStore {
   static String _canonicalPath(String path) {
     try {
       return File(path).resolveSymbolicLinksSync();
-    } catch (_) {
+    } catch (e, st) {
+      log.warn(
+        'operation',
+        'canonical path resolution failed',
+        error: e,
+        stack: st,
+      );
       return p.normalize(p.absolute(path));
     }
   }

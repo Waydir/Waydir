@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:signals/signals.dart';
 
+import '../../core/logging/app_logger.dart';
 import '../../i18n/strings.g.dart';
 
 enum RepoState { clean, merging, rebasing, cherryPicking, reverting, bisecting }
@@ -424,8 +425,28 @@ class GitStatusStore {
         },
       );
       if (timedOut) {
-        unawaited(stdoutF.catchError((_) => ''));
-        unawaited(stderrF.catchError((_) => ''));
+        unawaited(
+          stdoutF.catchError((e, st) {
+            log.warn(
+              'git',
+              'failed to drain timed-out git stdout',
+              error: e,
+              stack: st,
+            );
+            return '';
+          }),
+        );
+        unawaited(
+          stderrF.catchError((e, st) {
+            log.warn(
+              'git',
+              'failed to drain timed-out git stderr',
+              error: e,
+              stack: st,
+            );
+            return '';
+          }),
+        );
         return null;
       }
       return ProcessResult(p.pid, exitCode, await stdoutF, await stderrF);

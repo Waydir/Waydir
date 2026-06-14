@@ -4,6 +4,8 @@ import 'package:ffi/ffi.dart';
 import 'package:path/path.dart' as p;
 import 'package:xdg_directories/xdg_directories.dart' as xdg;
 
+import '../logging/app_logger.dart';
+
 class PlatformPaths {
   PlatformPaths._();
 
@@ -67,7 +69,8 @@ class PlatformPaths {
     final ptr = _windowsDriveRoot(cleaned).toNativeUtf16();
     try {
       return fn(ptr) == 4; // DRIVE_REMOTE
-    } catch (_) {
+    } catch (e, st) {
+      log.warn('platform', 'GetDriveType failed', error: e, stack: st);
       return false;
     } finally {
       malloc.free(ptr);
@@ -83,7 +86,8 @@ class PlatformPaths {
             Uint32 Function(Pointer<Utf16>),
             int Function(Pointer<Utf16>)
           >('GetDriveTypeW');
-    } catch (_) {
+    } catch (e, st) {
+      log.warn('platform', 'GetDriveType lookup failed', error: e, stack: st);
       _getDriveType = null;
     }
     return _getDriveType;
@@ -214,7 +218,13 @@ class PlatformPaths {
     try {
       final dir = xdg.getUserDirectory(key);
       return dir?.path;
-    } catch (_) {
+    } catch (e, st) {
+      log.warn(
+        'platform',
+        'XDG user directory lookup failed',
+        error: e,
+        stack: st,
+      );
       return null;
     }
   }
@@ -346,7 +356,9 @@ class PlatformPaths {
         if (Directory(root).existsSync()) {
           drives.add(root);
         }
-      } catch (_) {}
+      } catch (e, st) {
+        log.warn('platform', 'windows drive probe failed', error: e, stack: st);
+      }
     }
     return drives;
   }

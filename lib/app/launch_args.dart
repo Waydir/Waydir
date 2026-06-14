@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import '../core/logging/app_logger.dart';
 import '../core/platform/platform_paths.dart';
 
 class LaunchOptions {
@@ -116,7 +117,9 @@ Options:
       if (File(normalized).existsSync()) {
         return _ResolvedPath(normalized, false);
       }
-    } catch (_) {}
+    } catch (e, st) {
+      log.warn('launch', 'failed to resolve launch path', error: e, stack: st);
+    }
     return null;
   }
 }

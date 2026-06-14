@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:exif/exif.dart';
 
 import '../../core/fs/sftp_fs.dart';
+import '../../core/logging/app_logger.dart';
 import '../../core/models/file_entry.dart';
 import '../../core/platform/platform_paths.dart';
 import '../../i18n/strings.g.dart';
@@ -74,7 +75,8 @@ Future<QlSection?> imageInfo(FileEntry e) async {
     if (fl != null) rows.add(MapEntry(t.quickLook.focalLength, '$fl mm'));
     final dt = tag('EXIF DateTimeOriginal');
     if (dt != null) rows.add(MapEntry(t.quickLook.dateTaken, dt));
-  } catch (_) {
+  } catch (e, st) {
+    log.warn('quick-look', 'image metadata read failed', error: e, stack: st);
     return null;
   }
   if (rows.isEmpty) return null;
@@ -110,7 +112,8 @@ Future<Probe> probeFile(FileEntry entry) async {
       return const Probe(QlKind.binary);
     }
     return Probe(QlKind.text, text: utf8.decode(bytes, allowMalformed: true));
-  } catch (_) {
+  } catch (e, st) {
+    log.warn('quick-look', 'file preview read failed', error: e, stack: st);
     return Probe(QlKind.error, note: t.quickLook.readError);
   }
 }

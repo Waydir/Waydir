@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import '../logging/app_logger.dart';
+
 class SystemFonts {
   SystemFonts._();
 
@@ -44,7 +46,9 @@ class SystemFonts {
           final family = line.split(',').first.trim();
           if (family.isNotEmpty) names.add(family);
         }
-      } catch (_) {}
+      } catch (e, st) {
+        log.warn('terminal', 'font discovery failed', error: e, stack: st);
+      }
     }
     return names.toList();
   }

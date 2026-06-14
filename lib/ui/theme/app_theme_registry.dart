@@ -148,7 +148,14 @@ class AppThemeRegistry {
         return;
       }
       _themes.add(theme);
-    } catch (_) {}
+    } catch (e, st) {
+      log.warn(
+        'theme',
+        'failed to load theme file ${file.path}',
+        error: e,
+        stack: st,
+      );
+    }
   }
 }
 

@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 import '../archive/archive_path.dart';
 import '../archive/archive_reader.dart';
 import '../archive/archive_writer.dart';
+import '../logging/app_logger.dart';
 import '../models/file_entry.dart';
 import '../models/file_operation.dart';
 import '../open/open_service.dart';
@@ -672,7 +673,11 @@ class FileSystemService {
                 final sz = FileStat.statSync(path).size;
                 rootBytes += sz;
                 totalBytes += sz;
-              } catch (_) {}
+              } catch (e) {
+                final msg = _friendlyError(e);
+                errors.add(TaskError(path: path, message: msg));
+                mainSendPort.send(ErrorMessage(path: path, message: msg));
+              }
             }
           },
           (errorPath, errorMsg) {
@@ -713,7 +718,11 @@ class FileSystemService {
             final sz = FileStat.statSync(src).size;
             sourceRootBytes[src] = sz;
             totalBytes += sz;
-          } catch (_) {}
+          } catch (e) {
+            final msg = _friendlyError(e);
+            errors.add(TaskError(path: src, message: msg));
+            mainSendPort.send(ErrorMessage(path: src, message: msg));
+          }
           final targetStat = FileStat.statSync(targetPath);
           if (targetStat.type != FileSystemEntityType.notFound) {
             final sourceStat = FileStat.statSync(src);
@@ -1472,7 +1481,11 @@ class FileSystemService {
                   ),
                 );
               }
-            } catch (_) {}
+            } catch (e) {
+              final msg = _friendlyError(e);
+              errors.add(TaskError(path: src, message: msg));
+              mainSendPort.send(ErrorMessage(path: src, message: msg));
+            }
           }
           mainSendPort.send(
             PreScanResultMessage(
@@ -1587,7 +1600,13 @@ class FileSystemService {
         try {
           final f = File(destination!);
           if (f.existsSync()) f.deleteSync();
-        } catch (_) {}
+        } catch (e) {
+          final msg = _friendlyError(e);
+          errors.add(TaskError(path: destination ?? '', message: msg));
+          mainSendPort.send(
+            ErrorMessage(path: destination ?? '', message: msg),
+          );
+        }
       }
       mainSendPort.send(
         ProgressMessage(
@@ -2017,7 +2036,9 @@ class FileSystemService {
       if (entity is Link) {
         try {
           Link(newPath).createSync(entity.targetSync());
-        } catch (_) {}
+        } catch (e) {
+          throw FileSystemException(_friendlyError(e), newPath);
+        }
       } else if (entity is Directory) {
         await _copyDirectory(
           entity,
@@ -2044,7 +2065,8 @@ class FileSystemService {
   static String _resolveCanonical(String path) {
     try {
       return File(path).resolveSymbolicLinksSync();
-    } catch (_) {
+    } catch (e, st) {
+      log.warn('fs', 'canonical path resolution failed', error: e, stack: st);
       return path;
     }
   }

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 
 import '../fs/waydir_core_loader.dart';
+import '../logging/app_logger.dart';
 import 'platform_paths.dart';
 
 /// Virtual path that represents the user's trash / recycle bin.
@@ -144,7 +145,8 @@ class TrashRepository {
       FileStat stat;
       try {
         stat = ent.statSync();
-      } catch (_) {
+      } catch (e, st) {
+        log.warn('trash', 'failed to stat trash entry', error: e, stack: st);
         continue;
       }
       final info = _readTrashInfo(p.join(infoDir, '$name.trashinfo'));
@@ -191,7 +193,13 @@ class TrashRepository {
       FileStat stat;
       try {
         stat = ent.statSync();
-      } catch (_) {
+      } catch (e, st) {
+        log.warn(
+          'trash',
+          'failed to stat mac trash entry',
+          error: e,
+          stack: st,
+        );
         continue;
       }
       final vpath = '$kTrashPath/$name';
@@ -240,7 +248,8 @@ class TrashRepository {
       FileStat stat;
       try {
         stat = ent.statSync();
-      } catch (_) {
+      } catch (e, st) {
+        log.warn('trash', 'failed to stat trash child', error: e, stack: st);
         continue;
       }
       out.add(
@@ -331,14 +340,15 @@ class TrashRepository {
       String original;
       try {
         original = Uri.decodeFull(rawPath);
-      } catch (_) {
+      } catch (e) {
         original = rawPath;
       }
       return _TrashInfo(
         originalPath: original,
         deletedAt: rawDate == null ? null : DateTime.tryParse(rawDate),
       );
-    } catch (_) {
+    } catch (e, st) {
+      log.warn('trash', 'failed to read trash metadata', error: e, stack: st);
       return null;
     }
   }

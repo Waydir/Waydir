@@ -46,7 +46,14 @@ void main(List<String> args) async {
       LocaleSettings.useDeviceLocale();
       try {
         await initializeDateFormatting();
-      } catch (_) {}
+      } catch (e, st) {
+        log.warn(
+          'i18n',
+          'date formatting initialization failed',
+          error: e,
+          stack: st,
+        );
+      }
       FsBackendRegistry.registerLocal(const LocalFs());
       FsBackendRegistry.register(const SftpFs());
       unawaited(FsWorkerPool.instance.ensureStarted());

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:signals/signals.dart';
+import '../../core/logging/app_logger.dart';
 import 'drive_model.dart';
 import 'drive_service.dart';
 
@@ -23,7 +24,9 @@ class DriveStore {
     try {
       final updatedDrives = await _service.getDrives();
       drives.value = updatedDrives;
-    } catch (_) {}
+    } catch (e, st) {
+      log.warn('drives', 'drive refresh failed', error: e, stack: st);
+    }
   }
 
   Future<void> mount(Drive drive) async {
@@ -40,7 +43,9 @@ class DriveStore {
     try {
       await _service.unmount(drive);
       await _refresh();
-    } catch (_) {}
+    } catch (e, st) {
+      log.warn('drives', 'drive unmount failed', error: e, stack: st);
+    }
   }
 
   void dispose() {

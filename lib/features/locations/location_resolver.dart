@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:path/path.dart' as p;
 
 import '../../core/fs/sftp_session_manager.dart';
+import '../../core/logging/app_logger.dart';
 import '../../core/platform/platform_paths.dart';
 import '../../i18n/strings.g.dart';
 import 'location_uri.dart';
@@ -183,7 +184,14 @@ class LocationResolver {
         try {
           final dir = Directory(physical);
           if (dir.existsSync()) dir.deleteSync();
-        } catch (_) {}
+        } catch (e, st) {
+          log.warn(
+            'locations',
+            'failed to remove SMB mount directory',
+            error: e,
+            stack: st,
+          );
+        }
       }
       return;
     }
@@ -476,7 +484,14 @@ class LocationResolver {
       try {
         final dir = Directory(mountPoint);
         if (dir.existsSync() && dir.listSync().isEmpty) dir.deleteSync();
-      } catch (_) {}
+      } catch (e, st) {
+        log.warn(
+          'locations',
+          'failed to remove SMB mount directory',
+          error: e,
+          stack: st,
+        );
+      }
       final err = (result.stderr as String? ?? '').trim();
       final lower = err.toLowerCase();
       final authLike =
@@ -566,7 +581,13 @@ class LocationResolver {
     _logicalToPhysical.removeWhere((_, physical) {
       try {
         return !Directory(physical).existsSync();
-      } catch (_) {
+      } catch (e, st) {
+        log.warn(
+          'locations',
+          'failed to prune stale mount mapping',
+          error: e,
+          stack: st,
+        );
         return true;
       }
     });
@@ -643,7 +664,9 @@ class LocationResolver {
       if (r.exitCode == 0) {
         return (r.stdout as String).trim();
       }
-    } catch (_) {}
+    } catch (e, st) {
+      log.warn('locations', 'failed to read process uid', error: e, stack: st);
+    }
     return null;
   }
 }

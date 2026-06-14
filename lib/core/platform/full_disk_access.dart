@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import '../logging/app_logger.dart';
+
 const _fullDiskAccessPaneUrl =
     'x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles';
 
@@ -19,7 +21,8 @@ Future<bool> hasFullDiskAccess() async {
     return true;
   } on FileSystemException {
     return false;
-  } catch (_) {
+  } catch (e, st) {
+    log.warn('platform', 'full disk access probe failed', error: e, stack: st);
     return false;
   }
 }

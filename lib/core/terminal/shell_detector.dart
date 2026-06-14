@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import '../logging/app_logger.dart';
+
 /// A shell available on the system that the built-in terminal can launch.
 class ShellOption {
   /// Stored setting value: an absolute path to the shell executable.
@@ -57,7 +59,9 @@ class ShellDetector {
           add(s);
         }
       }
-    } catch (_) {}
+    } catch (e, st) {
+      log.warn('terminal', 'shell discovery failed', error: e, stack: st);
+    }
 
     for (final p in const [
       '/bin/bash',

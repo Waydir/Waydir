@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import '../logging/app_logger.dart';
+
 class _TerminalSpec {
   final String id;
   final String displayName;
@@ -327,7 +329,13 @@ class TerminalService {
       final cmd = Platform.isWindows ? 'where' : 'which';
       final result = await Process.run(cmd, [executable], runInShell: true);
       return result.exitCode == 0;
-    } catch (_) {
+    } catch (e, st) {
+      log.warn(
+        'terminal',
+        'terminal availability check failed',
+        error: e,
+        stack: st,
+      );
       return false;
     }
   }
@@ -342,7 +350,8 @@ class TerminalService {
         runInShell: Platform.isWindows,
       );
       return true;
-    } catch (_) {
+    } catch (e, st) {
+      log.warn('terminal', 'terminal launch failed', error: e, stack: st);
       return false;
     }
   }
@@ -384,7 +393,13 @@ class TerminalService {
         runInShell: Platform.isWindows,
       );
       return true;
-    } catch (_) {
+    } catch (e, st) {
+      log.warn(
+        'terminal',
+        'custom terminal launch failed',
+        error: e,
+        stack: st,
+      );
       return false;
     }
   }
@@ -402,7 +417,14 @@ class TerminalService {
           mode: ProcessStartMode.detached,
         );
         return true;
-      } catch (_) {}
+      } catch (e, st) {
+        log.warn(
+          'terminal',
+          'script terminal launch failed',
+          error: e,
+          stack: st,
+        );
+      }
     }
     return false;
   }

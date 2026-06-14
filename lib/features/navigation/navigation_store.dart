@@ -15,6 +15,7 @@ import '../../core/fs/recursive_search.dart';
 import '../../core/fs/sftp_fs.dart';
 import '../../core/fs/smb_share_discovery.dart';
 import '../../core/keyboard/keyboard_shortcuts.dart';
+import '../../core/logging/app_logger.dart';
 import '../../core/platform/platform_paths.dart';
 import '../../core/platform/trash_location.dart';
 import '../locations/location_resolver.dart';
@@ -402,7 +403,9 @@ class NavigationStore {
           pref.foldersFirst,
         );
       }
-    } catch (_) {}
+    } catch (e, st) {
+      log.warn('navigation', 'failed to load folder sort', error: e, stack: st);
+    }
   }
 
   void _persistSort() {
@@ -418,7 +421,14 @@ class NavigationStore {
           sortAscending: sortAscending.value,
           foldersFirst: foldersFirst.value,
         )
-        .catchError((_) {});
+        .catchError(
+          (e, st) => log.warn(
+            'navigation',
+            'failed to persist folder sort',
+            error: e,
+            stack: st,
+          ),
+        );
   }
 
   /// Toggles direction when [key] is already active, otherwise switches to
@@ -556,7 +566,7 @@ class NavigationStore {
         try {
           final r = RegExp(query);
           return r.hasMatch;
-        } catch (_) {
+        } catch (e) {
           return null;
         }
       case SearchMode.glob:
@@ -577,7 +587,7 @@ class NavigationStore {
         try {
           RegExp(query);
           return null;
-        } catch (_) {
+        } catch (e) {
           return t.search.invalidRegex;
         }
       case SearchMode.glob:
@@ -618,7 +628,7 @@ class NavigationStore {
     sb.write('\$');
     try {
       return RegExp(sb.toString(), caseSensitive: false);
-    } catch (_) {
+    } catch (e) {
       return null;
     }
   }
@@ -793,8 +803,9 @@ class NavigationStore {
         searchCurrentDir.value = null;
         isSearching.value = false;
       });
-    } catch (_) {
+    } catch (e, st) {
       if (token != _searchToken) return;
+      log.warn('navigation', 'recursive search failed', error: e, stack: st);
       _searchUiFlush?.cancel();
       _searchUiFlush = null;
       _pendingSearchResults = null;
@@ -1020,7 +1031,16 @@ class NavigationStore {
     if (path == null || path.trim().isEmpty) return;
     final s = SettingsStore.instance;
     if (!s.isLoaded) return;
-    s.db.recordRecentEnteredPath(path).catchError((_) {});
+    s.db
+        .recordRecentEnteredPath(path)
+        .catchError(
+          (e, st) => log.warn(
+            'navigation',
+            'failed to record entered path',
+            error: e,
+            stack: st,
+          ),
+        );
   }
 
   void _saveFolderState(String path) {
@@ -1039,7 +1059,14 @@ class NavigationStore {
     final encoded = selected.isEmpty ? null : jsonEncode(selected.toList());
     s.db
         .setFolderUiState(path, cursorPath: cursorPath, selectedPaths: encoded)
-        .catchError((_) {});
+        .catchError(
+          (e, st) => log.warn(
+            'navigation',
+            'failed to save folder state',
+            error: e,
+            stack: st,
+          ),
+        );
   }
 
   void _applyPendingSelect() {
@@ -1075,7 +1102,14 @@ class NavigationStore {
             if (decoded is List) {
               selected = decoded.whereType<String>().toSet();
             }
-          } catch (_) {}
+          } catch (e, st) {
+            log.warn(
+              'navigation',
+              'failed to decode stored folder selection',
+              error: e,
+              stack: st,
+            );
+          }
         }
         if (pref.cursorPath == null && selected.isEmpty) return;
         state = _FolderState(
@@ -1083,7 +1117,13 @@ class NavigationStore {
           cursorPath: pref.cursorPath,
         );
         _folderStateCache[path] = state;
-      } catch (_) {
+      } catch (e, st) {
+        log.warn(
+          'navigation',
+          'failed to restore folder state',
+          error: e,
+          stack: st,
+        );
         return;
       }
     }
@@ -1335,7 +1375,8 @@ class NavigationStore {
       return msg.contains('operation not permitted') ||
           msg.contains('permission denied') ||
           msg.contains('access is denied');
-    } catch (_) {
+    } catch (e, st) {
+      log.warn('navigation', 'permission probe failed', error: e, stack: st);
       return false;
     }
   }
@@ -1448,7 +1489,8 @@ class NavigationStore {
       if (!mutated) return;
       patched.removeWhere(identical0);
       _applyExternalChanges(sortCurrent(_dedupeByName(patched)));
-    } catch (_) {
+    } catch (e, st) {
+      log.warn('navigation', 'incremental refresh failed', error: e, stack: st);
       _onExternalChange(path);
     }
   }
@@ -1489,7 +1531,9 @@ class NavigationStore {
       final entries = await FileSystemService.listDirectory(path);
       if (path != currentPath.value) return;
       _applyExternalChanges(entries);
-    } catch (_) {}
+    } catch (e, st) {
+      log.warn('navigation', 'external refresh failed', error: e, stack: st);
+    }
   }
 
   void _applyExternalChanges(List<FileEntry> newEntries) {
@@ -1942,7 +1986,8 @@ class NavigationStore {
         try {
           await fs.rename(op.oldPath, op.newPath);
           acc.succeeded++;
-        } catch (_) {
+        } catch (e, st) {
+          log.warn('navigation', 'rename failed', error: e, stack: st);
           acc.other++;
         }
         report(PlatformPaths.fileName(op.newPath));
@@ -1960,7 +2005,8 @@ class NavigationStore {
       try {
         await fs.rename(op.oldPath, tempPath);
         staged.add((tempPath: tempPath, finalPath: op.newPath));
-      } catch (_) {
+      } catch (e, st) {
+        log.warn('navigation', 'rename staging failed', error: e, stack: st);
         acc.other++;
         report(PlatformPaths.fileName(op.newPath));
       }
@@ -1970,7 +2016,13 @@ class NavigationStore {
       try {
         await fs.rename(s.tempPath, s.finalPath);
         acc.succeeded++;
-      } catch (_) {
+      } catch (e, st) {
+        log.warn(
+          'navigation',
+          'rename finalization failed',
+          error: e,
+          stack: st,
+        );
         acc.other++;
       }
       report(PlatformPaths.fileName(s.finalPath));
@@ -2243,7 +2295,7 @@ class NavigationStore {
     final RegExp re;
     try {
       re = RegExp('^(?:${alternatives.join('|')})\$', caseSensitive: false);
-    } catch (_) {
+    } catch (e) {
       return 0;
     }
     final matched = _vf.where((f) => re.hasMatch(f.name)).toList();

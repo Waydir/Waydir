@@ -1049,8 +1049,13 @@ mixin _WaydirMenuMixin
               ),
               _chooserItem,
             ];
-    } catch (_) {
-      // Leave uncached so a later right-click can retry.
+    } catch (e, st) {
+      log.warn(
+        'open-with',
+        'failed to warm open-with menu',
+        error: e,
+        stack: st,
+      );
     } finally {
       _openWithWarming.remove(key);
     }

@@ -362,6 +362,22 @@ class WaydirCoreLoader {
   static DynamicLibrary? _cached;
   static bool _tried = false;
   static String? _resolvedPath;
+  static final Set<String> _warnedNativeOps = {};
+
+  static void _warnNative(
+    String operation,
+    Object error,
+    StackTrace stack, {
+    bool once = false,
+  }) {
+    if (once && !_warnedNativeOps.add(operation)) return;
+    log.warn(
+      'ffi.waydir_core',
+      '$operation failed',
+      error: error,
+      stack: stack,
+    );
+  }
 
   static DynamicLibrary? load() {
     if (_tried) return _cached;
@@ -434,7 +450,8 @@ class WaydirCoreLoader {
       final copy = Uint8List.fromList(buf.asTypedList(len));
       free(buf, len);
       return copy;
-    } catch (_) {
+    } catch (e, st) {
+      _warnNative('search', e, st);
       return null;
     } finally {
       calloc.free(rootPtr);
@@ -468,7 +485,8 @@ class WaydirCoreLoader {
       );
       if (session == nullptr) return null;
       return session.address;
-    } catch (_) {
+    } catch (e, st) {
+      _warnNative('search start', e, st);
       return null;
     } finally {
       calloc.free(rootPtr);
@@ -497,7 +515,8 @@ class WaydirCoreLoader {
       final copy = Uint8List.fromList(buf.asTypedList(len));
       free(buf, len);
       return SearchPollResult(copy, scanned, done);
-    } catch (_) {
+    } catch (e, st) {
+      _warnNative('search poll', e, st);
       return const SearchPollResult(null, 0, true);
     } finally {
       calloc.free(outLen);
@@ -533,7 +552,8 @@ class WaydirCoreLoader {
       final session = start(rootPtr);
       if (session == nullptr) return null;
       return session.address;
-    } catch (_) {
+    } catch (e, st) {
+      _warnNative('folder scan start', e, st);
       return null;
     } finally {
       calloc.free(rootPtr);
@@ -556,7 +576,8 @@ class WaydirCoreLoader {
         outItems.value,
         outDone.value != 0,
       );
-    } catch (_) {
+    } catch (e, st) {
+      _warnNative('folder scan poll', e, st);
       return const FolderScanPollResult(0, 0, true);
     } finally {
       calloc.free(outBytes);
@@ -596,7 +617,8 @@ class WaydirCoreLoader {
       final copy = Uint8List.fromList(buf.asTypedList(len));
       free(buf, len);
       return copy;
-    } catch (_) {
+    } catch (e, st) {
+      _warnNative('list dir', e, st);
       return null;
     } finally {
       calloc.free(pathPtr);
@@ -619,7 +641,8 @@ class WaydirCoreLoader {
       final copy = Uint8List.fromList(buf.asTypedList(len));
       free(buf, len);
       return copy;
-    } catch (_) {
+    } catch (e, st) {
+      _warnNative('enumerate', e, st);
       return null;
     } finally {
       calloc.free(rootPtr);
@@ -723,7 +746,8 @@ class WaydirCoreLoader {
     String sym(String name) {
       try {
         return lib.lookupFunction<_StrNative, _StrDart>(name)().toDartString();
-      } catch (_) {
+      } catch (e, st) {
+        _warnNative('read native version symbol $name', e, st, once: true);
         return '?';
       }
     }
@@ -731,7 +755,8 @@ class WaydirCoreLoader {
     int abi() {
       try {
         return lib.lookupFunction<_AbiNative, _AbiDart>('waydir_core_abi')();
-      } catch (_) {
+      } catch (e, st) {
+        _warnNative('read native ABI symbol', e, st, once: true);
         return 0;
       }
     }
@@ -821,7 +846,8 @@ class WaydirCoreLoader {
       freeStr = lib.lookupFunction<_SftpFreeStrNative, _SftpFreeStrDart>(
         'waydir_sftp_free_cstr',
       );
-    } catch (_) {
+    } catch (e, st) {
+      _warnNative('sftp realpath symbol lookup', e, st, once: true);
       return null;
     }
     final pathP = path.toNativeUtf8();
@@ -896,7 +922,9 @@ class WaydirCoreLoader {
         rangeFn = lib.lookupFunction<_SftpReadRangeNative, _SftpReadRangeDart>(
           'waydir_sftp_read_range',
         );
-      } catch (_) {}
+      } catch (e, st) {
+        _warnNative('sftp read range symbol lookup', e, st, once: true);
+      }
     }
     final fn = rangeFn == null
         ? lib.lookupFunction<_SftpReadNative, _SftpReadDart>('waydir_sftp_read')
@@ -954,7 +982,8 @@ class WaydirCoreLoader {
         'waydir_sftp_write_chunk',
       );
       return true;
-    } catch (_) {
+    } catch (e, st) {
+      _warnNative('sftp write chunk support lookup', e, st, once: true);
       return false;
     }
   }
@@ -971,7 +1000,8 @@ class WaydirCoreLoader {
       fn = lib.lookupFunction<_SftpWriteChunkNative, _SftpWriteChunkDart>(
         'waydir_sftp_write_chunk',
       );
-    } catch (_) {
+    } catch (e, st) {
+      _warnNative('sftp write chunk symbol lookup', e, st, once: true);
       return false;
     }
     final pathP = path.toNativeUtf8();
@@ -997,7 +1027,8 @@ class WaydirCoreLoader {
         'waydir_sftp_reader_read',
       );
       return true;
-    } catch (_) {
+    } catch (e, st) {
+      _warnNative('sftp streaming support lookup', e, st, once: true);
       return false;
     }
   }
@@ -1013,7 +1044,8 @@ class WaydirCoreLoader {
       fn = lib.lookupFunction<_SftpOpenWriterNative, _SftpOpenWriterDart>(
         'waydir_sftp_open_writer',
       );
-    } catch (_) {
+    } catch (e, st) {
+      _warnNative('sftp open writer symbol lookup', e, st, once: true);
       return null;
     }
     final pathP = path.toNativeUtf8();
@@ -1035,7 +1067,8 @@ class WaydirCoreLoader {
       fn = lib.lookupFunction<_SftpWriterWriteNative, _SftpWriterWriteDart>(
         'waydir_sftp_writer_write',
       );
-    } catch (_) {
+    } catch (e, st) {
+      _warnNative('sftp writer write symbol lookup', e, st, once: true);
       return false;
     }
     if (data.isEmpty) {
@@ -1057,7 +1090,8 @@ class WaydirCoreLoader {
       fn = lib.lookupFunction<_SftpWriterCloseNative, _SftpWriterCloseDart>(
         'waydir_sftp_writer_close',
       );
-    } catch (_) {
+    } catch (e, st) {
+      _warnNative('sftp writer close symbol lookup', e, st, once: true);
       return false;
     }
     return fn(writerId) == 0;
@@ -1073,7 +1107,8 @@ class WaydirCoreLoader {
       fn = lib.lookupFunction<_SftpOpenReaderNative, _SftpOpenReaderDart>(
         'waydir_sftp_open_reader',
       );
-    } catch (_) {
+    } catch (e, st) {
+      _warnNative('sftp open reader symbol lookup', e, st, once: true);
       return null;
     }
     final pathP = path.toNativeUtf8();
@@ -1097,7 +1132,8 @@ class WaydirCoreLoader {
       fn = lib.lookupFunction<_SftpReaderReadNative, _SftpReaderReadDart>(
         'waydir_sftp_reader_read',
       );
-    } catch (_) {
+    } catch (e, st) {
+      _warnNative('sftp reader read symbol lookup', e, st, once: true);
       return null;
     }
     final free = lib.lookupFunction<_FreeNative, _FreeDart>('waydir_free');
@@ -1121,7 +1157,8 @@ class WaydirCoreLoader {
       fn = lib.lookupFunction<_SftpReaderCloseNative, _SftpReaderCloseDart>(
         'waydir_sftp_reader_close',
       );
-    } catch (_) {
+    } catch (e, st) {
+      _warnNative('sftp reader close symbol lookup', e, st, once: true);
       return false;
     }
     return fn(readerId) == 0;
@@ -1174,7 +1211,8 @@ class WaydirCoreLoader {
     try {
       lib.lookupFunction<_PtyOpenNative, _PtyOpenDart>('waydir_pty_open');
       return true;
-    } catch (_) {
+    } catch (e, st) {
+      _warnNative('pty support lookup', e, st, once: true);
       return false;
     }
   }
@@ -1197,7 +1235,8 @@ class WaydirCoreLoader {
     try {
       final id = fn(shellPtr, cwdPtr, argsPtr, cols, rows);
       return id == 0 ? null : id;
-    } catch (_) {
+    } catch (e, st) {
+      _warnNative('pty open', e, st);
       return null;
     } finally {
       calloc.free(shellPtr);
@@ -1230,7 +1269,8 @@ class WaydirCoreLoader {
       final copy = Uint8List.fromList(buf.asTypedList(len));
       free(buf, len);
       return copy;
-    } catch (_) {
+    } catch (e, st) {
+      _warnNative('pty read', e, st);
       return null;
     } finally {
       calloc.free(outLen);
@@ -1317,7 +1357,8 @@ class WaydirCoreLoader {
         aspects.add(w > 0 && h > 0 ? h / w : 1.414);
       }
       return aspects;
-    } catch (_) {
+    } catch (e, st) {
+      _warnNative('PDF page aspects', e, st);
       return null;
     } finally {
       calloc.free(libPtr);
@@ -1359,7 +1400,8 @@ class WaydirCoreLoader {
       final copy = Uint8List.fromList(buf.asTypedList(len));
       free(buf, len);
       return PdfRenderedPage(outW.value, outH.value, copy);
-    } catch (_) {
+    } catch (e, st) {
+      _warnNative('PDF page render', e, st);
       return null;
     } finally {
       calloc.free(libPtr);

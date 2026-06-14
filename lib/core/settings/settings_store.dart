@@ -6,6 +6,7 @@ import 'package:signals/signals.dart';
 
 import '../database/app_database.dart';
 import '../keyboard/keyboard_shortcuts.dart';
+import '../logging/app_logger.dart';
 
 class SettingsStore {
   static final SettingsStore instance = SettingsStore._();
@@ -315,7 +316,9 @@ class SettingsStore {
           quickLookShowStatistics: Value(quickLookShowStatistics.value),
         ),
       );
-    } catch (_) {}
+    } catch (e, st) {
+      log.error('settings', 'failed to save settings', error: e, stack: st);
+    }
   }
 
   static const terminalFontSizes = [10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24];

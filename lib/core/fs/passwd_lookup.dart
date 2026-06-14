@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import '../logging/app_logger.dart';
 import '../platform/platform_paths.dart';
 
 /// Resolves numeric uids/gids to their account names by reading the local
@@ -23,7 +24,9 @@ class PasswdLookup {
         final id = int.tryParse(parts[idField]);
         if (id != null) out[id] = parts[0];
       }
-    } catch (_) {}
+    } catch (e, st) {
+      log.warn('platform', 'passwd/group lookup failed', error: e, stack: st);
+    }
     return out;
   }
 

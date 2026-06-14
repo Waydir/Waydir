@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:io';
+
+import '../logging/app_logger.dart';
 import 'dart:isolate';
 import '../models/file_entry.dart';
 import 'waydir_core_loader.dart';
@@ -253,7 +255,8 @@ class RecursiveSearch {
         size: stat.size,
         modifiedMs: stat.modified.millisecondsSinceEpoch,
       );
-    } catch (_) {
+    } catch (e, st) {
+      log.warn('search', 'failed to stat search result', error: e, stack: st);
       return entry;
     }
   }

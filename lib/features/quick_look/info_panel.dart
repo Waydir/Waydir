@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/fs/sftp_session_manager.dart';
 import '../../core/fs/waydir_core_loader.dart';
+import '../../core/logging/app_logger.dart';
 import '../../core/models/file_entry.dart';
 import '../../core/platform/platform_paths.dart';
 import '../../core/settings/settings_store.dart';
@@ -137,7 +138,8 @@ class _FolderSizeRowsState extends State<_FolderSizeRows> {
     }
     try {
       _session = WaydirCoreLoader.folderScanStart(widget.path);
-    } catch (_) {
+    } catch (e, st) {
+      log.warn('quick-look', 'folder scan start failed', error: e, stack: st);
       _session = null;
     }
     if (_session == null) return;
@@ -181,7 +183,8 @@ class _FolderSizeRowsState extends State<_FolderSizeRows> {
         _stats = FolderStats(r.bytes, r.items, done: r.done);
       });
       if (r.done) _stop(cancel: false);
-    } catch (_) {
+    } catch (e, st) {
+      log.warn('quick-look', 'folder scan poll failed', error: e, stack: st);
       _stop(cancel: true);
     }
   }
@@ -198,7 +201,9 @@ class _FolderSizeRowsState extends State<_FolderSizeRows> {
     try {
       if (cancel) WaydirCoreLoader.folderScanCancel(session);
       WaydirCoreLoader.folderScanFree(session);
-    } catch (_) {}
+    } catch (e, st) {
+      log.warn('quick-look', 'folder scan cleanup failed', error: e, stack: st);
+    }
   }
 
   @override
@@ -252,7 +257,13 @@ class _SftpFolderScan {
         request,
         debugName: 'sftp-folder-scan',
       );
-    } catch (_) {
+    } catch (e, st) {
+      log.warn(
+        'quick-look',
+        'SFTP folder scan isolate failed',
+        error: e,
+        stack: st,
+      );
       port.close();
       return null;
     }
@@ -336,7 +347,9 @@ void _runSftpFolderScan(_SftpFolderScanRequest request) {
 
   try {
     walk(request.remotePath);
-  } catch (_) {}
+  } catch (e) {
+    e.toString();
+  }
   send(true);
 }
 
@@ -560,7 +573,13 @@ class _TypeBreakdownScan {
         request,
         debugName: 'type-breakdown-scan',
       );
-    } catch (_) {
+    } catch (e, st) {
+      log.warn(
+        'quick-look',
+        'type breakdown scan isolate failed',
+        error: e,
+        stack: st,
+      );
       port.close();
       return null;
     }
@@ -630,7 +649,8 @@ void _runTypeBreakdownScan(_TypeScanRequest request) {
       List<FileSystemEntity> entries;
       try {
         entries = dir.listSync(followLinks: false);
-      } catch (_) {
+      } catch (e) {
+        e.toString();
         continue;
       }
       for (final entity in entries) {
@@ -642,7 +662,9 @@ void _runTypeBreakdownScan(_TypeScanRequest request) {
         try {
           addFile(PlatformPaths.fileName(entity.path), entity.statSync().size);
           maybeSend();
-        } catch (_) {}
+        } catch (e) {
+          e.toString();
+        }
       }
     }
   }
@@ -672,7 +694,9 @@ void _runTypeBreakdownScan(_TypeScanRequest request) {
     for (final root in request.sftpRoots) {
       walkSftp(root);
     }
-  } catch (_) {}
+  } catch (e) {
+    e.toString();
+  }
   send(true);
 }
 
@@ -766,7 +790,13 @@ class _MultiPropertiesState extends State<MultiProperties> {
       int? session;
       try {
         session = WaydirCoreLoader.folderScanStart(e.realPath);
-      } catch (_) {
+      } catch (e, st) {
+        log.warn(
+          'quick-look',
+          'folder statistics scan start failed',
+          error: e,
+          stack: st,
+        );
         session = null;
       }
       if (session == null) continue;
@@ -830,7 +860,13 @@ class _MultiPropertiesState extends State<MultiProperties> {
         } else {
           _free(j);
         }
-      } catch (_) {
+      } catch (e, st) {
+        log.warn(
+          'quick-look',
+          'folder statistics poll failed',
+          error: e,
+          stack: st,
+        );
         j.done = true;
         _free(j);
       }
@@ -852,7 +888,14 @@ class _MultiPropertiesState extends State<MultiProperties> {
     j.freed = true;
     try {
       WaydirCoreLoader.folderScanFree(session);
-    } catch (_) {}
+    } catch (e, st) {
+      log.warn(
+        'quick-look',
+        'folder statistics cleanup failed',
+        error: e,
+        stack: st,
+      );
+    }
   }
 
   void _stopAll() {
@@ -870,7 +913,14 @@ class _MultiPropertiesState extends State<MultiProperties> {
       if (!j.done) {
         try {
           WaydirCoreLoader.folderScanCancel(session);
-        } catch (_) {}
+        } catch (e, st) {
+          log.warn(
+            'quick-look',
+            'folder statistics cancel failed',
+            error: e,
+            stack: st,
+          );
+        }
       }
       _free(j);
     }

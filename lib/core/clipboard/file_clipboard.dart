@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/services.dart';
 
+import '../logging/app_logger.dart';
 import 'macos_clipboard_ffi.dart';
 
 class FileClipboard {
@@ -33,13 +34,27 @@ class FileClipboard {
           'text/uri-list',
         ], paths.map((p) => Uri.file(p).toString()).join('\n'));
       }
-    } catch (_) {}
+    } catch (e, st) {
+      log.warn(
+        'clipboard',
+        'native file clipboard write failed',
+        error: e,
+        stack: st,
+      );
+    }
 
     try {
       final uris = paths.map((p) => Uri.file(p).toString()).join('\n');
       final action = isCut ? 'cut' : 'copy';
       await Clipboard.setData(ClipboardData(text: 'x-special/$action\n$uris'));
-    } catch (_) {}
+    } catch (e, st) {
+      log.warn(
+        'clipboard',
+        'text clipboard fallback write failed',
+        error: e,
+        stack: st,
+      );
+    }
   }
 
   static Future<List<String>> readFilePaths() async {
@@ -53,7 +68,8 @@ class FileClipboard {
       } else {
         return await _readX11();
       }
-    } catch (_) {
+    } catch (e, st) {
+      log.warn('clipboard', 'file clipboard read failed', error: e, stack: st);
       return [];
     }
   }
@@ -76,7 +92,13 @@ class FileClipboard {
         if (output != null && output.trim().startsWith('cut')) return true;
       }
       return false;
-    } catch (_) {
+    } catch (e, st) {
+      log.warn(
+        'clipboard',
+        'clipboard cut-state read failed',
+        error: e,
+        stack: st,
+      );
       return false;
     }
   }
@@ -206,7 +228,7 @@ class FileClipboard {
         .map((l) {
           try {
             return Uri.parse(l).toFilePath();
-          } catch (_) {
+          } catch (e) {
             return '';
           }
         })

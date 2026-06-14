@@ -72,7 +72,13 @@ class ShellStore {
     }
     try {
       return Directory(path).existsSync();
-    } catch (_) {
+    } catch (e, st) {
+      log.warn(
+        'shell.restore',
+        'restorable path probe failed',
+        error: e,
+        stack: st,
+      );
       return false;
     }
   }
@@ -247,7 +253,9 @@ class ShellStore {
         }
       }
       await db.replaceTabs(rows);
-    } catch (_) {}
+    } catch (e, st) {
+      log.error('shell.persist', 'Session persist failed', error: e, stack: st);
+    }
   }
 
   void toggleDual() {

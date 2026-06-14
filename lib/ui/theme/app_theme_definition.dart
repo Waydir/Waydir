@@ -65,7 +65,7 @@ class TerminalColors {
       if (value is! String) return fallback;
       try {
         return parseThemeColor(value, key);
-      } catch (_) {
+      } catch (e) {
         return fallback;
       }
     }

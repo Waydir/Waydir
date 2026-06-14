@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/logging/app_logger.dart';
 import '../../ui/theme/app_theme.dart';
 import '../../ui/theme/app_text_styles.dart';
 
@@ -190,7 +191,8 @@ class _AsyncRetainState<T> extends State<AsyncRetain<T>> {
         _data = result;
         _has = true;
       });
-    } catch (_) {
+    } catch (e, st) {
+      log.warn('quick-look', 'async preview load failed', error: e, stack: st);
       if (!mounted || gen != _gen) return;
       setState(() => _has = true);
     }

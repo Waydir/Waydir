@@ -94,7 +94,7 @@ String _formatLocaleDate(DateTime d) {
   );
   try {
     return intl.DateFormat.yMd(locale).add_jm().format(d);
-  } catch (_) {
+  } catch (e) {
     return _formatIsoDate(d);
   }
 }

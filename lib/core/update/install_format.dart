@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import '../logging/app_logger.dart';
+
 /// Distribution format the running binary was installed as.
 enum InstallFormat {
   linuxDeb,
@@ -29,7 +31,13 @@ class InstallFormatDetector {
   static String _resolveExe(String path) {
     try {
       return File(path).resolveSymbolicLinksSync();
-    } catch (_) {
+    } catch (e, st) {
+      log.warn(
+        'update',
+        'executable path resolution failed',
+        error: e,
+        stack: st,
+      );
       return path;
     }
   }
@@ -47,7 +55,8 @@ class InstallFormatDetector {
     try {
       final r = await Process.run('dpkg', ['-S', exe]);
       return r.exitCode == 0 && (r.stdout as String).trim().isNotEmpty;
-    } catch (_) {
+    } catch (e, st) {
+      log.warn('update', 'dpkg ownership check failed', error: e, stack: st);
       return false;
     }
   }
@@ -57,7 +66,8 @@ class InstallFormatDetector {
       final r = await Process.run('rpm', ['-qf', exe]);
       return r.exitCode == 0 &&
           !(r.stdout as String).contains('not owned by any package');
-    } catch (_) {
+    } catch (e, st) {
+      log.warn('update', 'rpm ownership check failed', error: e, stack: st);
       return false;
     }
   }

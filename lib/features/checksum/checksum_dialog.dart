@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/fs/checksum_service.dart';
+import '../../core/logging/app_logger.dart';
 import '../../core/models/file_entry.dart';
 import '../../i18n/strings.g.dart';
 import '../../ui/dialogs/dialog.dart';
@@ -110,7 +111,8 @@ class _ChecksumDialogState extends State<_ChecksumDialog> {
         _result = result;
         _running = false;
       });
-    } catch (_) {
+    } catch (e, st) {
+      log.warn('checksum', 'checksum calculation failed', error: e, stack: st);
       if (!mounted || generation != _generation) return;
       setState(() {
         _result = null;

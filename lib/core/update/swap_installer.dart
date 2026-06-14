@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 
+import '../logging/app_logger.dart';
+
 /// Performs a portable in-place update by:
 ///   1. Extracting the downloaded archive into a sibling staging dir
 ///   2. Writing a small helper script that waits for the parent app to
@@ -117,7 +119,13 @@ class SwapInstaller {
   static String _resolvedExe() {
     try {
       return File(Platform.resolvedExecutable).resolveSymbolicLinksSync();
-    } catch (_) {
+    } catch (e, st) {
+      log.warn(
+        'update',
+        'bundle executable resolution failed',
+        error: e,
+        stack: st,
+      );
       return Platform.resolvedExecutable;
     }
   }
@@ -128,7 +136,8 @@ class SwapInstaller {
       probe.writeAsStringSync('x');
       probe.deleteSync();
       return true;
-    } catch (_) {
+    } catch (e, st) {
+      log.warn('update', 'bundle write probe failed', error: e, stack: st);
       return false;
     }
   }

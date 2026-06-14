@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:mime/mime.dart' as mime_pkg;
 
+import '../logging/app_logger.dart';
+
 /// A resolved content type for a file.
 ///
 /// On Linux/Windows [value] is a MIME type (e.g. `image/png`). On macOS it is
@@ -52,7 +54,9 @@ class _LinuxMimeResolver implements MimeResolver {
         final out = (r.stdout as String).trim();
         if (out.isNotEmpty) return MimeType(out);
       }
-    } catch (_) {}
+    } catch (e, st) {
+      log.warn('open', 'linux MIME lookup failed', error: e, stack: st);
+    }
     return _fromExtension(path);
   }
 }
@@ -73,7 +77,9 @@ class _MacMimeResolver implements MimeResolver {
           return MimeType(out, isUti: true);
         }
       }
-    } catch (_) {}
+    } catch (e, st) {
+      log.warn('open', 'mac MIME lookup failed', error: e, stack: st);
+    }
     return _fromExtension(path);
   }
 }

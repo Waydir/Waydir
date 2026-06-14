@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 import '../../core/fs/waydir_core_loader.dart';
+import '../../core/logging/app_logger.dart';
 import '../../i18n/strings.g.dart';
 import '../../ui/theme/app_theme.dart';
 import 'quick_look_common.dart';
@@ -42,7 +43,8 @@ class _PdfPreviewState extends State<PdfPreview> {
         loader: () async {
           try {
             return await _pageAspectsInIsolate(path);
-          } catch (_) {
+          } catch (e, st) {
+            log.warn('quick-look', 'PDF page scan failed', error: e, stack: st);
             return null;
           }
         },
@@ -164,7 +166,8 @@ class _PdfPageItemState extends State<_PdfPageItem> {
     PdfRenderedPage? page;
     try {
       page = await _renderInIsolate(path, index, width);
-    } catch (_) {
+    } catch (e, st) {
+      log.warn('quick-look', 'PDF page render failed', error: e, stack: st);
       page = null;
     }
     if (!mounted || gen != _gen) return;

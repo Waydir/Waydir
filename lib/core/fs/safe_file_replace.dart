@@ -6,6 +6,7 @@ import 'package:ffi/ffi.dart';
 import 'package:win32/win32.dart';
 
 import '../../i18n/strings.g.dart';
+import '../logging/app_logger.dart';
 import 'native_copy.dart';
 
 typedef _ChmodNative = Int32 Function(Pointer<Utf8>, Uint32);
@@ -62,7 +63,14 @@ class SafeFileReplace {
               FileSystemEntityType.notFound) {
         try {
           File(tempPath).deleteSync();
-        } catch (_) {}
+        } catch (e, st) {
+          log.warn(
+            'fs.replace',
+            'failed to remove temp file',
+            error: e,
+            stack: st,
+          );
+        }
       }
     }
 
@@ -111,9 +119,23 @@ class SafeFileReplace {
           if (entity.statSync().modified.isBefore(cutoff)) {
             entity.deleteSync();
           }
-        } catch (_) {}
+        } catch (e, st) {
+          log.warn(
+            'fs.replace',
+            'failed to remove stale temp file',
+            error: e,
+            stack: st,
+          );
+        }
       }
-    } catch (_) {}
+    } catch (e, st) {
+      log.warn(
+        'fs.replace',
+        'failed to scan stale temp files',
+        error: e,
+        stack: st,
+      );
+    }
   }
 
   /// Returns false if the copy was cancelled mid-stream, true on completion.
@@ -185,7 +207,14 @@ class SafeFileReplace {
       if (!Platform.isWindows) {
         _chmod(destination.path, stat.mode);
       }
-    } catch (_) {}
+    } catch (e, st) {
+      log.warn(
+        'fs.replace',
+        'failed to copy file metadata',
+        error: e,
+        stack: st,
+      );
+    }
   }
 
   static void _chmod(String path, int mode) {
@@ -193,7 +222,9 @@ class SafeFileReplace {
     if (_nativeChmod(path, permissions)) return;
     try {
       Process.runSync('chmod', [permissions.toRadixString(8), path]);
-    } catch (_) {}
+    } catch (e, st) {
+      log.warn('fs.replace', 'chmod fallback failed', error: e, stack: st);
+    }
   }
 
   static bool _nativeChmod(String path, int permissions) {
@@ -203,7 +234,8 @@ class SafeFileReplace {
     try {
       final chmod = libc.lookupFunction<_ChmodNative, _ChmodDart>('chmod');
       return chmod(nativePath, permissions) == 0;
-    } catch (_) {
+    } catch (e, st) {
+      log.warn('fs.replace', 'native chmod failed', error: e, stack: st);
       return false;
     } finally {
       calloc.free(nativePath);
@@ -223,7 +255,13 @@ class SafeFileReplace {
       times[1].tvUsec = (modified.microsecondsSinceEpoch % 1000000);
       final utimes = libc.lookupFunction<_UtimesNative, _UtimesDart>('utimes');
       return utimes(nativePath, times) == 0;
-    } catch (_) {
+    } catch (e, st) {
+      log.warn(
+        'fs.replace',
+        'native timestamp copy failed',
+        error: e,
+        stack: st,
+      );
       return false;
     } finally {
       calloc.free(times);
@@ -236,7 +274,8 @@ class SafeFileReplace {
     try {
       if (Platform.isLinux) return DynamicLibrary.open('libc.so.6');
       return DynamicLibrary.process();
-    } catch (_) {
+    } catch (e, st) {
+      log.warn('fs.replace', 'libc open failed', error: e, stack: st);
       return null;
     }
   }

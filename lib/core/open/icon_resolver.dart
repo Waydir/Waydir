@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 
+import '../logging/app_logger.dart';
+
 /// Resolves a freedesktop `Icon=` value (a bare name like `firefox`, or an
 /// absolute path) to a concrete icon file, following the icon theme spec
 /// closely enough for an app picker: it honours the active GTK icon theme,
@@ -65,7 +67,9 @@ class IconResolver {
         final t = (r.stdout as String).trim().replaceAll("'", '');
         if (t.isNotEmpty) themes.add(t);
       }
-    } catch (_) {}
+    } catch (e, st) {
+      log.warn('open', 'icon theme lookup failed', error: e, stack: st);
+    }
     for (final fallback in ['Adwaita', 'hicolor', 'gnome']) {
       if (!themes.contains(fallback)) themes.add(fallback);
     }

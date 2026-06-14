@@ -6,6 +6,7 @@ import 'package:waydir/ui/icons/waydir_icons.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:super_drag_and_drop/super_drag_and_drop.dart';
 import '../../core/database/app_database.dart';
+import '../../core/logging/app_logger.dart';
 import 'bookmark_store.dart';
 import 'navigation_store.dart';
 import 'sidebar_store.dart';
@@ -176,7 +177,14 @@ class _SidebarState extends State<Sidebar> {
     if (trashDir != null) {
       try {
         Directory(trashDir).createSync(recursive: true);
-      } catch (_) {}
+      } catch (e, st) {
+        log.warn(
+          'navigation',
+          'failed to create trash directory',
+          error: e,
+          stack: st,
+        );
+      }
     }
     _bookmarkStore.load();
     widget.store.requestSmbCredentials = _credentialsRequester;
@@ -882,7 +890,14 @@ class _SidebarState extends State<Sidebar> {
       try {
         await driveStore.mountWithPassword(drive, pwd);
         _navigateToMounted(drive.id);
-      } catch (_) {}
+      } catch (e, st) {
+        log.warn(
+          'drives',
+          'drive mount with password failed',
+          error: e,
+          stack: st,
+        );
+      }
     }
   }
 
@@ -905,7 +920,9 @@ class _SidebarState extends State<Sidebar> {
       if (mountPoint != null && currentPath.startsWith(mountPoint)) {
         widget.store.navigateTo(PlatformPaths.homePath);
       }
-    } catch (_) {}
+    } catch (e, st) {
+      log.warn('drives', 'drive unmount action failed', error: e, stack: st);
+    }
   }
 
   Future<void> _unmountLocation(String path) async {

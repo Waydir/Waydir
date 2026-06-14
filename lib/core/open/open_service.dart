@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 
+import '../logging/app_logger.dart';
 import '../platform/platform_paths.dart';
 import '../platform/win32_attributes.dart';
 import '../settings/settings_store.dart';
@@ -47,8 +48,13 @@ class OpenService {
         try {
           await _apps.launch(app, [path]);
           return;
-        } catch (_) {
-          // Stale mapping — fall back to OS default.
+        } catch (e, st) {
+          log.warn(
+            'open',
+            'stored default app launch failed',
+            error: e,
+            stack: st,
+          );
         }
       }
     }
@@ -96,7 +102,13 @@ class OpenService {
         iconPath: osDefault.iconPath,
       );
       return osDefault.copyWith(isDefault: true);
-    } catch (_) {
+    } catch (e, st) {
+      log.warn(
+        'open',
+        'failed to resolve stored default app',
+        error: e,
+        stack: st,
+      );
       return null;
     }
   }
@@ -173,7 +185,8 @@ class OpenService {
             ),
           )
           .toList();
-    } catch (_) {
+    } catch (e, st) {
+      log.warn('open', 'failed to load recent apps', error: e, stack: st);
       return const [];
     }
   }
@@ -187,7 +200,9 @@ class OpenService {
         appExec: app.exec,
         iconPath: app.iconPath,
       );
-    } catch (_) {}
+    } catch (e, st) {
+      log.warn('open', 'failed to record recent app', error: e, stack: st);
+    }
   }
 }
 
