@@ -2,27 +2,53 @@
 
 # Waydir
 
-A cross-platform file manager with dual-pane navigation, tabs, and network drives. Built on Flutter with a native Rust core.
+Fast, keyboard-first desktop file manager with dual panes, tabs, network drives, Quick Look, plugins and a native Rust core.
 
-Native Rust core • Flutter UI • Keyboard-first
+Built for people who move through files all day and do not want the UI to get in the way.
 
 [![Flutter](https://img.shields.io/badge/Flutter-3.35+-02569B?logo=flutter&logoColor=white&style=flat-square)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-3.10+-0175C2?logo=dart&logoColor=white&style=flat-square)](https://dart.dev)
 [![Platform](https://img.shields.io/badge/Linux%20%7C%20Windows%20%7C%20macOS-informational?style=flat-square)]()
+[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
+
+<p>
+  <a href="https://github.com/Waydir/Waydir/releases"><b>Download</b></a>
+  -
+  <a href="#install"><b>Install</b></a>
+  -
+  <a href="#first-5-minutes"><b>First 5 minutes</b></a>
+  -
+  <a href="docs/plugins.md"><b>Plugins</b></a>
+  -
+  <a href="CHANGELOG.md"><b>Changelog</b></a>
+</p>
 
 </div>
 
 <p align="center">
-  <img src="docs/screenshots/hero.png" alt="Waydir" width="820">
+  <img src="docs/screenshots/hero.png" alt="Waydir" width="860">
 </p>
 
-## See it in action
+## Why Waydir?
+
+Waydir is a native-feeling desktop file manager focused on speed, direct control and everyday file work.
+
+| What you get | Why it matters |
+|--------------|----------------|
+| Dual panes and tabs | Move between folders without juggling windows. |
+| Keyboard-first workflow | Navigate, select, preview, copy, move, rename and search without reaching for the mouse. |
+| Native Rust core | Large directories, recursive search and trash operations stay off the UI thread. |
+| SMB and SFTP drives | Remote files show up beside local files and behave like part of the same workspace. |
+| Quick Look previews | Tap Space to preview images, PDFs, text, code and file properties. |
+| Lua plugins | Add workflow actions, toolbar buttons, status bars and shortcuts without rebuilding the app. |
+
+## See It Fast
 
 <table>
   <tr>
     <td width="50%" align="center">
       <b>Keyboard-driven navigation</b><br>
-      <img src="docs/gifs/navigating.gif" alt="Navigating">
+      <img src="docs/gifs/navigating.gif" alt="Keyboard-driven navigation">
     </td>
     <td width="50%" align="center">
       <b>Dual-pane copy</b><br>
@@ -32,21 +58,222 @@ Native Rust core • Flutter UI • Keyboard-first
   <tr>
     <td width="50%" align="center">
       <b>Quick Look preview</b><br>
-      <img src="docs/gifs/quick_look_images.gif" alt="Quick Look">
+      <img src="docs/gifs/quick_look_images.gif" alt="Quick Look preview">
     </td>
     <td width="50%" align="center">
       <b>Live recursive search</b><br>
-      <img src="docs/gifs/search.gif" alt="Search">
+      <img src="docs/gifs/search.gif" alt="Live recursive search">
     </td>
   </tr>
+</table>
+
+## Install
+
+Grab the latest build from [Releases](https://github.com/Waydir/Waydir/releases), or install from the Linux package repository for automatic updates through your package manager.
+
+| Platform | Recommended install |
+|----------|---------------------|
+| Ubuntu / Debian | apt repository or `.deb` package |
+| Fedora / RHEL | dnf repository or `.rpm` package |
+| openSUSE | zypper repository or `.rpm` package |
+| Other Linux | AppImage or portable tarball |
+| Windows | `.exe` installer or portable `.zip` |
+| macOS | `.dmg` package |
+
+### Ubuntu / Debian
+
+Repository install, with updates via `apt upgrade`:
+
+```bash
+curl -1sLf 'https://dl.cloudsmith.io/public/waydir/waydir-project/setup.deb.sh' | sudo -E bash
+sudo apt install waydir
+```
+
+Single `.deb` package from [Releases](https://github.com/Waydir/Waydir/releases):
+
+```bash
+sudo dpkg -i waydir-*.deb
+```
+
+### Fedora / RHEL
+
+Repository install, with updates via `dnf upgrade`:
+
+```bash
+curl -1sLf 'https://dl.cloudsmith.io/public/waydir/waydir-project/setup.rpm.sh' | sudo -E bash
+sudo dnf install waydir
+```
+
+Single `.rpm` package from [Releases](https://github.com/Waydir/Waydir/releases):
+
+```bash
+sudo rpm -i waydir-*.rpm
+```
+
+### openSUSE
+
+Repository install, with updates via `zypper update`:
+
+```bash
+curl -1sLf 'https://dl.cloudsmith.io/public/waydir/waydir-project/setup.rpm.sh' | sudo -E bash
+sudo zypper install waydir
+```
+
+Single `.rpm` package from [Releases](https://github.com/Waydir/Waydir/releases):
+
+```bash
+sudo rpm -i waydir-*.rpm
+```
+
+### Other Linux
+
+AppImage:
+
+```bash
+chmod +x waydir-*.AppImage
+./waydir-*.AppImage
+```
+
+Portable tarball:
+
+```bash
+tar -xzf waydir-*-linux-x64.tar.gz
+./waydir
+```
+
+Package builds integrate with your desktop launcher. AppImage and tarball builds are portable and can be launched from any folder.
+
+Package repository hosting is provided by [Cloudsmith](https://cloudsmith.com), a hosted universal package management platform.
+
+### Windows
+
+Download the `.exe` installer or portable `.zip` from [Releases](https://github.com/Waydir/Waydir/releases). Run the installer, or unpack the archive and launch `waydir.exe`.
+
+### macOS
+
+Download the `.dmg` package from [Releases](https://github.com/Waydir/Waydir/releases), open it and drag Waydir to Applications.
+
+macOS is best-effort. Linux and Windows are the primary development and testing targets.
+
+## First 5 Minutes
+
+These are the fastest ways to feel how Waydir works:
+
+| Action | Shortcut or place |
+|--------|-------------------|
+| Preview the selected file | `Space` |
+| Toggle the built-in terminal | `Ctrl+Backtick` |
+| Search inside the current location | Search from the file pane |
+| Filter files with suggestions | Use filter mode and query by kind, extension, size, date or hidden state |
+| Work across folders | Open dual-pane mode and copy or move between panes |
+| Add repeatable actions | Preferences -> Plugins |
+| Open Waydir from a shell | `waydir <folder>` |
+
+Waydir is designed so the mouse is optional. Most commands are available from shortcuts, context menus and the command surfaces in the UI.
+
+## Features
+
+### Navigation And Layout
+
+- Dual-pane mode with independent tabs in each pane.
+- File and terminal tabs that can be reordered by dragging.
+- Sidebar with places, devices, pinned bookmarks and network drives.
+- Editable path bar with `~`, `$VAR`, `${VAR}` and `%VAR%` expansion.
+- Configurable file list columns, including Name, Kind, Size, Date, Created, Permissions and Owner where supported.
+- List and grid views, including image thumbnails in grid view.
+
+### File Operations
+
+- Copy, move, trash, delete and rename with live progress.
+- Cancellable operations that keep the UI responsive.
+- Conflict resolution for copy and move.
+- Multi-rename for batch edits.
+- Clipboard integration with the host desktop.
+- ZIP and TAR archives browsable in place.
+
+### Search And Preview
+
+- Recursive search that streams results while scanning.
+- Substring, regex and glob matching.
+- Filter mode with suggestions for kind, extension, size, date and hidden-file filters.
+- Quick Look on `Space` for images, PDFs, text, code and file properties.
+- Editable text previews with save prompts, line numbers, relative line numbers, wrapping options and optional Vim mode.
+- Large text previews backed by a viewport-virtualized editor.
+
+### Network Drives
+
+- SMB and SFTP from the sidebar.
+- Mount, unmount and reconnect remote drives.
+- Browse, search, copy, preview and open remote files like local files.
+- Pooled connections and off-thread transfers.
+- Fine-grained progress for network operations.
+
+### Terminal
+
+- Built-in terminal per pane.
+- Opens in the current directory.
+- Real PTY backed by Rust.
+- Uses your normal shell.
+- Toggle without leaving the keyboard.
+
+### Customization And Integrations
+
+- Light, Dark, Nord and One Dark themes.
+- Custom themes via JSON.
+- Configurable density, sort behavior, hidden files and date format.
+- Git status bar with branch switching and stash management.
+- Changelog viewer inside the app.
+- Command-line launch support with folder paths and options.
+
+## Plugins
+
+Plugins let you add small workflow actions without rebuilding Waydir. They are plain Lua folders with a `manifest.json` and an `init.lua`.
+
+Drop a plugin into the plugins folder, reload from Preferences -> Plugins and it can add:
+
+- Selection context menu actions.
+- Background context menu actions.
+- Top Plugins menu entries.
+- Location toolbar buttons.
+- Keyboard shortcuts.
+- Global and per-pane status bars.
+- Long-running tasks in the Operations panel.
+
+Plugins run in a sandbox and request explicit permissions for external commands or file operations.
+
+Start here:
+
+- [Plugin guide](docs/plugins.md)
+- [Example plugins](docs/examples/plugins/)
+- [Full plugin docs](https://waydir.dev/docs/plugins)
+
+Example plugin ideas already covered in the repository include opening the current folder in VS Code, adding 7-Zip actions, showing selection counts and running backup copies.
+
+## Architecture
+
+Waydir uses three layers so heavy work does not block the UI:
+
+| Layer | Responsibility |
+|-------|----------------|
+| Flutter UI | Rendering, input and desktop chrome. |
+| Dart isolates | Long-running copy, move, delete and network transfers. |
+| Rust core | Directory listing, recursive search, trash and PTY work through FFI. |
+
+Persistent state uses `drift` and `sqlite3`. Reactive UI state uses `signals`. The UI thread does no filesystem-heavy work.
+
+The native Rust library is required. There is no Dart fallback for the Rust core.
+
+## Feature Gallery
+
+<table>
   <tr>
     <td width="50%" align="center">
       <b>Browse remote files over SFTP</b><br>
-      <img src="docs/gifs/sftp.gif" alt="SFTP">
+      <img src="docs/gifs/sftp.gif" alt="SFTP browsing">
     </td>
     <td width="50%" align="center">
-      <b>Archiving and browsing archives</b><br>
-      <img src="docs/gifs/archive_browsing.gif" alt="Archiving and browsing archives">
+      <b>Archive browsing</b><br>
+      <img src="docs/gifs/archive_browsing.gif" alt="Archive browsing">
     </td>
   </tr>
   <tr>
@@ -56,7 +283,7 @@ Native Rust core • Flutter UI • Keyboard-first
     </td>
     <td width="50%" align="center">
       <b>Tabs per pane</b><br>
-      <img src="docs/gifs/tabs.gif" alt="Tabs">
+      <img src="docs/gifs/tabs.gif" alt="Tabs per pane">
     </td>
   </tr>
   <tr>
@@ -69,211 +296,88 @@ Native Rust core • Flutter UI • Keyboard-first
       <img src="docs/gifs/customization.gif" alt="Customization">
     </td>
   </tr>
-</table>
-
-## ✨ Highlights
-
-<table>
   <tr>
-    <td width="50%" valign="top">
-      <h3>Native Rust core</h3>
-      Listing, recursive search and trash run in a native Rust library,
-      off the UI thread. 100k-file directories open without freezing.
+    <td width="50%" align="center">
+      <b>Selection workflow</b><br>
+      <img src="docs/gifs/selection.gif" alt="Selection workflow">
     </td>
-    <td width="50%" valign="top">
-      <h3>Keyboard-first</h3>
-      Every operation has a shortcut. Dual panes, tabs, navigation,
-      copy, move, search - all without leaving the keyboard.
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top">
-      <h3>Network-native</h3>
-      SMB and SFTP appear in the sidebar as drives. Browse, search,
-      copy and Quick Look remote files like they're local.
-    </td>
-    <td width="50%" valign="top">
-      <h3>Dual panes, tabs, bookmarks</h3>
-      Side-by-side panes with independent tabs and pinned locations.
-      Built for moving files between places.
+    <td width="50%" align="center">
+      <b>Multi-rename</b><br>
+      <img src="docs/gifs/multi_rename.gif" alt="Multi-rename">
     </td>
   </tr>
 </table>
 
-## 🦀 How it works
+## Build From Source
 
-Three layers, each doing what it's good at:
+Requirements:
 
-- **Flutter UI** for rendering and input. Reactive state via the `signals` package.
-- **Dart isolates** for long-running operations: copy, move, delete, network transfers.
-- **Rust core** (`waydir_core`, loaded via FFI) for the heavy filesystem work: directory listing, recursive search, trash.
+- Flutter 3.35+
+- Dart 3.10+
+- Rust stable from [rustup](https://rustup.rs)
 
-Persistence sits on `drift` + `sqlite3`. The UI thread does no I/O.
-
-## 📦 Install
-
-Grab the latest build from the [Releases](https://github.com/Waydir/Waydir/releases) page.
-Waydir is distributed as native desktop packages and portable archives; pick the
-asset that matches your OS and CPU architecture.
-
-#### Ubuntu / Debian
-
-**Recommended - package repository (auto-updates via `apt upgrade`):**
-
-```bash
-curl -1sLf 'https://dl.cloudsmith.io/public/waydir/waydir-project/setup.deb.sh' | sudo -E bash
-sudo apt install waydir
-```
-
-**Or grab a single `.deb` from [Releases](https://github.com/Waydir/Waydir/releases):**
-
-```bash
-sudo dpkg -i waydir-*.deb
-```
-
-#### Fedora / RHEL
-
-**Recommended - package repository (auto-updates via `dnf upgrade`):**
-
-```bash
-curl -1sLf 'https://dl.cloudsmith.io/public/waydir/waydir-project/setup.rpm.sh' | sudo -E bash
-sudo dnf install waydir
-```
-
-**Or grab a single `.rpm` from [Releases](https://github.com/Waydir/Waydir/releases):**
-
-```bash
-sudo rpm -i waydir-*.rpm
-```
-
-#### openSUSE
-
-**Recommended - package repository (auto-updates via `zypper update`):**
-
-```bash
-curl -1sLf 'https://dl.cloudsmith.io/public/waydir/waydir-project/setup.rpm.sh' | sudo -E bash
-sudo zypper install waydir
-```
-
-**Or grab a single `.rpm` from [Releases](https://github.com/Waydir/Waydir/releases):**
-
-```bash
-sudo rpm -i waydir-*.rpm
-```
-
-#### Other Linux
-
-Portable builds from [Releases](https://github.com/Waydir/Waydir/releases) run on any
-distro:
-
-```bash
-# AppImage (portable, no install)
-chmod +x waydir-*.AppImage && ./waydir-*.AppImage
-
-# Portable tarball
-tar -xzf waydir-*-linux-x64.tar.gz && ./waydir
-```
-
-Package builds integrate with your desktop launcher. AppImage and tarball builds
-are portable and can be launched from any folder.
-
-Package repository hosting is graciously provided by [Cloudsmith](https://cloudsmith.com),
-the only fully hosted, cloud-native, universal package management solution.
-
-#### Windows
-
-`.exe` installer or portable `.zip`. Run the installer, or unpack the archive
-and launch `waydir.exe`.
-
-#### macOS
-
-`.dmg` package - drag Waydir to your Applications folder.
-
-> ⚠️ **macOS is not regularly tested.** Linux and Windows are the primary development and testing targets. macOS builds come from the same codebase but expect rough edges - please report any issues.
-
-## 🎯 Features
-
-#### Navigation & layout
-- Dual-pane mode with independent tabs in each pane
-- Sidebar with favorites, devices, and pinned bookmarks
-- A keyboard shortcut for every action
-
-#### File operations
-- Copy, move and delete with conflict resolution and live progress
-- Trash-safe delete, cancellable mid-flight
-- Clipboard integration; ZIP and TAR archives browsable in place
-
-#### Network drives
-- SMB and SFTP from the sidebar: mount, unmount, reconnect
-- Remote files act like local ones: search, copy, preview, "Open with"
-- Pooled connections, off-thread transfers, fine-grained progress
-
-#### Search & preview
-- Recursive search that streams results as it scans (substring, regex, glob)
-- Quick Look on `Space` for images, text and code
-- Per-type default apps and "Open with" picker
-
-#### Terminal
-- Embedded terminal per pane, opening in the current directory
-- Toggle with `Ctrl+\`` without leaving the keyboard
-- Real PTY backed by Rust, runs your usual shell
-
-#### Customization & integrations
-- Light, Dark and Nord themes; custom themes via JSON
-- Configurable density, sort, hidden files and date format
-- Lua plugins for context actions, toolbar buttons, status bars, the top Plugins menu and shortcuts
-- Git status bar with branch switching and stash management
-
-## 🔌 Plugins
-
-Plugins let you add small workflow actions without rebuilding Waydir. They are
-plain Lua folders with a `manifest.json` and an `init.lua`; drop one into the
-plugins folder, then reload from **Preferences -> Plugins**.
-
-Plugin actions can appear in the selection context menu, background context
-menu, top **Plugins** menu, location toolbar, keybindings, and compact global or
-per-pane status bars. They run in a sandbox and request explicit permissions for
-external commands (`exec`) or file operations (`fs`).
-
-Start with [docs/plugins.md](docs/plugins.md) or the working examples in
-[docs/examples/plugins/](docs/examples/plugins/). Fuller plugin documentation is
-available at [waydir.dev/docs/plugins](https://waydir.dev/docs/plugins/).
-
-## 🔧 Build from source
-
-**Requirements:** Flutter 3.35+, Dart 3.10+, Rust stable ([rustup](https://rustup.rs)).
-`waydir_core` (Rust) handles directory listing, search and delete - there is no Dart fallback.
+Run from the repository root:
 
 ```bash
 git clone https://github.com/Waydir/Waydir.git
-cd waydir
+cd Waydir
 flutter pub get
 cargo build --release --manifest-path rust/waydir_core/Cargo.toml
 flutter run -d linux
 ```
 
-> The Rust build must be `--release` and commands run from the repo root.
-> Rebuild and restart the app after editing `rust/waydir_core` (no hot reload).
-> For packaged builds use `scripts/build_waydir_core.sh` (Windows: `scripts/build_waydir_core_windows.ps1`).
+The Rust build must be `--release`. Rebuild and restart the app after editing `rust/waydir_core`, because Flutter hot reload does not reload the native library.
 
-#### Release binary
+For packaged native libraries:
 
 ```bash
-flutter build linux    # or: windows / macos
+scripts/build_waydir_core.sh
 ```
 
-## 🤝 Contributing
+On Windows:
 
-PRs are welcome. Before opening one:
+```powershell
+scripts/build_waydir_core_windows.ps1
+```
 
-1. `dart format .`
-2. `flutter analyze` - must be clean.
-3. `flutter test` - must be green.
+Build the Flutter app:
 
-CI runs the same three on every PR (see `.github/workflows/`). Keep commits focused; small PRs land faster than big ones.
+```bash
+flutter build linux
+```
 
-If you're picking up something non-trivial, open an issue first so we can sync on the approach.
+Use `windows` or `macos` instead of `linux` for other desktop targets.
 
-## 📄 License
+## Development
+
+Before opening a pull request, run:
+
+```bash
+dart format .
+flutter analyze
+flutter test
+```
+
+Useful faster test commands:
+
+```bash
+flutter test --exclude-tags=integration
+flutter test --tags=integration
+```
+
+Regenerate generated files when needed:
+
+```bash
+dart run slang
+dart run build_runner build --delete-conflicting-outputs
+```
+
+## Project Status
+
+Linux and Windows are the main development and testing targets. macOS builds are published from the same codebase, but they are not tested as heavily.
+
+Bug reports, crash reports and focused pull requests are welcome. For non-trivial changes, open an issue first so the approach can be discussed before implementation.
+
+## License
 
 [MIT](LICENSE)
