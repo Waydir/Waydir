@@ -64,7 +64,7 @@ mixin _WaydirMenuMixin
         action: 'select_all',
       ),
       ContextMenuItem.divider,
-      _sortMenuItem(store),
+      sortMenuParent(store),
       ContextMenuItem.divider,
       ContextMenuItem(
         icon: WaydirIconsRegular.info,
@@ -87,59 +87,6 @@ mixin _WaydirMenuMixin
     );
   }
 
-  ContextMenuItem _sortMenuItem(NavigationStore store) {
-    final activeKey = store.sortKey.value;
-    final ascending = store.sortAscending.value;
-    final c = t.fileView.columns;
-    ContextMenuItem keyItem(String label, SortKey key) => ContextMenuItem(
-      icon: activeKey == key
-          ? WaydirIconsRegular.check
-          : WaydirIconsRegular.caretUpDown,
-      label: label,
-      action: 'sort_key:${sortKeyToString(key)}',
-    );
-
-    return ContextMenuItem(
-      icon: WaydirIconsRegular.caretUpDown,
-      label: t.menu.sortBy,
-      action: 'sort_by',
-      children: [
-        keyItem(c.name, SortKey.name),
-        keyItem(c.size, SortKey.size),
-        keyItem(c.dateModified, SortKey.date),
-        keyItem(c.kind, SortKey.kind),
-        keyItem(c.dateCreated, SortKey.created),
-        if (!PlatformPaths.isWindows) ...[
-          keyItem(c.permissions, SortKey.permissions),
-          keyItem(c.owner, SortKey.owner),
-        ],
-        ContextMenuItem.divider,
-        ContextMenuItem(
-          icon: ascending
-              ? WaydirIconsRegular.check
-              : WaydirIconsRegular.caretUp,
-          label: t.menu.sortAscending,
-          action: 'sort_dir:asc',
-        ),
-        ContextMenuItem(
-          icon: ascending
-              ? WaydirIconsRegular.caretDown
-              : WaydirIconsRegular.check,
-          label: t.menu.sortDescending,
-          action: 'sort_dir:desc',
-        ),
-        ContextMenuItem.divider,
-        ContextMenuItem(
-          icon: WaydirIconsRegular.folder,
-          label: t.menu.sortFoldersFirst,
-          action: 'sort_folders_first',
-          isToggle: true,
-          toggleSignal: store.foldersFirst,
-        ),
-      ],
-    );
-  }
-
   void _handleBackgroundMenuAction(String action) {
     final store = _active;
     if (action.startsWith('plugin:')) {
@@ -147,11 +94,7 @@ mixin _WaydirMenuMixin
 
       return;
     }
-    if (action.startsWith('sort_key:')) {
-      store.setSortKey(sortKeyFromString(action.substring('sort_key:'.length)));
-
-      return;
-    }
+    if (handleSortMenuAction(store, action)) return;
     switch (action) {
       case 'paste':
         store.paste();
@@ -163,12 +106,6 @@ mixin _WaydirMenuMixin
         store.selectAll();
       case 'open_in_terminal':
         _openInTerminal(store.currentPath.value);
-      case 'sort_dir:asc':
-        store.setSortAscending(true);
-      case 'sort_dir:desc':
-        store.setSortAscending(false);
-      case 'sort_folders_first':
-        store.setFoldersFirst(!store.foldersFirst.value);
       case 'properties':
         _openFolderProperties(store.currentPath.value);
     }

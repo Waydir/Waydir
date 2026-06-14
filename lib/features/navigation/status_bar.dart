@@ -4,9 +4,11 @@ import 'package:signals/signals_flutter.dart';
 import 'navigation_store.dart';
 import '../../app/app_info.dart';
 import '../../core/update/update_store.dart';
+import '../../features/files/sort_menu.dart';
 import '../../features/update/update_dialog.dart';
 import '../../core/settings/settings_store.dart';
 import '../operations/operation_store.dart';
+import '../../ui/overlays/context_menu.dart';
 import '../../ui/overlays/notification_store.dart';
 import '../../ui/overlays/notifications_panel.dart';
 import '../../ui/theme/app_theme.dart';
@@ -65,6 +67,8 @@ class StatusBar extends StatelessWidget {
             },
           ),
           const Spacer(),
+          _StatusSortButton(store: store),
+          const SizedBox(width: 10),
           const _StatusViewModeToggle(),
           const SizedBox(width: 10),
           const _StatusZoomControl(),
@@ -171,6 +175,59 @@ class _StatusViewModeButtonState extends State<_StatusViewModeButton> {
               borderRadius: BorderRadius.zero,
             ),
             child: Icon(widget.icon, size: 14, color: color),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusSortButton extends StatefulWidget {
+  final NavigationStore store;
+
+  const _StatusSortButton({required this.store});
+
+  @override
+  State<_StatusSortButton> createState() => _StatusSortButtonState();
+}
+
+class _StatusSortButtonState extends State<_StatusSortButton> {
+  bool _hovered = false;
+
+  void _openMenu() {
+    final box = context.findRenderObject() as RenderBox?;
+    if (box == null) return;
+    final pos = box.localToGlobal(Offset.zero);
+    showContextMenu(
+      context: context,
+      position: pos,
+      items: buildSortMenuItems(widget.store),
+      onSelect: (action) => handleSortMenuAction(widget.store, action),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _hovered ? AppColors.fg : AppColors.fgMuted;
+
+    return Tooltip(
+      message: t.menu.sortBy,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(
+          onTap: _openMenu,
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            width: 22,
+            height: 20,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: _hovered ? AppColors.bgHover : Colors.transparent,
+              borderRadius: BorderRadius.zero,
+            ),
+            child: Icon(WaydirIconsRegular.caretUpDown, size: 14, color: color),
           ),
         ),
       ),
