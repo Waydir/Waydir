@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Quick Look: PDF preview.
 - Sort menu (status bar button and right-click), so sorting works in grid view too.
 - Appearance: "Show folders before files" toggle.
+- Type-ahead jump: quickly typed letters combine into a search string (toggle in General settings).
+- Jump to bookmarks with Ctrl/Cmd+Shift+1..9.
 
 ### Fixed
 - Grid view now supports left/right arrow navigation, drag selection, file dragging and Appearance spacing/density settings.
