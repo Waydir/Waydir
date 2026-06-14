@@ -25,8 +25,7 @@ List<ContextMenuItem> buildSortMenuItems(NavigationStore store) {
   return [
     keyItem(c.name, SortKey.name),
     for (final col in orderedColumns())
-      if (fileColumnSignal(col).value)
-        keyItem(fileColumnLabel(col), fileColumnSortKey(col)),
+      keyItem(fileColumnLabel(col), fileColumnSortKey(col)),
     ContextMenuItem.divider,
     ContextMenuItem(
       icon: ascending ? WaydirIconsRegular.check : WaydirIconsRegular.caretUp,
