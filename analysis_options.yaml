@@ -1,1 +1,12 @@
 include: package:flutter_lints/flutter.yaml
+
+dcm:
+  rules:
+    - avoid-unnecessary-reassignment
+    - avoid-unrelated-type-assertions
+    - avoid-unused-parameters
+    - newline-before-return
+    - no-boolean-literal-compare
+    - prefer-correct-type-name
+    - prefer-first
+    - prefer-last
