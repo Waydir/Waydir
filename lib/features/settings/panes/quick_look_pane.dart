@@ -50,6 +50,7 @@ class _QuickLookPaneState extends State<QuickLookPane> {
             SignalBuilder(
               builder: (_) {
                 if (useSystemFont.value == true) return const SizedBox.shrink();
+
                 return RegistrySettingRow(setting: fontFamily);
               },
             ),
@@ -66,6 +67,7 @@ class _QuickLookPaneState extends State<QuickLookPane> {
                 if (showLineNumbers.value != true) {
                   return const SizedBox.shrink();
                 }
+
                 return RegistrySettingRow(setting: relativeLineNumbers);
               },
             ),

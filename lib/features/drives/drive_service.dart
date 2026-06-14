@@ -129,6 +129,7 @@ class _WindowsDriveService implements DriveService {
     final letter = drive.id.replaceAll(r'\', '');
     if (drive.isNetwork) {
       await Process.run('net', ['use', letter, '/delete', '/y']);
+
       return;
     }
     if (!drive.isRemovable) return;
@@ -146,6 +147,7 @@ class _WindowsDriveService implements DriveService {
         .where((p) => p.isNotEmpty)
         .toList();
     if (parts.isEmpty) return null;
+
     return parts.last;
   }
 
@@ -157,9 +159,11 @@ class _WindowsDriveService implements DriveService {
       final result = _wNetGetConnection(local, remote, length);
       if (result != 0) return null;
       final unc = remote.toDartString();
+
       return unc.isEmpty ? null : unc;
     } catch (e, st) {
       log.warn('drives', 'network drive lookup failed', error: e, stack: st);
+
       return null;
     } finally {
       free(local);
@@ -176,6 +180,7 @@ class _WindowsDriveService implements DriveService {
     try {
       final ok = GetDiskFreeSpaceEx(path, freeToCaller, total, free);
       if (ok == 0 || total.value <= 0) return null;
+
       return DriveSpace(totalBytes: total.value, freeBytes: free.value);
     } catch (e, st) {
       log.warn(
@@ -184,6 +189,7 @@ class _WindowsDriveService implements DriveService {
         error: e,
         stack: st,
       );
+
       return null;
     } finally {
       calloc.free(path);
@@ -228,6 +234,7 @@ class _LinuxDriveService implements DriveService {
       return drives;
     } catch (e, st) {
       log.warn('drives', 'linux drive discovery failed', error: e, stack: st);
+
       return [];
     }
   }
@@ -373,7 +380,7 @@ class _MacDriveService implements DriveService {
         final parts = line.split(RegExp(r'\s+'));
         if (parts.length < 6) continue;
 
-        final device = parts[0];
+        final device = parts.first;
         final mountPoint = parts.sublist(5).join(' ');
 
         if (!device.startsWith('/dev/disk')) continue;
@@ -424,6 +431,7 @@ class _MacDriveService implements DriveService {
       return drives;
     } catch (e, st) {
       log.warn('drives', 'mac drive discovery failed', error: e, stack: st);
+
       return [];
     }
   }
@@ -453,9 +461,11 @@ Future<DriveSpace?> _unixSpace(String path) async {
         .where((line) => line.trim().isNotEmpty)
         .toList();
     if (lines.length < 2) return null;
+
     return _spaceFromDfParts(lines.last.trim().split(RegExp(r'\s+')));
   } catch (e, st) {
     log.warn('drives', 'drive space lookup failed', error: e, stack: st);
+
     return null;
   }
 }
@@ -465,5 +475,6 @@ DriveSpace? _spaceFromDfParts(List<String> parts) {
   final blocks = int.tryParse(parts[1]);
   final available = int.tryParse(parts[3]);
   if (blocks == null || available == null || blocks <= 0) return null;
+
   return DriveSpace(totalBytes: blocks * 1024, freeBytes: available * 1024);
 }

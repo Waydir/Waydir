@@ -70,8 +70,10 @@ List<FileEntry> sortEntries(
         cmp = a.ownerName.toLowerCase().compareTo(b.ownerName.toLowerCase());
     }
     if (cmp == 0) cmp = byName(a, b);
+
     return ascending ? cmp : -cmp;
   });
+
   return out;
 }
 
@@ -126,5 +128,6 @@ int compareNatural(String a, String b) {
     }
   }
   final rest = (la - i) - (lb - j);
-  return rest < 0 ? -1 : (rest > 0 ? 1 : 0);
+
+  return rest.sign;
 }

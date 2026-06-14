@@ -109,6 +109,7 @@ class RecursiveSearch {
           _StartMsg(root, query, includeHidden, mode, content, maxDepth),
         );
         if (handle._done) handle._commandPort?.send(const _CancelMsg());
+
         return;
       }
       if (handle._done && msg is! _DoneMsg) return;
@@ -184,6 +185,7 @@ class RecursiveSearch {
     const pollInterval = Duration(milliseconds: 120);
     if (isCancelled()) {
       mainPort.send(const _DoneMsg());
+
       return;
     }
 
@@ -199,12 +201,14 @@ class RecursiveSearch {
       );
     } catch (e) {
       mainPort.send(_ErrorMsg(e.toString()));
+
       return;
     }
 
     if (session == null) {
       mainPort.send(_ProgressMsg(0, null));
       mainPort.send(const _DoneMsg());
+
       return;
     }
 
@@ -248,6 +252,7 @@ class RecursiveSearch {
     try {
       final stat = FileStat.statSync(entry.realPath);
       if (stat.type == FileSystemEntityType.notFound) return entry;
+
       return FileEntry.raw(
         name: entry.name,
         path: entry.path,
@@ -257,6 +262,7 @@ class RecursiveSearch {
       );
     } catch (e, st) {
       log.warn('search', 'failed to stat search result', error: e, stack: st);
+
       return entry;
     }
   }

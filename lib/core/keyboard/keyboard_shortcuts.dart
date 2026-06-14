@@ -90,6 +90,7 @@ class ShortcutDef {
 
   String get displayKeys {
     final b = binding;
+
     return _format(
       b.ctrl,
       b.shift,
@@ -102,6 +103,7 @@ class ShortcutDef {
   String? get displayAltKeys {
     if (altKey == null) return null;
     if (AppShortcuts.isOverridden(id)) return null;
+
     return _format(altCtrl, altShift, false, altKey!);
   }
 
@@ -122,6 +124,7 @@ class ShortcutDef {
     if (s) parts.add(Platform.isMacOS ? '⇧' : 'Shift');
     if (a) parts.add(Platform.isMacOS ? '⌥' : 'Alt');
     parts.add(customDisplay ?? _keyLabel(key));
+
     return parts.join('+');
   }
 
@@ -144,6 +147,7 @@ class ShortcutDef {
     if (label.isNotEmpty) {
       return label.length == 1 ? label.toUpperCase() : label;
     }
+
     return key.debugName ?? 'Key';
   }
 }
@@ -172,6 +176,7 @@ class AppShortcuts {
       return pressed.contains(LogicalKeyboardKey.metaLeft) ||
           pressed.contains(LogicalKeyboardKey.metaRight);
     }
+
     return pressed.contains(LogicalKeyboardKey.controlLeft) ||
         pressed.contains(LogicalKeyboardKey.controlRight);
   }
@@ -200,6 +205,7 @@ class AppShortcuts {
 
   static KeyChord effectiveBinding(String id) {
     final def = _byId[id]!;
+
     return _overrides[id] ?? def.defaultBinding;
   }
 
@@ -217,6 +223,7 @@ class AppShortcuts {
         return def;
       }
     }
+
     return null;
   }
 
@@ -681,6 +688,7 @@ class AppShortcuts {
         return true;
       }
     }
+
     return false;
   }
 
@@ -739,6 +747,7 @@ class AppShortcuts {
       }
     }
     if (key == null) return null;
+
     return KeyChord(key: key, ctrl: ctrl, shift: shift, alt: alt);
   }
 
@@ -760,14 +769,17 @@ class AppShortcuts {
     final fn = RegExp(r'^f([1-9]|1[0-2])$').firstMatch(token);
     if (fn != null) {
       final n = int.parse(fn.group(1)!);
+
       return LogicalKeyboardKey(LogicalKeyboardKey.f1.keyId + (n - 1));
     }
+
     return null;
   }
 
   static bool isKey(String id, LogicalKeyboardKey key) {
     final def = _byId[id];
     if (def == null) return false;
+
     return def.matchesKey(key) || def.matchesAltKey(key);
   }
 
@@ -789,6 +801,7 @@ class AppShortcuts {
         !alt) {
       return true;
     }
+
     return false;
   }
 
@@ -796,6 +809,7 @@ class AppShortcuts {
     final def = _byId[id];
     if (def == null) return false;
     final b = effectiveBinding(id);
+
     return key == b.key && isControl == b.ctrl && isAlt == b.alt;
   }
 }

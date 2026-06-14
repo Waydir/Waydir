@@ -18,11 +18,13 @@ Future<bool> hasFullDiskAccess() async {
     } finally {
       raf.closeSync();
     }
+
     return true;
   } on FileSystemException {
     return false;
   } catch (e, st) {
     log.warn('platform', 'full disk access probe failed', error: e, stack: st);
+
     return false;
   }
 }

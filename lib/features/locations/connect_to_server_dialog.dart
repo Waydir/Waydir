@@ -38,6 +38,7 @@ Future<String?> showConnectToServerDialog(BuildContext context) async {
 
   if (clicked != connectLabel) return null;
   if (snapshot.host.trim().isEmpty) return null;
+
   return _buildUri(
     snapshot.protocol,
     snapshot.username,
@@ -91,6 +92,7 @@ String _buildUri(
       }
     }
   }
+
   return buf.toString();
 }
 
@@ -160,6 +162,7 @@ class _ConnectBodyState extends State<_ConnectBody> {
       _path.text,
     );
     final isSftp = widget.snapshot.protocol == ConnectProtocol.sftp;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,

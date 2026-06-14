@@ -61,6 +61,7 @@ class SftpSessionManager {
     if (!anyPath.startsWith('sftp://')) return null;
     final uri = LocationUri.parse(anyPath);
     final root = rootOf(uri);
+
     return _byRoot[root];
   }
 
@@ -69,6 +70,7 @@ class SftpSessionManager {
     if (!anyPath.startsWith('sftp://')) return anyPath;
     final uri = LocationUri.parse(anyPath);
     final p = uri.path ?? '';
+
     return p.isEmpty ? '/' : '/$p';
   }
 
@@ -85,6 +87,7 @@ class SftpSessionManager {
       buf.write(':');
       buf.write(uri.port);
     }
+
     return buf.toString();
   }
 
@@ -109,6 +112,7 @@ class SftpSessionManager {
       buf.write('/');
       buf.write(trimmed);
     }
+
     return buf.toString();
   }
 
@@ -156,6 +160,7 @@ class SftpSessionManager {
         return path;
       }
     }
+
     return '/';
   }
 
@@ -218,6 +223,7 @@ class SftpSessionManager {
         user: user,
         sessionId: result.sessionId,
       );
+
       return SftpOpenOutcome(
         status: SftpOpenStatus.ok,
         sessionId: result.sessionId,
@@ -226,6 +232,7 @@ class SftpSessionManager {
     if (result.isAuthRequired) {
       return const SftpOpenOutcome(status: SftpOpenStatus.authRequired);
     }
+
     return SftpOpenOutcome(
       status: SftpOpenStatus.error,
       message: result.errorMessage,

@@ -116,6 +116,7 @@ class SidebarStore {
       (pos.containsKey(keyOf(item)) ? known : unknown).add(item);
     }
     known.sort((a, b) => pos[keyOf(a)]!.compareTo(pos[keyOf(b)]!));
+
     return [...known, ...unknown];
   }
 
@@ -175,6 +176,7 @@ class SidebarStore {
     final list = [...source];
     final item = list.removeAt(oldIndex);
     list.insert(to, item);
+
     return list;
   }
 }

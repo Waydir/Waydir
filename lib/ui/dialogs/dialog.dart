@@ -26,6 +26,7 @@ Future<T?> showCustomDialog<T>({
       return _CustomDialogBody(
         title: title,
         icon: icon,
+        iconColor: iconColor,
         width: width,
         body: body,
         actions: actions,
@@ -38,6 +39,7 @@ Future<T?> showCustomDialog<T>({
 class _CustomDialogBody extends StatelessWidget {
   final String title;
   final IconData icon;
+  final Color? iconColor;
   final double width;
   final Widget body;
   final List<DialogAction> actions;
@@ -46,6 +48,7 @@ class _CustomDialogBody extends StatelessWidget {
   const _CustomDialogBody({
     required this.title,
     required this.icon,
+    required this.iconColor,
     this.width = 360,
     required this.body,
     required this.actions,
@@ -60,12 +63,15 @@ class _CustomDialogBody extends StatelessWidget {
     if (key == LogicalKeyboardKey.enter ||
         key == LogicalKeyboardKey.numpadEnter) {
       onAction(actions.last.label);
+
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.escape) {
       onAction(actions.first.label);
+
       return KeyEventResult.handled;
     }
+
     return KeyEventResult.ignored;
   }
 
@@ -76,6 +82,7 @@ class _CustomDialogBody extends StatelessWidget {
       onKeyEvent: _handleKey,
       child: AppModal(
         icon: icon,
+        iconColor: iconColor,
         title: title,
         width: width,
         padding: const EdgeInsets.all(16),

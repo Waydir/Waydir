@@ -37,6 +37,7 @@ class ArchivePath {
     for (final ext in _compoundExtensions) {
       if (lower.endsWith(ext)) return true;
     }
+
     return _extensions.contains(p.extension(lower));
   }
 
@@ -52,11 +53,13 @@ class ArchivePath {
         continue;
       }
       final innerSegments = segments.sublist(i + 1);
+
       return ArchiveLocation(
         prefix,
         innerSegments.isEmpty ? '' : p.joinAll(innerSegments),
       );
     }
+
     return null;
   }
 }

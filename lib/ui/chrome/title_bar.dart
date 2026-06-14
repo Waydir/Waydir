@@ -73,6 +73,7 @@ class TitleBar extends StatelessWidget {
         ),
       );
     }
+
     return Column(
       children: [
         _TitleBarRow(menuTrailing: menuTrailing),

@@ -23,6 +23,7 @@ class SftpFs implements FsBackend {
     if (rec == null) {
       throw FileSystemException(t.errors.sftpNoActiveSessionFor(path: path));
     }
+
     return rec.sessionId;
   }
 
@@ -33,6 +34,7 @@ class SftpFs implements FsBackend {
   String _logicalFrom(String referencePath, String remotePath) {
     final rec = SftpSessionManager.recordFor(referencePath);
     if (rec == null) return referencePath;
+
     return SftpSessionManager.buildLogicalPath(
       host: rec.host,
       port: rec.port,
@@ -50,6 +52,7 @@ class SftpFs implements FsBackend {
       throw FileSystemException(t.errors.sftpListingFailed, path);
     }
     final decoded = FileEntryCodec.decode(buf);
+
     return decoded
         .map(
           (e) => FileEntry.raw(
@@ -70,6 +73,7 @@ class SftpFs implements FsBackend {
     final s = WaydirCoreLoader.sftpStat(sessionId, remote);
     if (s == null || !s.exists) return null;
     final name = PlatformPaths.fileName(path);
+
     return FileEntry.raw(
       name: name.isEmpty ? remote : name,
       path: path,
@@ -82,6 +86,7 @@ class SftpFs implements FsBackend {
   @override
   Future<bool> exists(String path) async {
     final s = await stat(path);
+
     return s != null;
   }
 
@@ -107,6 +112,7 @@ class SftpFs implements FsBackend {
     final controller = StreamController<List<int>>();
     controller.add(bytes);
     controller.close();
+
     return controller.stream;
   }
 

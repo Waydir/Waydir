@@ -43,6 +43,7 @@ mixin _WaydirActionsMixin on State<WaydirShell>, _WaydirStateBase {
         DialogAction(label: actionLabel, color: AppColors.accent),
       ],
     );
+
     return result == actionLabel;
   }
 
@@ -51,6 +52,7 @@ mixin _WaydirActionsMixin on State<WaydirShell>, _WaydirStateBase {
     if (entries.isEmpty) return;
     if (_active.isTrashView) {
       _active.deletePermanentlySelectedFromTrash();
+
       return;
     }
     final useTrash =
@@ -58,6 +60,7 @@ mixin _WaydirActionsMixin on State<WaydirShell>, _WaydirStateBase {
         SettingsStore.instance.deleteKeyBehavior.value == 'trash';
     if (!SettingsStore.instance.confirmDelete.value) {
       _active.deleteSelected(toTrash: useTrash);
+
       return;
     }
     final count = entries.length;
@@ -97,6 +100,7 @@ mixin _WaydirActionsMixin on State<WaydirShell>, _WaydirStateBase {
     final entries = store.selectedEntries;
     if (entries.isEmpty) {
       _openFolderProperties(store.currentPath.value);
+
       return;
     }
     if (entries.length == 1) {
@@ -105,6 +109,7 @@ mixin _WaydirActionsMixin on State<WaydirShell>, _WaydirStateBase {
         store: store,
         explicitEntry: entries.first,
       ).then((_) => _restoreFocus());
+
       return;
     }
     showQuickLook(context: context, store: store).then((_) => _restoreFocus());
@@ -143,10 +148,12 @@ mixin _WaydirActionsMixin on State<WaydirShell>, _WaydirStateBase {
     final entries = store.selectedEntries;
     if (entries.length == 1) {
       final e = entries.first;
+
       return e.type == FileItemType.folder
           ? e.name
           : p.basenameWithoutExtension(e.name);
     }
+
     return _sanitizeArchiveBase(
       p.basename(store.currentPath.value),
       store.currentPath.value,
@@ -158,6 +165,7 @@ mixin _WaydirActionsMixin on State<WaydirShell>, _WaydirStateBase {
     if (cleaned.isNotEmpty) return cleaned;
     final drive = RegExp(r'^([A-Za-z]):').firstMatch(fullPath);
     if (drive != null) return drive.group(1)!;
+
     return 'archive';
   }
 
@@ -207,6 +215,7 @@ mixin _WaydirActionsMixin on State<WaydirShell>, _WaydirStateBase {
     if (entries.length < 2) return;
     if (store.isTrashView) {
       showToast(context: context, message: t.toast.multiRenameTrashBlocked);
+
       return;
     }
     final result = await showMultiRenameDialog(
@@ -215,6 +224,7 @@ mixin _WaydirActionsMixin on State<WaydirShell>, _WaydirStateBase {
     );
     if (result == null || result.renames.isEmpty) {
       _restoreFocus();
+
       return;
     }
     var cancelled = false;
@@ -274,6 +284,7 @@ mixin _WaydirActionsMixin on State<WaydirShell>, _WaydirStateBase {
   void _showMultiRenameToast(MultiRenameOutcome outcome) {
     if (outcome.blocked) {
       showToast(context: context, message: t.toast.multiRenameTrashBlocked);
+
       return;
     }
     if (outcome.failed == 0) {
@@ -281,6 +292,7 @@ mixin _WaydirActionsMixin on State<WaydirShell>, _WaydirStateBase {
         context: context,
         message: t.toast.multiRenameSuccess(count: outcome.succeeded),
       );
+
       return;
     }
     final details = _multiRenameDetails(outcome);
@@ -305,6 +317,7 @@ mixin _WaydirActionsMixin on State<WaydirShell>, _WaydirStateBase {
     if (outcome.other > 0) {
       parts.add(t.toast.multiRenameOtherErrors(count: outcome.other));
     }
+
     return parts.join(', ');
   }
 
@@ -464,6 +477,7 @@ mixin _WaydirActionsMixin on State<WaydirShell>, _WaydirStateBase {
     final idx = store.cursorIndex.value;
     final files = store.visibleFiles.value;
     if (idx >= 0 && idx < files.length) return [files[idx].realPath];
+
     return const [];
   }
 }

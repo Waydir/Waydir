@@ -71,6 +71,7 @@ class SmbShareDiscovery {
     if (result is SmbShareListOk) {
       _cache[key] = _CacheEntry(result.shares, DateTime.now());
     }
+
     return result;
   }
 
@@ -88,6 +89,7 @@ class SmbShareDiscovery {
 
   static bool _looksLikeAuthPrompt(String text) {
     final t = text.toLowerCase();
+
     return t.contains('nt_status_logon_failure') ||
         t.contains('nt_status_access_denied') ||
         t.contains('access denied') ||
@@ -125,10 +127,12 @@ class SmbShareDiscovery {
         return const SmbShareListAuthRequired();
       }
       final msg = err.trim().isNotEmpty ? err.trim() : out.trim();
+
       return SmbShareListError(
         msg.isEmpty ? t.errors.smbClientFailed(code: result.exitCode) : msg,
       );
     }
+
     return SmbShareListOk(parseSmbclientGrepable(out));
   }
 
@@ -146,6 +150,7 @@ class SmbShareDiscovery {
       final comment = parts.length >= 3 ? parts[2].trim() : '';
       out.add(SmbShare(name: name, comment: comment.isEmpty ? null : comment));
     }
+
     return out;
   }
 
@@ -180,10 +185,12 @@ class SmbShareDiscovery {
         return const SmbShareListAuthRequired();
       }
       final msg = err.trim().isNotEmpty ? err.trim() : out.trim();
+
       return SmbShareListError(
         msg.isEmpty ? t.errors.smbutilFailed(code: result.exitCode) : msg,
       );
     }
+
     return SmbShareListOk(parseSmbutil(out));
   }
 
@@ -201,13 +208,14 @@ class SmbShareDiscovery {
       if (!inTable) continue;
       final parts = line.split(RegExp(r'\s{2,}'));
       if (parts.length < 2) continue;
-      final name = parts[0].trim();
+      final name = parts.first.trim();
       final type = parts[1].trim().toLowerCase();
       if (type != 'disk') continue;
       if (name.isEmpty || name.endsWith(r'$')) continue;
       final comment = parts.length >= 3 ? parts[2].trim() : '';
       out.add(SmbShare(name: name, comment: comment.isEmpty ? null : comment));
     }
+
     return out;
   }
 
@@ -225,10 +233,12 @@ class SmbShareDiscovery {
         return const SmbShareListAuthRequired();
       }
       final msg = err.trim().isNotEmpty ? err.trim() : out.trim();
+
       return SmbShareListError(
         msg.isEmpty ? t.errors.netViewFailed(code: result.exitCode) : msg,
       );
     }
+
     return SmbShareListOk(parseNetView(out));
   }
 
@@ -246,11 +256,12 @@ class SmbShareDiscovery {
       if (!inTable) continue;
       final parts = line.split(RegExp(r'\s{2,}'));
       if (parts.length < 2) continue;
-      final name = parts[0].trim();
+      final name = parts.first.trim();
       if (name.isEmpty || name.endsWith(r'$')) continue;
       final comment = parts.length >= 3 ? parts.last.trim() : '';
       out.add(SmbShare(name: name, comment: comment.isEmpty ? null : comment));
     }
+
     return out;
   }
 }

@@ -20,6 +20,7 @@ class AppWindow {
 
   Size get size {
     final s = ffi.getSize();
+
     return Size(s.width.toDouble(), s.height.toDouble());
   }
 

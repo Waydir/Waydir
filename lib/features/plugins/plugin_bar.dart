@@ -129,6 +129,7 @@ class _PluginBarHostState extends State<PluginBarHost> {
     for (final bar in widget.bars) {
       if (_stateKey(bar) == key) return bar;
     }
+
     return null;
   }
 
@@ -155,6 +156,7 @@ class _PluginBarHostState extends State<PluginBarHost> {
   Future<void> _click(PluginBarContribution bar, PluginBarItem item) async {
     if (item.action == 'refresh') {
       await _refresh(bar);
+
       return;
     }
     final itemId = item.id.isNotEmpty ? item.id : item.action ?? '';
@@ -183,6 +185,7 @@ class _PluginBarHostState extends State<PluginBarHost> {
           visible.add((bar, state));
         }
         if (visible.isEmpty) return const SizedBox.shrink();
+
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -213,6 +216,7 @@ class _PluginBarRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final iconPath = bar.iconPath;
+
     return Container(
       height: 24,
       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -296,6 +300,7 @@ class _PluginBarBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = _levelColor(item.level) ?? AppColors.fgMuted;
+
     return Container(
       margin: const EdgeInsets.only(right: 8),
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
@@ -364,6 +369,7 @@ class _PluginBarButtonState extends State<_PluginBarButton> {
     );
     final tooltip = widget.item.tooltip;
     if (tooltip == null || tooltip.isEmpty) return child;
+
     return Tooltip(message: tooltip, child: child);
   }
 }
@@ -381,5 +387,6 @@ Color? _levelColor(String? level) {
     case 'info':
       return AppColors.fgAccent;
   }
+
   return null;
 }

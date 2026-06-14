@@ -39,6 +39,7 @@ List<Crumb> crumbsFromPath(String path) {
         );
       }
     }
+
     return crumbs;
   }
 
@@ -47,6 +48,7 @@ List<Crumb> crumbsFromPath(String path) {
     if (!PlatformPaths.isWindows && path.startsWith('/')) {
       return const [Crumb(label: '/', fullPath: '/')];
     }
+
     return const [];
   }
 
@@ -72,5 +74,6 @@ List<Crumb> crumbsFromPath(String path) {
       ),
     );
   }
+
   return crumbs;
 }

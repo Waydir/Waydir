@@ -31,15 +31,18 @@ class TerminalLaunch {
           cwd: PlatformPaths.homePath,
         );
       }
+
       return TerminalLaunchSpec(cwd: PlatformPaths.homePath);
     }
     if (PlatformPaths.isSmbUri(path)) {
       final physical = LocationResolver.logicalToPhysical(path);
+
       return TerminalLaunchSpec(
         cwd: physical ?? PlatformPaths.homePath,
         shell: _localShell(),
       );
     }
+
     return TerminalLaunchSpec(cwd: path, shell: _localShell());
   }
 
@@ -50,6 +53,7 @@ class TerminalLaunch {
   static String _localShell() {
     final pref = SettingsStore.instance.terminalShell.value;
     if (pref.isNotEmpty && pref != 'system') return pref;
+
     return ShellDetector.defaultShellPath();
   }
 }

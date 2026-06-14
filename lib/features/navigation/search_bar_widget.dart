@@ -46,6 +46,7 @@ class _AppSearchBarState extends State<AppSearchBar> {
             if (event.logicalKey == LogicalKeyboardKey.escape &&
                 _suggestionOverlay != null) {
               _dismissSuggestions();
+
               return KeyEventResult.handled;
             }
             if (event.logicalKey == LogicalKeyboardKey.arrowDown &&
@@ -54,6 +55,7 @@ class _AppSearchBarState extends State<AppSearchBar> {
                 _suggestionIndex = (_suggestionIndex + 1) % suggestions.length;
               });
               _suggestionOverlay?.markNeedsBuild();
+
               return KeyEventResult.handled;
             }
             if (event.logicalKey == LogicalKeyboardKey.arrowUp &&
@@ -64,6 +66,7 @@ class _AppSearchBarState extends State<AppSearchBar> {
                     suggestions.length;
               });
               _suggestionOverlay?.markNeedsBuild();
+
               return KeyEventResult.handled;
             }
             if ((event.logicalKey == LogicalKeyboardKey.tab ||
@@ -75,9 +78,11 @@ class _AppSearchBarState extends State<AppSearchBar> {
           }
           if (event.logicalKey == LogicalKeyboardKey.tab) {
             widget.store.cycleSearchMode();
+
             return KeyEventResult.handled;
           }
         }
+
         return KeyEventResult.ignored;
       },
     );
@@ -144,6 +149,7 @@ class _AppSearchBarState extends State<AppSearchBar> {
       return const [];
     }
     if (!_focusNode.hasFocus) return const [];
+
     return filterSuggestions(
       _controller.text,
       _controller.selection.baseOffset,
@@ -154,6 +160,7 @@ class _AppSearchBarState extends State<AppSearchBar> {
     if (suggestions.isEmpty) return false;
     final index = _boundedSuggestionIndex(suggestions.length);
     _applySuggestion(suggestions[index]);
+
     return true;
   }
 
@@ -161,6 +168,7 @@ class _AppSearchBarState extends State<AppSearchBar> {
     if (count <= 0) return -1;
     if (_suggestionIndex < 0) return 0;
     if (_suggestionIndex >= count) return count - 1;
+
     return _suggestionIndex;
   }
 
@@ -183,11 +191,13 @@ class _AppSearchBarState extends State<AppSearchBar> {
   void _syncSuggestionsOverlay() {
     if (_suggestionsDismissed) {
       _hideSuggestions();
+
       return;
     }
     final suggestions = _currentSuggestions();
     if (suggestions.isEmpty) {
       _hideSuggestions();
+
       return;
     }
     _showSuggestions();
@@ -196,12 +206,14 @@ class _AppSearchBarState extends State<AppSearchBar> {
   void _showSuggestions() {
     if (_suggestionOverlay != null) {
       _suggestionOverlay!.markNeedsBuild();
+
       return;
     }
     _suggestionOverlay = OverlayEntry(
       builder: (_) {
         final suggestions = _currentSuggestions();
         if (suggestions.isEmpty) return const SizedBox.shrink();
+
         return CompositedTransformFollower(
           link: _suggestionLayerLink,
           showWhenUnlinked: false,
@@ -248,6 +260,7 @@ class _AppSearchBarState extends State<AppSearchBar> {
         Overlay.of(context).context.findRenderObject() as RenderBox?;
     final targetWidth = targetBox?.size.width ?? 360;
     final maxWidth = (overlayBox?.size.width ?? targetWidth) - 16;
+
     return targetWidth.clamp(280, maxWidth < 280 ? 280 : maxWidth).toDouble();
   }
 
@@ -256,6 +269,7 @@ class _AppSearchBarState extends State<AppSearchBar> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _syncSuggestionsOverlay();
     });
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.bgToolbar,
@@ -349,6 +363,7 @@ class _StatusLine extends StatelessWidget {
         final child = _statusText(context, store);
         if (child == null) return const SizedBox.shrink();
         final searching = store.isSearching.value;
+
         return Padding(
           padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
           child: Row(
@@ -404,6 +419,7 @@ Widget? _statusText(BuildContext context, NavigationStore store) {
   } else {
     text = t.search.noMatches;
   }
+
   return Text(text, style: context.txt.bodyMuted);
 }
 
@@ -424,6 +440,7 @@ class _RecursiveToggleState extends State<_RecursiveToggle> {
     return SignalBuilder(
       builder: (context) {
         final active = widget.store.searchRecursive.value;
+
         return Tooltip(
           message: t.search.subfoldersShortcut,
           child: MouseRegion(
@@ -497,6 +514,7 @@ class _ContentToggleState extends State<_ContentToggle> {
         final fg = !enabled
             ? AppColors.fgSubtle
             : (active ? AppColors.accent : AppColors.fgMuted);
+
         return Tooltip(
           message: enabled
               ? t.search.contentSearch
@@ -562,6 +580,7 @@ class _ModeToggle extends StatelessWidget {
       builder: (context) {
         final current = SettingsStore.instance.searchMode.value;
         final content = store.searchContent.value;
+
         return Container(
           height: 24,
           margin: const EdgeInsets.only(right: 4),
@@ -696,6 +715,7 @@ class _FilterSuggestionPopupState extends State<_FilterSuggestionPopup> {
   @override
   Widget build(BuildContext context) {
     final suggestions = widget.suggestions;
+
     return Container(
       clipBehavior: Clip.antiAlias,
       constraints: const BoxConstraints(maxHeight: 184),
@@ -718,6 +738,7 @@ class _FilterSuggestionPopupState extends State<_FilterSuggestionPopup> {
               itemCount: suggestions.length,
               itemBuilder: (context, index) {
                 final suggestion = suggestions[index];
+
                 return _FilterSuggestionRow(
                   suggestion: suggestion,
                   highlighted: index == widget.highlightedIndex,
@@ -791,6 +812,7 @@ class _FilterSuggestionRowState extends State<_FilterSuggestionRow> {
   @override
   Widget build(BuildContext context) {
     final active = widget.highlighted || _hovered;
+
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),
@@ -862,6 +884,7 @@ class _ModeSegmentState extends State<_ModeSegment> {
     final color = !enabled
         ? AppColors.fgSubtle
         : (active ? AppColors.accent : AppColors.fgMuted);
+
     return Tooltip(
       message: widget.tooltip,
       child: MouseRegion(
@@ -989,6 +1012,7 @@ class _SearchQueryController extends TextEditingController {
     if (offset < text.length) {
       children.add(TextSpan(text: text.substring(offset)));
     }
+
     return TextSpan(style: base, children: children);
   }
 }

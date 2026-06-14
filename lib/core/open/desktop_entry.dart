@@ -52,6 +52,7 @@ class DesktopEntry {
         .map((s) => s.trim())
         .where((s) => s.isNotEmpty)
         .toList();
+
     return DesktopEntry(
       name: fields['Name'] ?? '',
       exec: fields['Exec'] ?? '',
@@ -91,6 +92,7 @@ class DesktopEntry {
           result.add(tok.replaceAll('%%', '%'));
       }
     }
+
     return result;
   }
 
@@ -124,6 +126,7 @@ class DesktopEntry {
       hasContent = true;
     }
     if (hasContent) tokens.add(buf.toString());
+
     return tokens;
   }
 }

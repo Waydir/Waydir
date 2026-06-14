@@ -74,12 +74,14 @@ class _WindowButtonState extends State<_WindowButton> {
   Color _bg() {
     if (_pressed) return widget.colors.mouseDown;
     if (_hover) return widget.colors.mouseOver;
+
     return widget.colors.normal;
   }
 
   Color _icon() {
     if (_pressed) return widget.colors.iconMouseDown;
     if (_hover) return widget.colors.iconMouseOver;
+
     return widget.colors.iconNormal;
   }
 
@@ -89,6 +91,7 @@ class _WindowButtonState extends State<_WindowButton> {
     final duration = Duration(
       milliseconds: widget.animate ? (_hover ? 100 : 200) : 0,
     );
+
     return SizedBox(
       width: _WindowButton.size.width,
       height: _WindowButton.size.height,

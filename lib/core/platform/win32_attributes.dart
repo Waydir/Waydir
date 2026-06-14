@@ -61,6 +61,7 @@ bool isHiddenOnWindows(String path) {
   try {
     final attrs = _getFileAttributesW!(pathPtr);
     if (attrs == _invalidFileAttributes) return false;
+
     return (attrs & _fileAttributeHidden) != 0 ||
         (attrs & _fileAttributeSystem) != 0;
   } finally {
@@ -92,6 +93,7 @@ bool shellOpenWithAppOnWindows(String appExe, String filePath) {
   try {
     final ret = _shellExecuteW!(0, verb, exe, params, nullptr, 1);
     // ShellExecute returns >32 on success.
+
     return ret > 32;
   } finally {
     calloc.free(verb);
@@ -171,6 +173,7 @@ String? assocQueryStringOnWindows(int str, String assoc) {
       );
       if (hr != 0) return null;
       final value = outPtr.toDartString();
+
       return value.isEmpty ? null : value;
     } finally {
       calloc.free(outPtr);

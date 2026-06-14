@@ -31,12 +31,14 @@ abstract class MimeResolver {
   factory MimeResolver.platform() {
     if (Platform.isLinux) return _LinuxMimeResolver();
     if (Platform.isMacOS) return _MacMimeResolver();
+
     return _FallbackMimeResolver();
   }
 }
 
 MimeType _fromExtension(String path) {
   final m = mime_pkg.lookupMimeType(path);
+
   return m == null ? MimeType.unknown : MimeType(m);
 }
 
@@ -57,6 +59,7 @@ class _LinuxMimeResolver implements MimeResolver {
     } catch (e, st) {
       log.warn('open', 'linux MIME lookup failed', error: e, stack: st);
     }
+
     return _fromExtension(path);
   }
 }
@@ -80,6 +83,7 @@ class _MacMimeResolver implements MimeResolver {
     } catch (e, st) {
       log.warn('open', 'mac MIME lookup failed', error: e, stack: st);
     }
+
     return _fromExtension(path);
   }
 }

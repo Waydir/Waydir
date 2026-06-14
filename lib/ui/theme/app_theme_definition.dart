@@ -71,6 +71,7 @@ class TerminalColors {
     }
 
     const d = standard;
+
     return TerminalColors(
       black: read('black', d.black),
       red: read('red', d.red),
@@ -189,6 +190,7 @@ class AppThemePalette {
       if (value is! String) {
         throw FormatException(t.preferences.appearance.missingColor(key: key));
       }
+
       return parseThemeColor(value, key);
     }
 
@@ -301,6 +303,7 @@ class AppThemeDefinition {
     if (palette is! Map<String, dynamic>) {
       throw FormatException(t.preferences.appearance.missingThemePalette);
     }
+
     return AppThemeDefinition(
       id: id.trim(),
       name: name.trim(),
@@ -330,6 +333,7 @@ Color parseThemeColor(String value, String key) {
   if (hex.length != 8 || !RegExp(r'^[0-9a-fA-F]{8}$').hasMatch(hex)) {
     throw FormatException(t.preferences.appearance.invalidColor(key: key));
   }
+
   return Color(int.parse(hex, radix: 16));
 }
 
@@ -346,5 +350,6 @@ String _hex(Color color) {
   final r = (color.r * 255).round().toRadixString(16).padLeft(2, '0');
   final g = (color.g * 255).round().toRadixString(16).padLeft(2, '0');
   final b = (color.b * 255).round().toRadixString(16).padLeft(2, '0');
+
   return '#${(a + r + g + b).toUpperCase()}';
 }

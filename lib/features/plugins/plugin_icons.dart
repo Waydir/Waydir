@@ -63,5 +63,6 @@ const Map<String, IconData> _pluginGlyphs = {
 /// returns the fallback for those and for unknown names.
 IconData pluginGlyph(String? name) {
   if (name == null) return defaultPluginGlyph;
+
   return _pluginGlyphs[name] ?? defaultPluginGlyph;
 }

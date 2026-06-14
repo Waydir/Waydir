@@ -279,6 +279,7 @@ class _TerminalRegistry {
     if (Platform.isLinux) return linux;
     if (Platform.isMacOS) return macos;
     if (Platform.isWindows) return windows;
+
     return const [];
   }
 
@@ -286,6 +287,7 @@ class _TerminalRegistry {
     for (final t in all()) {
       if (t.id == id) return t;
     }
+
     return null;
   }
 }
@@ -309,6 +311,7 @@ class TerminalService {
       for (final spec in specs)
         needsProbe ? _isAvailable(spec.executable) : Future.value(true),
     ]);
+
     return [
       for (var i = 0; i < specs.length; i++)
         if (available[i])
@@ -321,6 +324,7 @@ class TerminalService {
     if (cached != null) return cached;
     final result = await _which(executable);
     _detectionCache[executable] = result;
+
     return result;
   }
 
@@ -328,6 +332,7 @@ class TerminalService {
     try {
       final cmd = Platform.isWindows ? 'where' : 'which';
       final result = await Process.run(cmd, [executable], runInShell: true);
+
       return result.exitCode == 0;
     } catch (e, st) {
       log.warn(
@@ -336,6 +341,7 @@ class TerminalService {
         error: e,
         stack: st,
       );
+
       return false;
     }
   }
@@ -349,9 +355,11 @@ class TerminalService {
         mode: ProcessStartMode.detached,
         runInShell: Platform.isWindows,
       );
+
       return true;
     } catch (e, st) {
       log.warn('terminal', 'terminal launch failed', error: e, stack: st);
+
       return false;
     }
   }
@@ -392,6 +400,7 @@ class TerminalService {
         mode: ProcessStartMode.detached,
         runInShell: Platform.isWindows,
       );
+
       return true;
     } catch (e, st) {
       log.warn(
@@ -400,6 +409,7 @@ class TerminalService {
         error: e,
         stack: st,
       );
+
       return false;
     }
   }
@@ -416,6 +426,7 @@ class TerminalService {
           builder(scriptPath),
           mode: ProcessStartMode.detached,
         );
+
         return true;
       } catch (e, st) {
         log.warn(
@@ -426,6 +437,7 @@ class TerminalService {
         );
       }
     }
+
     return false;
   }
 
@@ -453,6 +465,7 @@ class TerminalService {
       }
     }
     if (buf.isNotEmpty) tokens.add(buf.toString());
+
     return tokens;
   }
 }

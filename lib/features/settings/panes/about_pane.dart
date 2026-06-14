@@ -81,6 +81,7 @@ class AboutPane extends StatelessWidget {
                       : status == UpdateStatus.upToDate
                       ? '  ·  ${t.update.statusUpToDateInline}'
                       : '';
+
                   return _InfoRow(
                     label: t.preferences.about.version,
                     value: '${AppInfo.versionLabel.value}$suffix',

@@ -25,6 +25,7 @@ class _WaydirAppState extends State<WaydirApp> {
         AppThemeRegistry.instance.loadSync();
         final theme = AppThemeRegistry.instance.resolve(themeId);
         AppColors.setTheme(theme);
+
         return MaterialApp(
           key: ValueKey(theme.id),
           title: t.app.title,

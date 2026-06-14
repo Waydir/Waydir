@@ -85,6 +85,7 @@ class _OperationsPanelBody extends StatelessWidget {
                   ),
                 );
               }
+
               return Flexible(
                 child: ListView.separated(
                   shrinkWrap: true,

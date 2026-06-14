@@ -23,6 +23,7 @@ Future<void> showUpdateDialog(BuildContext context) {
     pageBuilder: (ctx, _, _) => const _UpdateDialog(),
     transitionBuilder: (ctx, anim, secondary, child) {
       final c = CurvedAnimation(parent: anim, curve: Curves.easeOut);
+
       return FadeTransition(
         opacity: c,
         child: ScaleTransition(
@@ -40,6 +41,7 @@ class _UpdateDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final store = UpdateStore.instance;
+
     return Center(
       child: Material(
         color: Colors.transparent,
@@ -54,6 +56,7 @@ class _UpdateDialog extends StatelessWidget {
               builder: (_) {
                 final status = store.status.value;
                 final release = store.latestRelease.value;
+
                 return Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -101,6 +104,7 @@ class _Header extends StatelessWidget {
       UpdateStatus.launching => t.update.launching,
       UpdateStatus.error => t.update.error,
     };
+
     return Container(
       height: 48,
       color: AppColors.bgSidebar,
@@ -153,6 +157,7 @@ class _Body extends StatelessWidget {
         if (release == null) {
           return _CenterMessage(message: t.update.noRelease);
         }
+
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -223,6 +228,7 @@ class _ReleaseNotes extends StatelessWidget {
     final baseFont = context.txt.row.copyWith(height: 1.5, color: AppColors.fg);
     final mutedFont = baseFont.copyWith(color: AppColors.fgMuted);
     final monoFont = context.txt.code.copyWith(color: AppColors.fg);
+
     return Markdown(
       data: text,
       padding: const EdgeInsets.fromLTRB(18, 4, 18, 14),
@@ -296,6 +302,7 @@ class _AssetRow extends StatelessWidget {
           fmt == InstallFormat.linuxDeb || fmt == InstallFormat.linuxRpm
           ? t.update.packageManagerManual
           : t.update.appImageManual;
+
       return Padding(
         padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
         child: Text(
@@ -304,6 +311,7 @@ class _AssetRow extends StatelessWidget {
         ),
       );
     }
+
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 10, 18, 10),
       child: Row(
@@ -386,6 +394,7 @@ class _Progress extends StatelessWidget {
         final received = store.downloadedBytes.value;
         final total = store.totalBytes.value;
         final done = store.status.value == UpdateStatus.ready;
+
         return Padding(
           padding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
           child: Column(
@@ -493,7 +502,7 @@ class _PrimaryButton extends StatefulWidget {
 class _PrimaryButtonState extends State<_PrimaryButton> {
   bool _hover = false;
 
-  Future<void> _onTap(BuildContext context) async {
+  Future<void> _onTap() async {
     final store = widget.store;
     switch (store.status.value) {
       case UpdateStatus.available:
@@ -540,6 +549,7 @@ class _PrimaryButtonState extends State<_PrimaryButton> {
     if (status == UpdateStatus.checking) return t.update.checking;
     if (status == UpdateStatus.launching) return t.update.launching;
     if (status == UpdateStatus.error) return t.update.btnRetry;
+
     return t.update.btnCheckNow;
   }
 
@@ -558,12 +568,13 @@ class _PrimaryButtonState extends State<_PrimaryButton> {
             : _hover
             ? AppColors.accentHover
             : AppColors.accent;
+
         return MouseRegion(
           cursor: enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
           onEnter: (_) => setState(() => _hover = true),
           onExit: (_) => setState(() => _hover = false),
           child: GestureDetector(
-            onTap: enabled ? () => _onTap(context) : null,
+            onTap: enabled ? () => _onTap() : null,
             behavior: HitTestBehavior.opaque,
             child: Container(
               height: 30,

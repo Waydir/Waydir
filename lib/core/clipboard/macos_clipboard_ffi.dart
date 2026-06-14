@@ -41,6 +41,7 @@ List<String> macReadFiles() {
   final ptr = _readFiles();
   try {
     final raw = ptr.toDartString();
+
     return raw
         .split('\n')
         .map((l) => l.trim())

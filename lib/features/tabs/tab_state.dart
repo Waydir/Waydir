@@ -15,6 +15,7 @@ class TabState {
       if (path == kTrashPath) return t.sidebar.trash;
       final name = p.basename(path);
       if (name.isEmpty) return '/';
+
       return name;
     });
   }

@@ -46,6 +46,7 @@ class AppIcon extends StatelessWidget {
     } else {
       child = fallback;
     }
+
     return SizedBox(width: size, height: size, child: child);
   }
 }

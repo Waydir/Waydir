@@ -33,6 +33,7 @@ class _DiagnosticsPaneState extends State<DiagnosticsPane> {
   List<LogEntry> _filtered(List<LogEntry> entries) {
     if (_query.isEmpty) return entries;
     final q = _query.toLowerCase();
+
     return entries
         .where(
           (e) =>
@@ -45,6 +46,7 @@ class _DiagnosticsPaneState extends State<DiagnosticsPane> {
   String _format(LogEntry e) {
     final ts = e.timestamp.toIso8601String();
     final base = '$ts [${e.level.label}] ${e.tag}: ${e.message}';
+
     return e.stackTrace == null ? base : '$base\n${e.stackTrace}';
   }
 
@@ -62,6 +64,7 @@ class _DiagnosticsPaneState extends State<DiagnosticsPane> {
       builder: (context) {
         final all = log.entries.value;
         final visible = _filtered(all);
+
         return SettingsPaneScaffold(
           children: [
             Text(
@@ -185,6 +188,7 @@ class _LogRow extends StatelessWidget {
         ? AppColors.danger
         : AppColors.warning;
     final ts = entry.timestamp.toIso8601String().substring(11, 19);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       child: Column(
@@ -240,6 +244,7 @@ class _BtnState extends State<_Btn> {
     final fg = !enabled
         ? AppColors.fgMuted.withValues(alpha: 0.5)
         : (_hovered ? AppColors.fg : AppColors.fgMuted);
+
     return MouseRegion(
       cursor: enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
       onEnter: (_) => setState(() => _hovered = true),

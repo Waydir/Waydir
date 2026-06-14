@@ -37,6 +37,7 @@ import 'package:re_highlight/languages/yaml.dart';
 ) {
   final entry = _byExtension[extension.toLowerCase()];
   if (entry == null) return null;
+
   return (id: entry.$1, mode: CodeHighlightThemeMode(mode: entry.$2));
 }
 

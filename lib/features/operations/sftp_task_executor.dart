@@ -27,6 +27,7 @@ class SftpTaskExecutor {
     if (destination != null && PlatformPaths.isSftpUri(destination)) {
       return true;
     }
+
     return sources.any(PlatformPaths.isSftpUri);
   }
 
@@ -52,7 +53,7 @@ void sftpMoveWorker(List<dynamic> args) {
 }
 
 void sftpDeleteWorker(List<dynamic> args) {
-  final mainSendPort = args[0] as SendPort;
+  final mainSendPort = args.first as SendPort;
   final workerReceivePort = ReceivePort();
   mainSendPort.send(workerReceivePort.sendPort);
 
@@ -146,7 +147,7 @@ void sftpDeleteWorker(List<dynamic> args) {
 // ---------------------------------------------------------------------------
 
 void _runTransferWorker(List<dynamic> args, {required bool move}) {
-  final mainSendPort = args[0] as SendPort;
+  final mainSendPort = args.first as SendPort;
   final workerReceivePort = ReceivePort();
   mainSendPort.send(workerReceivePort.sendPort);
 
@@ -212,6 +213,7 @@ void _runTransferWorker(List<dynamic> args, {required bool move}) {
         mainSendPort.send(
           ErrorMessage(path: src, message: t.errors.sourceNotFound),
         );
+
         return;
       }
 
@@ -259,7 +261,6 @@ void _runTransferWorker(List<dynamic> args, {required bool move}) {
   }
 
   Future<String> resolveTargetPath(
-    String src,
     String desiredDst,
     bool dstIsSftp,
     SftpFs fs,
@@ -267,6 +268,7 @@ void _runTransferWorker(List<dynamic> args, {required bool move}) {
   ) async {
     if (resolution != ConflictResolution.rename) {
       reservedTargetNames.add(desiredDst);
+
       return desiredDst;
     }
     final unique = await _uniquePath(
@@ -276,6 +278,7 @@ void _runTransferWorker(List<dynamic> args, {required bool move}) {
       reserved: reservedTargetNames,
     );
     reservedTargetNames.add(unique);
+
     return unique;
   }
 
@@ -284,6 +287,7 @@ void _runTransferWorker(List<dynamic> args, {required bool move}) {
     if (resolution == ConflictResolution.skip) {
       processedFiles += sourceFileCounts[src] ?? 1;
       maybeReport(PlatformPaths.fileName(src));
+
       return true;
     }
 
@@ -291,13 +295,7 @@ void _runTransferWorker(List<dynamic> args, {required bool move}) {
     final destIsSftp = PlatformPaths.isSftpUri(destination!);
     final desiredDst = _joinDest(destination!, name, destIsSftp);
 
-    final dst = await resolveTargetPath(
-      src,
-      desiredDst,
-      destIsSftp,
-      fs,
-      resolution,
-    );
+    final dst = await resolveTargetPath(desiredDst, destIsSftp, fs, resolution);
 
     void onBytes(String path, int delta) {
       processedBytes += delta;
@@ -320,6 +318,7 @@ void _runTransferWorker(List<dynamic> args, {required bool move}) {
         await fs.rename(src, dst);
         processedFiles += sourceFileCounts[src] ?? 1;
         maybeReport(name);
+
         return true;
       }
     }
@@ -342,6 +341,7 @@ void _runTransferWorker(List<dynamic> args, {required bool move}) {
       errors.add(TaskError(path: src, message: _friendly(e)));
       mainSendPort.send(ErrorMessage(path: src, message: _friendly(e)));
     }
+
     return true;
   }
 
@@ -404,6 +404,7 @@ void _runTransferWorker(List<dynamic> args, {required bool move}) {
           if (cancelled) {
             mainSendPort.send(TaskDoneMessage(cancelled: true, errors: errors));
             workerReceivePort.close();
+
             return;
           }
           mainSendPort.send(
@@ -472,14 +473,17 @@ String _joinDest(String destination, String name, bool destIsSftp) {
     final trimmed = destination.endsWith('/')
         ? destination.substring(0, destination.length - 1)
         : destination;
+
     return '$trimmed/$name';
   }
+
   return '$destination${PlatformPaths.separator}$name';
 }
 
 bool _sameSftpSession(String a, String b) {
   final ra = SftpSessionManager.recordFor(a);
   final rb = SftpSessionManager.recordFor(b);
+
   return ra != null && rb != null && ra.sessionId == rb.sessionId;
 }
 
@@ -494,12 +498,14 @@ Future<_AnyStat?> _statAny(String path, SftpFs fs) async {
   if (PlatformPaths.isSftpUri(path)) {
     final s = await fs.stat(path);
     if (s == null) return null;
+
     return _AnyStat(s.type, s.size, s.modifiedMs);
   }
   final type = FileSystemEntity.typeSync(path, followLinks: false);
   if (type == FileSystemEntityType.notFound) return null;
   if (type == FileSystemEntityType.directory) {
     final stat = FileStat.statSync(path);
+
     return _AnyStat(
       FileItemType.folder,
       0,
@@ -507,6 +513,7 @@ Future<_AnyStat?> _statAny(String path, SftpFs fs) async {
     );
   }
   final stat = FileStat.statSync(path);
+
   return _AnyStat(
     FileItemType.file,
     stat.size,
@@ -535,6 +542,7 @@ Future<({int files, int bytes})> _scanRecursive(
       files += r.files;
       bytes += r.bytes;
     }
+
     return (files: files, bytes: bytes);
   }
   final type = FileSystemEntity.typeSync(path, followLinks: false);
@@ -550,6 +558,7 @@ Future<({int files, int bytes})> _scanRecursive(
     files += r.files;
     bytes += r.bytes;
   }
+
   return (files: files, bytes: bytes);
 }
 
@@ -562,6 +571,7 @@ Future<String> _uniquePath(
   Future<bool> taken(String p) async {
     if (reserved?.contains(p) ?? false) return true;
     final stat = await _statAny(p, fs);
+
     return stat != null;
   }
 
@@ -578,6 +588,7 @@ Future<String> _uniquePath(
     final candidate = dir.isEmpty ? newName : '$dir$sep$newName';
     if (!await taken(candidate)) return candidate;
   }
+
   return '$desired.${DateTime.now().microsecondsSinceEpoch}';
 }
 
@@ -619,6 +630,7 @@ Future<void> _removeAny(String src, SftpFs fs) async {
     final stat = await fs.stat(src);
     if (stat == null) return;
     await fs.remove(src, recursive: stat.type == FileItemType.folder);
+
     return;
   }
   final type = FileSystemEntity.typeSync(src, followLinks: false);
@@ -644,8 +656,9 @@ void _checkCancelled(bool Function() isCancelled) {
   if (isCancelled()) throw const _SftpCancelled();
 }
 
-String _partPath(String dst, bool isSftp) {
+String _partPath(String dst) {
   final rand = math.Random().nextInt(0x7fffffff);
+
   return '$dst.waydir-${DateTime.now().microsecondsSinceEpoch}-$rand.part';
 }
 
@@ -703,11 +716,12 @@ Future<void> _copyEntity(
       );
     }
     onEntry(src);
+
     return;
   }
 
   await _ensureParentDir(dst, dstIsSftp, fs);
-  final partial = _partPath(dst, dstIsSftp);
+  final partial = _partPath(dst);
   try {
     if (srcIsSftp && dstIsSftp) {
       await _copySftpToSftp(
@@ -840,6 +854,7 @@ Future<void> _uploadLocalToSftp(
     }
     final closed = WaydirCoreLoader.sftpWriterClose(writerId);
     if (!closed) throw FileSystemException(t.errors.sftpCloseFailed, dst);
+
     return;
   }
 
@@ -850,6 +865,7 @@ Future<void> _uploadLocalToSftp(
     final ok = WaydirCoreLoader.sftpWrite(rec.sessionId, remote, data);
     if (!ok) throw FileSystemException(t.errors.sftpWriteFailed, dst);
     onBytes(data.length);
+
     return;
   }
   var append = false;
@@ -923,6 +939,7 @@ Future<void> _downloadSftpToLocal(
       WaydirCoreLoader.sftpReaderClose(opened.readerId);
       await sink.close();
     }
+
     return;
   }
 
@@ -1010,6 +1027,7 @@ Future<void> _copySftpToSftp(
     if (!WaydirCoreLoader.sftpWriterClose(writerId)) {
       throw FileSystemException(t.errors.sftpCloseFailed, dst);
     }
+
     return;
   }
 
@@ -1022,6 +1040,7 @@ Future<void> _copySftpToSftp(
     final ok = WaydirCoreLoader.sftpWrite(dstRec.sessionId, dstRemote, data);
     if (!ok) throw FileSystemException(t.errors.sftpWriteFailed, dst);
     onBytes(data.length);
+
     return;
   }
 
@@ -1070,5 +1089,6 @@ class _SftpCancelled implements Exception {
 String _friendly(Object e) {
   final msg = e.toString();
   if (msg.length > 200) return '${msg.substring(0, 197)}...';
+
   return msg;
 }

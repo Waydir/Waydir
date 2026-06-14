@@ -48,6 +48,7 @@ class _AppearancePaneState extends State<AppearancePane> {
       files.add(await _readThemeFile(entity));
     }
     files.sort((a, b) => p.basename(a.path).compareTo(p.basename(b.path)));
+
     return _ThemeFilesState(themesPath: themesPath, files: files);
   }
 
@@ -60,6 +61,7 @@ class _AppearancePaneState extends State<AppearancePane> {
         );
       }
       final theme = AppThemeDefinition.fromJson(decoded);
+
       return _CustomThemeFile(path: file.path, theme: theme);
     } catch (error) {
       return _CustomThemeFile(path: file.path, error: '$error');
@@ -108,6 +110,7 @@ class _AppearancePaneState extends State<AppearancePane> {
 
   Future<String?> _showNameDialog() {
     final controller = TextEditingController();
+
     return showDialog<String>(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.4),
@@ -162,6 +165,7 @@ class _AppearancePaneState extends State<AppearancePane> {
   @override
   Widget build(BuildContext context) {
     final registry = SettingsRegistry.instance;
+
     return SettingsPaneScaffold(
       children: [
         SettingsSection(
@@ -175,6 +179,7 @@ class _AppearancePaneState extends State<AppearancePane> {
               future: _themeFiles,
               builder: (context, snapshot) {
                 final state = snapshot.data;
+
                 return _CustomThemesRow(
                   state: state,
                   onAdd: state == null
@@ -314,6 +319,7 @@ class _CustomThemesRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = this.state;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
@@ -393,6 +399,7 @@ class _ThemeFileRow extends StatelessWidget {
     final subtitle = theme == null
         ? '${t.preferences.appearance.invalidTheme}: ${file.error}'
         : '${theme.id} - ${p.basename(file.path)}';
+
     return Container(
       margin: const EdgeInsets.only(bottom: 4),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),

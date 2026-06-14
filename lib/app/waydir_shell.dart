@@ -113,6 +113,7 @@ class _WaydirShellState extends State<WaydirShell>
                   isRemoval &&
                   task.sources.any((s) {
                     final d = p.dirname(s);
+
                     return d == cp ||
                         LocationResolver.physicalToLogical(d) == cp;
                   });
@@ -146,6 +147,7 @@ class _WaydirShellState extends State<WaydirShell>
         final pane = _shell.activePane.value;
         if (pane == null) {
           appWindow.title = t.app.title;
+
           return;
         }
         final title = pane.tabs.activeTab.value.title.value;
@@ -300,6 +302,7 @@ class _WaydirShellState extends State<WaydirShell>
     bool isActive = true,
   }) {
     final paths = store.selectedPaths.value.toList()..sort();
+
     return {
       'scope': scope,
       'pane': pane,
@@ -324,6 +327,7 @@ class _WaydirShellState extends State<WaydirShell>
                   _active.selectedCount.value;
                   _active.visibleFiles.value.length;
                 }
+
                 return TitleBar(
                   menuTrailing: _buildViewMenu(),
                   platformMenus: _platformViewMenus(),
@@ -341,6 +345,7 @@ class _WaydirShellState extends State<WaydirShell>
                           ),
                         );
                       }
+
                       return Column(
                         children: [
                           Expanded(
@@ -367,6 +372,7 @@ class _WaydirShellState extends State<WaydirShell>
                                 _active,
                                 scope: 'global',
                               );
+
                               return PluginBarHost(
                                 hostId: 'global',
                                 bars: bars,

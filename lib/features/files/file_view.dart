@@ -148,6 +148,7 @@ List<FileColumn> parseColumnOrder(String csv) {
   for (final c in FileColumn.values) {
     if (!out.contains(c)) out.add(c);
   }
+
   return out;
 }
 
@@ -161,6 +162,7 @@ bool columnAvailable(FileColumn col) {
       (col == FileColumn.permissions || col == FileColumn.owner)) {
     return false;
   }
+
   return true;
 }
 
@@ -256,6 +258,7 @@ class _FileListState extends State<FileList> {
       maxLines: 1,
       textScaler: TextScaler.linear(_scale),
     )..layout();
+
     return tp.width;
   }
 
@@ -286,6 +289,7 @@ class _FileListState extends State<FileList> {
       final headerW = _measureWidth(fileColumnLabel(col), headerStyle) + 14;
       widths[col] = math.max(cellW, headerW).ceilToDouble() + 8;
     }
+
     return widths;
   }
 
@@ -301,6 +305,7 @@ class _FileListState extends State<FileList> {
   String? _relativeParent(String entryPath, String currentPath) {
     final rel = p.relative(p.dirname(entryPath), from: currentPath);
     if (rel == '.') return null;
+
     return rel;
   }
 
@@ -309,6 +314,7 @@ class _FileListState extends State<FileList> {
     if (rel == null) return null;
     final parts = p.split(rel).where((part) => part.isNotEmpty).toList();
     if (parts.length <= 2) return rel;
+
     return p.join('...', parts[parts.length - 2], parts.last);
   }
 
@@ -333,6 +339,7 @@ class _FileListState extends State<FileList> {
 
   bool _canStartRubberBandAt(Offset localPosition) {
     if (_contentWidth <= 0) return true;
+
     return localPosition.dx < _contentWidth - _listHorizontalPadding;
   }
 
@@ -524,6 +531,7 @@ class _FileListState extends State<FileList> {
                                   hitTestBehavior: HitTestBehavior.opaque,
                                   onDropOver: (event) {
                                     _updateHover(event.position.local);
+
                                     return DragHintController
                                                 .instance
                                                 .mode
@@ -736,14 +744,10 @@ class _ListHeader extends StatelessWidget {
     this.onConfigureColumns,
   });
 
-  Widget _sortable(
-    BuildContext context,
-    String label,
-    SortKey key,
-    TextStyle style,
-  ) {
+  Widget _sortable(String label, SortKey key, TextStyle style) {
     final active = sortColumn == key;
     final ascending = sortAscending;
+
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
@@ -780,6 +784,7 @@ class _ListHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final headerStyle = context.txt.fieldLabel;
+
     return Container(
       height: 24,
       padding: const EdgeInsets.only(left: 12, right: 16),
@@ -796,7 +801,6 @@ class _ListHeader extends StatelessWidget {
           SizedBox(
             width: nameWidth,
             child: _sortable(
-              context,
               t.fileView.columns.name,
               SortKey.name,
               headerStyle,
@@ -819,7 +823,6 @@ class _ListHeader extends StatelessWidget {
             SizedBox(
               width: columnWidths[col] ?? 0,
               child: _sortable(
-                context,
                 fileColumnLabel(col),
                 fileColumnSortKey(col),
                 headerStyle,
@@ -915,6 +918,7 @@ class _ColumnConfigMenu extends StatelessWidget {
           SignalBuilder(
             builder: (context) {
               final cols = orderedColumns();
+
               return ReorderableListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -924,6 +928,7 @@ class _ColumnConfigMenu extends StatelessWidget {
                 onReorderItem: _reorder,
                 itemBuilder: (context, index) {
                   final col = cols[index];
+
                   return _ColumnConfigRow(
                     key: ValueKey(col),
                     col: col,
@@ -956,6 +961,7 @@ class _ColumnConfigRowState extends State<_ColumnConfigRow> {
   Widget build(BuildContext context) {
     final signal = fileColumnSignal(widget.col);
     final visible = signal.value;
+
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
@@ -1184,6 +1190,7 @@ class _ListRowState extends State<_ListRow> {
     if (_dragging) return AppColors.accent.withValues(alpha: 0.08);
     if (widget.selected) return AppColors.bgSelectedMuted;
     if (_hovered) return AppColors.bgHover;
+
     return Colors.transparent;
   }
 
@@ -1194,11 +1201,13 @@ class _ListRowState extends State<_ListRow> {
     if (widget.selected) {
       return Border(left: BorderSide(color: AppColors.accent, width: 2));
     }
+
     return null;
   }
 
   List<Widget> _buildColumnCells(BuildContext context, FileEntry e) {
     final muted = context.txt.muted;
+
     return [
       for (final col in widget.columns) ...[
         SizedBox(
@@ -1227,6 +1236,7 @@ class _ListRowState extends State<_ListRow> {
         now.difference(_lastTap!).inMilliseconds < _kDoubleTapMs) {
       _lastTap = null;
       widget.onOpen(widget.entry);
+
       return;
     }
     _lastTap = now;
@@ -1322,6 +1332,7 @@ class _ListRowState extends State<_ListRow> {
   List<String> _pathsToDrag() {
     final selectedPaths = widget.selectedPaths.toList();
     if (widget.selected && selectedPaths.isNotEmpty) return selectedPaths;
+
     return [widget.entry.path];
   }
 
@@ -1376,6 +1387,7 @@ class _ListRowState extends State<_ListRow> {
     final picture = recorder.endRecording();
     final image = await picture.toImage(1, 1);
     picture.dispose();
+
     return TargetedWidgetSnapshot(
       WidgetSnapshot.image(image),
       Rect.fromLTWH(preview.rect.left, preview.rect.top, 1, 1),
@@ -1638,6 +1650,7 @@ class _PinnedVerticalScrollbar extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final trackHeight = constraints.maxHeight;
+
         return AnimatedBuilder(
           animation: controller,
           builder: (context, _) {
@@ -1660,6 +1673,7 @@ class _PinnedVerticalScrollbar extends StatelessWidget {
             final maxTravel = trackHeight - thumbHeight;
             final t = (position.pixels / maxScroll).clamp(0.0, 1.0);
             final top = maxTravel * t;
+
             return Stack(
               children: [
                 Positioned(

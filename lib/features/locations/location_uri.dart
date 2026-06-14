@@ -37,11 +37,13 @@ class LocationUri {
         final s = share ?? '';
         final p = (path == null || path!.isEmpty) ? '' : '/$path';
         if (s.isEmpty) return h.isEmpty ? raw : h;
+
         return '$h/$s$p';
       case LocationScheme.sftp:
         final h = host ?? '';
         final u = (username == null || username!.isEmpty) ? '' : '$username@';
         final p = (path == null || path!.isEmpty) ? '' : '/$path';
+
         return '$u$h$p';
       case LocationScheme.windowsUnc:
         return raw;
@@ -70,6 +72,7 @@ class LocationUri {
         buf.write(path!.replaceAll('/', r'\'));
       }
     }
+
     return buf.toString();
   }
 
@@ -88,6 +91,7 @@ class LocationUri {
         buf.write(path!.replaceAll(r'\', '/'));
       }
     }
+
     return buf.toString();
   }
 
@@ -116,13 +120,14 @@ class LocationUri {
     if (schemeMatch != null) {
       return LocationUri._(scheme: LocationScheme.other, raw: s);
     }
+
     return LocationUri._(scheme: LocationScheme.local, raw: s);
   }
 
   static LocationUri _parseSmb(String s) {
     final rest = s.substring('smb://'.length);
     final parts = rest.split('/');
-    var authority = parts.isNotEmpty ? parts[0] : '';
+    var authority = parts.isNotEmpty ? parts.first : '';
     String? username;
     final at = authority.lastIndexOf('@');
     if (at >= 0) {
@@ -141,6 +146,7 @@ class LocationUri {
     }
     final share = parts.length > 1 ? parts[1] : null;
     final path = parts.length > 2 ? parts.sublist(2).join('/') : null;
+
     return LocationUri._(
       scheme: LocationScheme.smb,
       raw: s,
@@ -174,6 +180,7 @@ class LocationUri {
         port = maybePort;
       }
     }
+
     return LocationUri._(
       scheme: LocationScheme.sftp,
       raw: s,
@@ -190,9 +197,10 @@ class LocationUri {
         .split(RegExp(r'[\\/]+'))
         .where((p) => p.isNotEmpty)
         .toList();
-    final host = parts.isNotEmpty ? parts[0] : '';
+    final host = parts.isNotEmpty ? parts.first : '';
     final share = parts.length > 1 ? parts[1] : null;
     final path = parts.length > 2 ? parts.sublist(2).join(r'\') : null;
+
     return LocationUri._(
       scheme: LocationScheme.windowsUnc,
       raw: s,

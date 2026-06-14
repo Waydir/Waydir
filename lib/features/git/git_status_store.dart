@@ -80,6 +80,7 @@ class GitStatusStore {
     if (path.isEmpty) {
       _lastPath = null;
       status.value = null;
+
       return;
     }
     _lastPath = path;
@@ -96,6 +97,7 @@ class GitStatusStore {
   Future<void> refreshCurrent() {
     final path = _lastPath ?? status.value?.root;
     if (path == null) return Future.value();
+
     return refresh(path);
   }
 
@@ -105,6 +107,7 @@ class GitStatusStore {
       // Collapse overlapping refreshes into a single trailing run so rapid
       // navigation can't stack concurrent multi-process git loads.
       _pending = true;
+
       return;
     }
     _loading = true;
@@ -140,6 +143,7 @@ class GitStatusStore {
         .toList();
     final current = status.value?.branch;
     if (current != null && names.remove(current)) names.insert(0, current);
+
     return names;
   }
 
@@ -160,12 +164,14 @@ class GitStatusStore {
           err.contains('Please commit your changes or stash')) {
         return const CheckoutResult(CheckoutOutcome.needsStash, null);
       }
+
       return CheckoutResult(
         CheckoutOutcome.failed,
         err.isEmpty ? t.git.gitCheckoutFailed : err,
       );
     }
     await refresh(root);
+
     return const CheckoutResult(CheckoutOutcome.ok, null);
   }
 
@@ -184,6 +190,7 @@ class GitStatusStore {
     ]);
     if (stashResult == null || stashResult.exitCode != 0) {
       final err = stashResult?.stderr.toString().trim();
+
       return (err == null || err.isEmpty) ? t.git.gitStashFailed : err;
     }
     final result = await checkout(branch);
@@ -191,6 +198,7 @@ class GitStatusStore {
     // Changes are safely stashed but we did not switch — make that explicit
     // so the user knows where their work went.
     final why = result.message ?? t.git.gitCheckoutFailed;
+
     return t.git.changesStashedSwitchFailed(message: why);
   }
 
@@ -270,6 +278,7 @@ class GitStatusStore {
     final text = result.stdout.toString();
     final ins = RegExp(r'(\d+) insertion').firstMatch(text);
     final del = RegExp(r'(\d+) deletion').firstMatch(text);
+
     return (
       ins == null ? 0 : int.tryParse(ins.group(1)!) ?? 0,
       del == null ? 0 : int.tryParse(del.group(1)!) ?? 0,
@@ -289,6 +298,7 @@ class GitStatusStore {
       if (parent.path == dir.path) return false;
       dir = parent;
     }
+
     return false;
   }
 
@@ -301,6 +311,7 @@ class GitStatusStore {
     }
     // "main...origin/main [ahead 1]" -> "main"
     final name = body.split('...').first.split(' ').first.trim();
+
     return name.isEmpty ? ('detached', true) : (name, false);
   }
 
@@ -315,7 +326,7 @@ class GitStatusStore {
       if (line.isEmpty) continue;
       final parts = line.split('\x1f');
       if (parts.length < 2) continue;
-      final idxMatch = RegExp(r'stash@\{(\d+)\}').firstMatch(parts[0]);
+      final idxMatch = RegExp(r'stash@\{(\d+)\}').firstMatch(parts.first);
       if (idxMatch == null) continue;
       final index = int.tryParse(idxMatch.group(1)!) ?? 0;
       // %gs looks like "WIP on main: 1a2b3c msg" or "On main: msg".
@@ -329,6 +340,7 @@ class GitStatusStore {
         ),
       );
     }
+
     return entries;
   }
 
@@ -349,9 +361,11 @@ class GitStatusStore {
     if (result == null) return t.git.gitStashFailed;
     if (result.exitCode != 0) {
       final err = result.stderr.toString().trim();
+
       return err.isEmpty ? t.git.gitStashFailed : err;
     }
     await refresh(root);
+
     return null;
   }
 
@@ -363,6 +377,7 @@ class GitStatusStore {
       'refs/stash',
     ]);
     if (result == null || result.exitCode != 0) return 0;
+
     return int.tryParse(result.stdout.toString().trim()) ?? 0;
   }
 
@@ -387,6 +402,7 @@ class GitStatusStore {
     if (exists('CHERRY_PICK_HEAD')) return RepoState.cherryPicking;
     if (exists('REVERT_HEAD')) return RepoState.reverting;
     if (exists('BISECT_LOG')) return RepoState.bisecting;
+
     return RepoState.clean;
   }
 
@@ -400,6 +416,7 @@ class GitStatusStore {
     final behindMatch = RegExp(r'behind (\d+)').firstMatch(line);
     if (aheadMatch != null) ahead = int.tryParse(aheadMatch.group(1)!) ?? 0;
     if (behindMatch != null) behind = int.tryParse(behindMatch.group(1)!) ?? 0;
+
     return (ahead, behind);
   }
 
@@ -421,6 +438,7 @@ class GitStatusStore {
           // Unlike Future.timeout alone, this actually reaps the child so
           // slow `git status` calls can't pile up orphaned processes.
           p.kill(ProcessSignal.sigkill);
+
           return -1;
         },
       );
@@ -433,6 +451,7 @@ class GitStatusStore {
               error: e,
               stack: st,
             );
+
             return '';
           }),
         );
@@ -444,14 +463,18 @@ class GitStatusStore {
               error: e,
               stack: st,
             );
+
             return '';
           }),
         );
+
         return null;
       }
+
       return ProcessResult(p.pid, exitCode, await stdoutF, await stderrF);
     } on Object {
       proc?.kill(ProcessSignal.sigkill);
+
       return null;
     }
   }

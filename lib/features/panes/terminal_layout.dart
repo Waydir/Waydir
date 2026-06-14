@@ -31,6 +31,7 @@ class TerminalLayout {
         next[1] = slot1.first.id;
       }
     }
+
     return next;
   }
 
@@ -53,14 +54,16 @@ class TerminalLayout {
     } else {
       next.remove(0);
     }
+
     return next;
   }
 
   /// Merges per-slot visibility into a single visible slot when exiting dual.
   static List<bool> mergeVisibilityForSingle(List<bool> visible) {
     if (visible.length > 1) {
-      return [visible[0] || visible[1], visible[1]];
+      return [visible.first || visible[1], visible[1]];
     }
+
     return [visible.isEmpty ? false : visible.first, false];
   }
 
@@ -80,6 +83,7 @@ class TerminalLayout {
         ? visibleOrder[(replacementIndex + 1).clamp(0, visibleOrder.length - 1)]
         : visibleOrder[replacementIndex];
     if (remainingIds.contains(candidate)) return candidate;
+
     return remainingIds.isEmpty ? null : remainingIds.first;
   }
 }

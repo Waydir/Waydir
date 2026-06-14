@@ -31,6 +31,7 @@ String trashParentOf(String path) {
   if (path == kTrashPath) return kTrashPath;
   final i = path.lastIndexOf('/');
   if (i <= kTrashPath.length - 1) return kTrashPath;
+
   return path.substring(0, i);
 }
 
@@ -106,6 +107,7 @@ class TrashRepository {
     if (PlatformPaths.isWindows) return _listWindowsRoot();
     if (PlatformPaths.isLinux) return _listFreedesktopRoot();
     if (PlatformPaths.isMacOS) return _listMacRoot();
+
     return const [];
   }
 
@@ -129,6 +131,7 @@ class TrashRepository {
       );
     }
     out.sort((a, b) => b.deletedAt.compareTo(a.deletedAt));
+
     return out;
   }
 
@@ -168,6 +171,7 @@ class TrashRepository {
       );
     }
     out.sort((a, b) => b.deletedAt.compareTo(a.deletedAt));
+
     return out;
   }
 
@@ -216,6 +220,7 @@ class TrashRepository {
       );
     }
     out.sort((a, b) => b.deletedAt.compareTo(a.deletedAt));
+
     return out;
   }
 
@@ -233,6 +238,7 @@ class TrashRepository {
     }
     if (base == null) return null;
     if (segs.length == 1) return base;
+
     return p.joinAll([base, ...segs.sublist(1)]);
   }
 
@@ -263,6 +269,7 @@ class TrashRepository {
         ),
       );
     }
+
     return out;
   }
 
@@ -275,6 +282,7 @@ class TrashRepository {
           throw FileSystemException(fails.first.message);
         }
       }
+
       return;
     }
     final original = e.originalPath;
@@ -306,6 +314,7 @@ class TrashRepository {
           throw FileSystemException(fails.first.message);
         }
       }
+
       return;
     }
     if (e.isDirectory) {
@@ -343,12 +352,14 @@ class TrashRepository {
       } catch (e) {
         original = rawPath;
       }
+
       return _TrashInfo(
         originalPath: original,
         deletedAt: rawDate == null ? null : DateTime.tryParse(rawDate),
       );
     } catch (e, st) {
       log.warn('trash', 'failed to read trash metadata', error: e, stack: st);
+
       return null;
     }
   }

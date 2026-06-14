@@ -201,6 +201,7 @@ class _ContextMenuBody extends StatelessWidget {
                       ),
                     );
                   }
+
                   return _ContextMenuItemTile(
                     item: e.value,
                     onTap: () => onSelect(e.value.action),
@@ -260,6 +261,7 @@ class _ContextMenuItemTileState extends State<_ContextMenuItemTile> {
     setState(() => _hovered = true);
     if (!widget.item.enabled) {
       widget.onCloseSubmenus();
+
       return;
     }
     if (widget.item.hasChildren) {

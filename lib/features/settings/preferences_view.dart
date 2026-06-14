@@ -97,6 +97,7 @@ class _PreferencesDialogState extends State<_PreferencesDialog> {
     final size = MediaQuery.of(context).size;
     final dialogWidth = size.width * 0.8 > 920 ? 920.0 : size.width * 0.8;
     final dialogHeight = size.height - 96 > 640 ? 640.0 : size.height - 96;
+
     return AppModal(
       icon: WaydirIconsRegular.gearSix,
       title: t.preferences.title,
@@ -167,6 +168,7 @@ class _CategoryItemState extends State<_CategoryItem> {
         ? AppColors.bgSelectedMuted
         : (_hovered ? AppColors.bgHover : Colors.transparent);
     final fg = widget.selected ? AppColors.fg : AppColors.fgMuted;
+
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),
@@ -465,6 +467,7 @@ class _SettingsActionButtonState extends State<SettingsActionButton> {
   @override
   Widget build(BuildContext context) {
     final fg = _hovered ? AppColors.fg : AppColors.fgMuted;
+
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),
@@ -497,6 +500,7 @@ class _SettingsToggleState extends State<SettingsToggle> {
   @override
   Widget build(BuildContext context) {
     final on = widget.value;
+
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: GestureDetector(

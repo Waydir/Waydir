@@ -35,6 +35,7 @@ class ArchiveReader {
     while (p.startsWith('./')) {
       p = p.substring(2);
     }
+
     return p;
   }
 
@@ -43,6 +44,7 @@ class ArchiveReader {
     for (final seg in path.split('/')) {
       if (seg == '..') return true;
     }
+
     return false;
   }
 
@@ -64,14 +66,17 @@ class ArchiveReader {
       final bytes = File(archivePath).readAsBytesSync();
       if (lower.endsWith('.tar.gz') || lower.endsWith('.tgz')) {
         final decoded = GZipDecoder().decodeBytes(bytes);
+
         return TarDecoder().decodeBytes(decoded);
       } else if (lower.endsWith('.tar.bz2') ||
           lower.endsWith('.tbz2') ||
           lower.endsWith('.tbz')) {
         final decoded = BZip2Decoder().decodeBytes(bytes);
+
         return TarDecoder().decodeBytes(decoded);
       } else if (lower.endsWith('.tar.xz') || lower.endsWith('.txz')) {
         final decoded = XZDecoder().decodeBytes(bytes);
+
         return TarDecoder().decodeBytes(decoded);
       }
       throw ArchiveReadException(t.errors.unsupportedArchiveFormat);
@@ -85,7 +90,7 @@ class ArchiveReader {
     final entries = <ArchiveEntry>[];
     for (final entry in archive) {
       final raw = entry.name;
-      final isDir = entry.isFile == false || raw.endsWith('/');
+      final isDir = !entry.isFile || raw.endsWith('/');
       final name = _normalize(raw);
       if (name.isNotEmpty) {
         entries.add(
@@ -98,6 +103,7 @@ class ArchiveReader {
         );
       }
     }
+
     return entries;
   }
 
@@ -157,7 +163,7 @@ class ArchiveReader {
       }
 
       found = true;
-      final isDir = entry.isFile == false || raw.endsWith('/');
+      final isDir = !entry.isFile || raw.endsWith('/');
       if (isDir) {
         Directory(dest).createSync(recursive: true);
         continue;
@@ -174,6 +180,7 @@ class ArchiveReader {
         t.errors.archiveEntryNotFound(path: innerPath),
       );
     }
+
     return stagedRoot;
   }
 
@@ -206,7 +213,7 @@ class ArchiveReader {
       final epath = _normalize(raw);
       if (epath.isEmpty || _isUnsafe(epath)) continue;
 
-      final isDir = entry.isFile == false || raw.endsWith('/');
+      final isDir = !entry.isFile || raw.endsWith('/');
       onEntry?.call(epath);
 
       final dest = resolveDest(epath, isDir);

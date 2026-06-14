@@ -20,6 +20,7 @@ import 'quick_look_io.dart';
 
 String _formatStatDate(DateTime d) {
   final s = SettingsStore.instance;
+
   return formatEntryDate(
     d,
     s.dateFormat.value,
@@ -86,6 +87,7 @@ class _SizeRows extends StatelessWidget {
     if (entry.type != FileItemType.folder) {
       return PropRow(label: t.quickLook.size, value: formatBytes(entry.size));
     }
+
     return _FolderSizeRows(path: entry.realPath);
   }
 }
@@ -134,6 +136,7 @@ class _FolderSizeRowsState extends State<_FolderSizeRows> {
     _cancelled = false;
     if (PlatformPaths.isSftpUri(widget.path)) {
       _startSftpFolderScan();
+
       return;
     }
     try {
@@ -160,12 +163,14 @@ class _FolderSizeRowsState extends State<_FolderSizeRows> {
       ).then((scan) {
         if (!mounted || _cancelled) {
           scan?.cancel();
+
           return;
         }
         if (scan == null) {
           setState(() {
             _stats = const FolderStats(0, 0, done: true);
           });
+
           return;
         }
         _sftpScan = scan;
@@ -220,6 +225,7 @@ class _FolderSizeRowsState extends State<_FolderSizeRows> {
         : stats.done
         ? t.quickLook.items(count: stats.items)
         : '${t.quickLook.items(count: stats.items)} · $calc';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -265,6 +271,7 @@ class _SftpFolderScan {
         stack: st,
       );
       port.close();
+
       return null;
     }
     final scan = _SftpFolderScan._(isolate, port);
@@ -275,6 +282,7 @@ class _SftpFolderScan {
         scan._close(kill: false);
       }
     });
+
     return scan;
   }
 
@@ -363,11 +371,13 @@ class _StatRows extends StatelessWidget {
     if (PlatformPaths.isRemoteUri(entry.realPath)) {
       return const SizedBox.shrink();
     }
+
     return AsyncRetain<FileStat?>(
       cacheKey: 'stat:${entry.realPath}|${entry.modifiedMs}',
       loader: () => FileStat.stat(entry.realPath),
       builder: (stat) {
         if (stat == null) return const SizedBox.shrink();
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -412,6 +422,7 @@ List<Widget> propertyRows(FileEntry e) {
       loader: () => imageInfo(e),
       builder: (section) {
         if (section == null) return const SizedBox.shrink();
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -454,6 +465,7 @@ class PropertiesOnly extends StatelessWidget {
     if (e == null) {
       return QlCentered(message: t.quickLook.noSelection);
     }
+
     return Container(
       color: AppColors.bgSidebar,
       child: ListView(
@@ -581,6 +593,7 @@ class _TypeBreakdownScan {
         stack: st,
       );
       port.close();
+
       return null;
     }
     final scan = _TypeBreakdownScan._(isolate, port);
@@ -589,6 +602,7 @@ class _TypeBreakdownScan {
       onProgress(message.groups, message.done);
       if (message.done) scan._close(kill: false);
     });
+
     return scan;
   }
 
@@ -616,6 +630,7 @@ void _runTypeBreakdownScan(_TypeScanRequest request) {
   String extOf(String name) {
     final dotIndex = name.lastIndexOf('.');
     if (dotIndex < 0) return '';
+
     return name.substring(dotIndex + 1).toLowerCase();
   }
 
@@ -774,12 +789,14 @@ class _MultiPropertiesState extends State<MultiProperties> {
           ).then((scan) {
             if (!mounted || !_jobs.contains(job) || job.done) {
               scan?.cancel();
+
               return;
             }
             if (scan == null) {
               job.done = true;
               setState(() {});
               _stopTimerIfAllDone();
+
               return;
             }
             job.sftpScan = scan;
@@ -828,12 +845,14 @@ class _MultiPropertiesState extends State<MultiProperties> {
       ).then((scan) {
         if (!mounted || gen != _typeScanGen || _typeScanDone) {
           scan?.cancel();
+
           return;
         }
         if (scan == null) {
           setState(() {
             _typeScanDone = true;
           });
+
           return;
         }
         _typeScan = scan;
@@ -952,6 +971,7 @@ class _MultiPropertiesState extends State<MultiProperties> {
         ]..sort((a, b) {
           final bySize = b.bytes.compareTo(a.bytes);
           if (bySize != 0) return bySize;
+
           return a.entry.nameLower.compareTo(b.entry.nameLower);
         });
     final typeBreakdown = _typeBreakdown(
@@ -1063,8 +1083,10 @@ class _MultiPropertiesState extends State<MultiProperties> {
         ]..sort((a, b) {
           final bySize = b.bytes.compareTo(a.bytes);
           if (bySize != 0) return bySize;
+
           return a.label.compareTo(b.label);
         });
+
     return items;
   }
 }
@@ -1117,6 +1139,7 @@ class _StatisticsItemsState extends State<_StatisticsItems> {
   Widget build(BuildContext context) {
     final items = widget.items;
     if (items.isEmpty) return const SizedBox.shrink();
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.bgSurface,
@@ -1159,6 +1182,7 @@ class _TypeBreakdownItemsState extends State<_TypeBreakdownItems> {
   @override
   Widget build(BuildContext context) {
     final items = widget.items;
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.bgSurface,
@@ -1200,6 +1224,7 @@ class _TypeBreakdownItemRow extends StatelessWidget {
         : item.done
         ? formatBytes(item.bytes)
         : '${formatBytes(item.bytes)} · ${t.quickLook.calculating}';
+
     return SizedBox(
       height: 32,
       child: Padding(
@@ -1272,6 +1297,7 @@ class _StatisticsItemRow extends StatelessWidget {
         : item.done
         ? formatBytes(item.bytes)
         : '${formatBytes(item.bytes)} · ${t.quickLook.calculating}';
+
     return SizedBox(
       height: 32,
       child: Padding(

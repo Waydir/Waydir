@@ -57,9 +57,11 @@ class PluginFfi {
       if (res == nullptr) return null;
       final out = res.toDartString();
       free(res);
+
       return out;
     } catch (e, st) {
       log.error('plugins', 'plugin load failed', error: e, stack: st);
+
       return null;
     } finally {
       calloc.free(pathPtr);
@@ -124,9 +126,11 @@ class PluginFfi {
       if (res == nullptr) return null;
       final out = res.toDartString();
       free(res);
+
       return out;
     } catch (e, st) {
       log.error('plugins', 'plugin invoke failed', error: e, stack: st);
+
       return null;
     } finally {
       calloc.free(pathPtr);
@@ -157,9 +161,11 @@ class PluginFfi {
       if (res == nullptr) return null;
       final out = res.toDartString();
       free(res);
+
       return out;
     } catch (e, st) {
       log.error('plugins', 'plugin bar update failed', error: e, stack: st);
+
       return null;
     } finally {
       calloc.free(pathPtr);
@@ -192,9 +198,11 @@ class PluginFfi {
       if (res == nullptr) return null;
       final out = res.toDartString();
       free(res);
+
       return out;
     } catch (e, st) {
       log.error('plugins', 'plugin bar click failed', error: e, stack: st);
+
       return null;
     } finally {
       calloc.free(pathPtr);

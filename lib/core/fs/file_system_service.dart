@@ -58,7 +58,8 @@ class FileSystemService {
   /// queue and hide latency without over-subscribing the device.
   static final int _copyConcurrency = () {
     final n = Platform.numberOfProcessors ~/ 2;
-    return n < 2 ? 2 : (n > 4 ? 4 : n);
+
+    return n.clamp(2, 4);
   }();
 
   static RenameResult rename(String oldPath, String newName) {
@@ -83,6 +84,7 @@ class FileSystemService {
       } else {
         File(oldPath).renameSync(newPath);
       }
+
       return RenameSuccess(newPath);
     } on FileSystemException catch (e) {
       return RenameError(_friendlyError(e));
@@ -94,6 +96,7 @@ class FileSystemService {
     if (loc != null) {
       return FsWorkerPool.instance.listArchive(loc.archivePath, loc.innerPath);
     }
+
     return FsWorkerPool.instance.listDirectory(path);
   }
 
@@ -102,11 +105,13 @@ class FileSystemService {
 
   static Future<bool> isNavigable(String path) async {
     if (ArchivePath.resolve(path) != null) return true;
+
     return FsWorkerPool.instance.directoryExists(path);
   }
 
   static bool isInsideArchive(String path) {
     final loc = ArchivePath.resolve(path);
+
     return loc != null && !loc.isRoot;
   }
 
@@ -136,6 +141,7 @@ class FileSystemService {
         ),
       );
     }
+
     return out;
   }
 
@@ -157,6 +163,7 @@ class FileSystemService {
     }
     final dot = name.lastIndexOf('.');
     if (dot > 0) name = name.substring(0, dot);
+
     return name;
   }
 
@@ -168,6 +175,7 @@ class FileSystemService {
       final candidate = '$desired ($i)';
       if (!taken(candidate)) return candidate;
     }
+
     return '$desired ${DateTime.now().microsecondsSinceEpoch}';
   }
 
@@ -202,7 +210,7 @@ class FileSystemService {
       OpenService.openDefault(path);
 
   static void copyWorker(List<dynamic> args) {
-    final mainSendPort = args[0] as SendPort;
+    final mainSendPort = args.first as SendPort;
     final workerReceivePort = ReceivePort();
     mainSendPort.send(workerReceivePort.sendPort);
 
@@ -261,6 +269,7 @@ class FileSystemService {
       if (type == FileSystemEntityType.notFound) {
         errors.add(TaskError(path: src, message: t.errors.notFound));
         mainSendPort.send(ErrorMessage(path: src, message: t.errors.notFound));
+
         return;
       }
       if (type == FileSystemEntityType.directory) {
@@ -320,9 +329,11 @@ class FileSystemService {
       if (srcRoot != null) {
         final srcName = srcRoot.split(sep).last;
         final relative = srcPath.substring(srcRoot.length);
+
         return '$dest$sep$srcName$relative';
       }
       final name = srcPath.split(sep).last;
+
       return '$dest$sep$name';
     }
 
@@ -352,12 +363,14 @@ class FileSystemService {
           }
           _deleteExistingEntity(dstPath);
           Link(dstPath).createSync(Link(srcPath).targetSync());
+
           return true;
         }
         // Not a link: followLinks:false already resolved the real type.
         final type = linkType;
         if (type == FileSystemEntityType.notFound) {
           errors.add(TaskError(path: srcPath, message: t.errors.notFound));
+
           return true;
         } else if (type == FileSystemEntityType.file) {
           final targetExists =
@@ -378,6 +391,7 @@ class FileSystemService {
             );
             pendingConflicts[srcPath] = info;
             emitPrompt(info);
+
             return false;
           }
 
@@ -407,6 +421,7 @@ class FileSystemService {
       } catch (e) {
         errors.add(TaskError(path: srcPath, message: _friendlyError(e)));
       }
+
       return true;
     }
 
@@ -438,10 +453,12 @@ class FileSystemService {
       Future<void> acquire(int weight) {
         if (available >= weight) {
           available -= weight;
+
           return Future<void>.value();
         }
         final c = Completer<void>();
         waitQueue.add((weight, c));
+
         return c.future;
       }
 
@@ -545,6 +562,7 @@ class FileSystemService {
           if (cancelled) {
             mainSendPort.send(TaskDoneMessage(cancelled: true, errors: errors));
             workerReceivePort.close();
+
             return;
           }
           mainSendPort.send(
@@ -593,7 +611,7 @@ class FileSystemService {
   }
 
   static void moveWorker(List<dynamic> args) {
-    final mainSendPort = args[0] as SendPort;
+    final mainSendPort = args.first as SendPort;
     final workerReceivePort = ReceivePort();
     mainSendPort.send(workerReceivePort.sendPort);
 
@@ -654,6 +672,7 @@ class FileSystemService {
       if (type == FileSystemEntityType.notFound) {
         errors.add(TaskError(path: src, message: t.errors.notFound));
         mainSendPort.send(ErrorMessage(path: src, message: t.errors.notFound));
+
         return;
       }
       if (type == FileSystemEntityType.directory) {
@@ -753,15 +772,18 @@ class FileSystemService {
       if (srcRoot != null) {
         final srcName = srcRoot.split(sep).last;
         final relative = srcPath.substring(srcRoot.length);
+
         return '$dest$sep$srcName$relative';
       }
       final name = srcPath.split(sep).last;
+
       return '$dest$sep$name';
     }
 
     ConflictInfo buildConflictInfo(String src, String dst) {
       final targetStat = FileStat.statSync(dst);
       final sourceStat = FileStat.statSync(src);
+
       return ConflictInfo(
         sourcePath: src,
         targetPath: dst,
@@ -803,6 +825,7 @@ class FileSystemService {
           final info = buildConflictInfo(srcPath, dstPath);
           pendingConflicts[srcPath] = info;
           emitPrompt(info);
+
           return false;
         }
         if (resolution == ConflictResolution.overwrite &&
@@ -824,6 +847,7 @@ class FileSystemService {
             _deleteExistingEntity(dstPath);
             await _moveEntity(tempDstPath, dstPath, () => false, null);
           }
+
           return true;
         }
         final dstDir = dstPath.substring(
@@ -844,6 +868,7 @@ class FileSystemService {
       } catch (e) {
         errors.add(TaskError(path: srcPath, message: _friendlyError(e)));
       }
+
       return true;
     }
 
@@ -938,6 +963,7 @@ class FileSystemService {
           if (cancelled) {
             mainSendPort.send(TaskDoneMessage(cancelled: true, errors: errors));
             workerReceivePort.close();
+
             return;
           }
           mainSendPort.send(
@@ -986,7 +1012,7 @@ class FileSystemService {
   }
 
   static void deleteWorker(List<dynamic> args) {
-    final mainSendPort = args[0] as SendPort;
+    final mainSendPort = args.first as SendPort;
     final workerReceivePort = ReceivePort();
     mainSendPort.send(workerReceivePort.sendPort);
 
@@ -1127,7 +1153,7 @@ class FileSystemService {
   }
 
   static void trashWorker(List<dynamic> args) {
-    final mainSendPort = args[0] as SendPort;
+    final mainSendPort = args.first as SendPort;
     final workerReceivePort = ReceivePort();
     mainSendPort.send(workerReceivePort.sendPort);
 
@@ -1224,7 +1250,7 @@ class FileSystemService {
   }
 
   static void trashEntryWorker(List<dynamic> args) {
-    final mainSendPort = args[0] as SendPort;
+    final mainSendPort = args.first as SendPort;
     final workerReceivePort = ReceivePort();
     mainSendPort.send(workerReceivePort.sendPort);
 
@@ -1325,6 +1351,7 @@ class FileSystemService {
   static List<TrashEntry> _decodeTrashEntries(String raw) {
     final decoded = jsonDecode(raw);
     if (decoded is! List) return const [];
+
     return [
       for (final item in decoded)
         if (item is Map)
@@ -1345,7 +1372,7 @@ class FileSystemService {
   }
 
   static void extractWorker(List<dynamic> args) {
-    final mainSendPort = args[0] as SendPort;
+    final mainSendPort = args.first as SendPort;
     final workerReceivePort = ReceivePort();
     mainSendPort.send(workerReceivePort.sendPort);
 
@@ -1405,6 +1432,7 @@ class FileSystemService {
       if (cancelled) {
         mainSendPort.send(TaskDoneMessage(cancelled: true, errors: errors));
         workerReceivePort.close();
+
         return;
       }
 
@@ -1424,6 +1452,7 @@ class FileSystemService {
                   runtimeResolutions[key] ??
                   resolutions[key] ??
                   ConflictResolution.overwrite;
+
               return switch (res) {
                 ConflictResolution.skip => null,
                 ConflictResolution.rename => _uniqueName(target),
@@ -1533,7 +1562,7 @@ class FileSystemService {
   }
 
   static void compressWorker(List<dynamic> args) {
-    final mainSendPort = args[0] as SendPort;
+    final mainSendPort = args.first as SendPort;
     final workerReceivePort = ReceivePort();
     mainSendPort.send(workerReceivePort.sendPort);
 
@@ -1670,7 +1699,7 @@ class FileSystemService {
   }
 
   static void archiveEditWorker(List<dynamic> args) {
-    final mainSendPort = args[0] as SendPort;
+    final mainSendPort = args.first as SendPort;
     final workerReceivePort = ReceivePort();
     mainSendPort.send(workerReceivePort.sendPort);
 
@@ -1947,6 +1976,7 @@ class FileSystemService {
         }
       }
     }
+
     return best;
   }
 
@@ -1965,6 +1995,7 @@ class FileSystemService {
         Link(dst).createSync(target);
         Link(src).deleteSync();
       });
+
       return;
     }
     if (type == FileSystemEntityType.directory) {
@@ -2067,6 +2098,7 @@ class FileSystemService {
       return File(path).resolveSymbolicLinksSync();
     } catch (e, st) {
       log.warn('fs', 'canonical path resolution failed', error: e, stack: st);
+
       return path;
     }
   }
@@ -2085,6 +2117,7 @@ class FileSystemService {
         return newPath;
       }
     }
+
     return '$dir${Platform.pathSeparator}$name.${DateTime.now().microsecondsSinceEpoch}';
   }
 
@@ -2114,6 +2147,7 @@ class FileSystemService {
     final msg = e.toString();
     if (msg.contains('errno = 1') || msg.contains('errno = 93')) return true;
     if (msg.contains('errno = 18')) return retryCrossDevice;
+
     return false;
   }
 
@@ -2157,6 +2191,7 @@ class FileSystemService {
       if (e.message.isNotEmpty) return e.message;
     }
     if (msg.length > 120) return '${msg.substring(0, 117)}...';
+
     return msg;
   }
 }

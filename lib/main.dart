@@ -40,6 +40,7 @@ void main(List<String> args) async {
 
       PlatformDispatcher.instance.onError = (error, stack) {
         log.error('platform', '$error', stack: stack);
+
         return true;
       };
 

@@ -56,6 +56,7 @@ class _TerminalPaneState extends State<TerminalPane> {
             SignalBuilder(
               builder: (_) {
                 if (useSystemFont.value == true) return const SizedBox.shrink();
+
                 return RegistrySettingRow(setting: fontFamily);
               },
             ),
@@ -74,6 +75,7 @@ class _TerminalPaneState extends State<TerminalPane> {
             SignalBuilder(
               builder: (_) {
                 if (external.value != 'custom') return const SizedBox.shrink();
+
                 return RegistrySettingRow(setting: externalCustom);
               },
             ),

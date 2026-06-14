@@ -10,11 +10,13 @@ String formatBytes(int bytes) {
   if (bytes < 1024 * 1024 * 1024) {
     return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
+
   return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
 }
 
 String formatSpeed(double bytesPerSecond) {
   if (bytesPerSecond <= 0) return '';
+
   return '${formatBytes(bytesPerSecond.round())}/s';
 }
 
@@ -33,6 +35,7 @@ String formatDurationShort(Duration duration) {
 
   final hours = duration.inHours;
   final remainingMinutes = minutes % 60;
+
   return remainingMinutes == 0 ? '${hours}h' : '${hours}h ${remainingMinutes}m';
 }
 
@@ -50,6 +53,7 @@ String formatTimeAgo(DateTime ts) {
   }
   final hh = ts.hour.toString().padLeft(2, '0');
   final mm = ts.minute.toString().padLeft(2, '0');
+
   return '${ts.month}/${ts.day} $hh:$mm';
 }
 
@@ -66,6 +70,7 @@ String formatEntryDate(
       if (recentDatesRelative && _isRecentDate(d)) {
         return _formatRelativeDate(d);
       }
+
       return _formatLocaleDate(d);
     case 'relative':
       return _formatRelativeDate(d);
@@ -77,6 +82,7 @@ String formatEntryDate(
 
 bool _isRecentDate(DateTime d) {
   final diff = DateTime.now().difference(d);
+
   return !diff.isNegative && diff.inHours < 24;
 }
 
@@ -115,5 +121,6 @@ String _formatRelativeDate(DateTime d) {
   if (diff.inDays < 365) {
     return t.fileView.date.monthsAgo(count: (diff.inDays / 30).floor());
   }
+
   return t.fileView.date.yearsAgo(count: (diff.inDays / 365).floor());
 }

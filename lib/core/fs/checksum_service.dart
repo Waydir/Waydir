@@ -42,6 +42,7 @@ class ChecksumService {
   static bool isExpectedFormatValid(ChecksumAlgorithm algorithm, String value) {
     final normalized = normalizeExpected(value);
     if (normalized.length != algorithm.hexLength) return false;
+
     return RegExp(r'^[0-9a-f]+$').hasMatch(normalized);
   }
 
@@ -51,6 +52,7 @@ class ChecksumService {
     required String actual,
   }) {
     if (!isExpectedFormatValid(algorithm, expected)) return false;
+
     return normalizeExpected(expected) == actual.toLowerCase();
   }
 
@@ -78,6 +80,7 @@ Future<ChecksumResult> _calculateInIsolate(
     input.add(chunk);
   }
   input.close();
+
   return ChecksumResult(
     algorithm: algorithm,
     digest: output.value.toString(),

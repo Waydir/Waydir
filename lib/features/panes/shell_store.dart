@@ -46,6 +46,7 @@ class ShellStore {
     if (list.isEmpty) return null;
     final idx = activePaneIndex.value;
     if (idx < 0 || idx >= list.length) return list.first;
+
     return list[idx];
   });
 
@@ -79,6 +80,7 @@ class ShellStore {
         error: e,
         stack: st,
       );
+
       return false;
     }
   }
@@ -112,6 +114,7 @@ class ShellStore {
     final launch = LaunchArgs.options;
     if (launch.opensLocation) {
       _buildLaunchSession(launch);
+
       return;
     }
 
@@ -122,6 +125,7 @@ class ShellStore {
       if (configured.isNotEmpty && Directory(configured).existsSync()) {
         return configured;
       }
+
       return PlatformPaths.homePath;
     }
 
@@ -277,7 +281,7 @@ class ShellStore {
       for (final t in terminals.value) TerminalRef(t.id, t.originPane),
     ]);
     batch(() {
-      panes.value = [panes.value[0], secondPane];
+      panes.value = [panes.value.first, secondPane];
       activePaneIndex.value = 0;
       activeTerminalId.value = active;
       isDual.value = true;
@@ -293,7 +297,7 @@ class ShellStore {
     ], activePaneIndex.value);
     batch(() {
       activePaneIndex.value = 0;
-      panes.value = [panes.value[0]];
+      panes.value = [panes.value.first];
       terminalVisible.value = TerminalLayout.mergeVisibilityForSingle(visible);
       activeTerminalId.value = active;
       isDual.value = false;
@@ -313,6 +317,7 @@ class ShellStore {
 
   List<TerminalTab> terminalsForSlot(int slot) {
     if (!isDual.value) return terminals.value;
+
     return terminals.value.where((t) => t.originPane == slot).toList();
   }
 
@@ -323,6 +328,7 @@ class ShellStore {
     for (final tab in tabs) {
       if (tab.id == id) return tab;
     }
+
     return tabs.first;
   }
 
@@ -341,6 +347,7 @@ class ShellStore {
     );
     if (!started) {
       session.dispose();
+
       return null;
     }
     final tab = TerminalTab(
@@ -355,6 +362,7 @@ class ShellStore {
       setActiveTerminal(slot, id);
       setTerminalVisible(slot, true);
     });
+
     return tab;
   }
 
@@ -459,6 +467,7 @@ class ShellStore {
         if (tab.label == label) return;
         tab.label = label;
         terminals.value = [...tabs];
+
         return;
       }
     }
@@ -468,6 +477,7 @@ class ShellStore {
     if (cwd == PlatformPaths.homePath) return '~';
     final name = p.basename(cwd);
     if (name.isNotEmpty) return name;
+
     return cwd.isEmpty ? t.terminal.title : cwd;
   }
 

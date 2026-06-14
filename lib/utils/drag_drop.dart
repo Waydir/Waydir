@@ -42,5 +42,6 @@ Future<List<String>> pathsFromSession(DropSession session) async {
       }
     }
   }
+
   return paths;
 }

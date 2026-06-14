@@ -101,6 +101,7 @@ Options:
   static String? _resolveFile(String raw) {
     final resolved = _resolve(raw);
     if (resolved == null || resolved.isDirectory) return null;
+
     return resolved.path;
   }
 
@@ -120,6 +121,7 @@ Options:
     } catch (e, st) {
       log.warn('launch', 'failed to resolve launch path', error: e, stack: st);
     }
+
     return null;
   }
 }

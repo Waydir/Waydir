@@ -70,8 +70,10 @@ class _PopupOverlayState extends State<PopupOverlay>
     if (event is KeyDownEvent &&
         event.logicalKey == LogicalKeyboardKey.escape) {
       _dismiss();
+
       return true;
     }
+
     return false;
   }
 
@@ -150,6 +152,7 @@ class _ClampedPositionDelegate extends SingleChildLayoutDelegate {
     );
     final dx = position.dx.clamp(_margin, maxX).toDouble();
     final dy = position.dy.clamp(_margin, maxY).toDouble();
+
     return Offset(dx, dy);
   }
 

@@ -201,6 +201,7 @@ class _AsyncRetainState<T> extends State<AsyncRetain<T>> {
   @override
   Widget build(BuildContext context) {
     if (!_has) return widget.loading ?? const SizedBox.shrink();
+
     return widget.builder(_data as T);
   }
 }

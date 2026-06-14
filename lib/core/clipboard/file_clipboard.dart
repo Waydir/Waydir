@@ -14,6 +14,7 @@ class FileClipboard {
   }) async {
     if (Platform.isMacOS) {
       _writeMacOS(paths, isCut: isCut);
+
       return;
     }
 
@@ -70,6 +71,7 @@ class FileClipboard {
       }
     } catch (e, st) {
       log.warn('clipboard', 'file clipboard read failed', error: e, stack: st);
+
       return [];
     }
   }
@@ -91,6 +93,7 @@ class FileClipboard {
         ]);
         if (output != null && output.trim().startsWith('cut')) return true;
       }
+
       return false;
     } catch (e, st) {
       log.warn(
@@ -99,6 +102,7 @@ class FileClipboard {
         error: e,
         stack: st,
       );
+
       return false;
     }
   }
@@ -120,6 +124,7 @@ class FileClipboard {
       '(Get-Clipboard -Format FileDropList).FullName',
     ]);
     if (output == null || output.trim().isEmpty) return [];
+
     return output
         .split('\n')
         .map((l) => l.trim())
@@ -157,6 +162,7 @@ class FileClipboard {
     ]);
     if (output != null) {
       final lines = output.split('\n');
+
       return _parseUris(lines.skip(1).join('\n'));
     }
 
@@ -174,6 +180,7 @@ class FileClipboard {
       'text/uri-list',
     ], timeout: const Duration(seconds: 1));
     if (output != null) return _parseUris(output);
+
     return [];
   }
 
@@ -204,6 +211,7 @@ class FileClipboard {
         timeout,
         onTimeout: () {
           process.kill();
+
           return -1;
         },
       );
@@ -213,6 +221,7 @@ class FileClipboard {
 
     if (exitCode != 0) {
       await process.stderr.drain();
+
       return null;
     }
 
@@ -221,6 +230,7 @@ class FileClipboard {
 
   static List<String> _parseUris(String raw) {
     const prefix = 'file://';
+
     return raw
         .split('\n')
         .map((l) => l.trim())

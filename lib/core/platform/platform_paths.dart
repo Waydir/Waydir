@@ -24,6 +24,7 @@ class PlatformPaths {
       return Platform.environment['USERPROFILE'] ??
           '${Platform.environment['HOMEDRIVE'] ?? 'C:'}${Platform.environment['HOMEPATH'] ?? r'\Users\Default'}';
     }
+
     return Platform.environment['HOME'] ?? '/';
   }
 
@@ -31,6 +32,7 @@ class PlatformPaths {
     if (isWindows) {
       return _windowsDriveRoot(homePath);
     }
+
     return '/';
   }
 
@@ -54,6 +56,7 @@ class PlatformPaths {
     if (isRemoteUri(path)) return true;
     if (isWindows) return _windowsIsNetworkPath(path);
     if (isLinux) return path.contains('/gvfs/');
+
     return false;
   }
 
@@ -71,6 +74,7 @@ class PlatformPaths {
       return fn(ptr) == 4; // DRIVE_REMOTE
     } catch (e, st) {
       log.warn('platform', 'GetDriveType failed', error: e, stack: st);
+
       return false;
     } finally {
       malloc.free(ptr);
@@ -90,6 +94,7 @@ class PlatformPaths {
       log.warn('platform', 'GetDriveType lookup failed', error: e, stack: st);
       _getDriveType = null;
     }
+
     return _getDriveType;
   }
 
@@ -98,6 +103,7 @@ class PlatformPaths {
       final scheme = isSftpUri(path) ? 'sftp://' : 'smb://';
       final rest = path.substring(scheme.length);
       final slashes = '/'.allMatches(rest).length;
+
       return slashes <= 1;
     }
     if (isWindows) {
@@ -106,10 +112,13 @@ class PlatformPaths {
         final parts = _stripTrailingWindowsSeparator(
           cleaned,
         ).substring(2).split(r'\').where((s) => s.isNotEmpty).toList();
+
         return parts.length <= 1;
       }
+
       return RegExp(r'^[A-Za-z]:\\?$').hasMatch(cleaned);
     }
+
     return path == '/';
   }
 
@@ -119,6 +128,7 @@ class PlatformPaths {
       final rest = path.substring(scheme.length);
       final slash = rest.lastIndexOf('/');
       if (slash < 0) return path;
+
       return '$scheme${rest.substring(0, slash)}';
     }
     if (isWindows) {
@@ -131,6 +141,7 @@ class PlatformPaths {
             .where((s) => s.isNotEmpty)
             .toList();
         if (parts.length <= 1) return _ensureTrailingWindowsSeparator(trimmed);
+
         return '\\\\${parts.sublist(0, parts.length - 1).join('\\')}';
       }
       final root = _windowsRoot(cleaned);
@@ -145,25 +156,30 @@ class PlatformPaths {
           parent.length < rootTrimmed.length) {
         return root;
       }
+
       return parent;
     }
     if (path == '/') return '/';
     final parent = p.dirname(path);
+
     return parent.isEmpty ? '/' : parent;
   }
 
   static String join(String part1, [String? part2, String? part3]) {
     if (isSmbUri(part1) || isSftpUri(part1)) {
       final parts = [part1, ?part2, ?part3];
+
       return parts.where((part) => part.isNotEmpty).fold<String>('', (
         acc,
         part,
       ) {
         if (acc.isEmpty) return part.replaceAll(RegExp(r'/+$'), '');
+
         return '${acc.replaceAll(RegExp(r'/+$'), '')}/${part.replaceAll(RegExp(r'^/+'), '')}';
       });
     }
     if (isWindows) return _windowsPath.join(part1, part2, part3);
+
     return p.join(part1, part2, part3);
   }
 
@@ -174,6 +190,7 @@ class PlatformPaths {
       final parts = rest.split('/').where((s) => s.isNotEmpty).toList();
       if (parts.isEmpty) return [scheme];
       final root = '$scheme${parts.first}';
+
       return [root, ...parts.sublist(1)];
     }
     if (isWindows) {
@@ -183,6 +200,7 @@ class PlatformPaths {
           cleaned,
         ).substring(2).split(r'\').where((s) => s.isNotEmpty).toList();
         if (parts.isEmpty) return [_stripTrailingWindowsSeparator(cleaned)];
+
         return ['\\\\${parts.first}', ...parts.sublist(1)];
       }
       final root = _windowsDriveRoot(cleaned);
@@ -191,9 +209,11 @@ class PlatformPaths {
           : '';
       final parts = rest.split(r'\').where((s) => s.isNotEmpty).toList();
       final rootLabel = root.replaceAll(r'\', '').replaceAll('/', '');
+
       return [rootLabel, ...parts];
     }
     final parts = path.split('/').where((s) => s.isNotEmpty).toList();
+
     return parts;
   }
 
@@ -202,14 +222,17 @@ class PlatformPaths {
         (segments.first.startsWith('smb://') ||
             segments.first.startsWith('sftp://'))) {
       if (upToIndex == 0) return segments.first;
+
       return '${segments.first}/${segments.sublist(1, upToIndex + 1).join('/')}';
     }
     if (isWindows) {
       final root = segments.first;
       if (upToIndex == 0) return _ensureTrailingWindowsSeparator(root);
       final rest = segments.sublist(1, upToIndex + 1).join(r'\');
+
       return '${_ensureTrailingWindowsSeparator(root)}$rest';
     }
+
     return '/${segments.sublist(0, upToIndex + 1).join('/')}';
   }
 
@@ -217,6 +240,7 @@ class PlatformPaths {
     if (!Platform.isLinux) return null;
     try {
       final dir = xdg.getUserDirectory(key);
+
       return dir?.path;
     } catch (e, st) {
       log.warn(
@@ -225,6 +249,7 @@ class PlatformPaths {
         error: e,
         stack: st,
       );
+
       return null;
     }
   }
@@ -250,9 +275,11 @@ class PlatformPaths {
       final base = (xdgData == null || xdgData.isEmpty)
           ? join(homePath, '.local', 'share')
           : xdgData;
+
       return p.join(base, 'Trash', 'files');
     }
     if (Platform.isMacOS) return join(homePath, '.Trash');
+
     return null;
   }
 
@@ -295,6 +322,7 @@ class PlatformPaths {
     } else {
       if (name.contains('/')) return false;
     }
+
     return true;
   }
 
@@ -304,9 +332,11 @@ class PlatformPaths {
       final rest = path.substring(scheme.length);
       final slash = rest.lastIndexOf('/');
       if (slash < 0) return rest;
+
       return rest.substring(slash + 1);
     }
     if (isWindows) return _windowsPath.basename(path);
+
     return p.basename(path);
   }
 
@@ -317,6 +347,7 @@ class PlatformPaths {
     if (second == '/' || (isWindows && second == r'\')) {
       return join(homePath, path.substring(2));
     }
+
     return path;
   }
 
@@ -329,9 +360,11 @@ class PlatformPaths {
         for (final e in env.entries) {
           if (e.key.toLowerCase() == name) return e.value;
         }
+
         return m[0]!;
       });
     }
+
     return path.replaceAllMapped(
       RegExp(r'\$(?:\{([A-Za-z_][A-Za-z0-9_]*)\}|([A-Za-z_][A-Za-z0-9_]*))'),
       (m) => env[m[1] ?? m[2]!] ?? m[0]!,
@@ -343,6 +376,7 @@ class PlatformPaths {
     if (isWindows) {
       return _normalizeWindowsPath(path);
     }
+
     return path;
   }
 
@@ -360,6 +394,7 @@ class PlatformPaths {
         log.warn('platform', 'windows drive probe failed', error: e, stack: st);
       }
     }
+
     return drives;
   }
 
@@ -375,6 +410,7 @@ class PlatformPaths {
             _stripTrailingWindowsSeparator(uncRoot)) {
       return _ensureTrailingWindowsSeparator(cleaned);
     }
+
     return path;
   }
 
@@ -390,6 +426,7 @@ class PlatformPaths {
       cleaned,
     ).substring(2).split(r'\').where((s) => s.isNotEmpty).toList();
     if (parts.length != 1) return null;
+
     return parts.first;
   }
 
@@ -397,6 +434,7 @@ class PlatformPaths {
     if (path.length >= 2 && path[1] == ':') {
       return '${path[0].toUpperCase()}:\\';
     }
+
     return 'C:\\';
   }
 
@@ -420,7 +458,8 @@ class PlatformPaths {
     if (parts.length < 2) {
       return _ensureTrailingWindowsSeparator(path);
     }
-    return '\\\\${parts[0]}\\${parts[1]}\\';
+
+    return '\\\\${parts.first}\\${parts[1]}\\';
   }
 
   static String _normalizeWindowsPath(String path) {
@@ -428,6 +467,7 @@ class PlatformPaths {
     if (p.length >= 2 && p[1] == ':' && (p.length == 2 || p[2] != r'\')) {
       p = '${p.substring(0, 2)}\\${p.substring(2)}';
     }
+
     return p;
   }
 
@@ -441,6 +481,7 @@ class PlatformPaths {
       if (RegExp(r'^[A-Za-z]:\\$').hasMatch(out)) break;
       out = out.substring(0, out.length - 1);
     }
+
     return out;
   }
 }
