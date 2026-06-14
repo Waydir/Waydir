@@ -5,6 +5,8 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:signals/signals.dart';
 
+import '../fs/checksum_service.dart';
+import '../logging/app_logger.dart';
 import 'github_releases.dart';
 import 'install_format.dart';
 import '../../i18n/strings.g.dart';
@@ -41,6 +43,8 @@ class UpdateStore {
 
   final String currentVersion;
   final GithubReleasesClient _gh;
+  final Future<Directory> Function() _temporaryDirectory;
+  final http.Client Function() _downloadClientFactory;
 
   final status = signal<UpdateStatus>(UpdateStatus.idle);
   final latestRelease = signal<GithubRelease?>(null);
@@ -61,8 +65,14 @@ class UpdateStore {
     return _isNewer(r.version, currentVersion);
   });
 
-  UpdateStore({required this.currentVersion, GithubReleasesClient? client})
-    : _gh = client ?? GithubReleasesClient(owner: _owner, repo: _repo);
+  UpdateStore({
+    required this.currentVersion,
+    GithubReleasesClient? client,
+    Future<Directory> Function()? temporaryDirectory,
+    http.Client Function()? downloadClientFactory,
+  }) : _gh = client ?? GithubReleasesClient(owner: _owner, repo: _repo),
+       _temporaryDirectory = temporaryDirectory ?? getTemporaryDirectory,
+       _downloadClientFactory = downloadClientFactory ?? http.Client.new;
 
   static bool canSelfInstall(InstallFormat? fmt) =>
       fmt != null &&
@@ -121,7 +131,8 @@ class UpdateStore {
     totalBytes.value = asset.sizeBytes;
     errorMessage.value = null;
 
-    _downloadClient = http.Client();
+    _downloadClient = _downloadClientFactory();
+    File? outFile;
     try {
       final req = http.Request('GET', Uri.parse(asset.downloadUrl));
       final res = await _downloadClient!.send(req);
@@ -134,15 +145,22 @@ class UpdateStore {
       final total = res.contentLength ?? asset.sizeBytes;
       totalBytes.value = total;
 
-      final dir = await getTemporaryDirectory();
+      final dir = await _temporaryDirectory();
       final outDir = Directory('${dir.path}/waydir-update');
       if (outDir.existsSync()) {
         try {
           outDir.deleteSync(recursive: true);
-        } catch (_) {}
+        } catch (e, st) {
+          log.warn(
+            'update',
+            'failed to clear update cache',
+            error: e,
+            stack: st,
+          );
+        }
       }
       outDir.createSync(recursive: true);
-      final outFile = File('${outDir.path}/${asset.name}');
+      outFile = File('${outDir.path}/${asset.name}');
       final sink = outFile.openWrite();
 
       int received = 0;
@@ -155,10 +173,23 @@ class UpdateStore {
       await sink.flush();
       await sink.close();
 
+      await _verifyAssetDigest(asset, outFile);
+
       downloadedFile.value = outFile;
       progress.value = 1;
       status.value = UpdateStatus.ready;
     } catch (e) {
+      downloadedFile.value = null;
+      try {
+        if (outFile != null && outFile.existsSync()) outFile.deleteSync();
+      } catch (cleanupError, cleanupStack) {
+        log.warn(
+          'update',
+          'failed to remove invalid update download',
+          error: cleanupError,
+          stack: cleanupStack,
+        );
+      }
       errorMessage.value = e.toString();
       status.value = UpdateStatus.error;
     } finally {
@@ -169,10 +200,12 @@ class UpdateStore {
 
   Future<bool> launchInstaller() async {
     final file = downloadedFile.value;
+    final asset = selectedAsset.value;
     final fmt = installFormat.value;
-    if (file == null || fmt == null) return false;
+    if (file == null || asset == null || fmt == null) return false;
     status.value = UpdateStatus.launching;
     try {
+      await _verifyAssetDigest(asset, file);
       switch (fmt) {
         case InstallFormat.linuxPortable:
           final ok = await SwapInstaller.installLinuxPortable(file);
@@ -213,6 +246,42 @@ class UpdateStore {
       status.value = UpdateStatus.error;
       return false;
     }
+  }
+
+  static Future<void> _verifyAssetDigest(GithubAsset asset, File file) async {
+    final expected = _sha256FromAssetDigest(asset.digest);
+    if (expected == null) {
+      throw UpdateIntegrityException(
+        t.update.missingChecksum(asset: asset.name),
+      );
+    }
+    final actual = await ChecksumService.calculate(
+      file.path,
+      ChecksumAlgorithm.sha256,
+    );
+    if (!ChecksumService.matches(
+      algorithm: ChecksumAlgorithm.sha256,
+      expected: expected,
+      actual: actual.digest,
+    )) {
+      throw UpdateIntegrityException(
+        t.update.checksumMismatch(asset: asset.name),
+      );
+    }
+  }
+
+  static String? _sha256FromAssetDigest(String value) {
+    final digest = value.trim().toLowerCase();
+    const prefix = 'sha256:';
+    if (!digest.startsWith(prefix)) return null;
+    final expected = digest.substring(prefix.length);
+    if (!ChecksumService.isExpectedFormatValid(
+      ChecksumAlgorithm.sha256,
+      expected,
+    )) {
+      return null;
+    }
+    return expected;
   }
 
   void openReleasePage() {
@@ -312,4 +381,13 @@ class _Version {
   final List<int> parts;
   final String? pre;
   _Version(this.parts, this.pre);
+}
+
+class UpdateIntegrityException implements Exception {
+  final String message;
+
+  UpdateIntegrityException(this.message);
+
+  @override
+  String toString() => message;
 }

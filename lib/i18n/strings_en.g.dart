@@ -626,6 +626,12 @@ class Translations$update$en {
 	/// en: 'GitHub API $statusCode: $reason'
 	String githubApiError({required Object statusCode, required Object reason}) => 'GitHub API ${statusCode}: ${reason}';
 
+	/// en: 'Update asset $asset does not provide a valid SHA-256 checksum.'
+	String missingChecksum({required Object asset}) => 'Update asset ${asset} does not provide a valid SHA-256 checksum.';
+
+	/// en: 'Update asset $asset failed SHA-256 verification.'
+	String checksumMismatch({required Object asset}) => 'Update asset ${asset} failed SHA-256 verification.';
+
 	/// en: 'Cannot write to bundle directory. Install the new version manually.'
 	String get bundleNotWritable => 'Cannot write to bundle directory. Install the new version manually.';
 
@@ -3553,6 +3559,8 @@ extension on Translations {
 			'update.formatUnknown' => 'unknown',
 			'update.downloadFailed' => ({required Object statusCode}) => 'Download failed: HTTP ${statusCode}',
 			'update.githubApiError' => ({required Object statusCode, required Object reason}) => 'GitHub API ${statusCode}: ${reason}',
+			'update.missingChecksum' => ({required Object asset}) => 'Update asset ${asset} does not provide a valid SHA-256 checksum.',
+			'update.checksumMismatch' => ({required Object asset}) => 'Update asset ${asset} failed SHA-256 verification.',
 			'update.bundleNotWritable' => 'Cannot write to bundle directory. Install the new version manually.',
 			'update.installerLaunchFailed' => ({required Object error}) => 'Failed to launch installer: ${error}',
 			'appMenu.help' => 'Help',
@@ -3722,10 +3730,10 @@ extension on Translations {
 			'quickLook.sizeBreakdown' => 'Size breakdown',
 			'quickLook.typeBreakdown' => 'Type breakdown',
 			'quickLook.noExtension' => 'no extension',
-			'quickLook.sectionImage' => 'Image',
-			'quickLook.sectionText' => 'Text',
 			_ => null,
 		} ?? switch (path) {
+			'quickLook.sectionImage' => 'Image',
+			'quickLook.sectionText' => 'Text',
 			'quickLook.hintSwitchFile' => 'Switch file',
 			'quickLook.hintClose' => 'Close',
 			'toast.copiedItems' => ({required Object count}) => 'Copied ${count} items',

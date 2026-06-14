@@ -385,6 +385,8 @@
     "formatUnknown": "unknown",
     "downloadFailed": "Download failed: HTTP $statusCode",
     "githubApiError": "GitHub API $statusCode: $reason",
+    "missingChecksum": "Update asset $asset does not provide a valid SHA-256 checksum.",
+    "checksumMismatch": "Update asset $asset failed SHA-256 verification.",
     "bundleNotWritable": "Cannot write to bundle directory. Install the new version manually.",
     "installerLaunchFailed": "Failed to launch installer: $error"
   },

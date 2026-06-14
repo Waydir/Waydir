@@ -9,11 +9,13 @@ class GithubAsset {
   final String name;
   final String downloadUrl;
   final int sizeBytes;
+  final String digest;
 
   GithubAsset({
     required this.name,
     required this.downloadUrl,
     required this.sizeBytes,
+    required this.digest,
   });
 
   factory GithubAsset.fromJson(Map<String, dynamic> json) {
@@ -21,6 +23,7 @@ class GithubAsset {
       name: json['name'] as String? ?? '',
       downloadUrl: json['browser_download_url'] as String? ?? '',
       sizeBytes: (json['size'] as num?)?.toInt() ?? 0,
+      digest: json['digest'] as String? ?? '',
     );
   }
 }
