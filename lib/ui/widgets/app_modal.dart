@@ -6,6 +6,7 @@ import 'app_close_button.dart';
 
 class AppModal extends StatelessWidget {
   final IconData? icon;
+  final Color? iconColor;
   final String title;
   final double? width;
   final double? height;
@@ -16,6 +17,7 @@ class AppModal extends StatelessWidget {
   const AppModal({
     super.key,
     this.icon,
+    this.iconColor,
     required this.title,
     this.width,
     this.height,
@@ -58,7 +60,12 @@ class AppModal extends StatelessWidget {
             child: Column(
               mainAxisSize: fixedHeight ? MainAxisSize.max : MainAxisSize.min,
               children: [
-                _ModalTitleBar(icon: icon, title: title, onClose: onClose),
+                _ModalTitleBar(
+                  icon: icon,
+                  iconColor: iconColor,
+                  title: title,
+                  onClose: onClose,
+                ),
                 Container(height: 1, color: AppColors.bgDivider),
                 body,
               ],
@@ -71,17 +78,20 @@ class AppModal extends StatelessWidget {
 
   Widget get _paddedChild {
     if (padding == EdgeInsets.zero) return child;
+
     return Padding(padding: padding, child: child);
   }
 }
 
 class _ModalTitleBar extends StatelessWidget {
   final IconData? icon;
+  final Color? iconColor;
   final String title;
   final VoidCallback onClose;
 
   const _ModalTitleBar({
     required this.icon,
+    required this.iconColor,
     required this.title,
     required this.onClose,
   });
@@ -95,7 +105,7 @@ class _ModalTitleBar extends StatelessWidget {
       child: Row(
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 16, color: AppColors.fgAccent),
+            Icon(icon, size: 16, color: iconColor ?? AppColors.fgAccent),
             const SizedBox(width: 8),
           ],
           Text(title, style: context.txt.dialogTitle),
