@@ -88,8 +88,9 @@ void sftpDeleteWorker(List<dynamic> args) {
         processedFiles++;
         maybeReport(PlatformPaths.fileName(src));
       } catch (e) {
-        errors.add(TaskError(path: src, message: _friendly(e)));
-        mainSendPort.send(ErrorMessage(path: src, message: _friendly(e)));
+        final message = _friendly(e);
+        errors.add(TaskError(path: src, message: message));
+        mainSendPort.send(ErrorMessage(path: src, message: message));
       }
       await Future<void>.delayed(Duration.zero);
     }
@@ -118,7 +119,7 @@ void sftpDeleteWorker(List<dynamic> args) {
               cancelled: cancelled,
               errors: [
                 ...errors,
-                TaskError(path: '', message: e.toString()),
+                TaskError(path: '', message: _friendly(e)),
               ],
             ),
           );
@@ -133,7 +134,7 @@ void sftpDeleteWorker(List<dynamic> args) {
           cancelled: cancelled,
           errors: [
             ...errors,
-            TaskError(path: '', message: e.toString()),
+            TaskError(path: '', message: _friendly(e)),
           ],
         ),
       );
@@ -424,7 +425,7 @@ void _runTransferWorker(List<dynamic> args, {required bool move}) {
               cancelled: cancelled,
               errors: [
                 ...errors,
-                TaskError(path: '', message: e.toString()),
+                TaskError(path: '', message: _friendly(e)),
               ],
             ),
           );
@@ -444,7 +445,7 @@ void _runTransferWorker(List<dynamic> args, {required bool move}) {
           cancelled: cancelled,
           errors: [
             ...errors,
-            TaskError(path: '', message: e.toString()),
+            TaskError(path: '', message: _friendly(e)),
           ],
         ),
       );
@@ -1088,6 +1089,23 @@ class _SftpCancelled implements Exception {
 
 String _friendly(Object e) {
   final msg = e.toString();
+  final lower = msg.toLowerCase();
+  if (e is FileSystemException) {
+    final code = e.osError?.errorCode;
+    if (code == 1 || code == 5 || code == 13) return t.errors.permissionDenied;
+  }
+  if (lower.contains('permission denied') ||
+      lower.contains('access is denied') ||
+      lower.contains('access denied') ||
+      lower.contains('operation not permitted') ||
+      lower.contains('error_access_denied') ||
+      lower.contains('unauthorizedaccessexception') ||
+      lower.contains('eacces') ||
+      lower.contains('eperm') ||
+      lower.contains('errno = 1') ||
+      lower.contains('errno = 13')) {
+    return t.errors.permissionDenied;
+  }
   if (msg.length > 200) return '${msg.substring(0, 197)}...';
 
   return msg;

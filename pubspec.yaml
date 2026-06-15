@@ -76,3 +76,6 @@ flutter:
     - family: PhosphorFill
       fonts:
         - asset: assets/fonts/phosphor/PhosphorFill.ttf
+    - family: DistroLogos
+      fonts:
+        - asset: assets/fonts/font-logos/font-logos.ttf

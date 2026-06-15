@@ -7,9 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Windows: WSL support. Browse WSL distributions from the sidebar.
+- Terminal: the new-tab dropdown lets you pick any shell, or a WSL distribution, to launch the next terminal session.
+
 ### Fixed
 - PDF preview crash when rapidly switching between files ([#175](https://github.com/Waydir/Waydir/issues/175)).
 - "Date created" now uses real birth time instead of ctime ([#174](https://github.com/Waydir/Waydir/issues/174)).
+- File operations now report a clean "Permission denied" message (instead of a raw error string) across more cases, including SFTP/SMB transfers and Windows access-denied errors.
 
 ## [0.17.0] - 2026-06-14
 

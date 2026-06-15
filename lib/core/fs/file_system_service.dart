@@ -581,7 +581,7 @@ class FileSystemService {
                 cancelled: cancelled,
                 errors: [
                   ...errors,
-                  TaskError(path: '', message: e.toString()),
+                  TaskError(path: '', message: _friendlyError(e)),
                 ],
               ),
             );
@@ -601,7 +601,7 @@ class FileSystemService {
             cancelled: cancelled,
             errors: [
               ...errors,
-              TaskError(path: '', message: e.toString()),
+              TaskError(path: '', message: _friendlyError(e)),
             ],
           ),
         );
@@ -982,7 +982,7 @@ class FileSystemService {
                 cancelled: cancelled,
                 errors: [
                   ...errors,
-                  TaskError(path: '', message: e.toString()),
+                  TaskError(path: '', message: _friendlyError(e)),
                 ],
               ),
             );
@@ -1002,7 +1002,7 @@ class FileSystemService {
             cancelled: cancelled,
             errors: [
               ...errors,
-              TaskError(path: '', message: e.toString()),
+              TaskError(path: '', message: _friendlyError(e)),
             ],
           ),
         );
@@ -1128,7 +1128,7 @@ class FileSystemService {
                 cancelled: cancelled,
                 errors: [
                   ...errors,
-                  TaskError(path: '', message: e.toString()),
+                  TaskError(path: '', message: _friendlyError(e)),
                 ],
               ),
             );
@@ -1143,7 +1143,7 @@ class FileSystemService {
             cancelled: cancelled,
             errors: [
               ...errors,
-              TaskError(path: '', message: e.toString()),
+              TaskError(path: '', message: _friendlyError(e)),
             ],
           ),
         );
@@ -1225,7 +1225,7 @@ class FileSystemService {
                 cancelled: cancelled,
                 errors: [
                   ...errors,
-                  TaskError(path: '', message: e.toString()),
+                  TaskError(path: '', message: _friendlyError(e)),
                 ],
               ),
             );
@@ -1240,7 +1240,7 @@ class FileSystemService {
             cancelled: cancelled,
             errors: [
               ...errors,
-              TaskError(path: '', message: e.toString()),
+              TaskError(path: '', message: _friendlyError(e)),
             ],
           ),
         );
@@ -1324,7 +1324,7 @@ class FileSystemService {
                 cancelled: cancelled,
                 errors: [
                   ...errors,
-                  TaskError(path: '', message: e.toString()),
+                  TaskError(path: '', message: _friendlyError(e)),
                 ],
               ),
             );
@@ -1339,7 +1339,7 @@ class FileSystemService {
             cancelled: cancelled,
             errors: [
               ...errors,
-              TaskError(path: '', message: e.toString()),
+              TaskError(path: '', message: _friendlyError(e)),
             ],
           ),
         );
@@ -1532,7 +1532,7 @@ class FileSystemService {
                 cancelled: cancelled,
                 errors: [
                   ...errors,
-                  TaskError(path: '', message: e.toString()),
+                  TaskError(path: '', message: _friendlyError(e)),
                 ],
               ),
             );
@@ -1552,7 +1552,7 @@ class FileSystemService {
             cancelled: cancelled,
             errors: [
               ...errors,
-              TaskError(path: '', message: e.toString()),
+              TaskError(path: '', message: _friendlyError(e)),
             ],
           ),
         );
@@ -1620,9 +1620,10 @@ class FileSystemService {
           },
         );
       } catch (e) {
-        errors.add(TaskError(path: destination ?? '', message: e.toString()));
+        final message = _friendlyError(e);
+        errors.add(TaskError(path: destination ?? '', message: message));
         mainSendPort.send(
-          ErrorMessage(path: destination ?? '', message: e.toString()),
+          ErrorMessage(path: destination ?? '', message: message),
         );
       }
       if (cancelled || errors.isNotEmpty) {
@@ -1674,7 +1675,7 @@ class FileSystemService {
                 cancelled: cancelled,
                 errors: [
                   ...errors,
-                  TaskError(path: '', message: e.toString()),
+                  TaskError(path: '', message: _friendlyError(e)),
                 ],
               ),
             );
@@ -1689,7 +1690,7 @@ class FileSystemService {
             cancelled: cancelled,
             errors: [
               ...errors,
-              TaskError(path: '', message: e.toString()),
+              TaskError(path: '', message: _friendlyError(e)),
             ],
           ),
         );
@@ -1760,10 +1761,9 @@ class FileSystemService {
           },
         );
       } catch (e) {
-        errors.add(TaskError(path: archivePath, message: e.toString()));
-        mainSendPort.send(
-          ErrorMessage(path: archivePath, message: e.toString()),
-        );
+        final message = _friendlyError(e);
+        errors.add(TaskError(path: archivePath, message: message));
+        mainSendPort.send(ErrorMessage(path: archivePath, message: message));
       }
       mainSendPort.send(
         ProgressMessage(
@@ -1802,7 +1802,7 @@ class FileSystemService {
                 cancelled: cancelled,
                 errors: [
                   ...errors,
-                  TaskError(path: '', message: e.toString()),
+                  TaskError(path: '', message: _friendlyError(e)),
                 ],
               ),
             );
@@ -1817,7 +1817,7 @@ class FileSystemService {
             cancelled: cancelled,
             errors: [
               ...errors,
-              TaskError(path: '', message: e.toString()),
+              TaskError(path: '', message: _friendlyError(e)),
             ],
           ),
         );
@@ -2153,13 +2153,8 @@ class FileSystemService {
 
   static String _friendlyError(Object e) {
     final msg = e.toString();
+    if (_isPermissionError(e, msg)) return t.errors.permissionDenied;
     if (e is FileSystemException) {
-      if (msg.contains('Permission denied') ||
-          msg.contains('errno = 13') ||
-          msg.contains('Access is denied') ||
-          msg.contains('ERROR_ACCESS_DENIED')) {
-        return t.errors.permissionDenied;
-      }
       if (msg.contains('No space left') ||
           msg.contains('errno = 28') ||
           msg.contains('ERROR_DISK_FULL') ||
@@ -2193,5 +2188,24 @@ class FileSystemService {
     if (msg.length > 120) return '${msg.substring(0, 117)}...';
 
     return msg;
+  }
+
+  static bool _isPermissionError(Object e, String msg) {
+    final lower = msg.toLowerCase();
+    if (e is FileSystemException) {
+      final code = e.osError?.errorCode;
+      if (code == 1 || code == 5 || code == 13) return true;
+    }
+
+    return lower.contains('permission denied') ||
+        lower.contains('access is denied') ||
+        lower.contains('access denied') ||
+        lower.contains('operation not permitted') ||
+        lower.contains('error_access_denied') ||
+        lower.contains('unauthorizedaccessexception') ||
+        lower.contains('eacces') ||
+        lower.contains('eperm') ||
+        lower.contains('errno = 1') ||
+        lower.contains('errno = 13');
   }
 }

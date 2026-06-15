@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:waydir/ui/icons/distro_icons.dart';
 import 'package:waydir/ui/icons/waydir_icons.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:super_drag_and_drop/super_drag_and_drop.dart';
@@ -12,6 +13,8 @@ import 'navigation_store.dart';
 import 'sidebar_store.dart';
 import '../drives/drive_store.dart';
 import '../drives/drive_model.dart';
+import '../containers/container_store.dart';
+import '../containers/wsl_distribution.dart';
 import '../../ui/theme/app_theme.dart';
 import '../../ui/theme/app_text_styles.dart';
 import '../../ui/dialogs/password_dialog.dart';
@@ -48,7 +51,14 @@ class _SidebarItem {
   final IconData icon;
   final String path;
   final String? key;
-  const _SidebarItem(this.label, this.icon, this.path, {this.key});
+  final Color? iconColor;
+  const _SidebarItem(
+    this.label,
+    this.icon,
+    this.path, {
+    this.key,
+    this.iconColor,
+  });
 }
 
 /// One row's full rendering inputs, shared by normal and edit-mode rendering.
@@ -542,6 +552,7 @@ class _SidebarState extends State<Sidebar> {
 
     final currentPath = widget.store.currentPath.value;
     final currentDrives = driveStore.drives.value;
+    final distributions = containerStore.distributions.value;
     final bookmarks = _bookmarkStore.bookmarks.value;
 
     // Read layout signals so the body re-renders on reorder/visibility edits.
@@ -577,6 +588,11 @@ class _SidebarState extends State<Sidebar> {
         title: t.sidebar.devices,
         entries: _deviceEntries(devices, currentPath),
       ),
+      sidebarSectionContainers: _SidebarSection(
+        id: sidebarSectionContainers,
+        title: t.sidebar.containers,
+        entries: _containerEntries(distributions, currentPath),
+      ),
       sidebarSectionNetwork: _SidebarSection(
         id: sidebarSectionNetwork,
         title: t.sidebar.network,
@@ -607,7 +623,8 @@ class _SidebarState extends State<Sidebar> {
     );
   }
 
-  bool _sectionAlwaysShown(String id) => id != sidebarSectionNetwork;
+  bool _sectionAlwaysShown(String id) =>
+      id != sidebarSectionNetwork && id != sidebarSectionContainers;
 
   Widget _buildNormalList(List<_SidebarSection> sections, bool collapsed) {
     final store = SidebarStore.instance;
@@ -779,6 +796,42 @@ class _SidebarState extends State<Sidebar> {
 
     return SidebarStore.instance.orderItems(
       sidebarSectionDevices,
+      entries,
+      (e) => e.key,
+    );
+  }
+
+  List<_SidebarEntry> _containerEntries(
+    List<WslDistribution> distributions,
+    String currentPath,
+  ) {
+    final entries = distributions.map((dist) {
+      final path = dist.uncPath;
+
+      return _SidebarEntry(
+        key: 'wsl:${dist.name}',
+        item: _SidebarItem(
+          dist.name,
+          distroIconFor(dist.name),
+          path,
+          iconColor: distroColorFor(dist.name),
+        ),
+        isSelected: currentPath == path || currentPath.startsWith(path),
+        isMounted: dist.isRunning,
+        tooltip: dist.isRunning
+            ? '${dist.name}\n${t.sidebar.containerRunning}'
+            : dist.name,
+        onTap: widget.store.navigateTo,
+        onMiddleTap: widget.onOpenInNewTab != null
+            ? () => widget.onOpenInNewTab!(path)
+            : null,
+        onDropFiles: (paths, {bool move = false}) =>
+            widget.store.dropFiles(paths, path, move: move),
+      );
+    }).toList();
+
+    return SidebarStore.instance.orderItems(
+      sidebarSectionContainers,
       entries,
       (e) => e.key,
     );
@@ -1819,6 +1872,10 @@ class _ItemRowState extends State<_ItemRow> {
   }
 
   Color get _iconColor {
+    final brand = widget.item.iconColor;
+    if (brand != null) {
+      return widget.isMounted ? brand : brand.withValues(alpha: 0.55);
+    }
     if (widget.isSelected) return AppColors.fgAccent;
 
     return widget.isMounted

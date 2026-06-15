@@ -3,14 +3,22 @@ import 'package:flutter/widgets.dart';
 import '../../../core/platform/platform_paths.dart';
 import '../../../core/platform/trash_location.dart';
 import '../../../i18n/strings.g.dart';
+import '../../../ui/icons/distro_icons.dart';
 import '../../../ui/icons/waydir_icons.dart';
+import '../../containers/wsl_path.dart';
 
 class Crumb {
   final String label;
   final String fullPath;
   final IconData? icon;
+  final Color? iconColor;
 
-  const Crumb({required this.label, required this.fullPath, this.icon});
+  const Crumb({
+    required this.label,
+    required this.fullPath,
+    this.icon,
+    this.iconColor,
+  });
 }
 
 List<Crumb> crumbsFromPath(String path) {
@@ -38,6 +46,28 @@ List<Crumb> crumbsFromPath(String path) {
           ),
         );
       }
+    }
+
+    return crumbs;
+  }
+
+  final wsl = parseWslPath(path);
+  if (wsl != null) {
+    final crumbs = <Crumb>[
+      Crumb(
+        label: wsl.distro,
+        fullPath: wsl.root,
+        icon: distroIconFor(wsl.distro),
+        iconColor: distroColorFor(wsl.distro),
+      ),
+    ];
+    for (var i = 0; i < wsl.rest.length; i++) {
+      crumbs.add(
+        Crumb(
+          label: wsl.rest[i],
+          fullPath: '${wsl.root}\\${wsl.rest.sublist(0, i + 1).join('\\')}',
+        ),
+      );
     }
 
     return crumbs;

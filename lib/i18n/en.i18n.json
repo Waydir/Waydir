@@ -691,6 +691,8 @@
     "trash": "Trash",
     "root": "Root",
     "network": "Network",
+    "containers": "Containers",
+    "containerRunning": "Running",
     "bookmarks": "Bookmarks",
     "dropBookmark": "Drop folder to bookmark",
     "editLayout": "Edit sidebar",

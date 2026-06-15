@@ -46,6 +46,27 @@ class TerminalLaunch {
     return TerminalLaunchSpec(cwd: path, shell: _localShell());
   }
 
+  /// Launch spec for an explicit shell executable at [cwd]. An empty [shell]
+  /// (e.g. the "system default" choice) falls back to the platform default.
+  static TerminalLaunchSpec forShell(String shell, String cwd) {
+    return TerminalLaunchSpec(
+      cwd: cwd,
+      shell: shell.isEmpty ? _localShell() : shell,
+    );
+  }
+
+  /// Launch spec for a WSL distribution. The target directory is passed via
+  /// `--cd` (WSL translates Windows and `\\wsl.localhost` paths); the Windows
+  /// process cwd is left at the home path because CreateProcess rejects a UNC
+  /// working directory.
+  static TerminalLaunchSpec forWsl(String distribution, String cwd) {
+    return TerminalLaunchSpec(
+      cwd: PlatformPaths.homePath,
+      shell: 'wsl.exe',
+      args: ['-d', distribution, '--cd', cwd],
+    );
+  }
+
   /// The shell to launch for a local session, from the user's preference.
   /// An empty string lets the native pty fall back to the platform default
   /// (`$SHELL` on Unix); `'system'` resolves to the platform's sensible

@@ -332,17 +332,17 @@ class ShellStore {
     return tabs.first;
   }
 
-  TerminalTab? openTerminal(int slot, String cwd) {
+  TerminalTab? openTerminal(int slot, String cwd, {TerminalLaunchSpec? spec}) {
     final session = PtySession();
     final id = _nextTerminalId++;
     session.terminal.onTitleChange = (title) {
       _setTerminalLabel(id, title);
     };
-    final spec = TerminalLaunch.resolve(cwd);
+    final launch = spec ?? TerminalLaunch.resolve(cwd);
     final started = session.start(
-      cwd: spec.cwd,
-      shell: spec.shell,
-      args: spec.args,
+      cwd: launch.cwd,
+      shell: launch.shell,
+      args: launch.args,
       onExit: () => closeTerminalTab(id),
     );
     if (!started) {

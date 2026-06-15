@@ -1293,6 +1293,12 @@ class Translations$sidebar$en {
 	/// en: 'Network'
 	String get network => 'Network';
 
+	/// en: 'Containers'
+	String get containers => 'Containers';
+
+	/// en: 'Running'
+	String get containerRunning => 'Running';
+
 	/// en: 'Bookmarks'
 	String get bookmarks => 'Bookmarks';
 
@@ -3820,6 +3826,8 @@ extension on Translations {
 			'sidebar.trash' => 'Trash',
 			'sidebar.root' => 'Root',
 			'sidebar.network' => 'Network',
+			'sidebar.containers' => 'Containers',
+			'sidebar.containerRunning' => 'Running',
 			'sidebar.bookmarks' => 'Bookmarks',
 			'sidebar.dropBookmark' => 'Drop folder to bookmark',
 			'sidebar.editLayout' => 'Edit sidebar',
