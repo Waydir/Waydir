@@ -30,6 +30,11 @@ class FileEntry {
   /// on filesystems without a birth time. 0 when unknown.
   final int createdMs;
 
+  /// Time the file was added to its current location, as epoch milliseconds.
+  /// On macOS this is kMDItemDateAdded (xattr); on other platforms it falls
+  /// back to [createdMs]. 0 when unknown.
+  final int addedMs;
+
   /// Unix mode bits (type + permissions), 0 when unknown (e.g. non-unix).
   final int mode;
 
@@ -44,6 +49,9 @@ class FileEntry {
   DateTime? _created;
   DateTime get created =>
       _created ??= DateTime.fromMillisecondsSinceEpoch(createdMs);
+
+  DateTime? _added;
+  DateTime get added => _added ??= DateTime.fromMillisecondsSinceEpoch(addedMs);
 
   late final String nameLower = name.toLowerCase();
 
@@ -60,14 +68,17 @@ class FileEntry {
     required this.size,
     required DateTime modified,
     DateTime? created,
+    DateTime? added,
     this.mode = 0,
     this.uid = 0,
     this.gid = 0,
     String? realPath,
   }) : modifiedMs = modified.millisecondsSinceEpoch,
        createdMs = (created ?? modified).millisecondsSinceEpoch,
+       addedMs = (added ?? created ?? modified).millisecondsSinceEpoch,
        _modified = modified,
        _created = created,
+       _added = added,
        _realPath = realPath;
 
   FileEntry.raw({
@@ -77,6 +88,7 @@ class FileEntry {
     required this.size,
     required this.modifiedMs,
     this.createdMs = 0,
+    this.addedMs = 0,
     this.mode = 0,
     this.uid = 0,
     this.gid = 0,
@@ -149,9 +161,9 @@ class FileEntryCodec {
   static const int _magic = 0x57444952; // 'WDIR'
 
   /// Fixed-size record header, mirroring `codec.rs::RECORD_HEAD`. Layout
-  /// (big-endian): u8 is_dir, i64 size, i64 mtime_ms, i64 ctime_ms, u32 mode,
-  /// u32 uid, u32 gid, u32 name_len, u32 path_len.
-  static const int _recordHead = 1 + 8 + 8 + 8 + 4 + 4 + 4 + 4 + 4;
+  /// (big-endian): u8 is_dir, i64 size, i64 mtime_ms, i64 ctime_ms,
+  /// i64 added_ms, u32 mode, u32 uid, u32 gid, u32 name_len, u32 path_len.
+  static const int _recordHead = 1 + 8 + 8 + 8 + 8 + 4 + 4 + 4 + 4 + 4;
 
   static Uint8List encode(List<FileEntry> entries) {
     final b = BytesBuilder(copy: false);
@@ -168,11 +180,12 @@ class FileEntryCodec {
       rec.setInt64(1, e.size);
       rec.setInt64(9, e.modifiedMs);
       rec.setInt64(17, e.createdMs);
-      rec.setUint32(25, e.mode);
-      rec.setUint32(29, e.uid);
-      rec.setUint32(33, e.gid);
-      rec.setUint32(37, nameB.length);
-      rec.setUint32(41, pathB.length);
+      rec.setInt64(25, e.addedMs);
+      rec.setUint32(33, e.mode);
+      rec.setUint32(37, e.uid);
+      rec.setUint32(41, e.gid);
+      rec.setUint32(45, nameB.length);
+      rec.setUint32(49, pathB.length);
       b.add(rec.buffer.asUint8List());
       b.add(nameB);
       b.add(pathB);
@@ -205,11 +218,12 @@ class FileEntryCodec {
       final size = view.getInt64(off + 1);
       final modifiedMs = view.getInt64(off + 9);
       final createdMs = view.getInt64(off + 17);
-      final mode = view.getUint32(off + 25);
-      final uid = view.getUint32(off + 29);
-      final gid = view.getUint32(off + 33);
-      final nameLen = view.getUint32(off + 37);
-      final pathLen = view.getUint32(off + 41);
+      final addedMs = view.getInt64(off + 25);
+      final mode = view.getUint32(off + 33);
+      final uid = view.getUint32(off + 37);
+      final gid = view.getUint32(off + 41);
+      final nameLen = view.getUint32(off + 45);
+      final pathLen = view.getUint32(off + 49);
       off += _recordHead;
       final name = utf8.decode(bytes.sublist(off, off + nameLen));
       off += nameLen;
@@ -223,6 +237,7 @@ class FileEntryCodec {
           size: size,
           modifiedMs: modifiedMs,
           createdMs: createdMs,
+          addedMs: addedMs,
           mode: mode,
           uid: uid,
           gid: gid,

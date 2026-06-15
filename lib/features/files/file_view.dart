@@ -49,7 +49,7 @@ const _kHeaderHeight = 24.0;
 
 /// Optional, user-toggleable file-list columns (Name and the recursive-search
 /// Location column are not part of this set). Order here is the display order.
-enum FileColumn { size, date, kind, created, permissions, owner }
+enum FileColumn { size, date, kind, created, added, permissions, owner }
 
 String fileColumnLabel(FileColumn col) {
   final c = t.fileView.columns;
@@ -62,6 +62,8 @@ String fileColumnLabel(FileColumn col) {
       return c.kind;
     case FileColumn.created:
       return c.dateCreated;
+    case FileColumn.added:
+      return c.dateAdded;
     case FileColumn.permissions:
       return c.permissions;
     case FileColumn.owner:
@@ -79,6 +81,8 @@ SortKey fileColumnSortKey(FileColumn col) {
       return SortKey.kind;
     case FileColumn.created:
       return SortKey.created;
+    case FileColumn.added:
+      return SortKey.added;
     case FileColumn.permissions:
       return SortKey.permissions;
     case FileColumn.owner:
@@ -110,6 +114,12 @@ String fileColumnText(
         dateFmt,
         recentDatesRelative: recentDatesRelative,
       );
+    case FileColumn.added:
+      return _formatDateBy(
+        e.added,
+        dateFmt,
+        recentDatesRelative: recentDatesRelative,
+      );
     case FileColumn.permissions:
       return e.permissionsString;
     case FileColumn.owner:
@@ -128,6 +138,8 @@ Signal<bool> fileColumnSignal(FileColumn col) {
       return s.showColumnKind;
     case FileColumn.created:
       return s.showColumnCreated;
+    case FileColumn.added:
+      return s.showColumnAdded;
     case FileColumn.permissions:
       return s.showColumnPermissions;
     case FileColumn.owner:

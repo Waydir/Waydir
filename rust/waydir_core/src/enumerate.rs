@@ -52,6 +52,7 @@ pub unsafe extern "C" fn waydir_enumerate(
                 size: 0,
                 mtime_ms: 0,
                 created_ms: 0,
+                added_ms: 0,
                 mode: 0,
                 uid: 0,
                 gid: 0,

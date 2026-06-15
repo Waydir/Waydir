@@ -53,10 +53,11 @@ class SettingsStore {
   final showColumnDate = signal<bool>(true);
   final showColumnKind = signal<bool>(true);
   final showColumnCreated = signal<bool>(false);
+  final showColumnAdded = signal<bool>(false);
   final showColumnPermissions = signal<bool>(false);
   final showColumnOwner = signal<bool>(false);
   final columnOrder = signal<String>(
-    'kind,size,date,created,permissions,owner',
+    'kind,size,date,created,added,permissions,owner',
   );
   final quickLookUseSystemFont = signal<bool>(true);
   final quickLookFontFamily = signal<String>('');
@@ -127,6 +128,7 @@ class SettingsStore {
     showColumnDate.value = row.showColumnDate;
     showColumnKind.value = row.showColumnKind;
     showColumnCreated.value = row.showColumnCreated;
+    showColumnAdded.value = row.showColumnAdded;
     showColumnPermissions.value = row.showColumnPermissions;
     showColumnOwner.value = row.showColumnOwner;
     columnOrder.value = row.columnOrder;
@@ -237,6 +239,7 @@ class SettingsStore {
         showColumnDate.value;
         showColumnKind.value;
         showColumnCreated.value;
+        showColumnAdded.value;
         showColumnPermissions.value;
         showColumnOwner.value;
         columnOrder.value;
@@ -304,6 +307,7 @@ class SettingsStore {
           showColumnDate: Value(showColumnDate.value),
           showColumnKind: Value(showColumnKind.value),
           showColumnCreated: Value(showColumnCreated.value),
+          showColumnAdded: Value(showColumnAdded.value),
           showColumnPermissions: Value(showColumnPermissions.value),
           showColumnOwner: Value(showColumnOwner.value),
           columnOrder: Value(columnOrder.value),

@@ -46,6 +46,7 @@ pub unsafe extern "C" fn waydir_list(
             size: 0,
             mtime_ms: 0,
             created_ms: 0,
+            added_ms: 0,
             mode: 0,
             uid: 0,
             gid: 0,
@@ -93,6 +94,7 @@ fn fill_stat(e: &mut Entry) {
         e.size = meta.len() as i64;
         e.mtime_ms = mtime_ms(&meta);
         e.created_ms = created_ms(&meta);
+        e.added_ms = added_ms(&e.disk_path, &meta);
         fill_owner_mode(e, &meta);
     }
 }
@@ -118,6 +120,53 @@ fn created_via_btime(meta: &std::fs::Metadata) -> Option<i64> {
 #[cfg(not(unix))]
 fn created_ms(meta: &std::fs::Metadata) -> i64 {
     created_via_btime(meta).unwrap_or(0)
+}
+
+#[cfg(target_os = "macos")]
+fn added_ms(path: &std::path::Path, meta: &std::fs::Metadata) -> i64 {
+    read_date_added_xattr(path).unwrap_or_else(|| created_ms(meta))
+}
+
+#[cfg(target_os = "macos")]
+fn read_date_added_xattr(path: &std::path::Path) -> Option<i64> {
+    use std::ffi::{c_char, c_void, CString};
+    extern "C" {
+        fn getxattr(
+            path: *const c_char,
+            name: *const c_char,
+            value: *mut c_void,
+            size: usize,
+            position: u32,
+            options: i32,
+        ) -> isize;
+    }
+    let path_cstr = CString::new(path.as_os_str().as_encoded_bytes()).ok()?;
+    const ATTR: &std::ffi::CStr =
+        unsafe { std::ffi::CStr::from_bytes_with_nul_unchecked(b"com.apple.metadata:kMDItemDateAdded\0") };
+    let mut buf = [0u8; 64];
+    let len = unsafe {
+        getxattr(
+            path_cstr.as_ptr(),
+            ATTR.as_ptr(),
+            buf.as_mut_ptr() as *mut c_void,
+            buf.len(),
+            0,
+            0,
+        )
+    };
+    if len < 17 {
+        return None;
+    }
+    if &buf[0..8] != b"bplist00" || buf[8] != 0x33 {
+        return None;
+    }
+    let secs = f64::from_be_bytes(buf[9..17].try_into().ok()?);
+    Some(((secs + 978_307_200.0) * 1000.0) as i64)
+}
+
+#[cfg(not(target_os = "macos"))]
+fn added_ms(_path: &std::path::Path, meta: &std::fs::Metadata) -> i64 {
+    created_ms(meta)
 }
 
 #[cfg(unix)]

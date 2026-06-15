@@ -672,6 +672,7 @@
       "location": "Location",
       "kind": "Kind",
       "dateCreated": "Date created",
+      "dateAdded": "Date added",
       "permissions": "Permissions",
       "owner": "Owner",
       "configure": "Configure columns"

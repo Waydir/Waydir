@@ -212,6 +212,7 @@ pub unsafe extern "C" fn waydir_sftp_list(
             size,
             mtime,
             0,
+            0,
             attr.permissions.unwrap_or(0),
             attr.uid.unwrap_or(0),
             attr.gid.unwrap_or(0),
