@@ -81,6 +81,11 @@ class MainFlutterWindow: NSWindow, NSWindowDelegate {
   func windowDidBecomeKey(_ notification: Notification) {
     positionTrafficLights()
   }
+
+  func windowShouldClose(_ sender: NSWindow) -> Bool {
+    sender.orderOut(nil)
+    return false
+  }
 }
 
 @_cdecl("waydir_window_set_min_size")
