@@ -169,9 +169,14 @@ String columnOrderToString(List<FileColumn> columns) =>
 
 /// Whether [col] is meaningful on the current platform. Permissions and owner
 /// are POSIX concepts that Windows doesn't expose, so they're hidden there.
+/// Date added relies on kMDItemDateAdded (macOS xattr) and is macOS-only.
 bool columnAvailable(FileColumn col) {
   if (PlatformPaths.isWindows &&
       (col == FileColumn.permissions || col == FileColumn.owner)) {
+    return false;
+  }
+
+  if (col == FileColumn.added && !PlatformPaths.isMacOS) {
     return false;
   }
 
