@@ -33,7 +33,7 @@ dependencies:
   ffi: ^2.2.0
   package_info_plus: ^9.0.1
   win32: ^5.15.0
-  drift: ^2.33.0
+  drift: ^2.34.0
   drift_flutter: ^0.3.0
   sqlite3_flutter_libs: ^0.6.0
   xdg_directories: ^1.1.0
