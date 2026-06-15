@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - PDF preview crash when rapidly switching between files ([#175](https://github.com/Waydir/Waydir/issues/175)).
+- "Date created" now uses real birth time instead of ctime ([#174](https://github.com/Waydir/Waydir/issues/174)).
 
 ## [0.17.0] - 2026-06-14
 
