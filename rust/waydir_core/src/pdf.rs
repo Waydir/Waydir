@@ -1,4 +1,5 @@
 use std::ffi::{c_char, CStr};
+use std::sync::Mutex;
 
 use once_cell::sync::OnceCell;
 use pdfium_render::prelude::*;
@@ -11,6 +12,13 @@ use crate::codec::finish_buffer;
 /// breaks every subsequent render. We initialise it once, on the first call,
 /// and never drop it for the life of the process.
 static PDFIUM: OnceCell<Pdfium> = OnceCell::new();
+
+/// Pdfium is not thread-safe. These FFI entry points are invoked from many
+/// Dart isolates at once (one per page render plus the page-size scan), each
+/// on its own OS thread, all hitting the single shared `PDFIUM` above.
+/// Concurrent calls corrupt Pdfium's internal state and crash the process, so
+/// every call serialises through this lock.
+static PDFIUM_LOCK: Mutex<()> = Mutex::new(());
 
 /// Returns the shared Pdfium instance, binding to the library on first use.
 /// An empty `lib_path` falls back to the system-installed library; otherwise
@@ -51,6 +59,10 @@ pub unsafe extern "C" fn waydir_pdf_page_sizes(
     if out_len.is_null() {
         return std::ptr::null_mut();
     }
+    let _guard = match PDFIUM_LOCK.lock() {
+        Ok(g) => g,
+        Err(_) => return std::ptr::null_mut(),
+    };
     let (lib, path) = match (read_str(lib_path), read_str(pdf_path)) {
         (Some(l), Some(p)) => (l, p),
         _ => return std::ptr::null_mut(),
@@ -97,6 +109,10 @@ pub unsafe extern "C" fn waydir_pdf_render(
     if page_index < 0 || target_width <= 0 {
         return std::ptr::null_mut();
     }
+    let _guard = match PDFIUM_LOCK.lock() {
+        Ok(g) => g,
+        Err(_) => return std::ptr::null_mut(),
+    };
     let (lib, path) = match (read_str(lib_path), read_str(pdf_path)) {
         (Some(l), Some(p)) => (l, p),
         _ => return std::ptr::null_mut(),
