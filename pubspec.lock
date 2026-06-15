@@ -761,10 +761,10 @@ packages:
     dependency: "direct main"
     description:
       name: signals
-      sha256: "202013a4f7811650c4811dba22755753471cf3e13305200fd83895075039190a"
+      sha256: "3b6be91d04808b542612a525eaeb1875e50be153671e618a42f74e0607088ecd"
       url: "https://pub.dev"
     source: hosted
-    version: "7.0.0"
+    version: "7.1.0"
   signals_core:
     dependency: transitive
     description:
@@ -777,18 +777,18 @@ packages:
     dependency: transitive
     description:
       name: signals_flutter
-      sha256: f82955b66b96fc7f53150ce7737d2bb6c87f23377583e00bd355aae9cb36a45a
+      sha256: f0285fd2f98d720724df879c258dc41725f260f8e5b1184655ef64ba679197ad
       url: "https://pub.dev"
     source: hosted
-    version: "7.0.0"
+    version: "7.1.0"
   signals_hooks:
     dependency: transitive
     description:
       name: signals_hooks
-      sha256: a06a9f5123174d572a353565b7e6f9ed03bb2201d98dcb370c593f072040135c
+      sha256: af6c2c4be47f06214292fedab6f6e943433c02086c956eeaffe45c4a23a57413
       url: "https://pub.dev"
     source: hosted
-    version: "7.0.0"
+    version: "7.1.0"
   sky_engine:
     dependency: transitive
     description: flutter
