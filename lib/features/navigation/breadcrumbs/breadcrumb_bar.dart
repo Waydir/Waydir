@@ -183,7 +183,11 @@ class _CrumbSegmentState extends State<_CrumbSegment> {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (icon != null) ...[
-          Icon(icon, size: 13, color: AppColors.fgAccent),
+          Icon(
+            icon,
+            size: 13,
+            color: widget.crumb.iconColor ?? AppColors.fgAccent,
+          ),
           const SizedBox(width: 6),
         ],
         Flexible(

@@ -1,6 +1,12 @@
 part of '../waydir_shell.dart';
 
 mixin _WaydirTerminalMixin on State<WaydirShell>, _WaydirStateBase {
+  TerminalLaunchSpec? _autoWslSpec(String cwd) {
+    final wsl = parseWslPath(cwd);
+
+    return wsl != null ? TerminalLaunch.forWsl(wsl.distro, cwd) : null;
+  }
+
   void _focusTerminal() {
     final slot = _terminalSlotForActivePane();
     _terminalInteractionAt = DateTime.now();
@@ -36,7 +42,11 @@ mixin _WaydirTerminalMixin on State<WaydirShell>, _WaydirStateBase {
     final slot = _terminalSlotForActivePane();
     _terminalInteractionAt = DateTime.now();
     if (_shell.isDual.value) _shell.setActivePane(slot);
-    final tab = _shell.openTerminal(slot, directory);
+    final tab = _shell.openTerminal(
+      slot,
+      directory,
+      spec: _autoWslSpec(directory),
+    );
     if (tab == null) {
       showToast(context: context, message: t.toast.terminalUnavailable);
 
@@ -75,7 +85,7 @@ mixin _WaydirTerminalMixin on State<WaydirShell>, _WaydirStateBase {
   TerminalTab? _openTerminalTab(int slot) {
     final pane = _shell.panes.value[slot];
     final cwd = pane.tabs.activeTab.value.store.currentPath.value;
-    final tab = _shell.openTerminal(slot, cwd);
+    final tab = _shell.openTerminal(slot, cwd, spec: _autoWslSpec(cwd));
     if (tab == null) {
       showToast(context: context, message: t.toast.terminalUnavailable);
     }
@@ -89,6 +99,72 @@ mixin _WaydirTerminalMixin on State<WaydirShell>, _WaydirStateBase {
     if (tab == null) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      tab.focusNode.requestFocus();
+    });
+  }
+
+  void _newTerminalTabMenu(int slot, Offset position) {
+    final cwd =
+        _shell.panes.value[slot].tabs.activeTab.value.store.currentPath.value;
+    final items = <ContextMenuItem>[
+      ContextMenuItem(
+        icon: WaydirIconsRegular.magicWand,
+        label: t.preferences.terminal.shellSystem,
+        action: 'shell:',
+      ),
+      for (final shell in ShellDetector.detect())
+        ContextMenuItem(
+          icon: WaydirIconsRegular.terminal,
+          label: shell.label,
+          action: 'shell:${shell.path}',
+        ),
+    ];
+    final distributions = containerStore.distributions.value;
+    if (distributions.isNotEmpty) {
+      items.add(ContextMenuItem.divider);
+      for (final dist in distributions) {
+        items.add(
+          ContextMenuItem(
+            icon: distroIconFor(dist.name),
+            label: dist.name,
+            action: 'wsl:${dist.name}',
+          ),
+        );
+      }
+    }
+    showContextMenu(
+      context: context,
+      position: position,
+      items: items,
+      onSelect: (action) {
+        TerminalLaunchSpec spec;
+        if (action.startsWith('wsl:')) {
+          spec = TerminalLaunch.forWsl(action.substring(4), cwd);
+        } else if (action.startsWith('shell:')) {
+          spec = TerminalLaunch.forShell(action.substring(6), cwd);
+        } else {
+          return;
+        }
+        _openTerminalWithSpec(slot, cwd, spec);
+      },
+    );
+  }
+
+  void _openTerminalWithSpec(int slot, String cwd, TerminalLaunchSpec spec) {
+    _terminalInteractionAt = DateTime.now();
+    if (_shell.isDual.value) _shell.setActivePane(slot);
+    final tab = _shell.openTerminal(slot, cwd, spec: spec);
+    if (tab == null) {
+      showToast(context: context, message: t.toast.terminalUnavailable);
+
+      return;
+    }
+    if (!_shell.terminalVisible.value[slot]) {
+      _shell.setTerminalVisible(slot, true);
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _shell.setActiveTerminal(slot, tab.id);
       tab.focusNode.requestFocus();
     });
   }
