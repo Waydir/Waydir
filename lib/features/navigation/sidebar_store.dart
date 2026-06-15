@@ -7,12 +7,14 @@ import '../../core/settings/settings_store.dart';
 /// [BookmarkStore]; the other three also persist per-item order/visibility.
 const sidebarSectionFavorites = 'favorites';
 const sidebarSectionDevices = 'devices';
+const sidebarSectionContainers = 'containers';
 const sidebarSectionNetwork = 'network';
 const sidebarSectionBookmarks = 'bookmarks';
 
 const _defaultSectionOrder = [
   sidebarSectionFavorites,
   sidebarSectionDevices,
+  sidebarSectionContainers,
   sidebarSectionNetwork,
   sidebarSectionBookmarks,
 ];

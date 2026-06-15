@@ -137,6 +137,9 @@ mixin _WaydirMenuMixin
     final isSingleFolder =
         count == 1 && entries.first.type == FileItemType.folder;
     final isSingleFile = count == 1 && entries.first.type == FileItemType.file;
+    final hasNetworkPath = entries.any(
+      (entry) => PlatformPaths.isNetworkPath(entry.realPath),
+    );
     final canVerifyChecksum =
         isSingleFile &&
         !PlatformPaths.isRemoteUri(entries.first.realPath) &&
@@ -326,13 +329,14 @@ mixin _WaydirMenuMixin
           label: t.menu.multiRename,
           action: 'multi_rename',
         ),
-      ContextMenuItem(
-        icon: WaydirIconsRegular.trashSimple,
-        label: count == 1
-            ? t.menu.moveToTrash
-            : t.menu.moveToTrashItems(count: count),
-        action: 'trash',
-      ),
+      if (!hasNetworkPath)
+        ContextMenuItem(
+          icon: WaydirIconsRegular.trashSimple,
+          label: count == 1
+              ? t.menu.moveToTrash
+              : t.menu.moveToTrashItems(count: count),
+          action: 'trash',
+        ),
       ContextMenuItem(
         icon: WaydirIconsRegular.trash,
         label: count == 1
@@ -1148,7 +1152,7 @@ mixin _WaydirMenuMixin
       case 'multi_rename':
         _multiRename(store);
       case 'trash':
-        _confirmAndDelete();
+        _confirmAndDelete(forceTrash: true);
       case 'delete_permanent':
         _confirmAndDelete(forcePermanent: true);
       case 'restore':

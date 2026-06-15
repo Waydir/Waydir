@@ -2455,10 +2455,10 @@ class NavigationStore {
 
       return;
     }
-    final hasRemote = entries.any((e) => PlatformPaths.isRemoteUri(e.path));
-    final useTrash =
-        !hasRemote &&
-        (toTrash ?? SettingsStore.instance.deleteKeyBehavior.value == 'trash');
+    final hasNetworkPath = entries.any(
+      (entry) => PlatformPaths.isNetworkPath(entry.realPath),
+    );
+    final useTrash = !hasNetworkPath && (toTrash ?? false);
     if (useTrash) {
       operationStore.enqueueTrash(paths);
     } else {

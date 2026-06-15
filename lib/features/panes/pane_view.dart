@@ -54,6 +54,7 @@ class PaneView extends StatelessWidget {
   final void Function(int slot, int id)? onSelectTerminalTab;
   final void Function(int id)? onCloseTerminalTab;
   final void Function(int slot)? onNewTerminalTab;
+  final void Function(int slot, Offset position)? onNewTerminalTabMenu;
   final void Function(int slot, int dir)? onCycleTerminalTab;
   final void Function(int slot, int from, int to)? onReorderTerminalTab;
   final void Function(int slot, double height)? onTerminalHeightChanged;
@@ -82,6 +83,7 @@ class PaneView extends StatelessWidget {
     this.onSelectTerminalTab,
     this.onCloseTerminalTab,
     this.onNewTerminalTab,
+    this.onNewTerminalTabMenu,
     this.onCycleTerminalTab,
     this.onReorderTerminalTab,
     this.onTerminalHeightChanged,
@@ -190,6 +192,7 @@ class PaneView extends StatelessWidget {
                   onSelectTab: onSelectTerminalTab,
                   onCloseTab: onCloseTerminalTab,
                   onNewTab: onNewTerminalTab,
+                  onNewTabMenu: onNewTerminalTabMenu,
                   onCycleTab: onCycleTerminalTab,
                   onReorderTab: onReorderTerminalTab,
                   onHeightChanged: onTerminalHeightChanged,
@@ -337,6 +340,7 @@ class _TerminalPanel extends StatefulWidget {
   final void Function(int slot, int id)? onSelectTab;
   final void Function(int id)? onCloseTab;
   final void Function(int slot)? onNewTab;
+  final void Function(int slot, Offset position)? onNewTabMenu;
   final void Function(int slot, int dir)? onCycleTab;
   final void Function(int slot, int from, int to)? onReorderTab;
   final void Function(int slot, double height)? onHeightChanged;
@@ -353,6 +357,7 @@ class _TerminalPanel extends StatefulWidget {
     this.onSelectTab,
     this.onCloseTab,
     this.onNewTab,
+    this.onNewTabMenu,
     this.onCycleTab,
     this.onReorderTab,
     this.onHeightChanged,
@@ -498,6 +503,7 @@ class _TerminalPanelState extends State<_TerminalPanel> {
           onSelectTab: widget.onSelectTab,
           onCloseTab: widget.onCloseTab,
           onNewTab: widget.onNewTab,
+          onNewTabMenu: widget.onNewTabMenu,
           onClose: widget.onToggleTerminal,
           onReorderTab: widget.onReorderTab,
         ),
@@ -578,6 +584,7 @@ class _TerminalHeader extends StatelessWidget {
   final void Function(int slot, int id)? onSelectTab;
   final void Function(int id)? onCloseTab;
   final void Function(int slot)? onNewTab;
+  final void Function(int slot, Offset position)? onNewTabMenu;
   final void Function(int slot)? onClose;
   final void Function(int slot, int from, int to)? onReorderTab;
 
@@ -590,6 +597,7 @@ class _TerminalHeader extends StatelessWidget {
     this.onSelectTab,
     this.onCloseTab,
     this.onNewTab,
+    this.onNewTabMenu,
     this.onClose,
     this.onReorderTab,
   });
@@ -643,6 +651,20 @@ class _TerminalHeader extends StatelessWidget {
               _TerminalIconButton(
                 icon: WaydirIconsRegular.plus,
                 onTap: () => onNewTab?.call(slot),
+              ),
+            if (onClose != null && onNewTabMenu != null)
+              Builder(
+                builder: (context) => _TerminalIconButton(
+                  icon: WaydirIconsRegular.caretDown,
+                  size: 16,
+                  onTap: () {
+                    final box = context.findRenderObject() as RenderBox?;
+                    final pos = box == null
+                        ? Offset.zero
+                        : box.localToGlobal(box.size.bottomLeft(Offset.zero));
+                    onNewTabMenu!(slot, pos);
+                  },
+                ),
               ),
             if (onClose != null) const SizedBox(width: 2),
             if (onClose != null)

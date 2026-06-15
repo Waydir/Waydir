@@ -47,7 +47,10 @@ mixin _WaydirActionsMixin on State<WaydirShell>, _WaydirStateBase {
     return result == actionLabel;
   }
 
-  Future<void> _confirmAndDelete({bool forcePermanent = false}) async {
+  Future<void> _confirmAndDelete({
+    bool forcePermanent = false,
+    bool forceTrash = false,
+  }) async {
     final entries = _active.selectedEntries;
     if (entries.isEmpty) return;
     if (_active.isTrashView) {
@@ -55,9 +58,10 @@ mixin _WaydirActionsMixin on State<WaydirShell>, _WaydirStateBase {
 
       return;
     }
-    final useTrash =
-        !forcePermanent &&
-        SettingsStore.instance.deleteKeyBehavior.value == 'trash';
+    final hasNetworkPath = entries.any(
+      (entry) => PlatformPaths.isNetworkPath(entry.realPath),
+    );
+    final useTrash = forceTrash && !forcePermanent && !hasNetworkPath;
     if (!SettingsStore.instance.confirmDelete.value) {
       _active.deleteSelected(toTrash: useTrash);
 
