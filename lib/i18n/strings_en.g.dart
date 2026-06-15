@@ -2927,6 +2927,9 @@ class Translations$fileView$columns$en {
 	/// en: 'Date created'
 	String get dateCreated => 'Date created';
 
+	/// en: 'Date added'
+	String get dateAdded => 'Date added';
+
 	/// en: 'Permissions'
 	String get permissions => 'Permissions';
 
@@ -3807,6 +3810,7 @@ extension on Translations {
 			'fileView.columns.location' => 'Location',
 			'fileView.columns.kind' => 'Kind',
 			'fileView.columns.dateCreated' => 'Date created',
+			'fileView.columns.dateAdded' => 'Date added',
 			'fileView.columns.permissions' => 'Permissions',
 			'fileView.columns.owner' => 'Owner',
 			'fileView.columns.configure' => 'Configure columns',

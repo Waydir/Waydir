@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- "Date added" column showing when a file appeared in its current folder (macOS only). ([#173](https://github.com/Waydir/Waydir/issues/173)) ([@fwitkowski17](https://github.com/fwitkowski17))
 - Windows: WSL support. Browse WSL distributions from the sidebar.
 - Terminal: the new-tab dropdown lets you pick any shell, or a WSL distribution, to launch the next terminal session.
 

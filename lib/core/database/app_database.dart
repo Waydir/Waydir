@@ -68,12 +68,14 @@ class AppSettings extends Table {
       boolean().withDefault(const Constant(true))();
   BoolColumn get showColumnCreated =>
       boolean().withDefault(const Constant(false))();
+  BoolColumn get showColumnAdded =>
+      boolean().withDefault(const Constant(false))();
   BoolColumn get showColumnPermissions =>
       boolean().withDefault(const Constant(false))();
   BoolColumn get showColumnOwner =>
       boolean().withDefault(const Constant(false))();
   TextColumn get columnOrder => text().withDefault(
-    const Constant('kind,size,date,created,permissions,owner'),
+    const Constant('kind,size,date,created,added,permissions,owner'),
   )();
   BoolColumn get quickLookUseSystemFont =>
       boolean().withDefault(const Constant(true))();
@@ -220,7 +222,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 36;
+  int get schemaVersion => 37;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -379,6 +381,9 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 36) {
         await addSettingColumn(appSettings.typeAheadBuffer);
+      }
+      if (from < 37) {
+        await addSettingColumn(appSettings.showColumnAdded);
       }
     },
   );
