@@ -149,7 +149,7 @@ Download the `.exe` installer or portable `.zip` from [Releases](https://github.
 
 Download the `.dmg` package from [Releases](https://github.com/Waydir/Waydir/releases), open it and drag Waydir to Applications.
 
-macOS is best-effort. Linux and Windows are the primary development and testing targets.
+macOS is officially supported and maintained by [@fwitkowski17](https://github.com/fwitkowski17).
 
 ## Features
 
@@ -354,7 +354,7 @@ dart run build_runner build --delete-conflicting-outputs
 
 ## Project Status
 
-Linux and Windows are the main development and testing targets. macOS builds are published from the same codebase, but they are not tested as heavily.
+Linux and Windows are the main development and testing targets. macOS is officially supported and maintained by [@fwitkowski17](https://github.com/fwitkowski17).
 
 Bug reports, crash reports and focused pull requests are welcome. For non-trivial changes, open an issue first so the approach can be discussed before implementation.
 
