@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0-test1] - 2026-06-15
+
+### Fixed
+- PDF preview crash when rapidly switching between files ([#175](https://github.com/Waydir/Waydir/issues/175)).
+
 ## [0.17.0] - 2026-06-14
 
 ### Added
