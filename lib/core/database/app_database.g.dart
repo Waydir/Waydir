@@ -558,6 +558,21 @@ class $AppSettingsTable extends AppSettings
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _showColumnAddedMeta = const VerificationMeta(
+    'showColumnAdded',
+  );
+  @override
+  late final GeneratedColumn<bool> showColumnAdded = GeneratedColumn<bool>(
+    'show_column_added',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("show_column_added" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _showColumnPermissionsMeta =
       const VerificationMeta('showColumnPermissions');
   @override
@@ -598,7 +613,9 @@ class $AppSettingsTable extends AppSettings
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultValue: const Constant('kind,size,date,created,permissions,owner'),
+    defaultValue: const Constant(
+      'kind,size,date,created,added,permissions,owner',
+    ),
   );
   static const VerificationMeta _quickLookUseSystemFontMeta =
       const VerificationMeta('quickLookUseSystemFont');
@@ -768,6 +785,7 @@ class $AppSettingsTable extends AppSettings
     showColumnDate,
     showColumnKind,
     showColumnCreated,
+    showColumnAdded,
     showColumnPermissions,
     showColumnOwner,
     columnOrder,
@@ -1132,6 +1150,15 @@ class $AppSettingsTable extends AppSettings
         ),
       );
     }
+    if (data.containsKey('show_column_added')) {
+      context.handle(
+        _showColumnAddedMeta,
+        showColumnAdded.isAcceptableOrUnknown(
+          data['show_column_added']!,
+          _showColumnAddedMeta,
+        ),
+      );
+    }
     if (data.containsKey('show_column_permissions')) {
       context.handle(
         _showColumnPermissionsMeta,
@@ -1413,6 +1440,10 @@ class $AppSettingsTable extends AppSettings
         DriftSqlType.bool,
         data['${effectivePrefix}show_column_created'],
       )!,
+      showColumnAdded: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}show_column_added'],
+      )!,
       showColumnPermissions: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}show_column_permissions'],
@@ -1512,6 +1543,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
   final bool showColumnDate;
   final bool showColumnKind;
   final bool showColumnCreated;
+  final bool showColumnAdded;
   final bool showColumnPermissions;
   final bool showColumnOwner;
   final String columnOrder;
@@ -1566,6 +1598,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     required this.showColumnDate,
     required this.showColumnKind,
     required this.showColumnCreated,
+    required this.showColumnAdded,
     required this.showColumnPermissions,
     required this.showColumnOwner,
     required this.columnOrder,
@@ -1625,6 +1658,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     map['show_column_date'] = Variable<bool>(showColumnDate);
     map['show_column_kind'] = Variable<bool>(showColumnKind);
     map['show_column_created'] = Variable<bool>(showColumnCreated);
+    map['show_column_added'] = Variable<bool>(showColumnAdded);
     map['show_column_permissions'] = Variable<bool>(showColumnPermissions);
     map['show_column_owner'] = Variable<bool>(showColumnOwner);
     map['column_order'] = Variable<String>(columnOrder);
@@ -1687,6 +1721,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       showColumnDate: Value(showColumnDate),
       showColumnKind: Value(showColumnKind),
       showColumnCreated: Value(showColumnCreated),
+      showColumnAdded: Value(showColumnAdded),
       showColumnPermissions: Value(showColumnPermissions),
       showColumnOwner: Value(showColumnOwner),
       columnOrder: Value(columnOrder),
@@ -1767,6 +1802,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       showColumnDate: serializer.fromJson<bool>(json['showColumnDate']),
       showColumnKind: serializer.fromJson<bool>(json['showColumnKind']),
       showColumnCreated: serializer.fromJson<bool>(json['showColumnCreated']),
+      showColumnAdded: serializer.fromJson<bool>(json['showColumnAdded']),
       showColumnPermissions: serializer.fromJson<bool>(
         json['showColumnPermissions'],
       ),
@@ -1844,6 +1880,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       'showColumnDate': serializer.toJson<bool>(showColumnDate),
       'showColumnKind': serializer.toJson<bool>(showColumnKind),
       'showColumnCreated': serializer.toJson<bool>(showColumnCreated),
+      'showColumnAdded': serializer.toJson<bool>(showColumnAdded),
       'showColumnPermissions': serializer.toJson<bool>(showColumnPermissions),
       'showColumnOwner': serializer.toJson<bool>(showColumnOwner),
       'columnOrder': serializer.toJson<String>(columnOrder),
@@ -1907,6 +1944,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     bool? showColumnDate,
     bool? showColumnKind,
     bool? showColumnCreated,
+    bool? showColumnAdded,
     bool? showColumnPermissions,
     bool? showColumnOwner,
     String? columnOrder,
@@ -1963,6 +2001,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     showColumnDate: showColumnDate ?? this.showColumnDate,
     showColumnKind: showColumnKind ?? this.showColumnKind,
     showColumnCreated: showColumnCreated ?? this.showColumnCreated,
+    showColumnAdded: showColumnAdded ?? this.showColumnAdded,
     showColumnPermissions: showColumnPermissions ?? this.showColumnPermissions,
     showColumnOwner: showColumnOwner ?? this.showColumnOwner,
     columnOrder: columnOrder ?? this.columnOrder,
@@ -2095,6 +2134,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       showColumnCreated: data.showColumnCreated.present
           ? data.showColumnCreated.value
           : this.showColumnCreated,
+      showColumnAdded: data.showColumnAdded.present
+          ? data.showColumnAdded.value
+          : this.showColumnAdded,
       showColumnPermissions: data.showColumnPermissions.present
           ? data.showColumnPermissions.value
           : this.showColumnPermissions,
@@ -2178,6 +2220,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           ..write('showColumnDate: $showColumnDate, ')
           ..write('showColumnKind: $showColumnKind, ')
           ..write('showColumnCreated: $showColumnCreated, ')
+          ..write('showColumnAdded: $showColumnAdded, ')
           ..write('showColumnPermissions: $showColumnPermissions, ')
           ..write('showColumnOwner: $showColumnOwner, ')
           ..write('columnOrder: $columnOrder, ')
@@ -2239,6 +2282,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     showColumnDate,
     showColumnKind,
     showColumnCreated,
+    showColumnAdded,
     showColumnPermissions,
     showColumnOwner,
     columnOrder,
@@ -2297,6 +2341,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           other.showColumnDate == this.showColumnDate &&
           other.showColumnKind == this.showColumnKind &&
           other.showColumnCreated == this.showColumnCreated &&
+          other.showColumnAdded == this.showColumnAdded &&
           other.showColumnPermissions == this.showColumnPermissions &&
           other.showColumnOwner == this.showColumnOwner &&
           other.columnOrder == this.columnOrder &&
@@ -2354,6 +2399,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
   final Value<bool> showColumnDate;
   final Value<bool> showColumnKind;
   final Value<bool> showColumnCreated;
+  final Value<bool> showColumnAdded;
   final Value<bool> showColumnPermissions;
   final Value<bool> showColumnOwner;
   final Value<String> columnOrder;
@@ -2408,6 +2454,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.showColumnDate = const Value.absent(),
     this.showColumnKind = const Value.absent(),
     this.showColumnCreated = const Value.absent(),
+    this.showColumnAdded = const Value.absent(),
     this.showColumnPermissions = const Value.absent(),
     this.showColumnOwner = const Value.absent(),
     this.columnOrder = const Value.absent(),
@@ -2463,6 +2510,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.showColumnDate = const Value.absent(),
     this.showColumnKind = const Value.absent(),
     this.showColumnCreated = const Value.absent(),
+    this.showColumnAdded = const Value.absent(),
     this.showColumnPermissions = const Value.absent(),
     this.showColumnOwner = const Value.absent(),
     this.columnOrder = const Value.absent(),
@@ -2518,6 +2566,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Expression<bool>? showColumnDate,
     Expression<bool>? showColumnKind,
     Expression<bool>? showColumnCreated,
+    Expression<bool>? showColumnAdded,
     Expression<bool>? showColumnPermissions,
     Expression<bool>? showColumnOwner,
     Expression<String>? columnOrder,
@@ -2583,6 +2632,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       if (showColumnDate != null) 'show_column_date': showColumnDate,
       if (showColumnKind != null) 'show_column_kind': showColumnKind,
       if (showColumnCreated != null) 'show_column_created': showColumnCreated,
+      if (showColumnAdded != null) 'show_column_added': showColumnAdded,
       if (showColumnPermissions != null)
         'show_column_permissions': showColumnPermissions,
       if (showColumnOwner != null) 'show_column_owner': showColumnOwner,
@@ -2648,6 +2698,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Value<bool>? showColumnDate,
     Value<bool>? showColumnKind,
     Value<bool>? showColumnCreated,
+    Value<bool>? showColumnAdded,
     Value<bool>? showColumnPermissions,
     Value<bool>? showColumnOwner,
     Value<String>? columnOrder,
@@ -2707,6 +2758,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       showColumnDate: showColumnDate ?? this.showColumnDate,
       showColumnKind: showColumnKind ?? this.showColumnKind,
       showColumnCreated: showColumnCreated ?? this.showColumnCreated,
+      showColumnAdded: showColumnAdded ?? this.showColumnAdded,
       showColumnPermissions:
           showColumnPermissions ?? this.showColumnPermissions,
       showColumnOwner: showColumnOwner ?? this.showColumnOwner,
@@ -2863,6 +2915,9 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     if (showColumnCreated.present) {
       map['show_column_created'] = Variable<bool>(showColumnCreated.value);
     }
+    if (showColumnAdded.present) {
+      map['show_column_added'] = Variable<bool>(showColumnAdded.value);
+    }
     if (showColumnPermissions.present) {
       map['show_column_permissions'] = Variable<bool>(
         showColumnPermissions.value,
@@ -2960,6 +3015,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
           ..write('showColumnDate: $showColumnDate, ')
           ..write('showColumnKind: $showColumnKind, ')
           ..write('showColumnCreated: $showColumnCreated, ')
+          ..write('showColumnAdded: $showColumnAdded, ')
           ..write('showColumnPermissions: $showColumnPermissions, ')
           ..write('showColumnOwner: $showColumnOwner, ')
           ..write('columnOrder: $columnOrder, ')
@@ -6273,6 +6329,7 @@ typedef $$AppSettingsTableCreateCompanionBuilder =
       Value<bool> showColumnDate,
       Value<bool> showColumnKind,
       Value<bool> showColumnCreated,
+      Value<bool> showColumnAdded,
       Value<bool> showColumnPermissions,
       Value<bool> showColumnOwner,
       Value<String> columnOrder,
@@ -6329,6 +6386,7 @@ typedef $$AppSettingsTableUpdateCompanionBuilder =
       Value<bool> showColumnDate,
       Value<bool> showColumnKind,
       Value<bool> showColumnCreated,
+      Value<bool> showColumnAdded,
       Value<bool> showColumnPermissions,
       Value<bool> showColumnOwner,
       Value<String> columnOrder,
@@ -6554,6 +6612,11 @@ class $$AppSettingsTableFilterComposer
 
   ColumnFilters<bool> get showColumnCreated => $composableBuilder(
     column: $table.showColumnCreated,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get showColumnAdded => $composableBuilder(
+    column: $table.showColumnAdded,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6832,6 +6895,11 @@ class $$AppSettingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get showColumnAdded => $composableBuilder(
+    column: $table.showColumnAdded,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get showColumnPermissions => $composableBuilder(
     column: $table.showColumnPermissions,
     builder: (column) => ColumnOrderings(column),
@@ -7097,6 +7165,11 @@ class $$AppSettingsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<bool> get showColumnAdded => $composableBuilder(
+    column: $table.showColumnAdded,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<bool> get showColumnPermissions => $composableBuilder(
     column: $table.showColumnPermissions,
     builder: (column) => column,
@@ -7230,6 +7303,7 @@ class $$AppSettingsTableTableManager
                 Value<bool> showColumnDate = const Value.absent(),
                 Value<bool> showColumnKind = const Value.absent(),
                 Value<bool> showColumnCreated = const Value.absent(),
+                Value<bool> showColumnAdded = const Value.absent(),
                 Value<bool> showColumnPermissions = const Value.absent(),
                 Value<bool> showColumnOwner = const Value.absent(),
                 Value<String> columnOrder = const Value.absent(),
@@ -7284,6 +7358,7 @@ class $$AppSettingsTableTableManager
                 showColumnDate: showColumnDate,
                 showColumnKind: showColumnKind,
                 showColumnCreated: showColumnCreated,
+                showColumnAdded: showColumnAdded,
                 showColumnPermissions: showColumnPermissions,
                 showColumnOwner: showColumnOwner,
                 columnOrder: columnOrder,
@@ -7340,6 +7415,7 @@ class $$AppSettingsTableTableManager
                 Value<bool> showColumnDate = const Value.absent(),
                 Value<bool> showColumnKind = const Value.absent(),
                 Value<bool> showColumnCreated = const Value.absent(),
+                Value<bool> showColumnAdded = const Value.absent(),
                 Value<bool> showColumnPermissions = const Value.absent(),
                 Value<bool> showColumnOwner = const Value.absent(),
                 Value<String> columnOrder = const Value.absent(),
@@ -7394,6 +7470,7 @@ class $$AppSettingsTableTableManager
                 showColumnDate: showColumnDate,
                 showColumnKind: showColumnKind,
                 showColumnCreated: showColumnCreated,
+                showColumnAdded: showColumnAdded,
                 showColumnPermissions: showColumnPermissions,
                 showColumnOwner: showColumnOwner,
                 columnOrder: columnOrder,
