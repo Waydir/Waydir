@@ -4,7 +4,7 @@ pub(crate) struct Entry {
     pub is_dir: bool,
     pub size: i64,
     pub mtime_ms: i64,
-    pub ctime_ms: i64,
+    pub created_ms: i64,
     pub mode: u32,
     pub uid: u32,
     pub gid: u32,
@@ -27,7 +27,7 @@ pub(crate) fn put_u64(buf: &mut Vec<u8>, v: u64) {
 }
 
 /// Fixed-size portion of a serialised record. Layout (big-endian):
-/// u8 is_dir, i64 size, i64 mtime_ms, i64 ctime_ms, u32 mode, u32 uid,
+/// u8 is_dir, i64 size, i64 mtime_ms, i64 created_ms, u32 mode, u32 uid,
 /// u32 gid, u32 name_len, u32 path_len, then name + path bytes.
 pub(crate) const RECORD_HEAD: usize = 1 + 8 + 8 + 8 + 4 + 4 + 4 + 4 + 4;
 
@@ -37,7 +37,7 @@ pub(crate) fn put_record(
     is_dir: bool,
     size: i64,
     mtime_ms: i64,
-    ctime_ms: i64,
+    created_ms: i64,
     mode: u32,
     uid: u32,
     gid: u32,
@@ -47,7 +47,7 @@ pub(crate) fn put_record(
     buf.push(if is_dir { 0 } else { 1 });
     put_i64(buf, size);
     put_i64(buf, mtime_ms);
-    put_i64(buf, ctime_ms);
+    put_i64(buf, created_ms);
     put_u32(buf, mode);
     put_u32(buf, uid);
     put_u32(buf, gid);
@@ -67,7 +67,7 @@ pub(crate) fn serialise(entries: &[Entry]) -> Vec<u8> {
     put_u32(&mut buf, entries.len() as u32);
     for e in entries {
         put_record(
-            &mut buf, e.is_dir, e.size, e.mtime_ms, e.ctime_ms, e.mode, e.uid, e.gid,
+            &mut buf, e.is_dir, e.size, e.mtime_ms, e.created_ms, e.mode, e.uid, e.gid,
             &e.name, &e.path,
         );
     }

@@ -26,7 +26,8 @@ class FileEntry {
   /// is materialised lazily and only when actually read.
   final int modifiedMs;
 
-  /// Creation/change time as epoch milliseconds (unix ctime), 0 when unknown.
+  /// Creation (birth) time as epoch milliseconds, falling back to unix ctime
+  /// on filesystems without a birth time. 0 when unknown.
   final int createdMs;
 
   /// Unix mode bits (type + permissions), 0 when unknown (e.g. non-unix).

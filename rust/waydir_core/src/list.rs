@@ -45,7 +45,7 @@ pub unsafe extern "C" fn waydir_list(
             is_dir,
             size: 0,
             mtime_ms: 0,
-            ctime_ms: 0,
+            created_ms: 0,
             mode: 0,
             uid: 0,
             gid: 0,
@@ -92,25 +92,32 @@ fn fill_stat(e: &mut Entry) {
     if let Ok(meta) = std::fs::metadata(&e.disk_path) {
         e.size = meta.len() as i64;
         e.mtime_ms = mtime_ms(&meta);
-        e.ctime_ms = ctime_ms(&meta);
+        e.created_ms = created_ms(&meta);
         fill_owner_mode(e, &meta);
     }
 }
 
 #[cfg(unix)]
-fn ctime_ms(meta: &std::fs::Metadata) -> i64 {
+fn created_ms(meta: &std::fs::Metadata) -> i64 {
     use std::os::unix::fs::MetadataExt;
-    meta.ctime() * 1000 + (meta.ctime_nsec() / 1_000_000)
+    // Real birth time (statx btime) where the filesystem records it. Some
+    // filesystems (older ext4 without crtime, network mounts) have none, so we
+    // fall back to ctime to keep the column populated rather than show nothing.
+    created_via_btime(meta)
+        .unwrap_or_else(|| meta.ctime() * 1000 + (meta.ctime_nsec() / 1_000_000))
 }
 
-#[cfg(not(unix))]
-fn ctime_ms(meta: &std::fs::Metadata) -> i64 {
+fn created_via_btime(meta: &std::fs::Metadata) -> Option<i64> {
     use std::time::UNIX_EPOCH;
     meta.created()
         .ok()
         .and_then(|t| t.duration_since(UNIX_EPOCH).ok())
         .map(|d| d.as_millis() as i64)
-        .unwrap_or(0)
+}
+
+#[cfg(not(unix))]
+fn created_ms(meta: &std::fs::Metadata) -> i64 {
+    created_via_btime(meta).unwrap_or(0)
 }
 
 #[cfg(unix)]
