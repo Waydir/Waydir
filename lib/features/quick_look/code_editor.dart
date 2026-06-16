@@ -391,15 +391,16 @@ class _CodeEditorState extends State<CodeEditor> {
               ? (context, editingController, chunkController, notifier) {
                   return Row(
                     children: [
-                      re.DefaultCodeLineNumber(
-                        controller: editingController,
-                        notifier: notifier,
-                        // Reads the caret live so relative numbers update as the
-                        // cursor moves without rebuilding the editor.
-                        customLineIndex2Text: relativeLineNumbers
-                            ? (i) =>
-                                  '${(i - editingController.selection.extentIndex).abs()}'
-                            : null,
+                      Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: re.DefaultCodeLineNumber(
+                          controller: editingController,
+                          notifier: notifier,
+                          customLineIndex2Text: relativeLineNumbers
+                              ? (i) =>
+                                    '${(i - editingController.selection.extentIndex).abs()}'
+                              : null,
+                        ),
                       ),
                     ],
                   );
