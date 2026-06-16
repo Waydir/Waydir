@@ -367,6 +367,12 @@ mixin _WaydirKeyboardMixin
       return KeyEventResult.handled;
     }
 
+    if (AppShortcuts.matches('compute_folder_size', key)) {
+      store.computeSelectedFolderSizes();
+
+      return KeyEventResult.handled;
+    }
+
     if (AppShortcuts.matches('toggle_select', key)) {
       store.toggleSelectAndAdvance();
 

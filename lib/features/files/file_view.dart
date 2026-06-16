@@ -95,11 +95,14 @@ String fileColumnText(
   FileEntry e, {
   required String dateFmt,
   required bool recentDatesRelative,
+  int? folderSize,
 }) {
   final isFolder = e.type == FileItemType.folder;
   switch (col) {
     case FileColumn.size:
-      return isFolder ? '--' : formatBytes(e.size);
+      if (isFolder) return folderSize == null ? '--' : formatBytes(folderSize);
+
+      return formatBytes(e.size);
     case FileColumn.date:
       return _formatDateBy(
         e.modified,
@@ -214,11 +217,13 @@ class FileList extends StatefulWidget {
   final bool sortAscending;
   final void Function(SortKey key)? onSortColumn;
   final ValueChanged<int>? onPageRows;
+  final Map<String, int> folderSizes;
 
   const FileList({
     super.key,
     required this.files,
     required this.currentPath,
+    this.folderSizes = const {},
     required this.onSelect,
     required this.onOpen,
     this.sortColumn = SortKey.name,
@@ -299,6 +304,7 @@ class _FileListState extends State<FileList> {
           e,
           dateFmt: _dateFmt,
           recentDatesRelative: _recentDatesRelative,
+          folderSize: widget.folderSizes[e.realPath],
         );
         if (v.length > longest.length) longest = v;
       }
@@ -631,6 +637,11 @@ class _FileListState extends State<FileList> {
                                                     recentDatesRelative:
                                                         _recentDatesRelative,
                                                     entry: widget.files[i],
+                                                    folderSize:
+                                                        widget
+                                                            .folderSizes[widget
+                                                            .files[i]
+                                                            .realPath],
                                                     index: i,
                                                     nameWidth: nameWidth,
                                                     selected: widget
@@ -1073,10 +1084,12 @@ class _ListRow extends StatefulWidget {
   final bool recentDatesRelative;
   final String? location;
   final OpenInNewTabCallback? onOpenInNewTab;
+  final int? folderSize;
 
   const _ListRow({
     required this.entry,
     required this.index,
+    this.folderSize,
     required this.selected,
     required this.selectedPaths,
     this.isCut = false,
@@ -1235,6 +1248,7 @@ class _ListRowState extends State<_ListRow> {
               e,
               dateFmt: widget.dateFmt,
               recentDatesRelative: widget.recentDatesRelative,
+              folderSize: widget.folderSize,
             ),
             maxLines: 1,
             softWrap: false,

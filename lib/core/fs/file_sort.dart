@@ -39,6 +39,7 @@ List<FileEntry> sortEntries(
   required bool foldersFirst,
   bool naturalSort = false,
   bool sortFolders = true,
+  int? Function(FileEntry entry)? folderSize,
 }) {
   final out = List<FileEntry>.of(entries);
   int byName(FileEntry a, FileEntry b) => naturalSort
@@ -49,11 +50,19 @@ List<FileEntry> sortEntries(
     if (foldersFirst && a.type != b.type) {
       return a.type == FileItemType.folder ? -1 : 1;
     }
-    final bothFolders =
-        a.type == FileItemType.folder && b.type == FileItemType.folder;
-    // Folders have no meaningful size: keep them name-ascending among
-    // themselves and treat them as size 0 relative to files.
-    if (bothFolders && (!sortFolders || key == SortKey.size)) {
+    final aFolder = a.type == FileItemType.folder;
+    final bFolder = b.type == FileItemType.folder;
+    final bothFolders = aFolder && bFolder;
+    final aFolderSize = aFolder ? folderSize?.call(a) : null;
+    final bFolderSize = bFolder ? folderSize?.call(b) : null;
+    // Folders without a computed size have no meaningful size: keep them
+    // name-ascending among themselves and treat them as size 0 relative to
+    // files. Folders with a computed size sort by it like ordinary entries.
+    if (bothFolders &&
+        (!sortFolders ||
+            (key == SortKey.size &&
+                aFolderSize == null &&
+                bFolderSize == null))) {
       return byName(a, b);
     }
     int cmp;
@@ -61,8 +70,8 @@ List<FileEntry> sortEntries(
       case SortKey.name:
         cmp = byName(a, b);
       case SortKey.size:
-        final asize = a.type == FileItemType.folder ? 0 : a.size;
-        final bsize = b.type == FileItemType.folder ? 0 : b.size;
+        final asize = aFolder ? (aFolderSize ?? 0) : a.size;
+        final bsize = bFolder ? (bFolderSize ?? 0) : b.size;
         cmp = asize.compareTo(bsize);
       case SortKey.date:
         cmp = a.modifiedMs.compareTo(b.modifiedMs);

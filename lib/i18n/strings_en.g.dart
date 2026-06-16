@@ -265,9 +265,6 @@ class Translations$menu$en {
 
 	/// en: 'Descending'
 	String get sortDescending => 'Descending';
-
-	/// en: 'Folders First'
-	String get sortFoldersFirst => 'Folders First';
 }
 
 // Path: multiRename
@@ -924,6 +921,9 @@ class Translations$keybindings$en {
 
 	/// en: 'Load selection from file'
 	String get loadSelection => 'Load selection from file';
+
+	/// en: 'Calculate folder size'
+	String get computeFolderSize => 'Calculate folder size';
 
 	/// en: 'Search'
 	String get search => 'Search';
@@ -3354,7 +3354,6 @@ extension on Translations {
 			'menu.sortBy' => 'Sort By',
 			'menu.sortAscending' => 'Ascending',
 			'menu.sortDescending' => 'Descending',
-			'menu.sortFoldersFirst' => 'Folders First',
 			'multiRename.title' => 'Multi Rename',
 			'multiRename.subtitle' => ({required Object count}) => '${count} items selected',
 			'multiRename.modeTemplate' => 'Template',
@@ -3761,6 +3760,7 @@ extension on Translations {
 			'keybindings.toggleSelect' => 'Toggle select',
 			'keybindings.saveSelection' => 'Save selection to file',
 			'keybindings.loadSelection' => 'Load selection from file',
+			'keybindings.computeFolderSize' => 'Calculate folder size',
 			'keybindings.search' => 'Search',
 			'keybindings.recursiveSearch' => 'Recursive search',
 			'keybindings.closeSearch' => 'Close search',

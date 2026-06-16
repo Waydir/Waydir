@@ -25,6 +25,7 @@ import '../../i18n/strings.g.dart';
 import '../git/git_status_store.dart';
 import '../operations/operation_store.dart';
 import 'filter_query.dart';
+import 'folder_size_scanner.dart';
 
 enum ClipboardMode { copy, cut }
 
@@ -63,6 +64,7 @@ class NavigationStore {
   final sortKey = signal<SortKey>(SortKey.name);
   final sortAscending = signal<bool>(true);
   final foldersFirst = signal<bool>(true);
+  final folderSizes = FolderSizeScanner();
   int _sortLoadToken = 0;
   void Function()? _sortDefaultsDisposer;
   void Function()? _gitStatusDisposer;
@@ -286,6 +288,7 @@ class NavigationStore {
         foldersFirst: foldersFirst.value,
         naturalSort: SettingsStore.instance.naturalSort.value,
         sortFolders: SettingsStore.instance.sortFolders.value,
+        folderSize: _folderSizeFor,
       );
 
       return pending != null ? [pending, ...sorted] : sorted;
@@ -319,6 +322,7 @@ class NavigationStore {
       foldersFirst: foldersFirst.value,
       naturalSort: SettingsStore.instance.naturalSort.value,
       sortFolders: SettingsStore.instance.sortFolders.value,
+      folderSize: _folderSizeFor,
     );
 
     return pending != null ? [pending, ...list] : list;
@@ -416,7 +420,7 @@ class NavigationStore {
         _applySort(
           sortKeyFromString(pref.sortKey),
           pref.sortAscending,
-          pref.foldersFirst,
+          s.foldersFirst.value,
         );
       }
     } catch (e, st) {
@@ -456,12 +460,6 @@ class NavigationStore {
   void setSortAscending(bool ascending) {
     if (sortAscending.value == ascending) return;
     sortAscending.value = ascending;
-    _persistSort();
-  }
-
-  void setFoldersFirst(bool value) {
-    if (foldersFirst.value == value) return;
-    foldersFirst.value = value;
     _persistSort();
   }
 
@@ -1051,6 +1049,7 @@ class NavigationStore {
       _saveFolderState(previous);
     }
     closeSearch();
+    folderSizes.cancelAll();
     if (addToHistory) {
       history.value = history.value.sublist(0, historyIndex.value + 1)
         ..add(normalized);
@@ -1565,7 +1564,36 @@ class NavigationStore {
     foldersFirst: foldersFirst.value,
     naturalSort: SettingsStore.instance.naturalSort.value,
     sortFolders: SettingsStore.instance.sortFolders.value,
+    folderSize: _folderSizeFor,
   );
+
+  int? _folderSizeFor(FileEntry entry) =>
+      folderSizes.sizes.value[entry.realPath];
+
+  void computeSelectedFolderSizes() {
+    if (isTrashView) return;
+    final entries = _vf;
+    final sel = selectedPaths.value;
+    final targets = <String>[];
+    void consider(FileEntry e) {
+      if (e.type != FileItemType.folder) return;
+      final path = e.realPath;
+      if (PlatformPaths.isNetworkPath(path)) return;
+      if (PlatformPaths.isSftpUri(path)) return;
+      targets.add(path);
+    }
+
+    if (sel.isEmpty) {
+      final idx = cursorIndex.value;
+      if (idx >= 0 && idx < entries.length) consider(entries[idx]);
+    } else {
+      for (final e in entries) {
+        if (sel.contains(e.path)) consider(e);
+      }
+    }
+    if (targets.isEmpty) return;
+    folderSizes.scan(targets);
+  }
 
   static List<FileEntry> _dedupeByName(List<FileEntry> entries) {
     final seen = <String>{};
@@ -2184,6 +2212,7 @@ class NavigationStore {
     _searchUiFlush?.cancel();
     _searchHandle?.cancel();
     _watcher.dispose();
+    folderSizes.dispose();
   }
 
   List<FileEntry> get _vf => visibleFiles.value;

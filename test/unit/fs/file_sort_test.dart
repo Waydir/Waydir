@@ -154,4 +154,46 @@ void main() {
       ]);
     });
   });
+
+  group('sortEntries size with computed folder sizes', () {
+    test('folders with a computed size sort by it, ascending', () {
+      final entries = [
+        _folder('big'),
+        _folder('small'),
+        _fileSize('mid.bin', 500),
+      ];
+      final computed = {'/big': 9000, '/small': 100};
+      final sorted = sortEntries(
+        entries,
+        key: SortKey.size,
+        ascending: true,
+        foldersFirst: false,
+        folderSize: (e) => computed[e.path],
+      );
+      expect(sorted.map((e) => e.name).toList(), ['small', 'mid.bin', 'big']);
+    });
+
+    test('uncomputed folders stay name-ordered, computed ones sort', () {
+      final entries = [
+        _folder('zeta'),
+        _folder('alpha'),
+        _folder('huge'),
+        _fileSize('mid.bin', 500),
+      ];
+      final computed = {'/huge': 9000};
+      final sorted = sortEntries(
+        entries,
+        key: SortKey.size,
+        ascending: true,
+        foldersFirst: false,
+        folderSize: (e) => computed[e.path],
+      );
+      expect(sorted.map((e) => e.name).toList(), [
+        'alpha',
+        'zeta',
+        'mid.bin',
+        'huge',
+      ]);
+    });
+  });
 }

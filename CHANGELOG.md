@@ -16,8 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Menu bar: View menu now marks the active layout (list/grid), and a new Terminal menu toggles the panel and manages terminal tabs.
 - Selection: Invert selection (`Ctrl+I`).
 - Navigation: `Home`/`End` jump to the first/last item (Shift extends the selection).
+- Calculate folder sizes (`Alt+S`); sizes show live in the Size column and sort with it.
 
 ### Fixed
+- "Show folders before files" preference now applies; removed the duplicate toggle from the sort menu.
 - Sort by size now treats folders as size 0 and keeps them name-ascending, instead of using the directory inode size.
 - PDF preview crash when rapidly switching between files ([#175](https://github.com/Waydir/Waydir/issues/175)).
 - "Date created" now uses real birth time instead of ctime ([#174](https://github.com/Waydir/Waydir/issues/174)).

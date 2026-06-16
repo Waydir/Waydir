@@ -321,6 +321,7 @@ class _TabContent extends StatelessWidget {
               sortAscending: store.sortAscending.value,
               onSortColumn: store.cycleSortColumn,
               onPageRows: store.setPageRows,
+              folderSizes: store.folderSizes.displaySizes.value,
             );
           },
         );

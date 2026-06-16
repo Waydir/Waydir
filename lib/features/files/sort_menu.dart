@@ -8,7 +8,6 @@ import 'file_view.dart';
 const sortKeyActionPrefix = 'sort_key:';
 const sortAscendingAction = 'sort_dir:asc';
 const sortDescendingAction = 'sort_dir:desc';
-const sortFoldersFirstAction = 'sort_folders_first';
 
 List<ContextMenuItem> buildSortMenuItems(NavigationStore store) {
   final activeKey = store.sortKey.value;
@@ -37,14 +36,6 @@ List<ContextMenuItem> buildSortMenuItems(NavigationStore store) {
       label: t.menu.sortDescending,
       action: sortDescendingAction,
     ),
-    ContextMenuItem.divider,
-    ContextMenuItem(
-      icon: WaydirIconsRegular.folder,
-      label: t.menu.sortFoldersFirst,
-      action: sortFoldersFirstAction,
-      isToggle: true,
-      toggleSignal: store.foldersFirst,
-    ),
   ];
 }
 
@@ -70,10 +61,6 @@ bool handleSortMenuAction(NavigationStore store, String action) {
       return true;
     case sortDescendingAction:
       store.setSortAscending(false);
-
-      return true;
-    case sortFoldersFirstAction:
-      store.setFoldersFirst(!store.foldersFirst.value);
 
       return true;
   }

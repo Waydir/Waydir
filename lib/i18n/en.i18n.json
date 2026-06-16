@@ -62,8 +62,7 @@
     "verifyChecksum": "Verify Checksum…",
     "sortBy": "Sort By",
     "sortAscending": "Ascending",
-    "sortDescending": "Descending",
-    "sortFoldersFirst": "Folders First"
+    "sortDescending": "Descending"
   },
   "multiRename": {
     "title": "Multi Rename",
@@ -539,6 +538,7 @@
     "toggleSelect": "Toggle select",
     "saveSelection": "Save selection to file",
     "loadSelection": "Load selection from file",
+    "computeFolderSize": "Calculate folder size",
     "search": "Search",
     "recursiveSearch": "Recursive search",
     "closeSearch": "Close search",

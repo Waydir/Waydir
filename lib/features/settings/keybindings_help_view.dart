@@ -124,6 +124,7 @@ String _labelFor(ShortcutDef s) => switch (s.id) {
   'toggle_select' => t.keybindings.toggleSelect,
   'save_selection' => t.keybindings.saveSelection,
   'load_selection' => t.keybindings.loadSelection,
+  'compute_folder_size' => t.keybindings.computeFolderSize,
   'search' => t.keybindings.search,
   'recursive_search' => t.keybindings.recursiveSearch,
   'toggle_hidden' => t.menu.showHidden,

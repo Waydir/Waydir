@@ -649,6 +649,13 @@ class AppShortcuts {
       shift: true,
     ),
     ShortcutDef(
+      id: 'compute_folder_size',
+      label: () => '',
+      group: ShortcutGroup.selection,
+      key: LogicalKeyboardKey.keyS,
+      alt: true,
+    ),
+    ShortcutDef(
       id: 'search',
       label: () => '',
       group: ShortcutGroup.search,
