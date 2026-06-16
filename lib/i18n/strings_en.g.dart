@@ -206,6 +206,15 @@ class Translations$menu$en {
 	/// en: 'Dual Pane Mode'
 	String get dualPaneMode => 'Dual Pane Mode';
 
+	/// en: 'Toggle Terminal'
+	String get toggleTerminal => 'Toggle Terminal';
+
+	/// en: 'New Terminal Tab'
+	String get newTerminalTab => 'New Terminal Tab';
+
+	/// en: 'Close Terminal Tab'
+	String get closeTerminalTab => 'Close Terminal Tab';
+
 	/// en: 'Properties'
 	String get properties => 'Properties';
 
@@ -3313,6 +3322,9 @@ extension on Translations {
 			'menu.eject' => 'Eject',
 			'menu.disconnect' => 'Disconnect',
 			'menu.dualPaneMode' => 'Dual Pane Mode',
+			'menu.toggleTerminal' => 'Toggle Terminal',
+			'menu.newTerminalTab' => 'New Terminal Tab',
+			'menu.closeTerminalTab' => 'Close Terminal Tab',
 			'menu.properties' => 'Properties',
 			'menu.openWith' => 'Open With',
 			'menu.openWithApp' => ({required Object app}) => 'Open With ${app}',
@@ -3788,11 +3800,11 @@ extension on Translations {
 			'quickLook.lens' => 'Lens',
 			'quickLook.exposure' => 'Exposure',
 			'quickLook.aperture' => 'Aperture',
+			_ => null,
+		} ?? switch (path) {
 			'quickLook.iso' => 'ISO',
 			'quickLook.focalLength' => 'Focal length',
 			'quickLook.dateTaken' => 'Date taken',
-			_ => null,
-		} ?? switch (path) {
 			'quickLook.linePosition' => ({required Object line, required Object count}) => 'Ln ${line} / ${count}',
 			'quickLook.lines' => 'Lines',
 			'quickLook.characters' => 'Characters',

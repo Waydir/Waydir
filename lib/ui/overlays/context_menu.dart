@@ -14,7 +14,7 @@ class ContextMenuItem {
   final String action;
   final bool danger;
   final bool isToggle;
-  final Signal<bool>? toggleSignal;
+  final ReadonlySignal<bool>? toggleSignal;
   final String? shortcut;
   final bool enabled;
 
@@ -333,7 +333,7 @@ class _ContextMenuItemTileState extends State<_ContextMenuItemTile> {
                   ),
                 ),
               ],
-              if (item.isToggle && item.toggleSignal != null) ...[
+              if (item.toggleSignal != null) ...[
                 const SizedBox(width: 8),
                 SignalBuilder(
                   builder: (_) => _Checkbox(value: item.toggleSignal!.value),

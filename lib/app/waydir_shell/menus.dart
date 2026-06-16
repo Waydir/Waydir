@@ -1207,11 +1207,17 @@ mixin _WaydirMenuMixin
                   icon: WaydirIconsRegular.list,
                   label: t.toolbar.listView,
                   action: 'view_list',
+                  toggleSignal: computed(
+                    () => SettingsStore.instance.fileViewMode.value == 'list',
+                  ),
                 ),
                 ContextMenuItem(
                   icon: WaydirIconsRegular.squaresFour,
                   label: t.toolbar.gridView,
                   action: 'view_grid',
+                  toggleSignal: computed(
+                    () => SettingsStore.instance.fileViewMode.value == 'grid',
+                  ),
                 ),
                 ContextMenuItem.divider,
                 ContextMenuItem(
@@ -1276,6 +1282,54 @@ mixin _WaydirMenuMixin
                 ),
               ],
               onSelect: _handleSelectionMenuAction,
+            ),
+            TitleMenuButton(
+              label: t.keybindings.categories.terminal,
+              items: [
+                ContextMenuItem(
+                  icon: WaydirIconsRegular.terminal,
+                  label: t.menu.toggleTerminal,
+                  action: 'terminal_toggle',
+                  shortcut: AppShortcuts.getById('toggle_terminal').displayKeys,
+                  isToggle: true,
+                  toggleSignal: computed(
+                    () =>
+                        _shell.ready.value &&
+                        _shell
+                            .terminalVisible
+                            .value[_terminalSlotForActivePane()],
+                  ),
+                ),
+                ContextMenuItem(
+                  icon: WaydirIconsRegular.plus,
+                  label: t.menu.newTerminalTab,
+                  action: 'terminal_new_tab',
+                  shortcut: AppShortcuts.getById(
+                    'new_terminal_tab',
+                  ).displayKeys,
+                ),
+                ContextMenuItem(
+                  icon: WaydirIconsRegular.x,
+                  label: t.menu.closeTerminalTab,
+                  action: 'terminal_close_tab',
+                  shortcut: AppShortcuts.getById(
+                    'close_terminal_tab',
+                  ).displayKeys,
+                ),
+              ],
+              onSelect: (action) {
+                if (!_shell.ready.value) return;
+                final slot = _terminalSlotForActivePane();
+                switch (action) {
+                  case 'terminal_toggle':
+                    _toggleTerminalSlot(slot);
+                  case 'terminal_new_tab':
+                    _newTerminalTab(slot);
+                  case 'terminal_close_tab':
+                    final tab = _shell.activeTerminalForSlot(slot);
+                    if (tab != null) _closeTerminalTab(tab.id);
+                }
+              },
             ),
             ?_buildPluginMenu(),
           ],
@@ -1403,8 +1457,58 @@ mixin _WaydirMenuMixin
           ),
         ],
       ),
+      ?_platformTerminalMenu(),
       ?_platformPluginMenu(),
     ];
+  }
+
+  PlatformMenu? _platformTerminalMenu() {
+    return PlatformMenu(
+      label: t.keybindings.categories.terminal,
+      menus: [
+        PlatformMenuItem(
+          label: t.menu.toggleTerminal,
+          shortcut: const SingleActivator(
+            LogicalKeyboardKey.keyJ,
+            meta: true,
+            shift: true,
+          ),
+          onSelected: () {
+            if (_shell.ready.value) {
+              _toggleTerminalSlot(_terminalSlotForActivePane());
+            }
+          },
+        ),
+        PlatformMenuItem(
+          label: t.menu.newTerminalTab,
+          shortcut: const SingleActivator(
+            LogicalKeyboardKey.keyT,
+            meta: true,
+            shift: true,
+          ),
+          onSelected: () {
+            if (_shell.ready.value) {
+              _newTerminalTab(_terminalSlotForActivePane());
+            }
+          },
+        ),
+        PlatformMenuItem(
+          label: t.menu.closeTerminalTab,
+          shortcut: const SingleActivator(
+            LogicalKeyboardKey.keyW,
+            meta: true,
+            shift: true,
+          ),
+          onSelected: () {
+            if (!_shell.ready.value) return;
+            final tab = _shell.activeTerminalForSlot(
+              _terminalSlotForActivePane(),
+            );
+            if (tab != null) _closeTerminalTab(tab.id);
+          },
+        ),
+      ],
+    );
   }
 
   PlatformMenu? _platformPluginMenu() {
