@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-06-16
+
 ### Added
 - macOS: "Date added" column showing when a file appeared in its current folder. ([#173](https://github.com/Waydir/Waydir/issues/173)) ([@fwitkowski17](https://github.com/fwitkowski17))
 - macOS: closing the window now keeps the app in the dock instead of quitting, and reopening it (dock click or Cmd+N) brings the window back. ([@fwitkowski17](https://github.com/fwitkowski17))
