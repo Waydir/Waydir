@@ -233,6 +233,20 @@ mixin _WaydirKeyboardMixin
         return KeyEventResult.handled;
       }
 
+      if (AppShortcuts.matchesIgnoreShift('home', key)) {
+        if (!_acceptCursorRepeat()) return KeyEventResult.handled;
+        store.moveCursorToStart();
+
+        return KeyEventResult.handled;
+      }
+
+      if (AppShortcuts.matchesIgnoreShift('end', key)) {
+        if (!_acceptCursorRepeat()) return KeyEventResult.handled;
+        store.moveCursorToEnd();
+
+        return KeyEventResult.handled;
+      }
+
       return KeyEventResult.ignored;
     }
 
@@ -449,6 +463,20 @@ mixin _WaydirKeyboardMixin
     if (AppShortcuts.matchesIgnoreShift('page_up', key)) {
       _lastCursorRepeatAt = null;
       store.moveCursorByPage(-1);
+
+      return KeyEventResult.handled;
+    }
+
+    if (AppShortcuts.matchesIgnoreShift('home', key)) {
+      _lastCursorRepeatAt = null;
+      store.moveCursorToStart();
+
+      return KeyEventResult.handled;
+    }
+
+    if (AppShortcuts.matchesIgnoreShift('end', key)) {
+      _lastCursorRepeatAt = null;
+      store.moveCursorToEnd();
 
       return KeyEventResult.handled;
     }

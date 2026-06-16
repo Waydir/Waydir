@@ -501,6 +501,8 @@
     "cursorDown": "Move down",
     "pageUp": "Move up one page",
     "pageDown": "Move down one page",
+    "home": "Jump to start",
+    "end": "Jump to end",
     "newTab": "New tab",
     "closeTab": "Close tab",
     "nextTab": "Next tab",

@@ -8,13 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- "Date added" column showing when a file appeared in its current folder (macOS only). ([#173](https://github.com/Waydir/Waydir/issues/173)) ([@fwitkowski17](https://github.com/fwitkowski17))
+- macOS: "Date added" column showing when a file appeared in its current folder. ([#173](https://github.com/Waydir/Waydir/issues/173)) ([@fwitkowski17](https://github.com/fwitkowski17))
 - macOS: closing the window now keeps the app in the dock instead of quitting, and reopening it (dock click or Cmd+N) brings the window back. ([@fwitkowski17](https://github.com/fwitkowski17))
 - Windows: WSL support. Browse WSL distributions from the sidebar.
 - Terminal: the new-tab dropdown lets you pick any shell, or a WSL distribution, to launch the next terminal session.
 - Terminal: Ctrl+Enter inserts relative paths and Ctrl+Shift+Enter inserts absolute paths for the current file selection.
 - Menu bar: View menu now marks the active layout (list/grid), and a new Terminal menu toggles the panel and manages terminal tabs.
-- Selection: invert selection (`Ctrl+I`) and an entry in the Selection menu.
+- Selection: Invert selection (`Ctrl+I`).
+- Navigation: `Home`/`End` jump to the first/last item (Shift extends the selection).
 
 ### Fixed
 - PDF preview crash when rapidly switching between files ([#175](https://github.com/Waydir/Waydir/issues/175)).

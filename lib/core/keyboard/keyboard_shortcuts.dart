@@ -300,6 +300,20 @@ class AppShortcuts {
       editable: false,
     ),
     ShortcutDef(
+      id: 'home',
+      label: () => '',
+      group: ShortcutGroup.navigation,
+      key: LogicalKeyboardKey.home,
+      editable: false,
+    ),
+    ShortcutDef(
+      id: 'end',
+      label: () => '',
+      group: ShortcutGroup.navigation,
+      key: LogicalKeyboardKey.end,
+      editable: false,
+    ),
+    ShortcutDef(
       id: 'quick_look',
       label: () => '',
       group: ShortcutGroup.quickLook,

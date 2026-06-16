@@ -811,6 +811,12 @@ class Translations$keybindings$en {
 	/// en: 'Move down one page'
 	String get pageDown => 'Move down one page';
 
+	/// en: 'Jump to start'
+	String get home => 'Jump to start';
+
+	/// en: 'Jump to end'
+	String get end => 'Jump to end';
+
 	/// en: 'New tab'
 	String get newTab => 'New tab';
 
@@ -3717,6 +3723,8 @@ extension on Translations {
 			'keybindings.cursorDown' => 'Move down',
 			'keybindings.pageUp' => 'Move up one page',
 			'keybindings.pageDown' => 'Move down one page',
+			'keybindings.home' => 'Jump to start',
+			'keybindings.end' => 'Jump to end',
 			'keybindings.newTab' => 'New tab',
 			'keybindings.closeTab' => 'Close tab',
 			'keybindings.nextTab' => 'Next tab',
@@ -3804,10 +3812,10 @@ extension on Translations {
 			'quickLook.typeFolder' => 'Folder',
 			'quickLook.typeFile' => 'File',
 			'quickLook.dimensions' => 'Dimensions',
-			'quickLook.camera' => 'Camera',
-			'quickLook.lens' => 'Lens',
 			_ => null,
 		} ?? switch (path) {
+			'quickLook.camera' => 'Camera',
+			'quickLook.lens' => 'Lens',
 			'quickLook.exposure' => 'Exposure',
 			'quickLook.aperture' => 'Aperture',
 			'quickLook.iso' => 'ISO',

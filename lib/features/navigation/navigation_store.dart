@@ -2712,6 +2712,27 @@ class NavigationStore {
     _applyCursorMove(next);
   }
 
+  void moveCursorToStart() {
+    if (_vf.isEmpty) return;
+    if (cursorIndex.value < 0) {
+      _initCursor(0);
+
+      return;
+    }
+    _applyCursorMove(0);
+  }
+
+  void moveCursorToEnd() {
+    if (_vf.isEmpty) return;
+    final last = _vf.length - 1;
+    if (cursorIndex.value < 0) {
+      _initCursor(last);
+
+      return;
+    }
+    _applyCursorMove(last);
+  }
+
   void _initCursor(int index) {
     batch(() {
       cursorIndex.value = index;
