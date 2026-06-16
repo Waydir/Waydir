@@ -49,9 +49,11 @@ List<FileEntry> sortEntries(
     if (foldersFirst && a.type != b.type) {
       return a.type == FileItemType.folder ? -1 : 1;
     }
-    if (!sortFolders &&
-        a.type == FileItemType.folder &&
-        b.type == FileItemType.folder) {
+    final bothFolders =
+        a.type == FileItemType.folder && b.type == FileItemType.folder;
+    // Folders have no meaningful size: keep them name-ascending among
+    // themselves and treat them as size 0 relative to files.
+    if (bothFolders && (!sortFolders || key == SortKey.size)) {
       return byName(a, b);
     }
     int cmp;
@@ -59,7 +61,9 @@ List<FileEntry> sortEntries(
       case SortKey.name:
         cmp = byName(a, b);
       case SortKey.size:
-        cmp = a.size.compareTo(b.size);
+        final asize = a.type == FileItemType.folder ? 0 : a.size;
+        final bsize = b.type == FileItemType.folder ? 0 : b.size;
+        cmp = asize.compareTo(bsize);
       case SortKey.date:
         cmp = a.modifiedMs.compareTo(b.modifiedMs);
       case SortKey.kind:

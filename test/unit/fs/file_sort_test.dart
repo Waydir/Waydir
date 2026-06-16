@@ -10,6 +10,22 @@ FileEntry _file(String name) => FileEntry(
   modified: DateTime(2026),
 );
 
+FileEntry _fileSize(String name, int size) => FileEntry(
+  name: name,
+  path: '/$name',
+  type: FileItemType.file,
+  size: size,
+  modified: DateTime(2026),
+);
+
+FileEntry _folderSize(String name, int size) => FileEntry(
+  name: name,
+  path: '/$name',
+  type: FileItemType.folder,
+  size: size,
+  modified: DateTime(2026),
+);
+
 FileEntry _folder(String name) => FileEntry(
   name: name,
   path: '/$name',
@@ -92,6 +108,50 @@ void main() {
         sortFolders: true,
       );
       expect(sorted.map((e) => e.name).toList(), ['beta', 'alpha']);
+    });
+  });
+
+  group('sortEntries size with folders', () {
+    test('folders count as 0 and keep name order, ascending', () {
+      final entries = [
+        _folderSize('zeta', 4096),
+        _folderSize('alpha', 4096),
+        _fileSize('big.bin', 5000),
+        _fileSize('small.txt', 100),
+      ];
+      final sorted = sortEntries(
+        entries,
+        key: SortKey.size,
+        ascending: true,
+        foldersFirst: false,
+      );
+      expect(sorted.map((e) => e.name).toList(), [
+        'alpha',
+        'zeta',
+        'small.txt',
+        'big.bin',
+      ]);
+    });
+
+    test('folders stay name-ascending even when size is descending', () {
+      final entries = [
+        _folderSize('zeta', 4096),
+        _folderSize('alpha', 4096),
+        _fileSize('big.bin', 5000),
+        _fileSize('small.txt', 100),
+      ];
+      final sorted = sortEntries(
+        entries,
+        key: SortKey.size,
+        ascending: false,
+        foldersFirst: false,
+      );
+      expect(sorted.map((e) => e.name).toList(), [
+        'big.bin',
+        'small.txt',
+        'alpha',
+        'zeta',
+      ]);
     });
   });
 }
