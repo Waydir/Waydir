@@ -722,8 +722,9 @@ const _statsTypeSizeWidth = 92.0;
 
 class MultiProperties extends StatefulWidget {
   final List<FileEntry> entries;
+  final void Function(FileEntry entry)? onSelect;
 
-  const MultiProperties({super.key, required this.entries});
+  const MultiProperties({super.key, required this.entries, this.onSelect});
 
   @override
   State<MultiProperties> createState() => _MultiPropertiesState();
@@ -1022,7 +1023,10 @@ class _MultiPropertiesState extends State<MultiProperties> {
                           Expanded(
                             child: _StatisticsList(
                               title: t.quickLook.sizeBreakdown,
-                              child: _StatisticsItems(items: largest),
+                              child: _StatisticsItems(
+                                items: largest,
+                                onSelect: widget.onSelect,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -1119,8 +1123,9 @@ class _StatisticsList extends StatelessWidget {
 
 class _StatisticsItems extends StatefulWidget {
   final List<_SelectionSizeItem> items;
+  final void Function(FileEntry entry)? onSelect;
 
-  const _StatisticsItems({required this.items});
+  const _StatisticsItems({required this.items, this.onSelect});
 
   @override
   State<_StatisticsItems> createState() => _StatisticsItemsState();
@@ -1152,7 +1157,10 @@ class _StatisticsItemsState extends State<_StatisticsItems> {
           padding: const EdgeInsets.symmetric(vertical: 4),
           itemCount: items.length,
           itemBuilder: (context, index) {
-            return _StatisticsItemRow(item: items[index]);
+            return _StatisticsItemRow(
+              item: items[index],
+              onSelect: widget.onSelect,
+            );
           },
         ),
       ),
@@ -1283,13 +1291,23 @@ class _TypeBreakdownItemRow extends StatelessWidget {
   }
 }
 
-class _StatisticsItemRow extends StatelessWidget {
+class _StatisticsItemRow extends StatefulWidget {
   final _SelectionSizeItem item;
+  final void Function(FileEntry entry)? onSelect;
 
-  const _StatisticsItemRow({required this.item});
+  const _StatisticsItemRow({required this.item, this.onSelect});
+
+  @override
+  State<_StatisticsItemRow> createState() => _StatisticsItemRowState();
+}
+
+class _StatisticsItemRowState extends State<_StatisticsItemRow> {
+  bool _hovered = false;
 
   @override
   Widget build(BuildContext context) {
+    final item = widget.item;
+    final onSelect = widget.onSelect;
     final entry = item.entry;
     final isFolder = entry.type == FileItemType.folder;
     final size = item.bytes == 0 && !item.done
@@ -1297,8 +1315,8 @@ class _StatisticsItemRow extends StatelessWidget {
         : item.done
         ? formatBytes(item.bytes)
         : '${formatBytes(item.bytes)} · ${t.quickLook.calculating}';
-
-    return SizedBox(
+    final fg = _hovered ? AppColors.fg : AppColors.fgMuted;
+    final row = SizedBox(
       height: 32,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -1328,11 +1346,26 @@ class _StatisticsItemRow extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.right,
                 style: context.txt.captionSmall.copyWith(
-                  color: item.done ? AppColors.fgMuted : AppColors.accent,
+                  color: item.done ? fg : AppColors.accent,
                 ),
               ),
             ),
           ],
+        ),
+      ),
+    );
+
+    if (onSelect == null) return row;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        onTap: () => onSelect(entry),
+        child: Container(
+          color: _hovered ? AppColors.bgHover : Colors.transparent,
+          child: row,
         ),
       ),
     );

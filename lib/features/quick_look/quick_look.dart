@@ -115,6 +115,17 @@ class _QuickLookState extends State<_QuickLook> {
     if (mounted) Navigator.of(context).pop();
   }
 
+  void _selectFromStats(FileEntry entry) {
+    final files = widget.store.visibleFiles.value;
+    final idx = files.indexWhere((f) => f.path == entry.path);
+    if (idx >= 0) {
+      widget.store.jumpToIndex(idx);
+    } else {
+      widget.store.selectedPaths.value = {entry.path};
+    }
+    if (mounted) Navigator.of(context).pop();
+  }
+
   bool _acceptCursorRepeat() {
     final now = DateTime.now();
     final last = _lastCursorRepeatAt;
@@ -278,7 +289,12 @@ class _QuickLookState extends State<_QuickLook> {
                 onClose: _requestClose,
               ),
               Container(height: 1, color: AppColors.bgDivider),
-              Expanded(child: MultiProperties(entries: entries)),
+              Expanded(
+                child: MultiProperties(
+                  entries: entries,
+                  onSelect: _selectFromStats,
+                ),
+              ),
             ],
           );
         }
@@ -299,7 +315,12 @@ class _QuickLookState extends State<_QuickLook> {
                   onClose: _requestClose,
                 ),
                 Container(height: 1, color: AppColors.bgDivider),
-                Expanded(child: MultiProperties(entries: entries)),
+                Expanded(
+                  child: MultiProperties(
+                    entries: entries,
+                    onSelect: _selectFromStats,
+                  ),
+                ),
               ],
             );
           }
