@@ -508,6 +508,8 @@
     "toggleTerminal": "Toggle terminal",
     "newTerminalTab": "New terminal tab",
     "closeTerminalTab": "Close terminal tab",
+    "insertRelativePaths": "Insert relative paths in terminal",
+    "insertAbsolutePaths": "Insert absolute paths in terminal",
     "terminalFontIncrease": "Increase terminal font",
     "terminalFontDecrease": "Decrease terminal font",
     "terminalFontReset": "Reset terminal font",
@@ -616,6 +618,7 @@
     "selectionLoaded(other)": "Selected $count visible items",
     "selectionLoadEmpty": "No visible items matched",
     "terminalUnavailable": "Terminal is unavailable: native core not loaded",
+    "terminalNotVisible": "Terminal is not open",
     "selectionFileError": "Selection file error: $message",
     "taskErrors(one)": "$label - 1 error",
     "taskErrors(other)": "$label - $count errors",
@@ -632,6 +635,13 @@
     "multiRenameOtherErrors(one)": "1 error",
     "multiRenameOtherErrors(other)": "$count errors",
     "multiRenameTrashBlocked": "Multi rename is not available in trash"
+  },
+  "terminalInsert": {
+    "title": "Insert $count selected items",
+    "separator": "Separator",
+    "customHint": "Separator",
+    "preview": "Preview",
+    "insert": "Insert"
   },
   "selectionFile": {
     "saveTitle": "Save Selection",

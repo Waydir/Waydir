@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - macOS: closing the window now keeps the app in the dock instead of quitting, and reopening it (dock click or Cmd+N) brings the window back. ([@fwitkowski17](https://github.com/fwitkowski17))
 - Windows: WSL support. Browse WSL distributions from the sidebar.
 - Terminal: the new-tab dropdown lets you pick any shell, or a WSL distribution, to launch the next terminal session.
+- Terminal: Ctrl+Enter inserts relative paths and Ctrl+Shift+Enter inserts absolute paths for the current file selection.
 
 ### Fixed
 - PDF preview crash when rapidly switching between files ([#175](https://github.com/Waydir/Waydir/issues/175)).

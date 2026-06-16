@@ -459,6 +459,23 @@ class AppShortcuts {
       shift: true,
     ),
     ShortcutDef(
+      id: 'insert_relative_paths',
+      label: () => '',
+      group: ShortcutGroup.terminal,
+      key: LogicalKeyboardKey.enter,
+      ctrl: true,
+      editable: false,
+    ),
+    ShortcutDef(
+      id: 'insert_absolute_paths',
+      label: () => '',
+      group: ShortcutGroup.terminal,
+      key: LogicalKeyboardKey.enter,
+      ctrl: true,
+      shift: true,
+      editable: false,
+    ),
+    ShortcutDef(
       id: 'terminal_font_increase',
       label: () => '',
       group: ShortcutGroup.terminal,

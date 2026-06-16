@@ -316,6 +316,18 @@ mixin _WaydirKeyboardMixin
       return KeyEventResult.handled;
     }
 
+    if (AppShortcuts.matches('insert_relative_paths', key)) {
+      unawaited(_insertPathsIntoTerminal(absolute: false));
+
+      return KeyEventResult.handled;
+    }
+
+    if (AppShortcuts.matches('insert_absolute_paths', key)) {
+      unawaited(_insertPathsIntoTerminal(absolute: true));
+
+      return KeyEventResult.handled;
+    }
+
     if (AppShortcuts.matches('open_item', key)) {
       store.openSelected();
 

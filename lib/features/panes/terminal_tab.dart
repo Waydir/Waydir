@@ -7,6 +7,7 @@ class TerminalTab {
   int originPane;
   final PtySession session;
   final FocusNode focusNode;
+  final String cwd;
   String label;
 
   TerminalTab({
@@ -14,6 +15,7 @@ class TerminalTab {
     required this.originPane,
     required this.session,
     required this.focusNode,
+    required this.cwd,
     required this.label,
   });
 

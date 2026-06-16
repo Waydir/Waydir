@@ -355,6 +355,7 @@ class ShellStore {
       originPane: isDual.value ? slot : 0,
       session: session,
       focusNode: FocusNode(debugLabel: 'terminal-tab-$id'),
+      cwd: cwd,
       label: _terminalLabel(cwd),
     );
     batch(() {

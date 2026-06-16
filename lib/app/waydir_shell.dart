@@ -56,6 +56,7 @@ import '../ui/dialogs/multi_rename_dialog.dart';
 import '../ui/dialogs/open_with_dialog.dart';
 import '../ui/overlays/context_menu.dart';
 import '../ui/overlays/notification_overlay.dart';
+import '../ui/widgets/app_text_field.dart';
 import '../features/navigation/select_pattern_dialog.dart';
 import '../features/quick_look/quick_look.dart';
 import '../ui/overlays/notification_store.dart';

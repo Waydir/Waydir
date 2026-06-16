@@ -56,6 +56,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$commandPalette$en commandPalette = Translations$commandPalette$en.internal(_root);
 	late final Translations$quickLook$en quickLook = Translations$quickLook$en.internal(_root);
 	late final Translations$toast$en toast = Translations$toast$en.internal(_root);
+	late final Translations$terminalInsert$en terminalInsert = Translations$terminalInsert$en.internal(_root);
 	late final Translations$selectionFile$en selectionFile = Translations$selectionFile$en.internal(_root);
 	late final Translations$dragHint$en dragHint = Translations$dragHint$en.internal(_root);
 	late final Translations$fileView$en fileView = Translations$fileView$en.internal(_root);
@@ -831,6 +832,12 @@ class Translations$keybindings$en {
 	/// en: 'Close terminal tab'
 	String get closeTerminalTab => 'Close terminal tab';
 
+	/// en: 'Insert relative paths in terminal'
+	String get insertRelativePaths => 'Insert relative paths in terminal';
+
+	/// en: 'Insert absolute paths in terminal'
+	String get insertAbsolutePaths => 'Insert absolute paths in terminal';
+
 	/// en: 'Increase terminal font'
 	String get terminalFontIncrease => 'Increase terminal font';
 
@@ -1152,6 +1159,9 @@ class Translations$toast$en {
 	/// en: 'Terminal is unavailable: native core not loaded'
 	String get terminalUnavailable => 'Terminal is unavailable: native core not loaded';
 
+	/// en: 'Terminal is not open'
+	String get terminalNotVisible => 'Terminal is not open';
+
 	/// en: 'Selection file error: $message'
 	String selectionFileError({required Object message}) => 'Selection file error: ${message}';
 
@@ -1184,6 +1194,30 @@ class Translations$toast$en {
 
 	/// en: 'Multi rename is not available in trash'
 	String get multiRenameTrashBlocked => 'Multi rename is not available in trash';
+}
+
+// Path: terminalInsert
+class Translations$terminalInsert$en {
+	Translations$terminalInsert$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Insert $count selected items'
+	String title({required Object count}) => 'Insert ${count} selected items';
+
+	/// en: 'Separator'
+	String get separator => 'Separator';
+
+	/// en: 'Separator'
+	String get customHint => 'Separator';
+
+	/// en: 'Preview'
+	String get preview => 'Preview';
+
+	/// en: 'Insert'
+	String get insert => 'Insert';
 }
 
 // Path: selectionFile
@@ -3675,6 +3709,8 @@ extension on Translations {
 			'keybindings.toggleTerminal' => 'Toggle terminal',
 			'keybindings.newTerminalTab' => 'New terminal tab',
 			'keybindings.closeTerminalTab' => 'Close terminal tab',
+			'keybindings.insertRelativePaths' => 'Insert relative paths in terminal',
+			'keybindings.insertAbsolutePaths' => 'Insert absolute paths in terminal',
 			'keybindings.terminalFontIncrease' => 'Increase terminal font',
 			'keybindings.terminalFontDecrease' => 'Decrease terminal font',
 			'keybindings.terminalFontReset' => 'Reset terminal font',
@@ -3755,10 +3791,10 @@ extension on Translations {
 			'quickLook.iso' => 'ISO',
 			'quickLook.focalLength' => 'Focal length',
 			'quickLook.dateTaken' => 'Date taken',
-			'quickLook.linePosition' => ({required Object line, required Object count}) => 'Ln ${line} / ${count}',
-			'quickLook.lines' => 'Lines',
 			_ => null,
 		} ?? switch (path) {
+			'quickLook.linePosition' => ({required Object line, required Object count}) => 'Ln ${line} / ${count}',
+			'quickLook.lines' => 'Lines',
 			'quickLook.characters' => 'Characters',
 			'quickLook.sectionGeneral' => 'General',
 			'quickLook.sectionStatistics' => 'Statistics',
@@ -3775,6 +3811,7 @@ extension on Translations {
 			'toast.selectionLoaded' => ({required Object count}) => 'Selected ${count} visible items',
 			'toast.selectionLoadEmpty' => 'No visible items matched',
 			'toast.terminalUnavailable' => 'Terminal is unavailable: native core not loaded',
+			'toast.terminalNotVisible' => 'Terminal is not open',
 			'toast.selectionFileError' => ({required Object message}) => 'Selection file error: ${message}',
 			'toast.taskErrors' => ({required Object label, required Object count}) => '${label} - ${count} errors',
 			'toast.renameAlreadyExists' => ({required Object name}) => 'An item named \'${name}\' already exists',
@@ -3786,6 +3823,11 @@ extension on Translations {
 			'toast.multiRenameInvalid' => ({required Object count}) => '${count} invalid names',
 			'toast.multiRenameOtherErrors' => ({required Object count}) => '${count} errors',
 			'toast.multiRenameTrashBlocked' => 'Multi rename is not available in trash',
+			'terminalInsert.title' => ({required Object count}) => 'Insert ${count} selected items',
+			'terminalInsert.separator' => 'Separator',
+			'terminalInsert.customHint' => 'Separator',
+			'terminalInsert.preview' => 'Preview',
+			'terminalInsert.insert' => 'Insert',
 			'selectionFile.saveTitle' => 'Save Selection',
 			'selectionFile.loadTitle' => 'Load Selection',
 			'selectionFile.pathLabel' => 'Text file',

@@ -52,6 +52,13 @@ class PtySession {
   bool get isStarted => _id != null;
   bool get hasExited => _exited;
 
+  void writeInput(String data) {
+    final i = _id;
+    if (i == null || data.isEmpty) return;
+    WaydirCoreLoader.ptyWrite(i, utf8.encode(data));
+    _wake();
+  }
+
   /// Spawns the shell in [cwd]. Returns false if the native pty is
   /// unavailable. Safe to call once; later calls are no-ops.
   bool start({
