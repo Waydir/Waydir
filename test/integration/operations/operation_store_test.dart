@@ -54,12 +54,7 @@ void main() {
         isFalse,
       );
 
-      store.resolveCurrentConflict(waiting.id, ConflictResolution.rename);
-
-      final done = await waitForTask(
-        store,
-        (task) => task.status == TaskStatus.completed,
-      );
+      final done = await _resolveRenameConflictsUntilDone(store, waiting.id);
 
       expect(done.errors, isEmpty);
       expect(
@@ -98,12 +93,7 @@ void main() {
       );
       expect(waiting.conflicts.single.sourcePath, sourceFolder.path);
 
-      store.resolveCurrentConflict(waiting.id, ConflictResolution.rename);
-
-      final done = await waitForTask(
-        store,
-        (task) => task.status == TaskStatus.completed,
-      );
+      final done = await _resolveRenameConflictsUntilDone(store, waiting.id);
 
       final renamedFolder = Directory(p.join(destination.path, 'folder (1)'));
       expect(done.errors, isEmpty);
@@ -202,4 +192,20 @@ void main() {
       expect(File(dest).existsSync(), isTrue);
     });
   });
+}
+
+Future<FileTask> _resolveRenameConflictsUntilDone(
+  OperationStore store,
+  String taskId,
+) async {
+  while (true) {
+    final task = await waitForTask(
+      store,
+      (task) =>
+          task.id == taskId &&
+          (task.status == TaskStatus.waitingConflicts || isTerminalTask(task)),
+    );
+    if (isTerminalTask(task)) return task;
+    store.resolveCurrentConflict(task.id, ConflictResolution.rename);
+  }
 }

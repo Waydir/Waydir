@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - "Date created" now uses real birth time instead of ctime ([#174](https://github.com/Waydir/Waydir/issues/174)).
 - File operations now report a clean "Permission denied" message (instead of a raw error string) across more cases, including SFTP/SMB transfers and Windows access-denied errors.
 - Quick Look: line numbers now have more room before the editor content.
+- Insert now starts keyboard selection from the current file instead of clearing it on the first press.
 
 ## [0.17.0] - 2026-06-14
 

@@ -15,7 +15,13 @@ Future<FileTask> waitForTask(
     }
     await Future<void>.delayed(pollInterval);
   }
-  fail('Timed out waiting for task state');
+  final states = store.tasks.value
+      .map(
+        (task) =>
+            '${task.id}:${task.type.name}:${task.status.name}:conflicts=${task.conflicts.length}:errors=${task.errors.length}',
+      )
+      .join(', ');
+  fail('Timed out waiting for task state. Tasks: $states');
 }
 
 bool isTerminalTask(FileTask task) =>

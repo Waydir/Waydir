@@ -2392,7 +2392,7 @@ class NavigationStore {
       if (cursorIndex.value >= 0 && cursorIndex.value < _vf.length) {
         final path = _vf[cursorIndex.value].path;
         final paths = Set<String>.from(selectedPaths.value);
-        if (paths.contains(path)) {
+        if (paths.contains(path) && paths.length > 1) {
           paths.remove(path);
         } else {
           paths.add(path);
