@@ -2748,6 +2748,22 @@ class NavigationStore {
         final anchor = anchorIndex.value >= 0 && anchorIndex.value < _vf.length
             ? anchorIndex.value
             : cursorIndex.value;
+        final cur = cursorIndex.value;
+        final extending = (next - anchor).abs() > (cur - anchor).abs();
+        if (cur >= 0 &&
+            cur < _vf.length &&
+            !selectedPaths.value.contains(_vf[cur].path) &&
+            extending) {
+          final lo = cur < anchor ? cur : anchor;
+          final hi = cur < anchor ? anchor : cur;
+          final paths = Set<String>.from(selectedPaths.value);
+          for (int i = lo; i <= hi; i++) {
+            paths.add(_vf[i].path);
+          }
+          selectedPaths.value = paths;
+
+          return;
+        }
         final lo = next < anchor ? next : anchor;
         final hi = next < anchor ? anchor : next;
         final paths = <String>{};
