@@ -347,6 +347,12 @@ mixin _WaydirKeyboardMixin
       return KeyEventResult.handled;
     }
 
+    if (AppShortcuts.matches('invert_selection', key)) {
+      store.invertSelection();
+
+      return KeyEventResult.handled;
+    }
+
     if (AppShortcuts.matches('toggle_select', key)) {
       store.toggleSelectAndAdvance();
 

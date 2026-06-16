@@ -173,6 +173,9 @@ class Translations$menu$en {
 	/// en: 'Deselect All'
 	String get deselectAll => 'Deselect All';
 
+	/// en: 'Invert Selection'
+	String get invertSelection => 'Invert Selection';
+
 	/// en: 'Save Selection to File…'
 	String get saveSelection => 'Save Selection to File…';
 
@@ -903,6 +906,9 @@ class Translations$keybindings$en {
 
 	/// en: 'Deselect all'
 	String get deselectAll => 'Deselect all';
+
+	/// en: 'Invert selection'
+	String get invertSelection => 'Invert selection';
 
 	/// en: 'Toggle select'
 	String get toggleSelect => 'Toggle select';
@@ -3311,6 +3317,7 @@ extension on Translations {
 			'menu.selectAll' => 'Select All',
 			'menu.selectByPattern' => 'Select by Pattern…',
 			'menu.deselectAll' => 'Deselect All',
+			'menu.invertSelection' => 'Invert Selection',
 			'menu.saveSelection' => 'Save Selection to File…',
 			'menu.loadSelection' => 'Load Selection from File…',
 			'menu.openInTerminal' => 'Open in Terminal',
@@ -3742,6 +3749,7 @@ extension on Translations {
 			'keybindings.selectAll' => 'Select all',
 			'keybindings.selectPattern' => 'Select by pattern',
 			'keybindings.deselectAll' => 'Deselect all',
+			'keybindings.invertSelection' => 'Invert selection',
 			'keybindings.toggleSelect' => 'Toggle select',
 			'keybindings.saveSelection' => 'Save selection to file',
 			'keybindings.loadSelection' => 'Load selection from file',
@@ -3798,10 +3806,10 @@ extension on Translations {
 			'quickLook.dimensions' => 'Dimensions',
 			'quickLook.camera' => 'Camera',
 			'quickLook.lens' => 'Lens',
-			'quickLook.exposure' => 'Exposure',
-			'quickLook.aperture' => 'Aperture',
 			_ => null,
 		} ?? switch (path) {
+			'quickLook.exposure' => 'Exposure',
+			'quickLook.aperture' => 'Aperture',
 			'quickLook.iso' => 'ISO',
 			'quickLook.focalLength' => 'Focal length',
 			'quickLook.dateTaken' => 'Date taken',

@@ -606,6 +606,13 @@ class AppShortcuts {
       editable: false,
     ),
     ShortcutDef(
+      id: 'invert_selection',
+      label: () => '',
+      group: ShortcutGroup.selection,
+      key: LogicalKeyboardKey.keyI,
+      ctrl: true,
+    ),
+    ShortcutDef(
       id: 'toggle_select',
       label: () => '',
       group: ShortcutGroup.selection,

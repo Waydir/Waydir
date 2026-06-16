@@ -1265,6 +1265,15 @@ mixin _WaydirMenuMixin
                   shortcut: AppShortcuts.getById('deselect_all').displayKeys,
                   enabled: selectedCount > 0,
                 ),
+                ContextMenuItem(
+                  icon: WaydirIconsRegular.arrowsLeftRight,
+                  label: t.menu.invertSelection,
+                  action: 'invert_selection',
+                  shortcut: AppShortcuts.getById(
+                    'invert_selection',
+                  ).displayKeys,
+                  enabled: hasVisibleFiles,
+                ),
                 ContextMenuItem.divider,
                 ContextMenuItem(
                   icon: WaydirIconsRegular.floppyDisk,
@@ -1369,6 +1378,8 @@ mixin _WaydirMenuMixin
         _openSelectPattern();
       case 'deselect_all':
         store.deselectAll();
+      case 'invert_selection':
+        store.invertSelection();
       case 'save_selection':
         _saveSelectionToFile();
       case 'load_selection':
@@ -1432,6 +1443,16 @@ mixin _WaydirMenuMixin
             label: t.menu.deselectAll,
             shortcut: const SingleActivator(LogicalKeyboardKey.escape),
             onSelected: selectedCount > 0 ? () => _active.deselectAll() : null,
+          ),
+          PlatformMenuItem(
+            label: t.menu.invertSelection,
+            shortcut: const SingleActivator(
+              LogicalKeyboardKey.keyI,
+              meta: true,
+            ),
+            onSelected: hasVisibleFiles
+                ? () => _active.invertSelection()
+                : null,
           ),
           PlatformMenuItemGroup(
             members: [

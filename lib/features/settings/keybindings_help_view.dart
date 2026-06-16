@@ -118,6 +118,7 @@ String _labelFor(ShortcutDef s) => switch (s.id) {
   'select_all' => t.keybindings.selectAll,
   'select_pattern' => t.keybindings.selectPattern,
   'deselect_all' => t.keybindings.deselectAll,
+  'invert_selection' => t.keybindings.invertSelection,
   'toggle_select' => t.keybindings.toggleSelect,
   'save_selection' => t.keybindings.saveSelection,
   'load_selection' => t.keybindings.loadSelection,

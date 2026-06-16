@@ -2387,6 +2387,13 @@ class NavigationStore {
     });
   }
 
+  void invertSelection() {
+    final selected = selectedPaths.value;
+    selectedPaths.value = Set<String>.from(
+      _vf.where((f) => !selected.contains(f.path)).map((f) => f.path),
+    );
+  }
+
   void toggleSelectAndAdvance() {
     batch(() {
       if (cursorIndex.value >= 0 && cursorIndex.value < _vf.length) {
