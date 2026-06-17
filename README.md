@@ -153,23 +153,37 @@ macOS is officially supported and maintained by [@fwitkowski17](https://github.c
 
 ## Features
 
+### Browse and navigate
+
 - Two folders side by side, each with its own draggable tabs.
 - Sidebar with your places, drives, bookmarks and network locations.
 - Quick path bar for jumping to any folder.
 - List and grid views with image thumbnails and columns you choose.
+
+### Work with files
+
 - Copy, move, rename, trash and delete with progress you can cancel.
 - Handles name clashes when copying, and renames many files at once.
 - Open ZIP and TAR archives and browse inside without extracting.
+
+### Find and preview
+
 - Fast search that fills in results as it scans, with pattern matching.
 - Filter the current folder by type, size, date, name or hidden files.
 - Quick Look on `Space` for images, PDFs, text, code and file details.
 - Edit text right in the preview, with line numbers and optional Vim mode.
+
+### Reach further
+
 - Connect to SMB and SFTP and work with remote files like local ones.
 - Browse files and open a terminal inside WSL distributions (Windows).
 - Built-in terminal for each pane that opens in the current folder.
+- Git status with branch switching and stash management.
+
+### Make it yours
+
 - Light, Dark, Nord and One Dark themes, plus your own themes.
 - Adjust density, sorting, hidden files and date format to taste.
-- Git status with branch switching and stash management.
 - Launch from the command line with a folder to open.
 
 ## Plugins
