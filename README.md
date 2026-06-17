@@ -153,57 +153,24 @@ macOS is officially supported and maintained by [@fwitkowski17](https://github.c
 
 ## Features
 
-### Navigation And Layout
-
-- Dual-pane mode with independent tabs in each pane.
-- File and terminal tabs that can be reordered by dragging.
-- Sidebar with places, devices, pinned bookmarks and network drives.
-- Editable path bar with `~`, `$VAR`, `${VAR}` and `%VAR%` expansion.
-- Configurable file list columns, including Name, Kind, Size, Date, Created, Permissions and Owner where supported.
-- List and grid views, including image thumbnails in grid view.
-
-### File Operations
-
-- Copy, move, trash, delete and rename with live progress.
-- Cancellable operations that keep the UI responsive.
-- Conflict resolution for copy and move.
-- Multi-rename for batch edits.
-- Clipboard integration with the host desktop.
-- ZIP and TAR archives browsable in place.
-
-### Search And Preview
-
-- Recursive search that streams results while scanning.
-- Substring, regex and glob matching.
-- Filter mode with suggestions for kind, extension, size, date and hidden-file filters.
-- Quick Look on `Space` for images, PDFs, text, code and file properties.
-- Editable text previews with save prompts, line numbers, relative line numbers, wrapping options and optional Vim mode.
-- Large text previews backed by a viewport-virtualized editor.
-
-### Network Drives
-
-- SMB and SFTP from the sidebar.
-- Mount, unmount and reconnect remote drives.
-- Browse, search, copy, preview and open remote files like local files.
-- Pooled connections and off-thread transfers.
-- Fine-grained progress for network operations.
-
-### Terminal
-
-- Built-in terminal per pane.
-- Opens in the current directory.
-- Real PTY backed by Rust.
-- Uses your normal shell.
-- Toggle without leaving the keyboard.
-
-### Customization And Integrations
-
-- Light, Dark, Nord and One Dark themes.
-- Custom themes via JSON.
-- Configurable density, sort behavior, hidden files and date format.
-- Git status bar with branch switching and stash management.
-- Changelog viewer inside the app.
-- Command-line launch support with folder paths and options.
+- Two folders side by side, each with its own draggable tabs.
+- Sidebar with your places, drives, bookmarks and network locations.
+- Quick path bar for jumping to any folder.
+- List and grid views with image thumbnails and columns you choose.
+- Copy, move, rename, trash and delete with progress you can cancel.
+- Handles name clashes when copying, and renames many files at once.
+- Open ZIP and TAR archives and browse inside without extracting.
+- Fast search that fills in results as it scans, with pattern matching.
+- Filter the current folder by type, size, date, name or hidden files.
+- Quick Look on `Space` for images, PDFs, text, code and file details.
+- Edit text right in the preview, with line numbers and optional Vim mode.
+- Connect to SMB and SFTP and work with remote files like local ones.
+- Browse files and open a terminal inside WSL distributions (Windows).
+- Built-in terminal for each pane that opens in the current folder.
+- Light, Dark, Nord and One Dark themes, plus your own themes.
+- Adjust density, sorting, hidden files and date format to taste.
+- Git status with branch switching and stash management.
+- Launch from the command line with a folder to open.
 
 ## Plugins
 
