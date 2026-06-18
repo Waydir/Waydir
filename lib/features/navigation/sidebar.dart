@@ -682,7 +682,7 @@ class _SidebarState extends State<Sidebar> {
 
     return ListView(
       controller: _scrollController,
-      padding: EdgeInsets.zero,
+      padding: EdgeInsets.only(bottom: collapsed ? 6 : _sectionGap),
       children: children,
     );
   }
