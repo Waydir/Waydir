@@ -203,6 +203,9 @@ class _AppearancePaneState extends State<AppearancePane> {
               setting: registry.byId('appearance.fileListHorizontalSpacing'),
             ),
             RegistrySettingRow(
+              setting: registry.byId('appearance.columnWidthMode'),
+            ),
+            RegistrySettingRow(
               setting: registry.byId('appearance.fileListVerticalSpacing'),
             ),
             RegistrySettingRow(setting: registry.byId('appearance.dateFormat')),

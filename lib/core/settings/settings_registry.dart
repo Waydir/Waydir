@@ -338,6 +338,25 @@ class SettingsRegistry {
       signal: SettingsStore.instance.fileListHorizontalSpacing,
       choices: _spacingChoices(WaydirIconsRegular.arrowsLeftRight),
     ),
+    ChoiceSetting<String>(
+      id: 'appearance.columnWidthMode',
+      category: SettingsCategory.appearance,
+      label: () => t.preferences.appearance.columnWidthMode,
+      searchTerms: const ['files', 'columns', 'width', 'resize'],
+      signal: SettingsStore.instance.columnWidthMode,
+      choices: [
+        SettingChoice(
+          value: 'automatic',
+          label: () => t.preferences.appearance.columnWidthModeAutomatic,
+          icon: WaydirIconsRegular.magicWand,
+        ),
+        SettingChoice(
+          value: 'resizable',
+          label: () => t.preferences.appearance.columnWidthModeResizable,
+          icon: WaydirIconsRegular.columns,
+        ),
+      ],
+    ),
     ChoiceSetting<int>(
       id: 'appearance.fileListVerticalSpacing',
       category: SettingsCategory.appearance,

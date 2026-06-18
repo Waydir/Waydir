@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
@@ -44,8 +45,13 @@ const _kScrollbarGutterWidth = _kScrollbarThumbWidth;
 const _kRowPaddingLeft = 8.0;
 const _kRowPaddingRight = 10.0;
 const _kNameMinWidth = 160.0;
+const _kNameManualDefaultWidth = 260.0;
+const _kLocationMinWidth = 120.0;
 const _kColumnGap = 16.0;
 const _kHeaderHeight = 24.0;
+const _kResizeHandleWidth = 8.0;
+const _kColumnWidthsNameKey = 'name';
+const _kColumnWidthsLocationKey = 'location';
 
 /// Optional, user-toggleable file-list columns (Name and the recursive-search
 /// Location column are not part of this set). Order here is the display order.
@@ -192,6 +198,37 @@ List<FileColumn> orderedColumns() => [
     if (columnAvailable(col)) col,
 ];
 
+String columnWidthKey(FileColumn col) => col.name;
+
+Map<String, double> parseColumnWidths(String json) {
+  try {
+    final decoded = jsonDecode(json);
+    if (decoded is! Map<String, dynamic>) return const {};
+
+    return {
+      for (final entry in decoded.entries)
+        if (entry.value is num) entry.key: (entry.value as num).toDouble(),
+    };
+  } catch (_) {
+    return const {};
+  }
+}
+
+String columnWidthsToString(Map<String, double> widths) {
+  final sorted = Map<String, double>.fromEntries(
+    widths.entries.toList()..sort((a, b) => a.key.compareTo(b.key)),
+  );
+
+  return jsonEncode(sorted);
+}
+
+double minColumnWidth(String key) {
+  if (key == _kColumnWidthsNameKey) return _kNameMinWidth;
+  if (key == _kColumnWidthsLocationKey) return _kLocationMinWidth;
+
+  return 56;
+}
+
 class FileList extends StatefulWidget {
   final List<FileEntry> files;
   final String currentPath;
@@ -314,6 +351,37 @@ class _FileListState extends State<FileList> {
     }
 
     return widths;
+  }
+
+  double _persistedColumnWidth(
+    Map<String, double> persisted,
+    String key,
+    double fallback,
+  ) {
+    final min = minColumnWidth(key);
+    final saved = persisted[key];
+    if (saved == null || !saved.isFinite) return math.max(min, fallback);
+
+    return math.max(min, saved);
+  }
+
+  void _resizeColumn(String key, double delta) {
+    if (delta == 0) return;
+    final settings = SettingsStore.instance;
+    final widths = Map<String, double>.of(
+      parseColumnWidths(settings.columnWidths.value),
+    );
+    final current = _persistedColumnWidth(
+      widths,
+      key,
+      key == _kColumnWidthsNameKey
+          ? _kNameManualDefaultWidth
+          : key == _kColumnWidthsLocationKey
+          ? _kLocationWidth
+          : minColumnWidth(key),
+    );
+    widths[key] = math.max(minColumnWidth(key), current + delta);
+    settings.columnWidths.value = columnWidthsToString(widths);
   }
 
   void _openColumnMenu(BuildContext context, Offset position) {
@@ -462,7 +530,12 @@ class _FileListState extends State<FileList> {
         });
 
         final columns = _visibleColumns();
-        final columnWidths = _computeColumnWidths(context, columns);
+        final automaticColumnWidths = _computeColumnWidths(context, columns);
+        final resizableColumns =
+            SettingsStore.instance.columnWidthMode.value == 'resizable';
+        final persistedColumnWidths = parseColumnWidths(
+          SettingsStore.instance.columnWidths.value,
+        );
         final recursive = widget.recursiveResults;
 
         return LayoutBuilder(
@@ -470,6 +543,51 @@ class _FileListState extends State<FileList> {
             _viewportWidth = constraints.maxWidth;
 
             final iconSlot = 16 * _scale + 6;
+            final rowChrome =
+                _listHorizontalPadding * 2 +
+                _kScrollbarGutterWidth +
+                _kRowPaddingLeft +
+                _kRowPaddingRight;
+            final automaticOptionalCols = columns.fold<double>(
+              0,
+              (sum, col) => sum + automaticColumnWidths[col]! + _kColumnGap,
+            );
+            final automaticFixedCols =
+                iconSlot +
+                automaticOptionalCols +
+                (recursive ? _kLocationWidth + _kColumnGap : 0);
+            final automaticAvailable =
+                _viewportWidth - rowChrome - automaticFixedCols;
+            final automaticNameWidth = math.max(
+              _kNameMinWidth,
+              automaticAvailable,
+            );
+            final nameWidth = resizableColumns
+                ? _persistedColumnWidth(
+                    persistedColumnWidths,
+                    _kColumnWidthsNameKey,
+                    automaticNameWidth.isFinite
+                        ? automaticNameWidth
+                        : _kNameManualDefaultWidth,
+                  )
+                : automaticNameWidth;
+            final locationWidth = resizableColumns
+                ? _persistedColumnWidth(
+                    persistedColumnWidths,
+                    _kColumnWidthsLocationKey,
+                    _kLocationWidth,
+                  )
+                : _kLocationWidth;
+            final columnWidths = resizableColumns
+                ? {
+                    for (final col in columns)
+                      col: _persistedColumnWidth(
+                        persistedColumnWidths,
+                        columnWidthKey(col),
+                        automaticColumnWidths[col]!,
+                      ),
+                  }
+                : automaticColumnWidths;
             final optionalCols = columns.fold<double>(
               0,
               (sum, col) => sum + columnWidths[col]! + _kColumnGap,
@@ -477,14 +595,7 @@ class _FileListState extends State<FileList> {
             final fixedCols =
                 iconSlot +
                 optionalCols +
-                (recursive ? _kLocationWidth + _kColumnGap : 0);
-            final rowChrome =
-                _listHorizontalPadding * 2 +
-                _kScrollbarGutterWidth +
-                _kRowPaddingLeft +
-                _kRowPaddingRight;
-            final available = _viewportWidth - rowChrome - fixedCols;
-            final nameWidth = math.max(_kNameMinWidth, available);
+                (recursive ? locationWidth + _kColumnGap : 0);
             _contentWidth = nameWidth + fixedCols + rowChrome;
             final bodyWidth = math.max(_contentWidth, _viewportWidth);
 
@@ -516,11 +627,14 @@ class _FileListState extends State<FileList> {
                                     recursive: recursive,
                                     leadingWidth: iconSlot,
                                     nameWidth: nameWidth,
+                                    locationWidth: locationWidth,
                                     columns: columns,
                                     columnWidths: columnWidths,
+                                    resizable: resizableColumns,
                                     sortColumn: widget.sortColumn,
                                     sortAscending: widget.sortAscending,
                                     onSortColumn: widget.onSortColumn,
+                                    onResizeColumn: _resizeColumn,
                                     onConfigureColumns: (pos) =>
                                         _openColumnMenu(context, pos),
                                   ),
@@ -644,6 +758,8 @@ class _FileListState extends State<FileList> {
                                                             .realPath],
                                                     index: i,
                                                     nameWidth: nameWidth,
+                                                    locationWidth:
+                                                        locationWidth,
                                                     selected: widget
                                                         .selectedPaths
                                                         .contains(
@@ -754,21 +870,27 @@ class _ListHeader extends StatelessWidget {
   final bool recursive;
   final double leadingWidth;
   final double nameWidth;
+  final double locationWidth;
   final List<FileColumn> columns;
   final Map<FileColumn, double> columnWidths;
+  final bool resizable;
   final SortKey sortColumn;
   final bool sortAscending;
   final void Function(SortKey key)? onSortColumn;
+  final void Function(String key, double delta)? onResizeColumn;
   final void Function(Offset globalPosition)? onConfigureColumns;
   const _ListHeader({
     this.recursive = false,
     this.leadingWidth = 22,
     this.nameWidth = 0,
+    this.locationWidth = _kLocationWidth,
     this.columns = const [],
     this.columnWidths = const {},
+    this.resizable = false,
     this.sortColumn = SortKey.name,
     this.sortAscending = true,
     this.onSortColumn,
+    this.onResizeColumn,
     this.onConfigureColumns,
   });
 
@@ -809,6 +931,32 @@ class _ListHeader extends StatelessWidget {
     );
   }
 
+  Widget _cell({
+    required double width,
+    required Widget child,
+    required String resizeKey,
+  }) {
+    return SizedBox(
+      width: width,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned.fill(child: child),
+          if (resizable && onResizeColumn != null)
+            Positioned(
+              top: 0,
+              right: -_kResizeHandleWidth / 2,
+              bottom: 0,
+              width: _kResizeHandleWidth,
+              child: _ColumnResizeHandle(
+                onDelta: (delta) => onResizeColumn!(resizeKey, delta),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final headerStyle = context.txt.fieldLabel;
@@ -826,34 +974,46 @@ class _ListHeader extends StatelessWidget {
               child: _ConfigureColumnsButton(onTap: onConfigureColumns),
             ),
           ),
-          SizedBox(
+          _cell(
             width: nameWidth,
-            child: _sortable(
+            resizeKey: _kColumnWidthsNameKey,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: _sortable(
               t.fileView.columns.name,
               SortKey.name,
               headerStyle,
+              ),
             ),
           ),
           if (recursive) ...[
-            SizedBox(
-              width: _kLocationWidth,
-              child: Text(
-                t.fileView.columns.location,
-                maxLines: 1,
-                softWrap: false,
-                overflow: TextOverflow.clip,
-                style: headerStyle,
+            _cell(
+              width: locationWidth,
+              resizeKey: _kColumnWidthsLocationKey,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  t.fileView.columns.location,
+                  maxLines: 1,
+                  softWrap: false,
+                  overflow: TextOverflow.clip,
+                  style: headerStyle,
+                ),
               ),
             ),
             const SizedBox(width: 16),
           ],
           for (final col in columns) ...[
-            SizedBox(
+            _cell(
               width: columnWidths[col] ?? 0,
-              child: _sortable(
-                fileColumnLabel(col),
-                fileColumnSortKey(col),
-                headerStyle,
+              resizeKey: columnWidthKey(col),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: _sortable(
+                  fileColumnLabel(col),
+                  fileColumnSortKey(col),
+                  headerStyle,
+                ),
               ),
             ),
             const SizedBox(width: 16),
@@ -901,6 +1061,46 @@ class _ConfigureColumnsButtonState extends State<_ConfigureColumnsButton> {
               size: 14,
               color: _hovered ? AppColors.fg : AppColors.fgMuted,
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ColumnResizeHandle extends StatefulWidget {
+  final ValueChanged<double> onDelta;
+
+  const _ColumnResizeHandle({required this.onDelta});
+
+  @override
+  State<_ColumnResizeHandle> createState() => _ColumnResizeHandleState();
+}
+
+class _ColumnResizeHandleState extends State<_ColumnResizeHandle> {
+  bool _hovered = false;
+  bool _dragging = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final active = _hovered || _dragging;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.resizeColumn,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onHorizontalDragStart: (_) => setState(() => _dragging = true),
+        onHorizontalDragUpdate: (details) =>
+            widget.onDelta(details.delta.dx),
+        onHorizontalDragEnd: (_) => setState(() => _dragging = false),
+        onHorizontalDragCancel: () => setState(() => _dragging = false),
+        child: Center(
+          child: Container(
+            width: 1,
+            height: double.infinity,
+            color: active ? AppColors.accent : Colors.transparent,
           ),
         ),
       ),
@@ -1076,6 +1276,7 @@ class _ListRow extends StatefulWidget {
   final FileMenuActionCallback? onMenuAction;
   final bool recursive;
   final double nameWidth;
+  final double locationWidth;
   final List<FileColumn> columns;
   final Map<FileColumn, double> columnWidths;
   final double rowHeight;
@@ -1105,6 +1306,7 @@ class _ListRow extends StatefulWidget {
     this.onMenuAction,
     this.recursive = false,
     this.nameWidth = 0,
+    this.locationWidth = _kLocationWidth,
     this.columns = const [],
     this.columnWidths = const {},
     this.rowHeight = _kRowHeightComfortable,
@@ -1502,7 +1704,7 @@ class _ListRowState extends State<_ListRow> {
                 ),
                 if (widget.recursive) ...[
                   SizedBox(
-                    width: _kLocationWidth,
+                    width: widget.locationWidth,
                     child: Padding(
                       padding: const EdgeInsets.only(left: 8),
                       child: Text(
@@ -1575,7 +1777,7 @@ class _ListRowState extends State<_ListRow> {
                 ),
                 if (widget.recursive) ...[
                   SizedBox(
-                    width: _kLocationWidth,
+                    width: widget.locationWidth,
                     child: Padding(
                       padding: const EdgeInsets.only(left: 8),
                       child: Text(

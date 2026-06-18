@@ -77,6 +77,9 @@ class AppSettings extends Table {
   TextColumn get columnOrder => text().withDefault(
     const Constant('kind,size,date,created,added,permissions,owner'),
   )();
+  TextColumn get columnWidthMode =>
+      text().withDefault(const Constant('automatic'))();
+  TextColumn get columnWidths => text().withDefault(const Constant('{}'))();
   BoolColumn get quickLookUseSystemFont =>
       boolean().withDefault(const Constant(true))();
   TextColumn get quickLookFontFamily =>
@@ -222,7 +225,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 37;
+  int get schemaVersion => 38;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -384,6 +387,10 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 37) {
         await addSettingColumn(appSettings.showColumnAdded);
+      }
+      if (from < 38) {
+        await addSettingColumn(appSettings.columnWidthMode);
+        await addSettingColumn(appSettings.columnWidths);
       }
     },
   );

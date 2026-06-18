@@ -26,6 +26,8 @@ void main() {
       expect(settings.activePaneIndex, 0);
       expect(settings.fileListHorizontalSpacing, 6);
       expect(settings.fileListVerticalSpacing, 6);
+      expect(settings.columnWidthMode, 'automatic');
+      expect(settings.columnWidths, '{}');
       expect(settings.dateFormat, 'locale');
       expect(settings.recentDatesRelative, true);
     });
@@ -45,6 +47,8 @@ void main() {
           terminalCustomCommand: Value('alacritty -e'),
           fileListHorizontalSpacing: Value(8),
           fileListVerticalSpacing: Value(4),
+          columnWidthMode: Value('resizable'),
+          columnWidths: Value('{"name":240}'),
           isDual: Value(true),
           splitRatio: Value(0.7),
           activePaneIndex: Value(1),
@@ -56,6 +60,8 @@ void main() {
       expect(settings.terminalCustomCommand, 'alacritty -e');
       expect(settings.fileListHorizontalSpacing, 8);
       expect(settings.fileListVerticalSpacing, 4);
+      expect(settings.columnWidthMode, 'resizable');
+      expect(settings.columnWidths, '{"name":240}');
       expect(settings.isDual, true);
       expect(settings.splitRatio, 0.7);
       expect(settings.activePaneIndex, 1);

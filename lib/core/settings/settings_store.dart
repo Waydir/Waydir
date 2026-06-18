@@ -59,6 +59,8 @@ class SettingsStore {
   final columnOrder = signal<String>(
     'kind,size,date,created,added,permissions,owner',
   );
+  final columnWidthMode = signal<String>('automatic');
+  final columnWidths = signal<String>('{}');
   final quickLookUseSystemFont = signal<bool>(true);
   final quickLookFontFamily = signal<String>('');
   final quickLookFontSize = signal<int>(13);
@@ -132,6 +134,8 @@ class SettingsStore {
     showColumnPermissions.value = row.showColumnPermissions;
     showColumnOwner.value = row.showColumnOwner;
     columnOrder.value = row.columnOrder;
+    columnWidthMode.value = row.columnWidthMode;
+    columnWidths.value = row.columnWidths;
     quickLookUseSystemFont.value = row.quickLookUseSystemFont;
     quickLookFontFamily.value = row.quickLookFontFamily;
     quickLookFontSize.value = row.quickLookFontSize;
@@ -243,6 +247,8 @@ class SettingsStore {
         showColumnPermissions.value;
         showColumnOwner.value;
         columnOrder.value;
+        columnWidthMode.value;
+        columnWidths.value;
         quickLookUseSystemFont.value;
         quickLookFontFamily.value;
         quickLookFontSize.value;
@@ -311,6 +317,8 @@ class SettingsStore {
           showColumnPermissions: Value(showColumnPermissions.value),
           showColumnOwner: Value(showColumnOwner.value),
           columnOrder: Value(columnOrder.value),
+          columnWidthMode: Value(columnWidthMode.value),
+          columnWidths: Value(columnWidths.value),
           quickLookUseSystemFont: Value(quickLookUseSystemFont.value),
           quickLookFontFamily: Value(quickLookFontFamily.value),
           quickLookFontSize: Value(quickLookFontSize.value),
