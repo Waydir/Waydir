@@ -1097,9 +1097,9 @@ class _ColumnResizeHandleState extends State<_ColumnResizeHandle> {
         onHorizontalDragCancel: () => setState(() => _dragging = false),
         child: Center(
           child: Container(
-            width: 1,
+            width: active ? 2 : 1,
             height: double.infinity,
-            color: active ? AppColors.accent : Colors.transparent,
+            color: active ? AppColors.accent : AppColors.borderColor,
           ),
         ),
       ),
