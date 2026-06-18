@@ -2713,6 +2713,15 @@ class Translations$preferences$appearance$en {
 	/// en: 'Horizontal spacing'
 	String get fileListHorizontalSpacing => 'Horizontal spacing';
 
+	/// en: 'List column widths'
+	String get columnWidthMode => 'List column widths';
+
+	/// en: 'Automatic columns'
+	String get columnWidthModeAutomatic => 'Automatic columns';
+
+	/// en: 'Resizable columns'
+	String get columnWidthModeResizable => 'Resizable columns';
+
 	/// en: 'Vertical spacing'
 	String get fileListVerticalSpacing => 'Vertical spacing';
 
@@ -3576,6 +3585,9 @@ extension on Translations {
 			'preferences.appearance.rowDensityComfortable' => 'Comfortable',
 			'preferences.appearance.rowDensityCompact' => 'Compact',
 			'preferences.appearance.fileListHorizontalSpacing' => 'Horizontal spacing',
+			'preferences.appearance.columnWidthMode' => 'List column widths',
+			'preferences.appearance.columnWidthModeAutomatic' => 'Automatic columns',
+			'preferences.appearance.columnWidthModeResizable' => 'Resizable columns',
 			'preferences.appearance.fileListVerticalSpacing' => 'Vertical spacing',
 			'preferences.appearance.dateFormat' => 'Date format',
 			'preferences.appearance.dateFormatIso' => 'ISO (2026-05-14 13:45)',
@@ -3815,11 +3827,11 @@ extension on Translations {
 			'quickLook.location' => 'Location',
 			'quickLook.modified' => 'Modified',
 			'quickLook.created' => 'Created',
+			_ => null,
+		} ?? switch (path) {
 			'quickLook.typeFolder' => 'Folder',
 			'quickLook.typeFile' => 'File',
 			'quickLook.dimensions' => 'Dimensions',
-			_ => null,
-		} ?? switch (path) {
 			'quickLook.camera' => 'Camera',
 			'quickLook.lens' => 'Lens',
 			'quickLook.exposure' => 'Exposure',

@@ -980,9 +980,9 @@ class _ListHeader extends StatelessWidget {
             child: Align(
               alignment: Alignment.centerLeft,
               child: _sortable(
-              t.fileView.columns.name,
-              SortKey.name,
-              headerStyle,
+                t.fileView.columns.name,
+                SortKey.name,
+                headerStyle,
               ),
             ),
           ),
@@ -1092,8 +1092,7 @@ class _ColumnResizeHandleState extends State<_ColumnResizeHandle> {
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
         onHorizontalDragStart: (_) => setState(() => _dragging = true),
-        onHorizontalDragUpdate: (details) =>
-            widget.onDelta(details.delta.dx),
+        onHorizontalDragUpdate: (details) => widget.onDelta(details.delta.dx),
         onHorizontalDragEnd: (_) => setState(() => _dragging = false),
         onHorizontalDragCancel: () => setState(() => _dragging = false),
         child: Center(

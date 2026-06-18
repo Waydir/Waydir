@@ -617,6 +617,30 @@ class $AppSettingsTable extends AppSettings
       'kind,size,date,created,added,permissions,owner',
     ),
   );
+  static const VerificationMeta _columnWidthModeMeta = const VerificationMeta(
+    'columnWidthMode',
+  );
+  @override
+  late final GeneratedColumn<String> columnWidthMode = GeneratedColumn<String>(
+    'column_width_mode',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('automatic'),
+  );
+  static const VerificationMeta _columnWidthsMeta = const VerificationMeta(
+    'columnWidths',
+  );
+  @override
+  late final GeneratedColumn<String> columnWidths = GeneratedColumn<String>(
+    'column_widths',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('{}'),
+  );
   static const VerificationMeta _quickLookUseSystemFontMeta =
       const VerificationMeta('quickLookUseSystemFont');
   @override
@@ -789,6 +813,8 @@ class $AppSettingsTable extends AppSettings
     showColumnPermissions,
     showColumnOwner,
     columnOrder,
+    columnWidthMode,
+    columnWidths,
     quickLookUseSystemFont,
     quickLookFontFamily,
     quickLookFontSize,
@@ -1186,6 +1212,24 @@ class $AppSettingsTable extends AppSettings
         ),
       );
     }
+    if (data.containsKey('column_width_mode')) {
+      context.handle(
+        _columnWidthModeMeta,
+        columnWidthMode.isAcceptableOrUnknown(
+          data['column_width_mode']!,
+          _columnWidthModeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('column_widths')) {
+      context.handle(
+        _columnWidthsMeta,
+        columnWidths.isAcceptableOrUnknown(
+          data['column_widths']!,
+          _columnWidthsMeta,
+        ),
+      );
+    }
     if (data.containsKey('quick_look_use_system_font')) {
       context.handle(
         _quickLookUseSystemFontMeta,
@@ -1456,6 +1500,14 @@ class $AppSettingsTable extends AppSettings
         DriftSqlType.string,
         data['${effectivePrefix}column_order'],
       )!,
+      columnWidthMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}column_width_mode'],
+      )!,
+      columnWidths: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}column_widths'],
+      )!,
       quickLookUseSystemFont: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}quick_look_use_system_font'],
@@ -1547,6 +1599,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
   final bool showColumnPermissions;
   final bool showColumnOwner;
   final String columnOrder;
+  final String columnWidthMode;
+  final String columnWidths;
   final bool quickLookUseSystemFont;
   final String quickLookFontFamily;
   final int quickLookFontSize;
@@ -1602,6 +1656,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     required this.showColumnPermissions,
     required this.showColumnOwner,
     required this.columnOrder,
+    required this.columnWidthMode,
+    required this.columnWidths,
     required this.quickLookUseSystemFont,
     required this.quickLookFontFamily,
     required this.quickLookFontSize,
@@ -1662,6 +1718,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     map['show_column_permissions'] = Variable<bool>(showColumnPermissions);
     map['show_column_owner'] = Variable<bool>(showColumnOwner);
     map['column_order'] = Variable<String>(columnOrder);
+    map['column_width_mode'] = Variable<String>(columnWidthMode);
+    map['column_widths'] = Variable<String>(columnWidths);
     map['quick_look_use_system_font'] = Variable<bool>(quickLookUseSystemFont);
     map['quick_look_font_family'] = Variable<String>(quickLookFontFamily);
     map['quick_look_font_size'] = Variable<int>(quickLookFontSize);
@@ -1725,6 +1783,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       showColumnPermissions: Value(showColumnPermissions),
       showColumnOwner: Value(showColumnOwner),
       columnOrder: Value(columnOrder),
+      columnWidthMode: Value(columnWidthMode),
+      columnWidths: Value(columnWidths),
       quickLookUseSystemFont: Value(quickLookUseSystemFont),
       quickLookFontFamily: Value(quickLookFontFamily),
       quickLookFontSize: Value(quickLookFontSize),
@@ -1808,6 +1868,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       ),
       showColumnOwner: serializer.fromJson<bool>(json['showColumnOwner']),
       columnOrder: serializer.fromJson<String>(json['columnOrder']),
+      columnWidthMode: serializer.fromJson<String>(json['columnWidthMode']),
+      columnWidths: serializer.fromJson<String>(json['columnWidths']),
       quickLookUseSystemFont: serializer.fromJson<bool>(
         json['quickLookUseSystemFont'],
       ),
@@ -1884,6 +1946,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       'showColumnPermissions': serializer.toJson<bool>(showColumnPermissions),
       'showColumnOwner': serializer.toJson<bool>(showColumnOwner),
       'columnOrder': serializer.toJson<String>(columnOrder),
+      'columnWidthMode': serializer.toJson<String>(columnWidthMode),
+      'columnWidths': serializer.toJson<String>(columnWidths),
       'quickLookUseSystemFont': serializer.toJson<bool>(quickLookUseSystemFont),
       'quickLookFontFamily': serializer.toJson<String>(quickLookFontFamily),
       'quickLookFontSize': serializer.toJson<int>(quickLookFontSize),
@@ -1948,6 +2012,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     bool? showColumnPermissions,
     bool? showColumnOwner,
     String? columnOrder,
+    String? columnWidthMode,
+    String? columnWidths,
     bool? quickLookUseSystemFont,
     String? quickLookFontFamily,
     int? quickLookFontSize,
@@ -2005,6 +2071,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     showColumnPermissions: showColumnPermissions ?? this.showColumnPermissions,
     showColumnOwner: showColumnOwner ?? this.showColumnOwner,
     columnOrder: columnOrder ?? this.columnOrder,
+    columnWidthMode: columnWidthMode ?? this.columnWidthMode,
+    columnWidths: columnWidths ?? this.columnWidths,
     quickLookUseSystemFont:
         quickLookUseSystemFont ?? this.quickLookUseSystemFont,
     quickLookFontFamily: quickLookFontFamily ?? this.quickLookFontFamily,
@@ -2146,6 +2214,12 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       columnOrder: data.columnOrder.present
           ? data.columnOrder.value
           : this.columnOrder,
+      columnWidthMode: data.columnWidthMode.present
+          ? data.columnWidthMode.value
+          : this.columnWidthMode,
+      columnWidths: data.columnWidths.present
+          ? data.columnWidths.value
+          : this.columnWidths,
       quickLookUseSystemFont: data.quickLookUseSystemFont.present
           ? data.quickLookUseSystemFont.value
           : this.quickLookUseSystemFont,
@@ -2224,6 +2298,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           ..write('showColumnPermissions: $showColumnPermissions, ')
           ..write('showColumnOwner: $showColumnOwner, ')
           ..write('columnOrder: $columnOrder, ')
+          ..write('columnWidthMode: $columnWidthMode, ')
+          ..write('columnWidths: $columnWidths, ')
           ..write('quickLookUseSystemFont: $quickLookUseSystemFont, ')
           ..write('quickLookFontFamily: $quickLookFontFamily, ')
           ..write('quickLookFontSize: $quickLookFontSize, ')
@@ -2286,6 +2362,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     showColumnPermissions,
     showColumnOwner,
     columnOrder,
+    columnWidthMode,
+    columnWidths,
     quickLookUseSystemFont,
     quickLookFontFamily,
     quickLookFontSize,
@@ -2345,6 +2423,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           other.showColumnPermissions == this.showColumnPermissions &&
           other.showColumnOwner == this.showColumnOwner &&
           other.columnOrder == this.columnOrder &&
+          other.columnWidthMode == this.columnWidthMode &&
+          other.columnWidths == this.columnWidths &&
           other.quickLookUseSystemFont == this.quickLookUseSystemFont &&
           other.quickLookFontFamily == this.quickLookFontFamily &&
           other.quickLookFontSize == this.quickLookFontSize &&
@@ -2403,6 +2483,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
   final Value<bool> showColumnPermissions;
   final Value<bool> showColumnOwner;
   final Value<String> columnOrder;
+  final Value<String> columnWidthMode;
+  final Value<String> columnWidths;
   final Value<bool> quickLookUseSystemFont;
   final Value<String> quickLookFontFamily;
   final Value<int> quickLookFontSize;
@@ -2458,6 +2540,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.showColumnPermissions = const Value.absent(),
     this.showColumnOwner = const Value.absent(),
     this.columnOrder = const Value.absent(),
+    this.columnWidthMode = const Value.absent(),
+    this.columnWidths = const Value.absent(),
     this.quickLookUseSystemFont = const Value.absent(),
     this.quickLookFontFamily = const Value.absent(),
     this.quickLookFontSize = const Value.absent(),
@@ -2514,6 +2598,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.showColumnPermissions = const Value.absent(),
     this.showColumnOwner = const Value.absent(),
     this.columnOrder = const Value.absent(),
+    this.columnWidthMode = const Value.absent(),
+    this.columnWidths = const Value.absent(),
     this.quickLookUseSystemFont = const Value.absent(),
     this.quickLookFontFamily = const Value.absent(),
     this.quickLookFontSize = const Value.absent(),
@@ -2570,6 +2656,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Expression<bool>? showColumnPermissions,
     Expression<bool>? showColumnOwner,
     Expression<String>? columnOrder,
+    Expression<String>? columnWidthMode,
+    Expression<String>? columnWidths,
     Expression<bool>? quickLookUseSystemFont,
     Expression<String>? quickLookFontFamily,
     Expression<int>? quickLookFontSize,
@@ -2637,6 +2725,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
         'show_column_permissions': showColumnPermissions,
       if (showColumnOwner != null) 'show_column_owner': showColumnOwner,
       if (columnOrder != null) 'column_order': columnOrder,
+      if (columnWidthMode != null) 'column_width_mode': columnWidthMode,
+      if (columnWidths != null) 'column_widths': columnWidths,
       if (quickLookUseSystemFont != null)
         'quick_look_use_system_font': quickLookUseSystemFont,
       if (quickLookFontFamily != null)
@@ -2702,6 +2792,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Value<bool>? showColumnPermissions,
     Value<bool>? showColumnOwner,
     Value<String>? columnOrder,
+    Value<String>? columnWidthMode,
+    Value<String>? columnWidths,
     Value<bool>? quickLookUseSystemFont,
     Value<String>? quickLookFontFamily,
     Value<int>? quickLookFontSize,
@@ -2763,6 +2855,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
           showColumnPermissions ?? this.showColumnPermissions,
       showColumnOwner: showColumnOwner ?? this.showColumnOwner,
       columnOrder: columnOrder ?? this.columnOrder,
+      columnWidthMode: columnWidthMode ?? this.columnWidthMode,
+      columnWidths: columnWidths ?? this.columnWidths,
       quickLookUseSystemFont:
           quickLookUseSystemFont ?? this.quickLookUseSystemFont,
       quickLookFontFamily: quickLookFontFamily ?? this.quickLookFontFamily,
@@ -2929,6 +3023,12 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     if (columnOrder.present) {
       map['column_order'] = Variable<String>(columnOrder.value);
     }
+    if (columnWidthMode.present) {
+      map['column_width_mode'] = Variable<String>(columnWidthMode.value);
+    }
+    if (columnWidths.present) {
+      map['column_widths'] = Variable<String>(columnWidths.value);
+    }
     if (quickLookUseSystemFont.present) {
       map['quick_look_use_system_font'] = Variable<bool>(
         quickLookUseSystemFont.value,
@@ -3019,6 +3119,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
           ..write('showColumnPermissions: $showColumnPermissions, ')
           ..write('showColumnOwner: $showColumnOwner, ')
           ..write('columnOrder: $columnOrder, ')
+          ..write('columnWidthMode: $columnWidthMode, ')
+          ..write('columnWidths: $columnWidths, ')
           ..write('quickLookUseSystemFont: $quickLookUseSystemFont, ')
           ..write('quickLookFontFamily: $quickLookFontFamily, ')
           ..write('quickLookFontSize: $quickLookFontSize, ')
@@ -6333,6 +6435,8 @@ typedef $$AppSettingsTableCreateCompanionBuilder =
       Value<bool> showColumnPermissions,
       Value<bool> showColumnOwner,
       Value<String> columnOrder,
+      Value<String> columnWidthMode,
+      Value<String> columnWidths,
       Value<bool> quickLookUseSystemFont,
       Value<String> quickLookFontFamily,
       Value<int> quickLookFontSize,
@@ -6390,6 +6494,8 @@ typedef $$AppSettingsTableUpdateCompanionBuilder =
       Value<bool> showColumnPermissions,
       Value<bool> showColumnOwner,
       Value<String> columnOrder,
+      Value<String> columnWidthMode,
+      Value<String> columnWidths,
       Value<bool> quickLookUseSystemFont,
       Value<String> quickLookFontFamily,
       Value<int> quickLookFontSize,
@@ -6632,6 +6738,16 @@ class $$AppSettingsTableFilterComposer
 
   ColumnFilters<String> get columnOrder => $composableBuilder(
     column: $table.columnOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get columnWidthMode => $composableBuilder(
+    column: $table.columnWidthMode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get columnWidths => $composableBuilder(
+    column: $table.columnWidths,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6915,6 +7031,16 @@ class $$AppSettingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get columnWidthMode => $composableBuilder(
+    column: $table.columnWidthMode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get columnWidths => $composableBuilder(
+    column: $table.columnWidths,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get quickLookUseSystemFont => $composableBuilder(
     column: $table.quickLookUseSystemFont,
     builder: (column) => ColumnOrderings(column),
@@ -7185,6 +7311,16 @@ class $$AppSettingsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get columnWidthMode => $composableBuilder(
+    column: $table.columnWidthMode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get columnWidths => $composableBuilder(
+    column: $table.columnWidths,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<bool> get quickLookUseSystemFont => $composableBuilder(
     column: $table.quickLookUseSystemFont,
     builder: (column) => column,
@@ -7307,6 +7443,8 @@ class $$AppSettingsTableTableManager
                 Value<bool> showColumnPermissions = const Value.absent(),
                 Value<bool> showColumnOwner = const Value.absent(),
                 Value<String> columnOrder = const Value.absent(),
+                Value<String> columnWidthMode = const Value.absent(),
+                Value<String> columnWidths = const Value.absent(),
                 Value<bool> quickLookUseSystemFont = const Value.absent(),
                 Value<String> quickLookFontFamily = const Value.absent(),
                 Value<int> quickLookFontSize = const Value.absent(),
@@ -7362,6 +7500,8 @@ class $$AppSettingsTableTableManager
                 showColumnPermissions: showColumnPermissions,
                 showColumnOwner: showColumnOwner,
                 columnOrder: columnOrder,
+                columnWidthMode: columnWidthMode,
+                columnWidths: columnWidths,
                 quickLookUseSystemFont: quickLookUseSystemFont,
                 quickLookFontFamily: quickLookFontFamily,
                 quickLookFontSize: quickLookFontSize,
@@ -7419,6 +7559,8 @@ class $$AppSettingsTableTableManager
                 Value<bool> showColumnPermissions = const Value.absent(),
                 Value<bool> showColumnOwner = const Value.absent(),
                 Value<String> columnOrder = const Value.absent(),
+                Value<String> columnWidthMode = const Value.absent(),
+                Value<String> columnWidths = const Value.absent(),
                 Value<bool> quickLookUseSystemFont = const Value.absent(),
                 Value<String> quickLookFontFamily = const Value.absent(),
                 Value<int> quickLookFontSize = const Value.absent(),
@@ -7474,6 +7616,8 @@ class $$AppSettingsTableTableManager
                 showColumnPermissions: showColumnPermissions,
                 showColumnOwner: showColumnOwner,
                 columnOrder: columnOrder,
+                columnWidthMode: columnWidthMode,
+                columnWidths: columnWidths,
                 quickLookUseSystemFont: quickLookUseSystemFont,
                 quickLookFontFamily: quickLookFontFamily,
                 quickLookFontSize: quickLookFontSize,
