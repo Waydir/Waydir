@@ -124,6 +124,7 @@ mixin _WaydirStateBase on State<WaydirShell> {
         }
       }
       if (paneIndex < 0) return;
+      if (store.renamingPath.peek() != null) return;
       if (_shell.activePaneIndex.peek() != paneIndex) {
         _shell.setActivePane(paneIndex);
       }

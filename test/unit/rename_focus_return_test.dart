@@ -88,4 +88,68 @@ void main() {
       shellNode.dispose();
     },
   );
+
+  testWidgets('re-entering rename refocuses and reselects the field', (
+    tester,
+  ) async {
+    String? renamingPath;
+    late StateSetter setState;
+
+    final existing = FileEntry(
+      name: 'folder',
+      path: '/tmp/folder',
+      type: FileItemType.folder,
+      size: 0,
+      modified: DateTime.now(),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.build(),
+        home: Scaffold(
+          body: StatefulBuilder(
+            builder: (context, s) {
+              setState = s;
+              return FileList(
+                files: [existing],
+                currentPath: '/tmp',
+                onSelect: (_) {},
+                onOpen: (_) {},
+                renamingPath: renamingPath,
+                onRenameSubmit: (_) => setState(() => renamingPath = null),
+                onRenameCancel: () => setState(() => renamingPath = null),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+
+    Future<void> enterRename() async {
+      setState(() => renamingPath = '/tmp/folder');
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+
+    void expectFocusedAndSelected() {
+      final editable = tester.widget<EditableText>(find.byType(EditableText));
+      expect(editable.focusNode.hasFocus, isTrue);
+      expect(editable.controller.selection.baseOffset, 0);
+      expect(
+        editable.controller.selection.extentOffset,
+        editable.controller.text.length,
+      );
+      expect(editable.controller.text, 'folder');
+    }
+
+    await enterRename();
+    expectFocusedAndSelected();
+
+    setState(() => renamingPath = null);
+    await tester.pumpAndSettle();
+    expect(find.byType(EditableText), findsNothing);
+
+    await enterRename();
+    expectFocusedAndSelected();
+  });
 }
