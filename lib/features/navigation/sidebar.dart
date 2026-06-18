@@ -1792,7 +1792,7 @@ class _SectionHeaderState extends State<_SectionHeader> {
 
   @override
   Widget build(BuildContext context) {
-    final color = _hovered ? AppColors.fg : AppColors.fgSubtle;
+    final color = _hovered ? AppColors.fg : AppColors.fgMuted;
 
     return Tooltip(
       message: widget.collapsed
