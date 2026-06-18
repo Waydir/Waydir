@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Resizable columns in the file list (toggle in Appearance).
+- Collapsible sidebar sections.
+
+### Fixed
+- Renaming the same item repeatedly no longer loses focus.
+- Spacing between list view columns cleaned up.
+
 ## [0.18.0] - 2026-06-16
 
 ### Added
