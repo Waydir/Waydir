@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Resizable columns in the file list (toggle in Appearance).
 - Collapsible sidebar sections.
+- Terminal: configurable copy/paste modifier (Standard `Ctrl+C`/`Ctrl+V` vs. `Ctrl+Shift+C`/`Ctrl+Shift+V`, platform-aware default) in Terminal preferences.
 
 ### Fixed
 - Renaming the same item repeatedly no longer loses focus.

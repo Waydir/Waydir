@@ -121,6 +121,18 @@ class $AppSettingsTable extends AppSettings
         requiredDuringInsert: false,
         defaultValue: const Constant(1.2),
       );
+  static const VerificationMeta _terminalCopyPasteModeMeta =
+      const VerificationMeta('terminalCopyPasteMode');
+  @override
+  late final GeneratedColumn<String> terminalCopyPasteMode =
+      GeneratedColumn<String>(
+        'terminal_copy_paste_mode',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(''),
+      );
   static const VerificationMeta _isDualMeta = const VerificationMeta('isDual');
   @override
   late final GeneratedColumn<bool> isDual = GeneratedColumn<bool>(
@@ -777,6 +789,7 @@ class $AppSettingsTable extends AppSettings
     terminalFontFamily,
     terminalFontSize,
     terminalLineHeight,
+    terminalCopyPasteMode,
     isDual,
     splitRatio,
     activePaneIndex,
@@ -903,6 +916,15 @@ class $AppSettingsTable extends AppSettings
         terminalLineHeight.isAcceptableOrUnknown(
           data['terminal_line_height']!,
           _terminalLineHeightMeta,
+        ),
+      );
+    }
+    if (data.containsKey('terminal_copy_paste_mode')) {
+      context.handle(
+        _terminalCopyPasteModeMeta,
+        terminalCopyPasteMode.isAcceptableOrUnknown(
+          data['terminal_copy_paste_mode']!,
+          _terminalCopyPasteModeMeta,
         ),
       );
     }
@@ -1356,6 +1378,10 @@ class $AppSettingsTable extends AppSettings
         DriftSqlType.double,
         data['${effectivePrefix}terminal_line_height'],
       )!,
+      terminalCopyPasteMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}terminal_copy_paste_mode'],
+      )!,
       isDual: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_dual'],
@@ -1563,6 +1589,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
   final String terminalFontFamily;
   final int terminalFontSize;
   final double terminalLineHeight;
+  final String terminalCopyPasteMode;
   final bool isDual;
   final double splitRatio;
   final int activePaneIndex;
@@ -1620,6 +1647,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     required this.terminalFontFamily,
     required this.terminalFontSize,
     required this.terminalLineHeight,
+    required this.terminalCopyPasteMode,
     required this.isDual,
     required this.splitRatio,
     required this.activePaneIndex,
@@ -1680,6 +1708,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     map['terminal_font_family'] = Variable<String>(terminalFontFamily);
     map['terminal_font_size'] = Variable<int>(terminalFontSize);
     map['terminal_line_height'] = Variable<double>(terminalLineHeight);
+    map['terminal_copy_paste_mode'] = Variable<String>(terminalCopyPasteMode);
     map['is_dual'] = Variable<bool>(isDual);
     map['split_ratio'] = Variable<double>(splitRatio);
     map['active_pane_index'] = Variable<int>(activePaneIndex);
@@ -1747,6 +1776,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       terminalFontFamily: Value(terminalFontFamily),
       terminalFontSize: Value(terminalFontSize),
       terminalLineHeight: Value(terminalLineHeight),
+      terminalCopyPasteMode: Value(terminalCopyPasteMode),
       isDual: Value(isDual),
       splitRatio: Value(splitRatio),
       activePaneIndex: Value(activePaneIndex),
@@ -1819,6 +1849,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       terminalFontSize: serializer.fromJson<int>(json['terminalFontSize']),
       terminalLineHeight: serializer.fromJson<double>(
         json['terminalLineHeight'],
+      ),
+      terminalCopyPasteMode: serializer.fromJson<String>(
+        json['terminalCopyPasteMode'],
       ),
       isDual: serializer.fromJson<bool>(json['isDual']),
       splitRatio: serializer.fromJson<double>(json['splitRatio']),
@@ -1906,6 +1939,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       'terminalFontFamily': serializer.toJson<String>(terminalFontFamily),
       'terminalFontSize': serializer.toJson<int>(terminalFontSize),
       'terminalLineHeight': serializer.toJson<double>(terminalLineHeight),
+      'terminalCopyPasteMode': serializer.toJson<String>(terminalCopyPasteMode),
       'isDual': serializer.toJson<bool>(isDual),
       'splitRatio': serializer.toJson<double>(splitRatio),
       'activePaneIndex': serializer.toJson<int>(activePaneIndex),
@@ -1976,6 +2010,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     String? terminalFontFamily,
     int? terminalFontSize,
     double? terminalLineHeight,
+    String? terminalCopyPasteMode,
     bool? isDual,
     double? splitRatio,
     int? activePaneIndex,
@@ -2033,6 +2068,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     terminalFontFamily: terminalFontFamily ?? this.terminalFontFamily,
     terminalFontSize: terminalFontSize ?? this.terminalFontSize,
     terminalLineHeight: terminalLineHeight ?? this.terminalLineHeight,
+    terminalCopyPasteMode: terminalCopyPasteMode ?? this.terminalCopyPasteMode,
     isDual: isDual ?? this.isDual,
     splitRatio: splitRatio ?? this.splitRatio,
     activePaneIndex: activePaneIndex ?? this.activePaneIndex,
@@ -2110,6 +2146,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       terminalLineHeight: data.terminalLineHeight.present
           ? data.terminalLineHeight.value
           : this.terminalLineHeight,
+      terminalCopyPasteMode: data.terminalCopyPasteMode.present
+          ? data.terminalCopyPasteMode.value
+          : this.terminalCopyPasteMode,
       isDual: data.isDual.present ? data.isDual.value : this.isDual,
       splitRatio: data.splitRatio.present
           ? data.splitRatio.value
@@ -2262,6 +2301,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           ..write('terminalFontFamily: $terminalFontFamily, ')
           ..write('terminalFontSize: $terminalFontSize, ')
           ..write('terminalLineHeight: $terminalLineHeight, ')
+          ..write('terminalCopyPasteMode: $terminalCopyPasteMode, ')
           ..write('isDual: $isDual, ')
           ..write('splitRatio: $splitRatio, ')
           ..write('activePaneIndex: $activePaneIndex, ')
@@ -2326,6 +2366,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     terminalFontFamily,
     terminalFontSize,
     terminalLineHeight,
+    terminalCopyPasteMode,
     isDual,
     splitRatio,
     activePaneIndex,
@@ -2387,6 +2428,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           other.terminalFontFamily == this.terminalFontFamily &&
           other.terminalFontSize == this.terminalFontSize &&
           other.terminalLineHeight == this.terminalLineHeight &&
+          other.terminalCopyPasteMode == this.terminalCopyPasteMode &&
           other.isDual == this.isDual &&
           other.splitRatio == this.splitRatio &&
           other.activePaneIndex == this.activePaneIndex &&
@@ -2447,6 +2489,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
   final Value<String> terminalFontFamily;
   final Value<int> terminalFontSize;
   final Value<double> terminalLineHeight;
+  final Value<String> terminalCopyPasteMode;
   final Value<bool> isDual;
   final Value<double> splitRatio;
   final Value<int> activePaneIndex;
@@ -2504,6 +2547,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.terminalFontFamily = const Value.absent(),
     this.terminalFontSize = const Value.absent(),
     this.terminalLineHeight = const Value.absent(),
+    this.terminalCopyPasteMode = const Value.absent(),
     this.isDual = const Value.absent(),
     this.splitRatio = const Value.absent(),
     this.activePaneIndex = const Value.absent(),
@@ -2562,6 +2606,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.terminalFontFamily = const Value.absent(),
     this.terminalFontSize = const Value.absent(),
     this.terminalLineHeight = const Value.absent(),
+    this.terminalCopyPasteMode = const Value.absent(),
     this.isDual = const Value.absent(),
     this.splitRatio = const Value.absent(),
     this.activePaneIndex = const Value.absent(),
@@ -2620,6 +2665,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Expression<String>? terminalFontFamily,
     Expression<int>? terminalFontSize,
     Expression<double>? terminalLineHeight,
+    Expression<String>? terminalCopyPasteMode,
     Expression<bool>? isDual,
     Expression<double>? splitRatio,
     Expression<int>? activePaneIndex,
@@ -2682,6 +2728,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       if (terminalFontSize != null) 'terminal_font_size': terminalFontSize,
       if (terminalLineHeight != null)
         'terminal_line_height': terminalLineHeight,
+      if (terminalCopyPasteMode != null)
+        'terminal_copy_paste_mode': terminalCopyPasteMode,
       if (isDual != null) 'is_dual': isDual,
       if (splitRatio != null) 'split_ratio': splitRatio,
       if (activePaneIndex != null) 'active_pane_index': activePaneIndex,
@@ -2756,6 +2804,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Value<String>? terminalFontFamily,
     Value<int>? terminalFontSize,
     Value<double>? terminalLineHeight,
+    Value<String>? terminalCopyPasteMode,
     Value<bool>? isDual,
     Value<double>? splitRatio,
     Value<int>? activePaneIndex,
@@ -2816,6 +2865,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       terminalFontFamily: terminalFontFamily ?? this.terminalFontFamily,
       terminalFontSize: terminalFontSize ?? this.terminalFontSize,
       terminalLineHeight: terminalLineHeight ?? this.terminalLineHeight,
+      terminalCopyPasteMode:
+          terminalCopyPasteMode ?? this.terminalCopyPasteMode,
       isDual: isDual ?? this.isDual,
       splitRatio: splitRatio ?? this.splitRatio,
       activePaneIndex: activePaneIndex ?? this.activePaneIndex,
@@ -2906,6 +2957,11 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     }
     if (terminalLineHeight.present) {
       map['terminal_line_height'] = Variable<double>(terminalLineHeight.value);
+    }
+    if (terminalCopyPasteMode.present) {
+      map['terminal_copy_paste_mode'] = Variable<String>(
+        terminalCopyPasteMode.value,
+      );
     }
     if (isDual.present) {
       map['is_dual'] = Variable<bool>(isDual.value);
@@ -3083,6 +3139,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
           ..write('terminalFontFamily: $terminalFontFamily, ')
           ..write('terminalFontSize: $terminalFontSize, ')
           ..write('terminalLineHeight: $terminalLineHeight, ')
+          ..write('terminalCopyPasteMode: $terminalCopyPasteMode, ')
           ..write('isDual: $isDual, ')
           ..write('splitRatio: $splitRatio, ')
           ..write('activePaneIndex: $activePaneIndex, ')
@@ -6399,6 +6456,7 @@ typedef $$AppSettingsTableCreateCompanionBuilder =
       Value<String> terminalFontFamily,
       Value<int> terminalFontSize,
       Value<double> terminalLineHeight,
+      Value<String> terminalCopyPasteMode,
       Value<bool> isDual,
       Value<double> splitRatio,
       Value<int> activePaneIndex,
@@ -6458,6 +6516,7 @@ typedef $$AppSettingsTableUpdateCompanionBuilder =
       Value<String> terminalFontFamily,
       Value<int> terminalFontSize,
       Value<double> terminalLineHeight,
+      Value<String> terminalCopyPasteMode,
       Value<bool> isDual,
       Value<double> splitRatio,
       Value<int> activePaneIndex,
@@ -6558,6 +6617,11 @@ class $$AppSettingsTableFilterComposer
 
   ColumnFilters<double> get terminalLineHeight => $composableBuilder(
     column: $table.terminalLineHeight,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get terminalCopyPasteMode => $composableBuilder(
+    column: $table.terminalCopyPasteMode,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6851,6 +6915,11 @@ class $$AppSettingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get terminalCopyPasteMode => $composableBuilder(
+    column: $table.terminalCopyPasteMode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get isDual => $composableBuilder(
     column: $table.isDual,
     builder: (column) => ColumnOrderings(column),
@@ -7135,6 +7204,11 @@ class $$AppSettingsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get terminalCopyPasteMode => $composableBuilder(
+    column: $table.terminalCopyPasteMode,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<bool> get isDual =>
       $composableBuilder(column: $table.isDual, builder: (column) => column);
 
@@ -7407,6 +7481,7 @@ class $$AppSettingsTableTableManager
                 Value<String> terminalFontFamily = const Value.absent(),
                 Value<int> terminalFontSize = const Value.absent(),
                 Value<double> terminalLineHeight = const Value.absent(),
+                Value<String> terminalCopyPasteMode = const Value.absent(),
                 Value<bool> isDual = const Value.absent(),
                 Value<double> splitRatio = const Value.absent(),
                 Value<int> activePaneIndex = const Value.absent(),
@@ -7464,6 +7539,7 @@ class $$AppSettingsTableTableManager
                 terminalFontFamily: terminalFontFamily,
                 terminalFontSize: terminalFontSize,
                 terminalLineHeight: terminalLineHeight,
+                terminalCopyPasteMode: terminalCopyPasteMode,
                 isDual: isDual,
                 splitRatio: splitRatio,
                 activePaneIndex: activePaneIndex,
@@ -7523,6 +7599,7 @@ class $$AppSettingsTableTableManager
                 Value<String> terminalFontFamily = const Value.absent(),
                 Value<int> terminalFontSize = const Value.absent(),
                 Value<double> terminalLineHeight = const Value.absent(),
+                Value<String> terminalCopyPasteMode = const Value.absent(),
                 Value<bool> isDual = const Value.absent(),
                 Value<double> splitRatio = const Value.absent(),
                 Value<int> activePaneIndex = const Value.absent(),
@@ -7580,6 +7657,7 @@ class $$AppSettingsTableTableManager
                 terminalFontFamily: terminalFontFamily,
                 terminalFontSize: terminalFontSize,
                 terminalLineHeight: terminalLineHeight,
+                terminalCopyPasteMode: terminalCopyPasteMode,
                 isDual: isDual,
                 splitRatio: splitRatio,
                 activePaneIndex: activePaneIndex,

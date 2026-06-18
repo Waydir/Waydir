@@ -43,6 +43,7 @@ class _TerminalPaneState extends State<TerminalPane> {
     final fontFamily = registry.byId('terminal.fontFamily');
     final fontSize = registry.byId('terminal.fontSize');
     final lineHeight = registry.byId('terminal.lineHeight');
+    final copyPasteMode = registry.byId('terminal.copyPasteMode');
     final shell = registry.byId('terminal.shell');
     final external = registry.byId('terminal.external');
     final externalCustom = registry.byId('terminal.externalCustomCommand');
@@ -63,6 +64,10 @@ class _TerminalPaneState extends State<TerminalPane> {
             RegistrySettingRow(setting: fontSize),
             RegistrySettingRow(setting: lineHeight),
           ],
+        ),
+        SettingsSection(
+          title: t.preferences.terminal.behaviorSection,
+          children: [RegistrySettingRow(setting: copyPasteMode)],
         ),
         SettingsSection(
           title: t.preferences.terminal.shellSection,

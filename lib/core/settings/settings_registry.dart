@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/widgets.dart';
 import 'package:waydir/ui/icons/waydir_icons.dart';
 import 'package:signals/signals.dart';
@@ -274,6 +276,38 @@ class SettingsRegistry {
             label: () => value.toStringAsFixed(1),
             icon: WaydirIconsRegular.rows,
           ),
+      ],
+    ),
+    ChoiceSetting<String>(
+      id: 'terminal.copyPasteMode',
+      category: SettingsCategory.terminal,
+      label: () => t.preferences.terminal.copyPasteMode,
+      hint: () => t.preferences.terminal.copyPasteModeHint,
+      searchTerms: const [
+        'terminal',
+        'copy',
+        'paste',
+        'clipboard',
+        'ctrl',
+        'shift',
+        'modifier',
+      ],
+      signal: SettingsStore.instance.terminalCopyPasteMode,
+      choices: [
+        SettingChoice(
+          value: 'standard',
+          label: () => Platform.isMacOS
+              ? t.preferences.terminal.copyPasteModeStandardMac
+              : t.preferences.terminal.copyPasteModeStandard,
+          icon: WaydirIconsRegular.copy,
+        ),
+        SettingChoice(
+          value: 'shift',
+          label: () => Platform.isMacOS
+              ? t.preferences.terminal.copyPasteModeShiftMac
+              : t.preferences.terminal.copyPasteModeShift,
+          icon: WaydirIconsRegular.clipboard,
+        ),
       ],
     ),
     ChoiceSetting<String>(

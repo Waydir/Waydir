@@ -237,7 +237,14 @@
       "shellLabel": "Shell",
       "shellHint": "Program the built-in terminal launches.",
       "shellSystem": "System default",
-      "externalSection": "Open in Terminal"
+      "externalSection": "Open in Terminal",
+      "behaviorSection": "Behavior",
+      "copyPasteMode": "Copy/paste modifier",
+      "copyPasteModeHint": "Key combination used to copy and paste in the terminal.",
+      "copyPasteModeStandard": "Standard (Ctrl+C / Ctrl+V)",
+      "copyPasteModeStandardMac": "Standard (Cmd+C / Cmd+V)",
+      "copyPasteModeShift": "With Shift (Ctrl+Shift+C / Ctrl+Shift+V)",
+      "copyPasteModeShiftMac": "With Shift (Cmd+Shift+C / Cmd+Shift+V)"
     },
     "quickLook": {
       "title": "Quick Look",
@@ -815,6 +822,26 @@
     "modeFilter": "Filter builder",
     "invalidGlob": "Invalid glob pattern",
     "invalidRegex": "Invalid regex",
+    "filterErrors": {
+      "unknownFilter": "Unknown filter: $key",
+      "missingValue": "Missing value for $key",
+      "unknownKind": "Unknown kind: $kind",
+      "unknownType": "Unknown type: $type",
+      "invalidSize": "Invalid size filter",
+      "unknownModified": "Unknown modified value: $value",
+      "unknownCreated": "Unknown created value: $value",
+      "hiddenBoolean": "Hidden must be true or false"
+    },
+    "filterDetails": {
+      "name": "file name contains text",
+      "kind": "category such as image or code",
+      "ext": "extension list such as dart,png",
+      "type": "file or folder",
+      "size": "comparison such as >10mb",
+      "modified": "today, week, month or year",
+      "created": "today, week, month or year",
+      "hidden": "true or false"
+    },
     "complete": "complete",
     "go": "go"
   },

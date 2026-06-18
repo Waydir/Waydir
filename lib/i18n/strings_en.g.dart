@@ -1589,6 +1589,9 @@ class Translations$search$en {
 	/// en: 'Invalid regex'
 	String get invalidRegex => 'Invalid regex';
 
+	late final Translations$search$filterErrors$en filterErrors = Translations$search$filterErrors$en.internal(_root);
+	late final Translations$search$filterDetails$en filterDetails = Translations$search$filterDetails$en.internal(_root);
+
 	/// en: 'complete'
 	String get complete => 'complete';
 
@@ -2505,6 +2508,27 @@ class Translations$preferences$terminal$en {
 
 	/// en: 'Open in Terminal'
 	String get externalSection => 'Open in Terminal';
+
+	/// en: 'Behavior'
+	String get behaviorSection => 'Behavior';
+
+	/// en: 'Copy/paste modifier'
+	String get copyPasteMode => 'Copy/paste modifier';
+
+	/// en: 'Key combination used to copy and paste in the terminal.'
+	String get copyPasteModeHint => 'Key combination used to copy and paste in the terminal.';
+
+	/// en: 'Standard (Ctrl+C / Ctrl+V)'
+	String get copyPasteModeStandard => 'Standard (Ctrl+C / Ctrl+V)';
+
+	/// en: 'Standard (Cmd+C / Cmd+V)'
+	String get copyPasteModeStandardMac => 'Standard (Cmd+C / Cmd+V)';
+
+	/// en: 'With Shift (Ctrl+Shift+C / Ctrl+Shift+V)'
+	String get copyPasteModeShift => 'With Shift (Ctrl+Shift+C / Ctrl+Shift+V)';
+
+	/// en: 'With Shift (Cmd+Shift+C / Cmd+Shift+V)'
+	String get copyPasteModeShiftMac => 'With Shift (Cmd+Shift+C / Cmd+Shift+V)';
 }
 
 // Path: preferences.quickLook
@@ -3106,6 +3130,72 @@ class Translations$sidebar$drives$en {
 	String mountTitle({required Object name}) => 'Mount ${name}';
 }
 
+// Path: search.filterErrors
+class Translations$search$filterErrors$en {
+	Translations$search$filterErrors$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Unknown filter: $key'
+	String unknownFilter({required Object key}) => 'Unknown filter: ${key}';
+
+	/// en: 'Missing value for $key'
+	String missingValue({required Object key}) => 'Missing value for ${key}';
+
+	/// en: 'Unknown kind: $kind'
+	String unknownKind({required Object kind}) => 'Unknown kind: ${kind}';
+
+	/// en: 'Unknown type: $type'
+	String unknownType({required Object type}) => 'Unknown type: ${type}';
+
+	/// en: 'Invalid size filter'
+	String get invalidSize => 'Invalid size filter';
+
+	/// en: 'Unknown modified value: $value'
+	String unknownModified({required Object value}) => 'Unknown modified value: ${value}';
+
+	/// en: 'Unknown created value: $value'
+	String unknownCreated({required Object value}) => 'Unknown created value: ${value}';
+
+	/// en: 'Hidden must be true or false'
+	String get hiddenBoolean => 'Hidden must be true or false';
+}
+
+// Path: search.filterDetails
+class Translations$search$filterDetails$en {
+	Translations$search$filterDetails$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'file name contains text'
+	String get name => 'file name contains text';
+
+	/// en: 'category such as image or code'
+	String get kind => 'category such as image or code';
+
+	/// en: 'extension list such as dart,png'
+	String get ext => 'extension list such as dart,png';
+
+	/// en: 'file or folder'
+	String get type => 'file or folder';
+
+	/// en: 'comparison such as >10mb'
+	String get size => 'comparison such as >10mb';
+
+	/// en: 'today, week, month or year'
+	String get modified => 'today, week, month or year';
+
+	/// en: 'today, week, month or year'
+	String get created => 'today, week, month or year';
+
+	/// en: 'true or false'
+	String get hidden => 'true or false';
+}
+
 // Path: tasks.status
 class Translations$tasks$status$en {
 	Translations$tasks$status$en.internal(this._root);
@@ -3522,6 +3612,13 @@ extension on Translations {
 			'preferences.terminal.shellHint' => 'Program the built-in terminal launches.',
 			'preferences.terminal.shellSystem' => 'System default',
 			'preferences.terminal.externalSection' => 'Open in Terminal',
+			'preferences.terminal.behaviorSection' => 'Behavior',
+			'preferences.terminal.copyPasteMode' => 'Copy/paste modifier',
+			'preferences.terminal.copyPasteModeHint' => 'Key combination used to copy and paste in the terminal.',
+			'preferences.terminal.copyPasteModeStandard' => 'Standard (Ctrl+C / Ctrl+V)',
+			'preferences.terminal.copyPasteModeStandardMac' => 'Standard (Cmd+C / Cmd+V)',
+			'preferences.terminal.copyPasteModeShift' => 'With Shift (Ctrl+Shift+C / Ctrl+Shift+V)',
+			'preferences.terminal.copyPasteModeShiftMac' => 'With Shift (Cmd+Shift+C / Cmd+Shift+V)',
 			'preferences.quickLook.title' => 'Quick Look',
 			'preferences.quickLook.subtitle' => 'Editor font, line numbers and modal editing in the Quick Look preview.',
 			'preferences.quickLook.fontSection' => 'Editor font',
@@ -3820,6 +3917,8 @@ extension on Translations {
 			'quickLook.pdfPages' => ({required Object count}) => '${count} pages',
 			'quickLook.sectionDetails' => 'Details',
 			'quickLook.info' => 'Information',
+			_ => null,
+		} ?? switch (path) {
 			'quickLook.name' => 'Name',
 			'quickLook.type' => 'Type',
 			'quickLook.size' => 'Size',
@@ -3827,8 +3926,6 @@ extension on Translations {
 			'quickLook.location' => 'Location',
 			'quickLook.modified' => 'Modified',
 			'quickLook.created' => 'Created',
-			_ => null,
-		} ?? switch (path) {
 			'quickLook.typeFolder' => 'Folder',
 			'quickLook.typeFile' => 'File',
 			'quickLook.dimensions' => 'Dimensions',
@@ -3998,6 +4095,22 @@ extension on Translations {
 			'search.modeFilter' => 'Filter builder',
 			'search.invalidGlob' => 'Invalid glob pattern',
 			'search.invalidRegex' => 'Invalid regex',
+			'search.filterErrors.unknownFilter' => ({required Object key}) => 'Unknown filter: ${key}',
+			'search.filterErrors.missingValue' => ({required Object key}) => 'Missing value for ${key}',
+			'search.filterErrors.unknownKind' => ({required Object kind}) => 'Unknown kind: ${kind}',
+			'search.filterErrors.unknownType' => ({required Object type}) => 'Unknown type: ${type}',
+			'search.filterErrors.invalidSize' => 'Invalid size filter',
+			'search.filterErrors.unknownModified' => ({required Object value}) => 'Unknown modified value: ${value}',
+			'search.filterErrors.unknownCreated' => ({required Object value}) => 'Unknown created value: ${value}',
+			'search.filterErrors.hiddenBoolean' => 'Hidden must be true or false',
+			'search.filterDetails.name' => 'file name contains text',
+			'search.filterDetails.kind' => 'category such as image or code',
+			'search.filterDetails.ext' => 'extension list such as dart,png',
+			'search.filterDetails.type' => 'file or folder',
+			'search.filterDetails.size' => 'comparison such as >10mb',
+			'search.filterDetails.modified' => 'today, week, month or year',
+			'search.filterDetails.created' => 'today, week, month or year',
+			'search.filterDetails.hidden' => 'true or false',
 			'search.complete' => 'complete',
 			'search.go' => 'go',
 			'statusBar.items' => ({required Object count}) => '${count} items',

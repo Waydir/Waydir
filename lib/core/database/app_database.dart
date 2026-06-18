@@ -19,6 +19,8 @@ class AppSettings extends Table {
   IntColumn get terminalFontSize => integer().withDefault(const Constant(13))();
   RealColumn get terminalLineHeight =>
       real().withDefault(const Constant(1.2))();
+  TextColumn get terminalCopyPasteMode =>
+      text().withDefault(const Constant(''))();
   BoolColumn get isDual => boolean().withDefault(const Constant(false))();
   RealColumn get splitRatio => real().withDefault(const Constant(0.5))();
   IntColumn get activePaneIndex => integer().withDefault(const Constant(0))();
@@ -225,7 +227,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 38;
+  int get schemaVersion => 39;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -391,6 +393,9 @@ class AppDatabase extends _$AppDatabase {
       if (from < 38) {
         await addSettingColumn(appSettings.columnWidthMode);
         await addSettingColumn(appSettings.columnWidths);
+      }
+      if (from < 39) {
+        await addSettingColumn(appSettings.terminalCopyPasteMode);
       }
     },
   );

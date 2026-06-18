@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:flutter/services.dart';
@@ -21,6 +22,7 @@ class SettingsStore {
   final terminalFontFamily = signal<String>('');
   final terminalFontSize = signal<int>(13);
   final terminalLineHeight = signal<double>(1.2);
+  final terminalCopyPasteMode = signal<String>(_defaultCopyPasteMode());
   final sessionIsDual = signal<bool>(false);
   final sessionSplitRatio = signal<double>(0.5);
   final sessionActivePaneIndex = signal<int>(0);
@@ -77,6 +79,13 @@ class SettingsStore {
   Timer? _saveDebounce;
   final _disposers = <void Function()>[];
 
+  static String _defaultCopyPasteMode() {
+    if (Platform.isMacOS) return 'standard';
+    if (Platform.isLinux) return 'shift';
+
+    return 'standard';
+  }
+
   AppDatabase get db => _db;
   bool get isLoaded => _loaded;
 
@@ -98,6 +107,9 @@ class SettingsStore {
     terminalFontFamily.value = row.terminalFontFamily;
     terminalFontSize.value = row.terminalFontSize;
     terminalLineHeight.value = row.terminalLineHeight;
+    terminalCopyPasteMode.value = row.terminalCopyPasteMode.isEmpty
+        ? _defaultCopyPasteMode()
+        : row.terminalCopyPasteMode;
     sessionIsDual.value = row.isDual;
     sessionSplitRatio.value = row.splitRatio;
     sessionActivePaneIndex.value = row.activePaneIndex;
@@ -211,6 +223,7 @@ class SettingsStore {
         terminalFontFamily.value;
         terminalFontSize.value;
         terminalLineHeight.value;
+        terminalCopyPasteMode.value;
         sessionIsDual.value;
         sessionSplitRatio.value;
         sessionActivePaneIndex.value;
@@ -281,6 +294,7 @@ class SettingsStore {
           terminalFontFamily: Value(terminalFontFamily.value),
           terminalFontSize: Value(terminalFontSize.value),
           terminalLineHeight: Value(terminalLineHeight.value),
+          terminalCopyPasteMode: Value(terminalCopyPasteMode.value),
           isDual: Value(sessionIsDual.value),
           splitRatio: Value(sessionSplitRatio.value),
           activePaneIndex: Value(sessionActivePaneIndex.value),

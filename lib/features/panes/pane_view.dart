@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -372,6 +373,7 @@ class _TerminalPanel extends StatefulWidget {
 class _TerminalPanelState extends State<_TerminalPanel> {
   bool _focused = false;
   double? _dragHeight;
+  final TerminalController _terminalController = TerminalController();
 
   double get _effectiveHeight => _dragHeight ?? widget.height;
 
@@ -407,6 +409,7 @@ class _TerminalPanelState extends State<_TerminalPanel> {
   @override
   void dispose() {
     widget.active.focusNode.removeListener(_onFocusChange);
+    _terminalController.dispose();
     super.dispose();
   }
 
@@ -416,6 +419,20 @@ class _TerminalPanelState extends State<_TerminalPanel> {
   }
 
   KeyEventResult _onKeyEvent(FocusNode node, KeyEvent event) {
+    if (event is KeyDownEvent && _isCopyPasteModifierHeld()) {
+      final key = event.physicalKey;
+      if (key == PhysicalKeyboardKey.keyC) {
+        return _handleTerminalCopy();
+      }
+      if (key == PhysicalKeyboardKey.keyV) {
+        _terminalPaste();
+        return KeyEventResult.handled;
+      }
+      if (key == PhysicalKeyboardKey.keyA) {
+        _terminalSelectAll();
+        return KeyEventResult.handled;
+      }
+    }
     if (event is KeyDownEvent &&
         event.physicalKey == AppShortcuts.terminalTogglePhysicalKey &&
         AppShortcuts.isControl &&
@@ -429,7 +446,7 @@ class _TerminalPanelState extends State<_TerminalPanel> {
       return KeyEventResult.handled;
     }
     if (event is KeyDownEvent &&
-        HardwareKeyboard.instance.isControlPressed &&
+        AppShortcuts.isControl &&
         HardwareKeyboard.instance.isShiftPressed &&
         !HardwareKeyboard.instance.isAltPressed &&
         event.physicalKey == PhysicalKeyboardKey.keyT) {
@@ -438,7 +455,7 @@ class _TerminalPanelState extends State<_TerminalPanel> {
       return KeyEventResult.handled;
     }
     if (event is KeyDownEvent &&
-        HardwareKeyboard.instance.isControlPressed &&
+        AppShortcuts.isControl &&
         HardwareKeyboard.instance.isShiftPressed &&
         !HardwareKeyboard.instance.isAltPressed &&
         event.physicalKey == PhysicalKeyboardKey.keyW) {
@@ -447,7 +464,7 @@ class _TerminalPanelState extends State<_TerminalPanel> {
       return KeyEventResult.handled;
     }
     if (event is KeyDownEvent &&
-        HardwareKeyboard.instance.isControlPressed &&
+        AppShortcuts.isControl &&
         !HardwareKeyboard.instance.isShiftPressed &&
         !HardwareKeyboard.instance.isAltPressed &&
         event.physicalKey == PhysicalKeyboardKey.pageDown) {
@@ -456,7 +473,7 @@ class _TerminalPanelState extends State<_TerminalPanel> {
       return KeyEventResult.handled;
     }
     if (event is KeyDownEvent &&
-        HardwareKeyboard.instance.isControlPressed &&
+        AppShortcuts.isControl &&
         !HardwareKeyboard.instance.isShiftPressed &&
         !HardwareKeyboard.instance.isAltPressed &&
         event.physicalKey == PhysicalKeyboardKey.pageUp) {
@@ -465,7 +482,7 @@ class _TerminalPanelState extends State<_TerminalPanel> {
       return KeyEventResult.handled;
     }
     if (event is KeyDownEvent &&
-        HardwareKeyboard.instance.isControlPressed &&
+        AppShortcuts.isControl &&
         !HardwareKeyboard.instance.isAltPressed) {
       final settings = SettingsStore.instance;
       final key = event.physicalKey;
@@ -487,6 +504,65 @@ class _TerminalPanelState extends State<_TerminalPanel> {
     }
 
     return KeyEventResult.ignored;
+  }
+
+  bool _isCopyPasteModifierHeld() {
+    final mode = SettingsStore.instance.terminalCopyPasteMode.value;
+    final shift = HardwareKeyboard.instance.isShiftPressed;
+    if (Platform.isMacOS) {
+      final meta = HardwareKeyboard.instance.isMetaPressed;
+
+      return mode == 'shift' ? (meta && shift) : (meta && !shift);
+    }
+    final ctrl = HardwareKeyboard.instance.isControlPressed;
+
+    return mode == 'shift' ? (ctrl && shift) : (ctrl && !shift);
+  }
+
+  KeyEventResult _handleTerminalCopy() {
+    final selection = _terminalController.selection;
+    if (selection == null) {
+      final mode = SettingsStore.instance.terminalCopyPasteMode.value;
+      if (mode == 'standard' && !Platform.isMacOS) {
+        return KeyEventResult.ignored;
+      }
+
+      return KeyEventResult.handled;
+    }
+    final terminal = widget.active.session.terminal;
+    final text = terminal.buffer.getText(selection);
+    _terminalController.clearSelection();
+    unawaited(Clipboard.setData(ClipboardData(text: text)));
+
+    return KeyEventResult.handled;
+  }
+
+  void _terminalPaste() {
+    final terminal = widget.active.session.terminal;
+    _terminalController.clearSelection();
+    Clipboard.getData(Clipboard.kTextPlain).then((data) {
+      final text = data?.text;
+      if (text != null && text.isNotEmpty) {
+        terminal.paste(text);
+      } else if (!Platform.isMacOS) {
+        terminal.charInput(0x76, ctrl: true);
+      }
+    });
+  }
+
+  void _terminalSelectAll() {
+    final terminal = widget.active.session.terminal;
+    _terminalController.setSelection(
+      terminal.buffer.createAnchor(
+        0,
+        terminal.buffer.height - terminal.viewHeight,
+      ),
+      terminal.buffer.createAnchor(
+        terminal.viewWidth,
+        terminal.buffer.height - 1,
+      ),
+      mode: SelectionMode.line,
+    );
   }
 
   @override
@@ -521,6 +597,8 @@ class _TerminalPanelState extends State<_TerminalPanel> {
 
                 return TerminalView(
                   widget.active.session.terminal,
+                  controller: _terminalController,
+                  shortcuts: const {},
                   focusNode: widget.active.focusNode,
                   theme: _appTerminalTheme(),
                   textStyle: TerminalStyle(
