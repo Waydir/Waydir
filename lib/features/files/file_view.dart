@@ -47,7 +47,7 @@ const _kRowPaddingRight = 10.0;
 const _kNameMinWidth = 160.0;
 const _kNameManualDefaultWidth = 260.0;
 const _kLocationMinWidth = 120.0;
-const _kColumnGap = 16.0;
+const _kColumnGap = 0.0;
 const _kHeaderHeight = 24.0;
 const _kResizeHandleWidth = 8.0;
 const _kColumnWidthsNameKey = 'name';
@@ -987,6 +987,7 @@ class _ListHeader extends StatelessWidget {
             ),
           ),
           if (recursive) ...[
+            const SizedBox(width: _kColumnGap),
             _cell(
               width: locationWidth,
               resizeKey: _kColumnWidthsLocationKey,
@@ -1001,9 +1002,9 @@ class _ListHeader extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 16),
           ],
           for (final col in columns) ...[
+            const SizedBox(width: _kColumnGap),
             _cell(
               width: columnWidths[col] ?? 0,
               resizeKey: columnWidthKey(col),
@@ -1016,7 +1017,6 @@ class _ListHeader extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 16),
           ],
         ],
       ),
@@ -1441,6 +1441,7 @@ class _ListRowState extends State<_ListRow> {
 
     return [
       for (final col in widget.columns) ...[
+        const SizedBox(width: _kColumnGap),
         SizedBox(
           width: widget.columnWidths[col] ?? 0,
           child: Text(
@@ -1457,7 +1458,6 @@ class _ListRowState extends State<_ListRow> {
             style: muted,
           ),
         ),
-        const SizedBox(width: 16),
       ],
     ];
   }
@@ -1702,6 +1702,7 @@ class _ListRowState extends State<_ListRow> {
                   ),
                 ),
                 if (widget.recursive) ...[
+                  const SizedBox(width: _kColumnGap),
                   SizedBox(
                     width: widget.locationWidth,
                     child: Padding(
@@ -1716,7 +1717,6 @@ class _ListRowState extends State<_ListRow> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16),
                 ],
                 ..._buildColumnCells(context, e),
               ],
@@ -1775,6 +1775,7 @@ class _ListRowState extends State<_ListRow> {
                   ),
                 ),
                 if (widget.recursive) ...[
+                  const SizedBox(width: _kColumnGap),
                   SizedBox(
                     width: widget.locationWidth,
                     child: Padding(
@@ -1789,7 +1790,6 @@ class _ListRowState extends State<_ListRow> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16),
                 ],
                 ..._buildColumnCells(context, e),
               ],
