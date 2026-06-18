@@ -20,6 +20,7 @@ const _defaultSectionOrder = [
 ];
 
 const _sectionScope = 'section';
+const _collapsedScope = 'collapsed';
 
 /// User overrides for the sidebar layout: order and visibility of sections and
 /// of items within the favorites/devices/network sections. Backed by the
@@ -32,6 +33,7 @@ class SidebarStore {
   final editing = signal<bool>(false);
   final sectionOrder = signal<List<String>>(_defaultSectionOrder);
   final hiddenSections = signal<Set<String>>(const {});
+  final collapsedSections = signal<Set<String>>(const {});
   final itemOrder = signal<Map<String, List<String>>>(const {});
   final hiddenItems = signal<Map<String, Set<String>>>(const {});
 
@@ -54,6 +56,10 @@ class SidebarStore {
       for (final r in sectionRows)
         if (r.hidden) r.itemKey,
     };
+    collapsedSections.value = {
+      for (final r in rows.where((r) => r.scope == _collapsedScope))
+        if (r.hidden) r.itemKey,
+    };
 
     final order = <String, List<String>>{};
     final hidden = <String, Set<String>>{};
@@ -74,6 +80,24 @@ class SidebarStore {
   void toggleEditing() => editing.value = !editing.value;
 
   bool isSectionHidden(String id) => hiddenSections.value.contains(id);
+
+  bool isSectionCollapsed(String id) => collapsedSections.value.contains(id);
+
+  Future<void> setSectionCollapsed(String id, bool collapsed) async {
+    final next = {...collapsedSections.value};
+    if (collapsed) {
+      next.add(id);
+    } else {
+      next.remove(id);
+    }
+    collapsedSections.value = next;
+    await _db.setSidebarPref(
+      _collapsedScope,
+      id,
+      orderIndex: 0,
+      hidden: collapsed,
+    );
+  }
 
   bool isItemHidden(String scope, String key) =>
       hiddenItems.value[scope]?.contains(key) ?? false;

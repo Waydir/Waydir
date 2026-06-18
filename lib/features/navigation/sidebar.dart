@@ -558,6 +558,7 @@ class _SidebarState extends State<Sidebar> {
     // Read layout signals so the body re-renders on reorder/visibility edits.
     final sectionOrder = store.sectionOrder.value;
     store.hiddenSections.value;
+    store.collapsedSections.value;
     store.itemOrder.value;
     store.hiddenItems.value;
 
@@ -637,6 +638,8 @@ class _SidebarState extends State<Sidebar> {
           .toList();
       if (!_sectionAlwaysShown(section.id) && visible.isEmpty) continue;
 
+      final sectionCollapsed =
+          !collapsed && store.isSectionCollapsed(section.id);
       if (collapsed) {
         if (first) {
           children.add(const SizedBox(height: 6));
@@ -645,9 +648,18 @@ class _SidebarState extends State<Sidebar> {
         }
       } else {
         if (!first) children.add(const SizedBox(height: _sectionGap));
-        children.add(_SectionHeader(title: section.title));
+        children.add(
+          _SectionHeader(
+            title: section.title,
+            collapsed: sectionCollapsed,
+            onToggle: () =>
+                store.setSectionCollapsed(section.id, !sectionCollapsed),
+          ),
+        );
       }
       first = false;
+
+      if (sectionCollapsed) continue;
 
       for (final entry in visible) {
         children.add(_rowFor(entry, collapsed));
@@ -1760,15 +1772,63 @@ class _SidebarOperationsButtonState extends State<_SidebarOperationsButton> {
   }
 }
 
-class _SectionHeader extends StatelessWidget {
+class _SectionHeader extends StatefulWidget {
   final String title;
-  const _SectionHeader({required this.title});
+  final bool collapsed;
+  final VoidCallback onToggle;
+
+  const _SectionHeader({
+    required this.title,
+    required this.collapsed,
+    required this.onToggle,
+  });
+
+  @override
+  State<_SectionHeader> createState() => _SectionHeaderState();
+}
+
+class _SectionHeaderState extends State<_SectionHeader> {
+  bool _hovered = false;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(_rowPadH, 14, _rowPadH, 6),
-      child: Text(title.toUpperCase(), style: context.txt.sectionLabel),
+    final color = _hovered ? AppColors.fg : AppColors.fgSubtle;
+
+    return Tooltip(
+      message: widget.collapsed
+          ? t.sidebar.expandSection
+          : t.sidebar.collapseSection,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: widget.onToggle,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(2, 14, _rowPadH, 6),
+            child: Row(
+              children: [
+                Icon(
+                  widget.collapsed
+                      ? WaydirIconsRegular.caretRight
+                      : WaydirIconsRegular.caretDown,
+                  size: 12,
+                  color: color,
+                ),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    widget.title.toUpperCase(),
+                    style: context.txt.sectionLabel,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

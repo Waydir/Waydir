@@ -40,4 +40,28 @@ void main() {
       expect(result, ['b', 'a']);
     });
   });
+
+  group('SidebarStore.collapsedSections', () {
+    setUp(() {
+      store.collapsedSections.value = const {};
+    });
+
+    test('isSectionCollapsed reflects signal state', () {
+      store.collapsedSections.value = {sidebarSectionBookmarks};
+      expect(store.isSectionCollapsed(sidebarSectionBookmarks), isTrue);
+      expect(store.isSectionCollapsed(sidebarSectionFavorites), isFalse);
+    });
+
+    test('empty set reports no section collapsed', () {
+      for (final id in [
+        sidebarSectionFavorites,
+        sidebarSectionDevices,
+        sidebarSectionContainers,
+        sidebarSectionNetwork,
+        sidebarSectionBookmarks,
+      ]) {
+        expect(store.isSectionCollapsed(id), isFalse);
+      }
+    });
+  });
 }

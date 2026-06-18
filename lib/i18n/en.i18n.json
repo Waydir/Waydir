@@ -747,7 +747,9 @@
       "mountTitle": "Mount $name"
     },
     "collapse": "Collapse sidebar",
-    "expand": "Expand sidebar"
+    "expand": "Expand sidebar",
+    "collapseSection": "Collapse section",
+    "expandSection": "Expand section"
   },
   "trash": {
     "accessDeniedTitle": "Trash needs Full Disk Access",

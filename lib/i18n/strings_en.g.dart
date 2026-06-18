@@ -1384,6 +1384,12 @@ class Translations$sidebar$en {
 
 	/// en: 'Expand sidebar'
 	String get expand => 'Expand sidebar';
+
+	/// en: 'Collapse section'
+	String get collapseSection => 'Collapse section';
+
+	/// en: 'Expand section'
+	String get expandSection => 'Expand section';
 }
 
 // Path: trash
@@ -3930,6 +3936,8 @@ extension on Translations {
 			'sidebar.drives.mountTitle' => ({required Object name}) => 'Mount ${name}',
 			'sidebar.collapse' => 'Collapse sidebar',
 			'sidebar.expand' => 'Expand sidebar',
+			'sidebar.collapseSection' => 'Collapse section',
+			'sidebar.expandSection' => 'Expand section',
 			'trash.accessDeniedTitle' => 'Trash needs Full Disk Access',
 			'trash.accessDeniedBody' => 'macOS protects the Trash folder. Grant Waydir Full Disk Access in System Settings, then relaunch the app.',
 			'trash.openSystemSettings' => 'Open System Settings',
