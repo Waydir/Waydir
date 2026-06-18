@@ -1,4 +1,5 @@
 import '../../core/models/file_entry.dart';
+import '../../i18n/strings.g.dart';
 
 const filterSearchMode = 'filter';
 
@@ -344,10 +345,14 @@ FilterQueryParseResult parseFilterQuery(String input) {
     final key = raw.substring(0, colon).toLowerCase();
     final value = raw.substring(colon + 1).toLowerCase();
     if (!filterQueryKeys.contains(key)) {
-      return FilterQueryParseResult(error: 'Unknown filter: $key');
+      return FilterQueryParseResult(
+        error: t.search.filterErrors.unknownFilter(key: key),
+      );
     }
     if (value.isEmpty) {
-      return FilterQueryParseResult(error: 'Missing value for $key');
+      return FilterQueryParseResult(
+        error: t.search.filterErrors.missingValue(key: key),
+      );
     }
     switch (key) {
       case 'name':
@@ -363,36 +368,46 @@ FilterQueryParseResult parseFilterQuery(String input) {
         final values = value.split(',').map((v) => v.trim());
         for (final kind in values) {
           if (!filterKindValues.contains(kind)) {
-            return FilterQueryParseResult(error: 'Unknown kind: $kind');
+            return FilterQueryParseResult(
+              error: t.search.filterErrors.unknownKind(kind: kind),
+            );
           }
           kinds.add(kind);
         }
       case 'type':
         if (!filterTypeValues.contains(value)) {
-          return FilterQueryParseResult(error: 'Unknown type: $value');
+          return FilterQueryParseResult(
+            error: t.search.filterErrors.unknownType(type: value),
+          );
         }
         type = value == 'folder' ? FileItemType.folder : FileItemType.file;
       case 'size':
         final parsed = _parseSize(value);
         if (parsed == null) {
-          return FilterQueryParseResult(error: 'Invalid size filter');
+          return FilterQueryParseResult(
+            error: t.search.filterErrors.invalidSize,
+          );
         }
         size = parsed;
       case 'modified':
         if (!filterDateValues.contains(value)) {
           return FilterQueryParseResult(
-            error: 'Unknown modified value: $value',
+            error: t.search.filterErrors.unknownModified(value: value),
           );
         }
         modified = DateFilter(value);
       case 'created':
         if (!filterDateValues.contains(value)) {
-          return FilterQueryParseResult(error: 'Unknown created value: $value');
+          return FilterQueryParseResult(
+            error: t.search.filterErrors.unknownCreated(value: value),
+          );
         }
         created = DateFilter(value);
       case 'hidden':
         if (!filterBooleanValues.contains(value)) {
-          return FilterQueryParseResult(error: 'Hidden must be true or false');
+          return FilterQueryParseResult(
+            error: t.search.filterErrors.hiddenBoolean,
+          );
         }
         hidden = value == 'true';
     }
@@ -548,14 +563,14 @@ List<String> _valuesForKey(String key) {
 
 String _detailForKey(String key) {
   return switch (key) {
-    'name' => 'file name contains text',
-    'kind' => 'category such as image or code',
-    'ext' => 'extension list such as dart,png',
-    'type' => 'file or folder',
-    'size' => 'comparison such as >10mb',
-    'modified' => 'today, week, month or year',
-    'created' => 'today, week, month or year',
-    'hidden' => 'true or false',
+    'name' => t.search.filterDetails.name,
+    'kind' => t.search.filterDetails.kind,
+    'ext' => t.search.filterDetails.ext,
+    'type' => t.search.filterDetails.type,
+    'size' => t.search.filterDetails.size,
+    'modified' => t.search.filterDetails.modified,
+    'created' => t.search.filterDetails.created,
+    'hidden' => t.search.filterDetails.hidden,
     _ => '',
   };
 }
