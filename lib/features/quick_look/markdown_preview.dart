@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -93,7 +94,6 @@ class _RenderedMarkdownState extends State<_RenderedMarkdown> {
   void initState() {
     super.initState();
     final urls = _remoteImageUrls(_md);
-    log.warn('ql-diag', 'remote urls found: ${urls.length} -> $urls');
     if (urls.isEmpty) {
       _ready = true;
     } else {
@@ -109,15 +109,6 @@ class _RenderedMarkdownState extends State<_RenderedMarkdown> {
               .get(Uri.parse(url))
               .timeout(const Duration(seconds: 10));
           if (res.statusCode == 200) _remote[url] = res.bodyBytes;
-          final bytes = res.bodyBytes;
-          final head = String.fromCharCodes(bytes.take(80));
-          final svg = _looksLikeSvg(bytes);
-          final sz = svg ? _svgIntrinsicSize(bytes) : null;
-          log.warn(
-            'ql-diag',
-            'fetch status=${res.statusCode} len=${bytes.length} '
-                'isSvg=$svg size=$sz head=$head',
-          );
         } catch (e, st) {
           log.warn(
             'quick-look',
@@ -142,9 +133,29 @@ class _RenderedMarkdownState extends State<_RenderedMarkdown> {
 const _empty = SizedBox.shrink();
 
 final _imgTag = RegExp(r'<img\b[^>]*>', caseSensitive: false);
-final _imgAttr = RegExp(
-  '''(\\w+)\\s*=\\s*("([^"]*)"|'([^']*)')''',
+final _htmlAttr = RegExp(
+  '''([\\w:-]+)\\s*=\\s*("([^"]*)"|'([^']*)')''',
   caseSensitive: false,
+);
+final _pBlock = RegExp(
+  r'<p\b[^>]*>(.*?)</p>',
+  caseSensitive: false,
+  dotAll: true,
+);
+final _aPair = RegExp(
+  r'<a\b([^>]*)>(.*?)</a>',
+  caseSensitive: false,
+  dotAll: true,
+);
+final _boldPair = RegExp(
+  r'<(b|strong)\b[^>]*>(.*?)</\1>',
+  caseSensitive: false,
+  dotAll: true,
+);
+final _emPair = RegExp(
+  r'<(i|em)\b[^>]*>(.*?)</\1>',
+  caseSensitive: false,
+  dotAll: true,
 );
 final _brTag = RegExp(r'<br\s*/?>', caseSensitive: false);
 // Real HTML tags only: a tag name after `<` (or `</`). Leaves CommonMark
@@ -163,9 +174,26 @@ final _fence = RegExp(r'^\s*(```|~~~)');
 /// blocks and inline code spans are left untouched.
 String _sanitizeHtml(String src) {
   final out = StringBuffer();
+  var normal = StringBuffer();
   var inFence = false;
+
+  void flushNormal() {
+    final rewritten = _rewriteHtmlLinkParagraphs(normal.toString());
+    normal = StringBuffer();
+    for (final line in rewritten.split('\n')) {
+      final parts = line.split('`');
+      final sb = StringBuffer();
+      for (var i = 0; i < parts.length; i++) {
+        if (i > 0) sb.write('`');
+        sb.write(i.isEven ? _stripHtml(parts[i]) : parts[i]);
+      }
+      out.writeln(sb.toString());
+    }
+  }
+
   for (final line in src.split('\n')) {
     if (_fence.hasMatch(line)) {
+      flushNormal();
       inFence = !inFence;
       out.writeln(line);
       continue;
@@ -174,18 +202,58 @@ String _sanitizeHtml(String src) {
       out.writeln(line);
       continue;
     }
-    // Split on backticks so inline code (e.g. `<div>`) is preserved verbatim:
-    // even segments are outside code, odd segments inside.
-    final parts = line.split('`');
-    final sb = StringBuffer();
-    for (var i = 0; i < parts.length; i++) {
-      if (i > 0) sb.write('`');
-      sb.write(i.isEven ? _stripHtml(parts[i]) : parts[i]);
-    }
-    out.writeln(sb.toString());
+    normal.writeln(line);
   }
+  flushNormal();
 
   return out.toString();
+}
+
+String _rewriteHtmlLinkParagraphs(String src) {
+  return src.replaceAllMapped(_pBlock, (m) {
+    final body = m[1]!;
+    if (!_aPair.hasMatch(body) || _imgTag.hasMatch(body)) return m[0]!;
+
+    final inline = _htmlInlineToMarkdown(body)
+        .split('\n')
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .join(' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    if (inline.isEmpty) return '';
+
+    return '\n\n$inline\n\n';
+  });
+}
+
+String _htmlInlineToMarkdown(String src) {
+  var out = src.replaceAllMapped(_aPair, (m) {
+    final attrs = m[1]!;
+    final href = _attrValue(attrs, 'href');
+    final text = _htmlInlineToMarkdown(m[2]!).trim();
+    if (href == null || href.isEmpty || text.isEmpty) return text;
+
+    return '[$text]($href)';
+  });
+  out = out.replaceAllMapped(
+    _boldPair,
+    (m) => '**${_htmlInlineToMarkdown(m[2]!).trim()}**',
+  );
+  out = out.replaceAllMapped(
+    _emPair,
+    (m) => '*${_htmlInlineToMarkdown(m[2]!).trim()}*',
+  );
+
+  return out.replaceAll(_brTag, '\n').replaceAll(_htmlTag, '');
+}
+
+String? _attrValue(String attrs, String name) {
+  for (final a in _htmlAttr.allMatches(attrs)) {
+    if (a[1]!.toLowerCase() == name) return a[3] ?? a[4] ?? '';
+  }
+
+  return null;
 }
 
 String _stripHtml(String segment) {
@@ -193,7 +261,7 @@ String _stripHtml(String segment) {
       .replaceAllMapped(_imgTag, (m) {
         String? imgSrc;
         String alt = '';
-        for (final a in _imgAttr.allMatches(m[0]!)) {
+        for (final a in _htmlAttr.allMatches(m[0]!)) {
           final name = a[1]!.toLowerCase();
           final value = a[3] ?? a[4] ?? '';
           if (name == 'src') {
@@ -342,32 +410,40 @@ Widget _fit(Widget child) {
 
 Widget _bytesImage(Uint8List bytes, {required bool isSvg}) {
   if (isSvg) {
-    // SVGs have no pixel size, so an unconstrained SvgPicture stretches to fill
-    // the pane (a tiny badge becomes full-width). Render at the intrinsic size
-    // from width/height or viewBox, scaled down only when wider than the pane.
     final size = _svgIntrinsicSize(bytes);
+    final svgBytes = _normalizeSvgForFlutter(bytes);
 
     return LayoutBuilder(
       builder: (context, c) {
         final maxW = c.maxWidth.isFinite ? c.maxWidth : double.infinity;
-        double? w;
-        double? h;
-        if (size != null && size.width > 0 && size.height > 0) {
-          w = size.width;
-          h = size.height;
-          if (w > maxW) {
-            h = h * (maxW / w);
-            w = maxW;
-          }
+        var w = size?.width ?? 240;
+        var h = size?.height ?? 160;
+        if (w <= 0 || h <= 0) {
+          w = 240;
+          h = 160;
+        }
+        if (w > maxW) {
+          h = h * (maxW / w);
+          w = maxW;
+        }
+        if (!w.isFinite || !h.isFinite) {
+          w = 240;
+          h = 160;
         }
 
-        return SvgPicture.memory(
-          bytes,
+        return SizedBox(
           width: w,
           height: h,
-          fit: BoxFit.contain,
-          alignment: Alignment.centerLeft,
-          placeholderBuilder: (_) => _empty,
+          child: ClipRect(
+            child: SvgPicture.memory(
+              svgBytes,
+              width: w,
+              height: h,
+              fit: BoxFit.contain,
+              alignment: Alignment.centerLeft,
+              placeholderBuilder: (_) => _empty,
+            ),
+          ),
         );
       },
     );
@@ -385,7 +461,35 @@ Widget _bytesImage(Uint8List bytes, {required bool isSvg}) {
 bool _looksLikeSvg(Uint8List bytes) {
   final head = String.fromCharCodes(bytes.take(256)).trimLeft().toLowerCase();
 
-  return head.startsWith('<?xml') || head.startsWith('<svg');
+  return head.startsWith('<?xml') || head.contains('<svg');
+}
+
+Uint8List _normalizeSvgForFlutter(Uint8List bytes) {
+  final svg = utf8.decode(bytes, allowMalformed: true);
+  final normalized = svg.replaceAllMapped(_textTag, (m) {
+    final tag = m[0]!;
+    final scale = _scaleTransform.firstMatch(tag);
+    if (scale == null) return tag;
+
+    final factor = double.tryParse(scale[2]!);
+    if (factor == null || factor <= 0) return tag;
+
+    final fontSize =
+        _attrNumber(tag, 'font-size') ?? _inheritedFontSize(svg, m.start);
+    var out = tag.replaceFirst(scale[0]!, '');
+    out = _scaleAttr(out, 'x', factor);
+    out = _scaleAttr(out, 'y', factor);
+    out = _scaleAttr(out, 'dx', factor);
+    out = _scaleAttr(out, 'dy', factor);
+    out = _scaleAttr(out, 'textLength', factor);
+    if (fontSize != null) {
+      out = _setAttr(out, 'font-size', _formatSvgNumber(fontSize * factor));
+    }
+
+    return out;
+  });
+
+  return Uint8List.fromList(utf8.encode(normalized));
 }
 
 final _svgTag = RegExp(r'<svg[^>]*>', caseSensitive: false);
@@ -393,6 +497,54 @@ final _viewBox = RegExp(
   '''viewbox\\s*=\\s*["']([0-9.eE+\\s,-]+)''',
   caseSensitive: false,
 );
+final _textTag = RegExp(r'<text\b[^>]*>', caseSensitive: false);
+final _scaleTransform = RegExp(
+  r'''\s*transform\s*=\s*(["'])\s*scale\(\s*([0-9]*\.?[0-9]+)\s*\)\s*\1''',
+  caseSensitive: false,
+);
+
+double? _attrNumber(String tag, String name) {
+  final m = RegExp(
+    '$name\\s*=\\s*["\']\\s*([0-9.]+)',
+    caseSensitive: false,
+  ).firstMatch(tag);
+
+  return m == null ? null : double.tryParse(m[1]!);
+}
+
+double? _inheritedFontSize(String svg, int offset) {
+  final before = svg.substring(0, offset);
+  final matches = RegExp(
+    'font-size\\s*=\\s*["\']\\s*([0-9.]+)',
+    caseSensitive: false,
+  ).allMatches(before);
+  if (matches.isEmpty) return null;
+
+  return double.tryParse(matches.last[1]!);
+}
+
+String _scaleAttr(String tag, String name, double factor) {
+  return tag.replaceAllMapped(
+    RegExp('$name\\s*=\\s*(["\'])\\s*([0-9.]+)\\s*\\1', caseSensitive: false),
+    (m) =>
+        '$name=${m[1]}${_formatSvgNumber(double.parse(m[2]!) * factor)}${m[1]}',
+  );
+}
+
+String _setAttr(String tag, String name, String value) {
+  final attr = RegExp('$name\\s*=\\s*(["\']).*?\\1', caseSensitive: false);
+  if (attr.hasMatch(tag)) {
+    return tag.replaceFirstMapped(attr, (m) => '$name=${m[1]}$value${m[1]}');
+  }
+
+  return tag.replaceFirst('>', ' $name="$value">');
+}
+
+String _formatSvgNumber(double value) {
+  final fixed = value.toStringAsFixed(6);
+
+  return fixed.replaceFirst(RegExp(r'\.?0+$'), '');
+}
 
 /// Reads an SVG's intrinsic size from the root `<svg>` tag: explicit
 /// width/height (units stripped) when present, otherwise the viewBox extent.
@@ -403,11 +555,14 @@ Size? _svgIntrinsicSize(Uint8List bytes) {
 
   double? dim(String name) {
     final m = RegExp(
-      '$name\\s*=\\s*["\']\\s*([0-9.]+)',
+      '$name\\s*=\\s*["\']\\s*([0-9.]+)\\s*([a-z%]*)',
       caseSensitive: false,
     ).firstMatch(tag);
+    if (m == null) return null;
+    final unit = m.group(2)?.toLowerCase() ?? '';
+    if (unit.isNotEmpty && unit != 'px') return null;
 
-    return m == null ? null : double.tryParse(m.group(1)!);
+    return double.tryParse(m.group(1)!);
   }
 
   final w = dim('width');

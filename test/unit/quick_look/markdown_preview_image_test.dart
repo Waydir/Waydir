@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -81,6 +82,49 @@ void main() {
     );
   });
 
+  testWidgets('sizes SVG images from viewBox when dimensions are percentages', (
+    tester,
+  ) async {
+    final dir = Directory.systemTemp.createTempSync('md_preview_test');
+    addTearDown(() => dir.deleteSync(recursive: true));
+
+    final svg = Uri.dataFromString(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" '
+      'viewBox="0 0 240 60"><rect width="240" height="60"/></svg>',
+      mimeType: 'image/svg+xml',
+    );
+    final md = File('${dir.path}/doc.md')
+      ..writeAsStringSync('![badge]($svg)\n');
+
+    await _pumpPreview(tester, md.path);
+
+    final picture = tester.widget<SvgPicture>(find.byType(SvgPicture));
+    expect(picture.width, 240);
+    expect(picture.height, 60);
+  });
+
+  testWidgets('renders a linked shields-style SVG at intrinsic size', (
+    tester,
+  ) async {
+    final dir = Directory.systemTemp.createTempSync('md_preview_test');
+    addTearDown(() => dir.deleteSync(recursive: true));
+    final url = Uri.dataFromString(_shieldsSvg, mimeType: 'image/svg+xml');
+    final md = File('${dir.path}/doc.md')
+      ..writeAsStringSync('[![Flutter]($url)](https://flutter.dev)\n');
+
+    await _pumpPreview(tester, md.path);
+
+    expect(find.byType(SvgPicture), findsOneWidget);
+    final picture = tester.widget<SvgPicture>(find.byType(SvgPicture));
+    final loader = picture.bytesLoader as SvgBytesLoader;
+    final svg = utf8.decode(loader.bytes);
+    expect(tester.getSize(find.byType(SvgPicture)), const Size(107, 20));
+    expect(svg, isNot(contains('transform="scale(.1)"')));
+    expect(svg, contains('font-size="11"'));
+    expect(svg, contains('x="41.5"'));
+    expect(svg, contains('y="14"'));
+  });
+
   testWidgets('renders an image embedded as an HTML <img> tag inside a '
       'block (div/p), which the parser would otherwise drop', (tester) async {
     final dir = Directory.systemTemp.createTempSync('md_preview_test');
@@ -106,6 +150,35 @@ void main() {
       isNotEmpty,
       reason: 'HTML <img> should be converted to a rendered image',
     );
+  });
+
+  testWidgets('renders multiline HTML link paragraphs as inline links', (
+    tester,
+  ) async {
+    final dir = Directory.systemTemp.createTempSync('md_preview_test');
+    addTearDown(() => dir.deleteSync(recursive: true));
+
+    final md = File('${dir.path}/readme.md')
+      ..writeAsStringSync(
+        '<p>\n'
+        '  <a href="https://github.com/Waydir/Waydir/releases">'
+        '<b>Download</b></a>\n'
+        '  -\n'
+        '  <a href="#install"><b>Install</b></a>\n'
+        '  -\n'
+        '  <a href="docs/plugins.md"><b>Plugins</b></a>\n'
+        '</p>\n',
+      );
+
+    await _pumpPreview(tester, md.path);
+
+    final shown = tester
+        .widgetList<SelectableText>(find.byType(SelectableText))
+        .map((s) => s.textSpan?.toPlainText() ?? s.data ?? '')
+        .join(' ');
+
+    expect(shown, contains('Download - Install - Plugins'));
+    expect(shown, isNot(contains('•')));
   });
 
   testWidgets('strips leaked HTML tags but keeps their text and code spans', (
@@ -155,3 +228,15 @@ final List<int> _onePixelPng = <int>[
   0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE,
   0x42, 0x60, 0x82,
 ];
+
+const _shieldsSvg =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="107" height="20" '
+    'role="img" aria-label="Flutter: 3.35+"><title>Flutter: 3.35+</title>'
+    '<g shape-rendering="crispEdges"><rect width="64" height="20" '
+    'fill="#555"/><rect x="64" width="43" height="20" fill="#02569b"/></g>'
+    '<g fill="#fff" text-anchor="middle" '
+    'font-family="Verdana,Geneva,DejaVu Sans,sans-serif" '
+    'text-rendering="geometricPrecision" font-size="110">'
+    '<text x="415" y="140" textLength="370" transform="scale(.1)">'
+    'Flutter</text><text x="845" y="140" textLength="330" '
+    'transform="scale(.1)">3.35+</text></g></svg>';
