@@ -157,6 +157,11 @@ final _emPair = RegExp(
   caseSensitive: false,
   dotAll: true,
 );
+final _htmlBlockPair = RegExp(
+  r'<(div|p)\b([^>]*)>(.*?)</\1>',
+  caseSensitive: false,
+  dotAll: true,
+);
 final _brTag = RegExp(r'<br\s*/?>', caseSensitive: false);
 // Real HTML tags only: a tag name after `<` (or `</`). Leaves CommonMark
 // autolinks like `<https://…>` and `<a@b.com>` untouched (no `://`/`@` here).
@@ -178,7 +183,8 @@ String _sanitizeHtml(String src) {
   var inFence = false;
 
   void flushNormal() {
-    final rewritten = _rewriteHtmlLinkParagraphs(normal.toString());
+    final aligned = _preserveHtmlAlignment(normal.toString());
+    final rewritten = _rewriteHtmlLinkParagraphs(aligned);
     normal = StringBuffer();
     for (final line in rewritten.split('\n')) {
       final parts = line.split('`');
@@ -207,6 +213,31 @@ String _sanitizeHtml(String src) {
   flushNormal();
 
   return out.toString();
+}
+
+const _centerStart = '@@WAYDIR_CENTER_START@@';
+const _centerEnd = '@@WAYDIR_CENTER_END@@';
+
+String _preserveHtmlAlignment(String src) {
+  return src.replaceAllMapped(_htmlBlockPair, (m) {
+    final attrs = m[2]!;
+    if (!_isCenteredHtml(attrs)) return m[0]!;
+
+    return '\n$_centerStart\n${m[3]!}\n$_centerEnd\n';
+  });
+}
+
+bool _isCenteredHtml(String attrs) {
+  final align = _attrValue(attrs, 'align')?.trim().toLowerCase();
+  if (align == 'center') return true;
+  final style = _attrValue(attrs, 'style')?.toLowerCase() ?? '';
+
+  return style.split(';').any((part) {
+    final pieces = part.split(':');
+    if (pieces.length != 2) return false;
+
+    return pieces[0].trim() == 'text-align' && pieces[1].trim() == 'center';
+  });
 }
 
 String _rewriteHtmlLinkParagraphs(String src) {
@@ -353,45 +384,119 @@ class _MarkdownBody extends StatelessWidget {
     final baseFont = context.txt.row.copyWith(height: 1.5, color: AppColors.fg);
     final mutedFont = baseFont.copyWith(color: AppColors.fgMuted);
     final monoFont = context.txt.code.copyWith(color: AppColors.fg);
+    final styleSheet = MarkdownStyleSheet(
+      p: baseFont,
+      h1: context.txt.heading.copyWith(height: 1.3),
+      h2: context.txt.dialogTitle.copyWith(height: 1.3),
+      h3: context.txt.bodyEmphasis.copyWith(color: AppColors.fgMuted),
+      listBullet: baseFont,
+      em: baseFont.copyWith(fontStyle: FontStyle.italic),
+      strong: baseFont.copyWith(fontWeight: FontWeight.w600),
+      code: monoFont.copyWith(backgroundColor: AppColors.bgInput),
+      codeblockDecoration: BoxDecoration(color: AppColors.bgInput),
+      codeblockPadding: const EdgeInsets.all(10),
+      blockSpacing: 10,
+      blockquote: mutedFont,
+      blockquoteDecoration: BoxDecoration(
+        color: AppColors.bgInput,
+        border: Border(
+          left: BorderSide(color: AppColors.borderColor, width: 3),
+        ),
+      ),
+      blockquotePadding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+      a: baseFont.copyWith(
+        color: AppColors.accent,
+        decoration: TextDecoration.underline,
+      ),
+      horizontalRuleDecoration: BoxDecoration(
+        border: Border(top: BorderSide(color: AppColors.bgDivider)),
+      ),
+    );
+    final children = _markdownSegments(md)
+        .map(
+          (segment) => _markdownContent(
+            segment.text,
+            segment.centered ? _centeredStyleSheet(styleSheet) : styleSheet,
+            centered: segment.centered,
+          ),
+        )
+        .toList();
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 18, 24, 18),
-      child: MarkdownBody(
-        data: md,
-        selectable: true,
-        onTapLink: (_, href, _) => _openLink(href),
-        imageBuilder: _buildImage,
-        styleSheet: MarkdownStyleSheet(
-          p: baseFont,
-          h1: context.txt.heading.copyWith(height: 1.3),
-          h2: context.txt.dialogTitle.copyWith(height: 1.3),
-          h3: context.txt.bodyEmphasis.copyWith(color: AppColors.fgMuted),
-          listBullet: baseFont,
-          em: baseFont.copyWith(fontStyle: FontStyle.italic),
-          strong: baseFont.copyWith(fontWeight: FontWeight.w600),
-          code: monoFont.copyWith(backgroundColor: AppColors.bgInput),
-          codeblockDecoration: BoxDecoration(color: AppColors.bgInput),
-          codeblockPadding: const EdgeInsets.all(10),
-          blockSpacing: 10,
-          blockquote: mutedFont,
-          blockquoteDecoration: BoxDecoration(
-            color: AppColors.bgInput,
-            border: Border(
-              left: BorderSide(color: AppColors.borderColor, width: 3),
-            ),
-          ),
-          blockquotePadding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-          a: baseFont.copyWith(
-            color: AppColors.accent,
-            decoration: TextDecoration.underline,
-          ),
-          horizontalRuleDecoration: BoxDecoration(
-            border: Border(top: BorderSide(color: AppColors.bgDivider)),
-          ),
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
       ),
     );
   }
+
+  Widget _markdownContent(
+    String data,
+    MarkdownStyleSheet styleSheet, {
+    required bool centered,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      child: MarkdownBody(
+        data: data,
+        selectable: true,
+        fitContent: !centered,
+        onTapLink: (_, href, _) => _openLink(href),
+        imageBuilder: _buildImage,
+        styleSheet: styleSheet,
+      ),
+    );
+  }
+}
+
+MarkdownStyleSheet _centeredStyleSheet(MarkdownStyleSheet styleSheet) {
+  return styleSheet.copyWith(
+    textAlign: WrapAlignment.center,
+    h1Align: WrapAlignment.center,
+    h2Align: WrapAlignment.center,
+    h3Align: WrapAlignment.center,
+    h4Align: WrapAlignment.center,
+    h5Align: WrapAlignment.center,
+    h6Align: WrapAlignment.center,
+    unorderedListAlign: WrapAlignment.center,
+    orderedListAlign: WrapAlignment.center,
+    blockquoteAlign: WrapAlignment.center,
+    codeblockAlign: WrapAlignment.center,
+  );
+}
+
+typedef _MarkdownSegment = ({String text, bool centered});
+
+List<_MarkdownSegment> _markdownSegments(String md) {
+  final segments = <_MarkdownSegment>[];
+  var centered = false;
+  var buffer = StringBuffer();
+
+  void flush() {
+    final text = buffer.toString();
+    buffer = StringBuffer();
+    if (text.trim().isEmpty) return;
+    segments.add((text: text, centered: centered));
+  }
+
+  for (final line in md.split('\n')) {
+    final trimmed = line.trim();
+    if (trimmed == _centerStart) {
+      flush();
+      centered = true;
+      continue;
+    }
+    if (trimmed == _centerEnd) {
+      flush();
+      centered = false;
+      continue;
+    }
+    buffer.writeln(line);
+  }
+  flush();
+
+  return segments;
 }
 
 /// Keeps an image within the available width while preserving aspect ratio.

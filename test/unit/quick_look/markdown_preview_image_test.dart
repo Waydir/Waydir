@@ -181,6 +181,38 @@ void main() {
     expect(shown, isNot(contains('•')));
   });
 
+  testWidgets('centers content from centered HTML blocks', (tester) async {
+    final dir = Directory.systemTemp.createTempSync('md_preview_test');
+    addTearDown(() => dir.deleteSync(recursive: true));
+
+    final md = File('${dir.path}/readme.md')
+      ..writeAsStringSync(
+        '<div align="center">\n'
+        '\n'
+        '# Waydir\n'
+        '\n'
+        '![Flutter](${Uri.dataFromString(_shieldsSvg, mimeType: 'image/svg+xml')})\n'
+        '\n'
+        '<p style="text-align: center;">\n'
+        '  <a href="#install"><b>Install</b></a>\n'
+        '</p>\n'
+        '\n'
+        '</div>\n',
+      );
+
+    await _pumpPreview(tester, md.path);
+
+    final title = find.byWidgetPredicate(
+      (widget) =>
+          widget is SelectableText &&
+          (widget.textSpan?.toPlainText() ?? widget.data ?? '') == 'Waydir',
+    );
+    expect(title, findsOneWidget);
+    expect(tester.getCenter(title).dx, closeTo(400, 40));
+    expect(find.byType(SvgPicture), findsOneWidget);
+    expect(tester.getCenter(find.byType(SvgPicture)).dx, closeTo(400, 40));
+  });
+
   testWidgets('strips leaked HTML tags but keeps their text and code spans', (
     tester,
   ) async {
