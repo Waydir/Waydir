@@ -37,6 +37,20 @@ void main() {
     }
   });
 
+  group('Markdown routing', () {
+    test('markdown and binary sets are disjoint', () {
+      expect(markdownExts.intersection(binaryExts), isEmpty);
+    });
+
+    test('.md and .markdown route to markdown preview', () {
+      expect(markdownExts.contains('md'), isTrue);
+      expect(markdownExts.contains('markdown'), isTrue);
+      expect(binaryExts.contains('md'), isFalse);
+      expect(imageExts.contains('md'), isFalse);
+      expect(pdfExts.contains('md'), isFalse);
+    });
+  });
+
   group('Binary fallback routing', () {
     final archiveTypes = ['zip', 'tar', '7z', 'gz', 'bz2', 'rar', 'xz'];
     final mediaTypes = ['mp3', 'mp4', 'mkv', 'wav', 'flac', 'ogg', 'aac'];

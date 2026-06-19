@@ -8,6 +8,8 @@ const imageExts = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'};
 
 const pdfExts = {'pdf'};
 
+const markdownExts = {'md', 'markdown'};
+
 /// Extensions that are never useful to preview as text — route straight to
 /// properties without reading the file.
 const binaryExts = {
