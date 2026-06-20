@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-06-20
+
 ### Added
 - Quick Look: Markdown preview for `.md` and `.markdown` files.
 - More shortcuts are now customizable: Delete, Rename, New Folder, and dual-pane Copy/Move.
