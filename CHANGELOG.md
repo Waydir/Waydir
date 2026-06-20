@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Quick Look: Markdown preview for `.md` and `.markdown` files.
+- More shortcuts are now customizable: Delete, Rename, New Folder, and dual-pane Copy/Move.
+- Customizable shortcut for permanent delete (defaults to `Ctrl+Delete`), now separate from move-to-trash.
 - Resizable columns in the file list (toggle in Appearance).
 - Collapsible sidebar sections.
 - Terminal: configurable copy/paste modifier (Standard `Ctrl+C`/`Ctrl+V` vs. `Ctrl+Shift+C`/`Ctrl+Shift+V`, platform-aware default) in Terminal preferences.

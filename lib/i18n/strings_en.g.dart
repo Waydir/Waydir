@@ -889,6 +889,9 @@ class Translations$keybindings$en {
 	/// en: 'Delete'
 	String get delete => 'Delete';
 
+	/// en: 'Delete permanently'
+	String get deletePermanent => 'Delete permanently';
+
 	/// en: 'Rename'
 	String get rename => 'Rename';
 
@@ -3873,6 +3876,7 @@ extension on Translations {
 			'keybindings.cut' => 'Cut',
 			'keybindings.paste' => 'Paste',
 			'keybindings.delete' => 'Delete',
+			'keybindings.deletePermanent' => 'Delete permanently',
 			'keybindings.rename' => 'Rename',
 			'keybindings.newFolder' => 'New folder',
 			'keybindings.dualCopy' => 'Copy to other pane',
@@ -3925,9 +3929,9 @@ extension on Translations {
 			'quickLook.items' => ({required Object count}) => '${count} items',
 			'quickLook.pdfPages' => ({required Object count}) => '${count} pages',
 			'quickLook.sectionDetails' => 'Details',
-			'quickLook.info' => 'Information',
 			_ => null,
 		} ?? switch (path) {
+			'quickLook.info' => 'Information',
 			'quickLook.name' => 'Name',
 			'quickLook.type' => 'Type',
 			'quickLook.size' => 'Size',

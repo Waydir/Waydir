@@ -425,8 +425,14 @@ mixin _WaydirKeyboardMixin
       return KeyEventResult.handled;
     }
 
-    if (AppShortcuts.matchesIgnoreShift('delete', key)) {
-      _confirmAndDelete(forcePermanent: shift);
+    if (AppShortcuts.matches('delete_permanent', key)) {
+      _confirmAndDelete(forcePermanent: true);
+
+      return KeyEventResult.handled;
+    }
+
+    if (AppShortcuts.matches('delete', key)) {
+      _confirmAndDelete(forceTrash: true);
 
       return KeyEventResult.handled;
     }

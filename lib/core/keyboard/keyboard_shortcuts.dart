@@ -566,21 +566,25 @@ class AppShortcuts {
       label: () => '',
       group: ShortcutGroup.fileOps,
       key: LogicalKeyboardKey.delete,
-      editable: false,
+    ),
+    ShortcutDef(
+      id: 'delete_permanent',
+      label: () => '',
+      group: ShortcutGroup.fileOps,
+      key: LogicalKeyboardKey.delete,
+      ctrl: true,
     ),
     ShortcutDef(
       id: 'rename',
       label: () => '',
       group: ShortcutGroup.fileOps,
       key: LogicalKeyboardKey.f2,
-      editable: false,
     ),
     ShortcutDef(
       id: 'new_folder',
       label: () => '',
       group: ShortcutGroup.fileOps,
       key: LogicalKeyboardKey.f7,
-      editable: false,
     ),
     ShortcutDef(
       id: 'dual_copy',
@@ -588,7 +592,6 @@ class AppShortcuts {
       hint: () => t.keybindings.dualHint,
       group: ShortcutGroup.fileOps,
       key: LogicalKeyboardKey.f5,
-      editable: false,
     ),
     ShortcutDef(
       id: 'dual_move',
@@ -596,7 +599,6 @@ class AppShortcuts {
       hint: () => t.keybindings.dualHint,
       group: ShortcutGroup.fileOps,
       key: LogicalKeyboardKey.f6,
-      editable: false,
     ),
     ShortcutDef(
       id: 'select_all',

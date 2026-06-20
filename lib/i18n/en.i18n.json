@@ -537,6 +537,7 @@
     "cut": "Cut",
     "paste": "Paste",
     "delete": "Delete",
+    "deletePermanent": "Delete permanently",
     "rename": "Rename",
     "newFolder": "New folder",
     "dualCopy": "Copy to other pane",

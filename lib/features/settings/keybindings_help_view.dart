@@ -113,6 +113,7 @@ String _labelFor(ShortcutDef s) => switch (s.id) {
   'cut' => t.keybindings.cut,
   'paste' => t.keybindings.paste,
   'delete' => t.keybindings.delete,
+  'delete_permanent' => t.keybindings.deletePermanent,
   'rename' => t.keybindings.rename,
   'new_folder' => t.keybindings.newFolder,
   'dual_copy' => t.keybindings.dualCopy,

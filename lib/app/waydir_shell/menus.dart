@@ -321,7 +321,7 @@ mixin _WaydirMenuMixin
           icon: WaydirIconsRegular.pencilSimple,
           label: t.menu.rename,
           action: 'rename',
-          shortcut: 'F2',
+          shortcut: AppShortcuts.getById('rename').displayKeys,
         ),
       if (count >= 2)
         ContextMenuItem(
