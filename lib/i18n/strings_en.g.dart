@@ -1152,6 +1152,15 @@ class Translations$quickLook$en {
 
 	/// en: 'Close'
 	String get hintClose => 'Close';
+
+	/// en: 'View source'
+	String get viewSource => 'View source';
+
+	/// en: 'View rendered'
+	String get viewRendered => 'View rendered';
+
+	/// en: 'Save changes to preview'
+	String get saveBeforePreview => 'Save changes to preview';
 }
 
 // Path: toast
@@ -3948,6 +3957,9 @@ extension on Translations {
 			'quickLook.sectionText' => 'Text',
 			'quickLook.hintSwitchFile' => 'Switch file',
 			'quickLook.hintClose' => 'Close',
+			'quickLook.viewSource' => 'View source',
+			'quickLook.viewRendered' => 'View rendered',
+			'quickLook.saveBeforePreview' => 'Save changes to preview',
 			'toast.copiedItems' => ({required Object count}) => 'Copied ${count} items',
 			'toast.cutItems' => ({required Object count}) => 'Cut ${count} items',
 			'toast.selectionSaved' => ({required Object count, required Object path}) => 'Saved ${count} names to ${path}',

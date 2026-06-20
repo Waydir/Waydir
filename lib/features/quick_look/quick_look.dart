@@ -14,6 +14,7 @@ import '../../ui/theme/app_text_styles.dart';
 import 'code_editor.dart';
 import 'image_preview.dart';
 import 'info_panel.dart';
+import 'markdown_preview.dart';
 import 'pdf_preview.dart';
 import 'quick_look_common.dart';
 import 'quick_look_io.dart';
@@ -62,6 +63,7 @@ class _QuickLookState extends State<_QuickLook> {
   final _editorController = CodeEditorController();
   bool _compact = true;
   bool _showInfo = true;
+  bool _markdownRendered = true;
   String? _presentationKey;
   DateTime? _lastCursorRepeatAt;
 
@@ -191,7 +193,9 @@ class _QuickLookState extends State<_QuickLook> {
     if (entry == null || entry.type == FileItemType.folder) return true;
     final ext = entry.extension;
 
-    return !imageExts.contains(ext) && !pdfExts.contains(ext);
+    return !imageExts.contains(ext) &&
+        !pdfExts.contains(ext) &&
+        !markdownExts.contains(ext);
   }
 
   void _setCompact(bool value) {
@@ -202,10 +206,14 @@ class _QuickLookState extends State<_QuickLook> {
     });
   }
 
+  void _toggleMarkdownRendered() =>
+      setState(() => _markdownRendered = !_markdownRendered);
+
   void _syncPresentation(FileEntry? entry) {
     final key = entry?.realPath;
     if (_presentationKey == key) return;
     _presentationKey = key;
+    _markdownRendered = true;
     _setCompact(_defaultCompact(entry));
   }
 
@@ -264,6 +272,7 @@ class _QuickLookState extends State<_QuickLook> {
                 showInfo: true,
                 onToggleInfo: () {},
                 onClose: _requestClose,
+                editorController: _editorController,
               ),
               Container(height: 1, color: AppColors.bgDivider),
               Expanded(
@@ -287,6 +296,7 @@ class _QuickLookState extends State<_QuickLook> {
                 multiCount: entries.length,
                 onToggleInfo: () {},
                 onClose: _requestClose,
+                editorController: _editorController,
               ),
               Container(height: 1, color: AppColors.bgDivider),
               Expanded(
@@ -313,6 +323,7 @@ class _QuickLookState extends State<_QuickLook> {
                   showInfo: true,
                   onToggleInfo: () {},
                   onClose: _requestClose,
+                  editorController: _editorController,
                 ),
                 Container(height: 1, color: AppColors.bgDivider),
                 Expanded(
@@ -336,6 +347,9 @@ class _QuickLookState extends State<_QuickLook> {
               showInfo: _showInfo,
               onToggleInfo: () => setState(() => _showInfo = !_showInfo),
               onClose: _requestClose,
+              editorController: _editorController,
+              markdownRendered: _markdownRendered,
+              onToggleMarkdownView: _toggleMarkdownRendered,
             ),
             Container(height: 1, color: AppColors.bgDivider),
             Expanded(
@@ -345,6 +359,7 @@ class _QuickLookState extends State<_QuickLook> {
                 editorController: _editorController,
                 showInfo: _showInfo,
                 onCompactChanged: _setCompact,
+                markdownRendered: _markdownRendered,
               ),
             ),
           ],
@@ -451,6 +466,9 @@ class _Header extends StatelessWidget {
   final VoidCallback onToggleInfo;
   final VoidCallback onClose;
   final int? multiCount;
+  final CodeEditorController editorController;
+  final bool markdownRendered;
+  final VoidCallback? onToggleMarkdownView;
 
   const _Header({
     required this.entry,
@@ -458,7 +476,10 @@ class _Header extends StatelessWidget {
     required this.showInfo,
     required this.onToggleInfo,
     required this.onClose,
+    required this.editorController,
     this.multiCount,
+    this.markdownRendered = true,
+    this.onToggleMarkdownView,
   });
 
   @override
@@ -469,6 +490,11 @@ class _Header extends StatelessWidget {
         ? t.quickLook.items(count: multiCount!)
         : e?.name ?? t.quickLook.noSelection;
     final hasPreview = !multi && e != null && !compact;
+    final isMarkdown =
+        !multi &&
+        e != null &&
+        markdownExts.contains(e.extension) &&
+        onToggleMarkdownView != null;
 
     return Container(
       height: 46,
@@ -496,6 +522,29 @@ class _Header extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
+          if (isMarkdown) ...[
+            ValueListenableBuilder<bool>(
+              valueListenable: editorController.dirty,
+              builder: (context, dirty, _) {
+                final blocked = !markdownRendered && dirty;
+
+                return _HeaderButton(
+                  icon: markdownRendered
+                      ? WaydirIconsRegular.code
+                      : WaydirIconsRegular.eye,
+                  active: false,
+                  enabled: !blocked,
+                  tooltip: blocked
+                      ? t.quickLook.saveBeforePreview
+                      : markdownRendered
+                      ? t.quickLook.viewSource
+                      : t.quickLook.viewRendered,
+                  onTap: onToggleMarkdownView!,
+                );
+              },
+            ),
+            const SizedBox(width: 4),
+          ],
           if (hasPreview) ...[
             _HeaderButton(
               icon: WaydirIconsRegular.info,
@@ -517,12 +566,14 @@ class _HeaderButton extends StatefulWidget {
   final bool active;
   final String tooltip;
   final VoidCallback onTap;
+  final bool enabled;
 
   const _HeaderButton({
     required this.icon,
     required this.active,
     required this.tooltip,
     required this.onTap,
+    this.enabled = true,
   });
 
   @override
@@ -535,14 +586,17 @@ class _HeaderButtonState extends State<_HeaderButton> {
   @override
   Widget build(BuildContext context) {
     final active = widget.active;
+    final hovered = widget.enabled && _hover;
     final bg = active
         ? AppColors.accent.withValues(alpha: 0.16)
-        : _hover
+        : hovered
         ? AppColors.bgHover
         : Colors.transparent;
-    final fg = active
+    final fg = !widget.enabled
+        ? AppColors.fgSubtle
+        : active
         ? AppColors.accent
-        : _hover
+        : hovered
         ? AppColors.fg
         : AppColors.fgMuted;
 
@@ -550,12 +604,14 @@ class _HeaderButtonState extends State<_HeaderButton> {
       message: widget.tooltip,
       waitDuration: const Duration(milliseconds: 450),
       child: MouseRegion(
-        cursor: SystemMouseCursors.click,
+        cursor: widget.enabled
+            ? SystemMouseCursors.click
+            : SystemMouseCursors.basic,
         onEnter: (_) => setState(() => _hover = true),
         onExit: (_) => setState(() => _hover = false),
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTap: widget.onTap,
+          onTap: widget.enabled ? widget.onTap : null,
           child: Container(
             width: 28,
             height: 28,
@@ -632,6 +688,7 @@ class _Body extends StatelessWidget {
   final CodeEditorController editorController;
   final bool showInfo;
   final ValueChanged<bool> onCompactChanged;
+  final bool markdownRendered;
 
   const _Body({
     required this.entry,
@@ -639,6 +696,7 @@ class _Body extends StatelessWidget {
     required this.editorController,
     required this.showInfo,
     required this.onCompactChanged,
+    required this.markdownRendered,
   });
 
   @override
@@ -665,6 +723,12 @@ class _Body extends StatelessWidget {
       onCompactChanged(false);
 
       return _split(PdfPreview(path: e.realPath), e, showInfo: showInfo);
+    }
+    if (markdownExts.contains(e.extension) && markdownRendered) {
+      release();
+      onCompactChanged(false);
+
+      return _split(MarkdownPreview(entry: e), e, showInfo: showInfo);
     }
     if (binaryExts.contains(e.extension)) {
       release();
