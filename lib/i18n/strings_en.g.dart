@@ -725,8 +725,17 @@ class Translations$appMenu$en {
 	/// en: 'Help'
 	String get help => 'Help';
 
+	/// en: 'Manage Plugins'
+	String get managePlugins => 'Manage Plugins';
+
 	/// en: 'Changelog'
 	String get changelog => 'Changelog';
+
+	/// en: 'Repository'
+	String get repository => 'Repository';
+
+	/// en: 'Report Bug'
+	String get createIssue => 'Report Bug';
 
 	/// en: 'Star on GitHub'
 	String get starOnGithub => 'Star on GitHub';
@@ -758,11 +767,11 @@ class Translations$help$en {
 
 	// Translations
 
-	/// en: 'Help'
-	String get title => 'Help';
+	/// en: 'In-app tutorial'
+	String get title => 'In-app tutorial';
 
-	/// en: 'Help'
-	String get menuLabel => 'Help';
+	/// en: 'In-app tutorial'
+	String get menuLabel => 'In-app tutorial';
 
 	late final Translations$help$groups$en groups = Translations$help$groups$en.internal(_root);
 }
@@ -4379,13 +4388,16 @@ extension on Translations {
 			'update.bundleNotWritable' => 'Cannot write to bundle directory. Install the new version manually.',
 			'update.installerLaunchFailed' => ({required Object error}) => 'Failed to launch installer: ${error}',
 			'appMenu.help' => 'Help',
+			'appMenu.managePlugins' => 'Manage Plugins',
 			'appMenu.changelog' => 'Changelog',
+			'appMenu.repository' => 'Repository',
+			'appMenu.createIssue' => 'Report Bug',
 			'appMenu.starOnGithub' => 'Star on GitHub',
 			'appMenu.quit' => 'Quit',
 			'changelog.title' => 'Changelog',
 			'changelog.loadError' => 'Could not load the changelog.',
-			'help.title' => 'Help',
-			'help.menuLabel' => 'Help',
+			'help.title' => 'In-app tutorial',
+			'help.menuLabel' => 'In-app tutorial',
 			'help.groups.gettingStarted.title' => 'Getting Started',
 			'help.groups.gettingStarted.welcome.title' => 'Welcome to Waydir',
 			'help.groups.gettingStarted.welcome.body' => 'Waydir is a fast, keyboard-driven file manager. This guide walks through everything from basic navigation to remote servers, the terminal and customization.\n\n- Use the tree on the left to jump between topics.\n- Most actions have a keyboard shortcut, shown inline as `Ctrl+C`.\n- Every shortcut can be rebound in **Preferences -> Keyboard**.\n\nPick a topic to get started, or read straight through from the top.',
@@ -4508,11 +4520,11 @@ extension on Translations {
 			'keybindings.closeTab' => 'Close tab',
 			'keybindings.nextTab' => 'Next tab',
 			'keybindings.prevTab' => 'Previous tab',
+			_ => null,
+		} ?? switch (path) {
 			'keybindings.switchTab' => 'Switch to tab',
 			'keybindings.jumpBookmark' => 'Jump to bookmark',
 			'keybindings.toggleDual' => 'Toggle dual pane',
-			_ => null,
-		} ?? switch (path) {
 			'keybindings.switchPane' => 'Switch active pane',
 			'keybindings.compare' => 'Compare folders',
 			'keybindings.compareSyncRight' => 'Sync left to right',

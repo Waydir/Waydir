@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:waydir/ui/icons/waydir_icons.dart';
 import 'package:signals/signals_flutter.dart';
+import 'package:waydir/ui/icons/waydir_icons.dart';
 
 import '../../core/keyboard/keyboard_shortcuts.dart';
 import '../../core/settings/settings_registry.dart';
@@ -169,16 +169,6 @@ const _visibleSettingIds = <String>{
   'quickLook.vimMode',
 };
 
-bool _matches(String query, Iterable<String> values) {
-  final tokens = query
-      .split(RegExp(r'\s+'))
-      .where((token) => token.isNotEmpty)
-      .toList();
-  final haystack = values.join(' ').toLowerCase();
-
-  return tokens.every(haystack.contains);
-}
-
 CategoryMeta _categoryMeta(Category category) {
   return categories.firstWhere((meta) => meta.id == category);
 }
@@ -190,10 +180,6 @@ Category _categoryForSetting(SettingsCategory category) {
     SettingsCategory.terminal => Category.terminal,
     SettingsCategory.quickLook => Category.quickLook,
   };
-}
-
-PreferenceNavSection _sectionById(String id) {
-  return preferenceNavSections.firstWhere((section) => section.id == id);
 }
 
 String? _sectionIdForSetting(String id) {
@@ -240,6 +226,16 @@ String? _sectionIdForSetting(String id) {
   };
 }
 
+bool _matchesQuery(String query, Iterable<String> values) {
+  final tokens = query
+      .toLowerCase()
+      .split(RegExp(r'\s+'))
+      .where((token) => token.isNotEmpty);
+  final haystack = values.join(' ').toLowerCase();
+
+  return tokens.every(haystack.contains);
+}
+
 class PreferenceAnchorScope extends InheritedWidget {
   final Map<String, GlobalKey> sectionKeys;
   final Map<String, GlobalKey> settingKeys;
@@ -283,13 +279,6 @@ class _PreferenceSearchResult {
   });
 }
 
-class _PreferenceNavSelection {
-  final Category category;
-  final String? sectionId;
-
-  const _PreferenceNavSelection({required this.category, this.sectionId});
-}
-
 class _PreferencesDialog extends StatefulWidget {
   const _PreferencesDialog();
 
@@ -298,190 +287,52 @@ class _PreferencesDialog extends StatefulWidget {
 }
 
 class _PreferencesDialogState extends State<_PreferencesDialog> {
-  late final ScrollController _scrollController;
   late final TextEditingController _searchController;
   late final FocusNode _searchFocusNode;
-  late final ValueNotifier<_PreferenceNavSelection> _navSelection;
-  late final GlobalKey _contentKey;
   late final Map<String, GlobalKey> _sectionKeys;
   late final Map<String, GlobalKey> _settingKeys;
-  final _sectionOffsets = <String, double>{};
-  bool _offsetRefreshScheduled = false;
-  String _searchQuery = '';
-  bool _searchResultsVisible = false;
+  Category _selected = Category.general;
+  String _query = '';
+  bool _showResults = false;
+  int _activeResult = 0;
 
   @override
   void initState() {
     super.initState();
-    _scrollController = ScrollController();
-    _scrollController.addListener(_syncSelectionToScroll);
     _searchController = TextEditingController();
     _searchFocusNode = FocusNode();
-    _navSelection = ValueNotifier(
-      const _PreferenceNavSelection(category: Category.general),
-    );
-    _contentKey = GlobalKey();
     _sectionKeys = {
       for (final section in preferenceNavSections) section.id: GlobalKey(),
     };
     _settingKeys = {for (final id in _visibleSettingIds) id: GlobalKey()};
-    _scheduleOffsetRefresh();
   }
 
   @override
   void dispose() {
-    _scrollController.dispose();
     _searchController.dispose();
     _searchFocusNode.dispose();
-    _navSelection.dispose();
     super.dispose();
   }
 
-  void _scrollToCategory(Category category) {
-    final section = preferenceNavSections.firstWhere(
-      (section) => section.category == category,
-    );
-    _scrollToSection(section);
-  }
-
-  void _scrollToSection(PreferenceNavSection section) {
-    _setNavSelection(section.category, section.id);
-    _scrollToSectionId(section.id);
-  }
-
-  void _scrollToSearchResult(_PreferenceSearchResult result) {
-    _setNavSelection(result.category, result.sectionId);
+  void _selectCategory(Category category) {
     setState(() {
-      _searchResultsVisible = false;
-    });
-    _scrollToKey(
-      result.settingId == null
-          ? result.sectionId == null
-                ? _sectionKeys[preferenceNavSections
-                      .firstWhere(
-                        (section) => section.category == result.category,
-                      )
-                      .id]
-                : _sectionKeys[result.sectionId]
-          : _settingKeys[result.settingId],
-    );
-  }
-
-  void _scrollToKey(GlobalKey? key) {
-    if (!_scrollController.hasClients) return;
-    final top = _anchorTop(key);
-    if (top == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToKey(key));
-
-      return;
-    }
-    final max = _scrollController.position.maxScrollExtent;
-    final target = (_scrollController.offset + top).clamp(0.0, max);
-    _scrollController.jumpTo(target);
-  }
-
-  void _scrollToSectionId(String id) {
-    if (!_scrollController.hasClients) return;
-    final offset = _sectionOffsets[id];
-    if (offset == null) {
-      _scheduleOffsetRefresh();
-      WidgetsBinding.instance.addPostFrameCallback(
-        (_) => _scrollToSectionId(id),
-      );
-
-      return;
-    }
-    final max = _scrollController.position.maxScrollExtent;
-    _scrollController.jumpTo(offset.clamp(0.0, max));
-  }
-
-  void _syncSelectionToScroll() {
-    _updateSelectionFromScrollOffset();
-  }
-
-  void _updateSelectionFromScrollOffset() {
-    if (!_scrollController.hasClients || _sectionOffsets.isEmpty) return;
-    final currentOffset = _scrollController.offset + 18;
-    PreferenceNavSection? active;
-    for (final section in preferenceNavSections) {
-      final offset = _sectionOffsets[section.id];
-      if (offset == null) continue;
-      if (offset <= currentOffset) {
-        active = section;
-      } else {
-        break;
-      }
-    }
-    if (active == null) return;
-    _setNavSelection(active.category, active.id);
-  }
-
-  void _scheduleOffsetRefresh() {
-    if (_offsetRefreshScheduled) return;
-    _offsetRefreshScheduled = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _offsetRefreshScheduled = false;
-      if (!mounted) return;
-      _refreshSectionOffsets();
-      _updateSelectionFromScrollOffset();
+      _selected = category;
+      _showResults = false;
     });
   }
 
-  void _refreshSectionOffsets() {
-    if (!_scrollController.hasClients) return;
-    final next = <String, double>{};
-    for (final section in preferenceNavSections) {
-      final top = _anchorTop(_sectionKeys[section.id]);
-      if (top == null) continue;
-      next[section.id] = _scrollController.offset + top;
-    }
-    if (next.isNotEmpty) {
-      _sectionOffsets
-        ..clear()
-        ..addAll(next);
-    }
-  }
-
-  void _setNavSelection(Category category, String? sectionId) {
-    final current = _navSelection.value;
-    if (current.category == category && current.sectionId == sectionId) return;
-    _navSelection.value = _PreferenceNavSelection(
-      category: category,
-      sectionId: sectionId,
-    );
-  }
-
-  double? _anchorTop(GlobalKey? key) {
-    final viewportBox =
-        _contentKey.currentContext?.findRenderObject() as RenderBox?;
-    final context = key?.currentContext;
-    final box = context?.findRenderObject() as RenderBox?;
-    if (box == null ||
-        viewportBox == null ||
-        !box.attached ||
-        !viewportBox.attached) {
-      return null;
-    }
-    return box.localToGlobal(Offset.zero).dy -
-        viewportBox.localToGlobal(Offset.zero).dy;
-  }
-
-  void _setSearchQuery(String value) {
+  void _setQuery(String value) {
     setState(() {
-      _searchQuery = value;
-      _searchResultsVisible = value.trim().isNotEmpty;
+      _query = value;
+      _showResults = value.trim().isNotEmpty;
+      _activeResult = 0;
     });
-  }
-
-  void _setSearchFocused(bool focused) {
-    if (!focused) return;
-    if (_searchQuery.trim().isEmpty) return;
-    setState(() => _searchResultsVisible = true);
   }
 
   void _clearSearch() {
     _searchController.clear();
-    _setSearchQuery('');
+    _setQuery('');
+    _searchFocusNode.requestFocus();
   }
 
   void _focusSearch() {
@@ -490,12 +341,12 @@ class _PreferencesDialogState extends State<_PreferencesDialog> {
       baseOffset: 0,
       extentOffset: _searchController.text.length,
     );
-    if (_searchQuery.trim().isNotEmpty) {
-      setState(() => _searchResultsVisible = true);
+    if (_query.trim().isNotEmpty) {
+      setState(() => _showResults = true);
     }
   }
 
-  KeyEventResult _handleDialogKeyEvent(FocusNode node, KeyEvent event) {
+  KeyEventResult _handleDialogKey(FocusNode node, KeyEvent event) {
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
     if (AppShortcuts.matches('search', event.logicalKey)) {
       _focusSearch();
@@ -506,31 +357,93 @@ class _PreferencesDialogState extends State<_PreferencesDialog> {
     return KeyEventResult.ignored;
   }
 
+  KeyEventResult _handleSearchKey(FocusNode node, KeyEvent event) {
+    if (event is! KeyDownEvent) return KeyEventResult.ignored;
+    final results = _searchResults();
+    if (!_showResults || _query.trim().isEmpty) {
+      return KeyEventResult.ignored;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+      if (results.isNotEmpty) {
+        setState(() {
+          _activeResult++;
+          if (_activeResult >= results.length) {
+            _activeResult = results.length - 1;
+          }
+        });
+      }
+
+      return KeyEventResult.handled;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+      if (results.isNotEmpty) {
+        setState(() {
+          _activeResult--;
+          if (_activeResult < 0) _activeResult = 0;
+        });
+      }
+
+      return KeyEventResult.handled;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.enter) {
+      if (results.isNotEmpty) _openSearchResult(results[_activeResult]);
+
+      return KeyEventResult.handled;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.escape) {
+      setState(() => _showResults = false);
+
+      return KeyEventResult.handled;
+    }
+
+    return KeyEventResult.ignored;
+  }
+
+  void _openSearchResult(_PreferenceSearchResult result) {
+    setState(() {
+      _selected = result.category;
+      _showResults = false;
+    });
+    final key = result.settingId == null
+        ? _sectionKeys[result.sectionId]
+        : _settingKeys[result.settingId];
+    if (key == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final context = key.currentContext;
+      if (context == null) return;
+      Scrollable.ensureVisible(
+        context,
+        duration: Duration.zero,
+        alignment: 0.08,
+      );
+    });
+  }
+
   List<_PreferenceSearchResult> _searchResults() {
-    final query = _searchQuery.trim().toLowerCase();
+    final query = _query.trim();
     if (query.isEmpty) return const [];
     final results = <_PreferenceSearchResult>[];
 
-    for (final cat in categories) {
-      if (_matches(query, [cat.label()])) {
+    for (final category in categories) {
+      if (_matchesQuery(query, [category.label()])) {
         results.add(
           _PreferenceSearchResult(
-            title: cat.label(),
-            icon: cat.icon,
-            category: cat.id,
+            title: category.label(),
+            icon: category.icon,
+            category: category.id,
           ),
         );
       }
     }
     for (final section in preferenceNavSections) {
       final category = _categoryMeta(section.category);
-      if (_matches(query, [section.label(), category.label()])) {
+      if (_matchesQuery(query, [category.label(), section.label()])) {
         results.add(
           _PreferenceSearchResult(
             title: section.label(),
             subtitle: category.label(),
             icon: category.icon,
-            category: section.category,
+            category: category.id,
             sectionId: section.id,
           ),
         );
@@ -540,8 +453,12 @@ class _PreferencesDialogState extends State<_PreferencesDialog> {
       if (!_visibleSettingIds.contains(setting.id)) continue;
       final category = _categoryMeta(_categoryForSetting(setting.category));
       final sectionId = _sectionIdForSetting(setting.id);
-      final section = sectionId == null ? null : _sectionById(sectionId);
-      if (_matches(query, [
+      final section = sectionId == null
+          ? null
+          : preferenceNavSections.firstWhere(
+              (section) => section.id == sectionId,
+            );
+      if (_matchesQuery(query, [
         setting.label(),
         setting.hint?.call() ?? '',
         setting.id,
@@ -572,6 +489,10 @@ class _PreferencesDialogState extends State<_PreferencesDialog> {
     final size = MediaQuery.of(context).size;
     final dialogWidth = size.width * 0.8 > 920 ? 920.0 : size.width * 0.8;
     final dialogHeight = size.height - 96 > 640 ? 640.0 : size.height - 96;
+    final results = _searchResults();
+    if (_activeResult >= results.length) {
+      _activeResult = results.isEmpty ? 0 : results.length - 1;
+    }
 
     return AppModal(
       icon: WaydirIconsRegular.gearSix,
@@ -581,20 +502,10 @@ class _PreferencesDialogState extends State<_PreferencesDialog> {
       onClose: () => Navigator.of(context).pop(),
       child: Focus(
         autofocus: true,
-        onKeyEvent: _handleDialogKeyEvent,
+        onKeyEvent: _handleDialogKey,
         child: Row(
           children: [
-            ValueListenableBuilder<_PreferenceNavSelection>(
-              valueListenable: _navSelection,
-              builder: (context, selection, child) {
-                return _CategorySidebar(
-                  selectedCategory: selection.category,
-                  selectedSectionId: selection.sectionId,
-                  onSelectCategory: _scrollToCategory,
-                  onSelectSection: _scrollToSection,
-                );
-              },
-            ),
+            _CategorySidebar(selected: _selected, onSelect: _selectCategory),
             Container(width: 1, color: AppColors.bgDivider),
             Expanded(
               child: Column(
@@ -602,21 +513,36 @@ class _PreferencesDialogState extends State<_PreferencesDialog> {
                   _PreferencesSearchBar(
                     focusNode: _searchFocusNode,
                     controller: _searchController,
-                    query: _searchQuery,
-                    results: _searchResults(),
-                    resultsVisible: _searchResultsVisible,
-                    onChanged: _setSearchQuery,
-                    onFocusChanged: _setSearchFocused,
+                    query: _query,
+                    onChanged: _setQuery,
                     onClear: _clearSearch,
-                    onSelect: _scrollToSearchResult,
+                    onKeyEvent: _handleSearchKey,
+                    onTap: () {
+                      if (_query.trim().isNotEmpty) {
+                        setState(() => _showResults = true);
+                      }
+                    },
                   ),
                   Expanded(
-                    child: _ContentPane(
-                      contentKey: _contentKey,
-                      scrollController: _scrollController,
-                      sectionKeys: _sectionKeys,
-                      settingKeys: _settingKeys,
-                      onLayoutChanged: _scheduleOffsetRefresh,
+                    child: Stack(
+                      children: [
+                        PreferenceAnchorScope(
+                          sectionKeys: _sectionKeys,
+                          settingKeys: _settingKeys,
+                          child: _ContentPane(category: _selected),
+                        ),
+                        if (_showResults && _query.trim().isNotEmpty)
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            top: 0,
+                            child: _SearchResultsPanel(
+                              results: results,
+                              activeIndex: _activeResult,
+                              onSelect: _openSearchResult,
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ],
@@ -629,258 +555,129 @@ class _PreferencesDialogState extends State<_PreferencesDialog> {
   }
 }
 
-class _PreferencesSearchBar extends StatefulWidget {
+class _PreferencesSearchBar extends StatelessWidget {
   final FocusNode focusNode;
   final TextEditingController controller;
   final String query;
-  final List<_PreferenceSearchResult> results;
-  final bool resultsVisible;
   final ValueChanged<String> onChanged;
-  final ValueChanged<bool> onFocusChanged;
   final VoidCallback onClear;
-  final ValueChanged<_PreferenceSearchResult> onSelect;
+  final FocusOnKeyEventCallback onKeyEvent;
+  final VoidCallback onTap;
 
   const _PreferencesSearchBar({
     required this.focusNode,
     required this.controller,
     required this.query,
-    required this.results,
-    required this.resultsVisible,
     required this.onChanged,
-    required this.onFocusChanged,
     required this.onClear,
-    required this.onSelect,
+    required this.onKeyEvent,
+    required this.onTap,
   });
 
   @override
-  State<_PreferencesSearchBar> createState() => _PreferencesSearchBarState();
-}
-
-class _PreferencesSearchBarState extends State<_PreferencesSearchBar> {
-  final _layerLink = LayerLink();
-  OverlayEntry? _resultsOverlay;
-  bool _focused = false;
-  bool _resultsSuppressed = false;
-  int _activeResult = 0;
-
-  @override
-  void didUpdateWidget(covariant _PreferencesSearchBar oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.query != widget.query) {
-      _activeResult = 0;
-      _resultsSuppressed = false;
-    }
-    if (_activeResult >= widget.results.length) {
-      _activeResult = widget.results.isEmpty ? 0 : widget.results.length - 1;
-    }
-    WidgetsBinding.instance.addPostFrameCallback((_) => _syncResultsOverlay());
-  }
-
-  @override
-  void dispose() {
-    _removeResultsOverlay();
-    super.dispose();
-  }
-
-  KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
-    if (event is! KeyDownEvent) return KeyEventResult.ignored;
-    if (!widget.resultsVisible || widget.query.trim().isEmpty) {
-      return KeyEventResult.ignored;
-    }
-    if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
-      if (widget.results.isNotEmpty) {
-        setState(() {
-          _activeResult++;
-          if (_activeResult >= widget.results.length) {
-            _activeResult = widget.results.length - 1;
-          }
-        });
-        _syncResultsOverlay();
-      }
-
-      return KeyEventResult.handled;
-    }
-    if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
-      if (widget.results.isNotEmpty) {
-        setState(() {
-          _activeResult--;
-          if (_activeResult < 0) _activeResult = 0;
-        });
-        _syncResultsOverlay();
-      }
-
-      return KeyEventResult.handled;
-    }
-    if (event.logicalKey == LogicalKeyboardKey.enter) {
-      if (widget.results.isNotEmpty) {
-        _resultsSuppressed = true;
-        widget.onSelect(widget.results[_activeResult]);
-        _removeResultsOverlay();
-      }
-
-      return KeyEventResult.handled;
-    }
-    if (event.logicalKey == LogicalKeyboardKey.escape) {
-      _resultsSuppressed = true;
-      _removeResultsOverlay();
-
-      return KeyEventResult.handled;
-    }
-
-    return KeyEventResult.ignored;
-  }
-
-  void _syncResultsOverlay() {
-    if (!mounted) return;
-    final showResults =
-        widget.resultsVisible &&
-        !_resultsSuppressed &&
-        widget.query.trim().isNotEmpty;
-    if (!showResults) {
-      _removeResultsOverlay();
-
-      return;
-    }
-    if (_resultsOverlay == null) {
-      _resultsOverlay = OverlayEntry(builder: _buildResultsOverlay);
-      Overlay.of(context).insert(_resultsOverlay!);
-    } else {
-      _resultsOverlay!.markNeedsBuild();
-    }
-  }
-
-  void _removeResultsOverlay() {
-    final overlay = _resultsOverlay;
-    _resultsOverlay = null;
-    overlay?.remove();
-  }
-
-  Widget _buildResultsOverlay(BuildContext context) {
-    final box = this.context.findRenderObject() as RenderBox?;
-    final width = box?.size.width ?? 480;
-
-    return Positioned.fill(
-      child: IgnorePointer(
-        ignoring: false,
-        child: CompositedTransformFollower(
-          link: _layerLink,
-          showWhenUnlinked: false,
-          targetAnchor: Alignment.bottomLeft,
-          followerAnchor: Alignment.topLeft,
-          child: Align(
-            alignment: Alignment.topLeft,
-            child: SizedBox(
-              width: width,
-              child: Material(
-                type: MaterialType.transparency,
-                child: _PreferenceSearchResults(
-                  results: widget.results,
-                  activeIndex: _activeResult,
-                  onSelect: (result) {
-                    _resultsSuppressed = true;
-                    widget.onSelect(result);
-                    _removeResultsOverlay();
-                  },
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) => _syncResultsOverlay());
-
-    return CompositedTransformTarget(
-      link: _layerLink,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.bgSurface,
-          border: Border(bottom: BorderSide(color: AppColors.bgDivider)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-              child: Focus(
-                onFocusChange: (focused) {
-                  setState(() {
-                    _focused = focused;
-                    if (focused) _resultsSuppressed = false;
-                  });
-                  widget.onFocusChanged(focused);
-                },
-                onKeyEvent: _handleKeyEvent,
-                child: Container(
-                  height: 32,
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  decoration: BoxDecoration(
-                    color: AppColors.bgInput,
-                    borderRadius: BorderRadius.zero,
-                    border: Border.all(
-                      color: _focused
-                          ? AppColors.accent
-                          : AppColors.borderColor,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        WaydirIconsRegular.magnifyingGlass,
-                        size: 14,
-                        color: AppColors.fgMuted,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: TextField(
-                          focusNode: widget.focusNode,
-                          controller: widget.controller,
-                          onChanged: widget.onChanged,
-                          onSubmitted: (_) {
-                            if (widget.results.isNotEmpty) {
-                              _resultsSuppressed = true;
-                              widget.onSelect(widget.results[_activeResult]);
-                              _removeResultsOverlay();
-                            }
-                          },
-                          style: context.txt.body,
-                          decoration: InputDecoration.collapsed(
-                            hintText: t.preferences.searchPlaceholder,
-                            hintStyle: context.txt.body.copyWith(
-                              color: AppColors.fgMuted,
-                            ),
-                          ),
-                          cursorColor: AppColors.accent,
-                        ),
-                      ),
-                      if (widget.query.isNotEmpty)
-                        _SearchClearButton(onTap: widget.onClear),
-                    ],
-                  ),
+    return Container(
+      height: 50,
+      padding: const EdgeInsets.fromLTRB(12, 9, 12, 9),
+      decoration: BoxDecoration(
+        color: AppColors.bgSurface,
+        border: Border(bottom: BorderSide(color: AppColors.bgDivider)),
+      ),
+      child: Focus(
+        onKeyEvent: onKeyEvent,
+        child: TextField(
+          focusNode: focusNode,
+          controller: controller,
+          onChanged: onChanged,
+          onTap: onTap,
+          style: context.txt.body,
+          cursorColor: AppColors.accent,
+          decoration:
+              appInputDecoration(
+                hintText: t.preferences.searchPlaceholder,
+                suffixIcon: query.isEmpty
+                    ? null
+                    : _SearchClearButton(onTap: onClear),
+              ).copyWith(
+                prefixIcon: Icon(
+                  WaydirIconsRegular.magnifyingGlass,
+                  size: 14,
+                  color: AppColors.fgMuted,
                 ),
               ),
-            ),
-          ],
         ),
       ),
     );
   }
 }
 
-class _PreferenceSearchResults extends StatelessWidget {
+class _SearchResultsPanel extends StatefulWidget {
   final List<_PreferenceSearchResult> results;
   final int activeIndex;
   final ValueChanged<_PreferenceSearchResult> onSelect;
 
-  const _PreferenceSearchResults({
+  const _SearchResultsPanel({
     required this.results,
     required this.activeIndex,
     required this.onSelect,
   });
+
+  @override
+  State<_SearchResultsPanel> createState() => _SearchResultsPanelState();
+}
+
+class _SearchResultsPanelState extends State<_SearchResultsPanel> {
+  final _rowKeys = <GlobalKey>[];
+
+  @override
+  void initState() {
+    super.initState();
+    _syncRowKeys();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _ensureActiveVisible());
+  }
+
+  @override
+  void didUpdateWidget(covariant _SearchResultsPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.results.length != widget.results.length) {
+      _syncRowKeys();
+    }
+    if (oldWidget.activeIndex != widget.activeIndex ||
+        oldWidget.results != widget.results) {
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _ensureActiveVisible(),
+      );
+    }
+  }
+
+  void _syncRowKeys() {
+    while (_rowKeys.length < widget.results.length) {
+      _rowKeys.add(GlobalKey());
+    }
+    if (_rowKeys.length > widget.results.length) {
+      _rowKeys.removeRange(widget.results.length, _rowKeys.length);
+    }
+  }
+
+  void _ensureActiveVisible() {
+    if (!mounted) return;
+    final index = widget.activeIndex;
+    if (index < 0 || index >= _rowKeys.length) return;
+    final context = _rowKeys[index].currentContext;
+    if (context == null) return;
+    Scrollable.ensureVisible(
+      context,
+      alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+      duration: const Duration(milliseconds: 60),
+      curve: Curves.easeOut,
+    );
+    Scrollable.ensureVisible(
+      context,
+      alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtStart,
+      duration: const Duration(milliseconds: 60),
+      curve: Curves.easeOut,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -888,53 +685,59 @@ class _PreferenceSearchResults extends StatelessWidget {
       constraints: const BoxConstraints(maxHeight: 236),
       decoration: BoxDecoration(
         color: AppColors.bgSidebar,
-        border: Border(top: BorderSide(color: AppColors.bgDivider)),
+        border: Border(bottom: BorderSide(color: AppColors.bgDivider)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x66000000),
+            blurRadius: 12,
+            offset: Offset(0, 6),
+          ),
+        ],
       ),
-      child: results.isEmpty
+      child: widget.results.isEmpty
           ? Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  t.preferences.searchNoResults,
-                  style: context.txt.muted,
-                ),
+              padding: const EdgeInsets.all(14),
+              child: Text(
+                t.preferences.searchNoResults,
+                style: context.txt.muted,
               ),
             )
-          : ListView(
-              shrinkWrap: true,
+          : ListView.builder(
               padding: const EdgeInsets.symmetric(vertical: 4),
-              children: [
-                for (final result in results)
-                  _PreferenceSearchResultRow(
-                    result: result,
-                    selected: results.indexOf(result) == activeIndex,
-                    onTap: () => onSelect(result),
-                  ),
-              ],
+              shrinkWrap: true,
+              itemCount: widget.results.length,
+              itemBuilder: (context, index) {
+                final result = widget.results[index];
+
+                return _SearchResultRow(
+                  key: _rowKeys[index],
+                  result: result,
+                  selected: index == widget.activeIndex,
+                  onTap: () => widget.onSelect(result),
+                );
+              },
             ),
     );
   }
 }
 
-class _PreferenceSearchResultRow extends StatefulWidget {
+class _SearchResultRow extends StatefulWidget {
   final _PreferenceSearchResult result;
   final bool selected;
   final VoidCallback onTap;
 
-  const _PreferenceSearchResultRow({
+  const _SearchResultRow({
+    super.key,
     required this.result,
     required this.selected,
     required this.onTap,
   });
 
   @override
-  State<_PreferenceSearchResultRow> createState() =>
-      _PreferenceSearchResultRowState();
+  State<_SearchResultRow> createState() => _SearchResultRowState();
 }
 
-class _PreferenceSearchResultRowState
-    extends State<_PreferenceSearchResultRow> {
+class _SearchResultRowState extends State<_SearchResultRow> {
   bool _hovered = false;
 
   @override
@@ -1006,12 +809,10 @@ class _SearchClearButtonState extends State<_SearchClearButton> {
       child: GestureDetector(
         onTap: widget.onTap,
         child: Container(
-          width: 22,
-          height: 22,
-          decoration: BoxDecoration(
-            color: _hovered ? AppColors.bgHover : Colors.transparent,
-            borderRadius: BorderRadius.zero,
-          ),
+          width: 24,
+          height: 24,
+          alignment: Alignment.center,
+          color: _hovered ? AppColors.bgHover : Colors.transparent,
           child: Icon(WaydirIconsRegular.x, size: 13, color: AppColors.fgMuted),
         ),
       ),
@@ -1020,36 +821,24 @@ class _SearchClearButtonState extends State<_SearchClearButton> {
 }
 
 class _CategorySidebar extends StatelessWidget {
-  final Category selectedCategory;
-  final String? selectedSectionId;
-  final ValueChanged<Category> onSelectCategory;
-  final ValueChanged<PreferenceNavSection> onSelectSection;
+  final Category selected;
+  final ValueChanged<Category> onSelect;
 
-  const _CategorySidebar({
-    required this.selectedCategory,
-    required this.selectedSectionId,
-    required this.onSelectCategory,
-    required this.onSelectSection,
-  });
+  const _CategorySidebar({required this.selected, required this.onSelect});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 190,
+      width: 164,
       color: AppColors.bgSidebar,
-      padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 5),
       child: ListView(
         children: [
           for (final cat in categories)
-            _CategoryTreeItem(
+            _CategoryItem(
               meta: cat,
-              sections: preferenceNavSections
-                  .where((section) => section.category == cat.id)
-                  .toList(),
-              selectedCategory: selectedCategory,
-              selectedSectionId: selectedSectionId,
-              onSelectCategory: onSelectCategory,
-              onSelectSection: onSelectSection,
+              selected: cat.id == selected,
+              onTap: () => onSelect(cat.id),
             ),
         ],
       ),
@@ -1057,57 +846,14 @@ class _CategorySidebar extends StatelessWidget {
   }
 }
 
-class _CategoryTreeItem extends StatelessWidget {
-  final CategoryMeta meta;
-  final List<PreferenceNavSection> sections;
-  final Category selectedCategory;
-  final String? selectedSectionId;
-  final ValueChanged<Category> onSelectCategory;
-  final ValueChanged<PreferenceNavSection> onSelectSection;
-
-  const _CategoryTreeItem({
-    required this.meta,
-    required this.sections,
-    required this.selectedCategory,
-    required this.selectedSectionId,
-    required this.onSelectCategory,
-    required this.onSelectSection,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final categorySelected = meta.id == selectedCategory;
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _CategoryItem(
-          meta: meta,
-          selected: categorySelected && selectedSectionId == null,
-          expanded: sections.isNotEmpty,
-          onTap: () => onSelectCategory(meta.id),
-        ),
-        for (final section in sections)
-          _SectionItem(
-            section: section,
-            selected: selectedSectionId == section.id,
-            onTap: () => onSelectSection(section),
-          ),
-      ],
-    );
-  }
-}
-
 class _CategoryItem extends StatefulWidget {
   final CategoryMeta meta;
   final bool selected;
-  final bool expanded;
   final VoidCallback onTap;
 
   const _CategoryItem({
     required this.meta,
     required this.selected,
-    required this.expanded,
     required this.onTap,
   });
 
@@ -1132,9 +878,9 @@ class _CategoryItemState extends State<_CategoryItem> {
       child: GestureDetector(
         onTap: widget.onTap,
         child: Container(
-          height: 28,
-          margin: const EdgeInsets.only(bottom: 2),
-          padding: const EdgeInsets.symmetric(horizontal: 7),
+          height: 24,
+          margin: const EdgeInsets.symmetric(vertical: 1),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
           decoration: BoxDecoration(
             color: bg,
             borderRadius: BorderRadius.zero,
@@ -1144,11 +890,6 @@ class _CategoryItemState extends State<_CategoryItem> {
           ),
           child: Row(
             children: [
-              if (widget.expanded)
-                Icon(WaydirIconsRegular.caretDown, size: 12, color: fg)
-              else
-                const SizedBox(width: 12),
-              const SizedBox(width: 6),
               Icon(widget.meta.icon, size: 14, color: fg),
               const SizedBox(width: 8),
               Expanded(
@@ -1171,124 +912,19 @@ class _CategoryItemState extends State<_CategoryItem> {
   }
 }
 
-class _SectionItem extends StatefulWidget {
-  final PreferenceNavSection section;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _SectionItem({
-    required this.section,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  State<_SectionItem> createState() => _SectionItemState();
-}
-
-class _SectionItemState extends State<_SectionItem> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final bg = widget.selected
-        ? AppColors.bgSelectedMuted
-        : (_hovered ? AppColors.bgHover : Colors.transparent);
-    final fg = widget.selected ? AppColors.fg : AppColors.fgMuted;
-
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: Container(
-          height: 25,
-          margin: const EdgeInsets.only(bottom: 1),
-          padding: const EdgeInsets.only(left: 24, right: 7),
-          decoration: BoxDecoration(
-            color: bg,
-            borderRadius: BorderRadius.zero,
-            border: widget.selected
-                ? Border(left: BorderSide(color: AppColors.accent, width: 2))
-                : null,
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 1,
-                height: 25,
-                color: widget.selected ? AppColors.accent : AppColors.bgDivider,
-              ),
-              const SizedBox(width: 9),
-              Container(
-                width: 4,
-                height: 4,
-                color: widget.selected
-                    ? AppColors.accent
-                    : AppColors.fgMuted.withValues(alpha: 0.55),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  widget.section.label(),
-                  style: context.txt.body.copyWith(
-                    color: fg,
-                    fontWeight: widget.selected
-                        ? FontWeight.w500
-                        : FontWeight.normal,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _ContentPane extends StatelessWidget {
-  final GlobalKey contentKey;
-  final ScrollController scrollController;
-  final Map<String, GlobalKey> sectionKeys;
-  final Map<String, GlobalKey> settingKeys;
-  final VoidCallback onLayoutChanged;
+  final Category category;
 
-  const _ContentPane({
-    required this.contentKey,
-    required this.scrollController,
-    required this.sectionKeys,
-    required this.settingKeys,
-    required this.onLayoutChanged,
-  });
+  const _ContentPane({required this.category});
 
   @override
   Widget build(BuildContext context) {
-    return PreferenceAnchorScope(
-      sectionKeys: sectionKeys,
-      settingKeys: settingKeys,
-      child: NotificationListener<SizeChangedLayoutNotification>(
-        onNotification: (_) {
-          onLayoutChanged();
-
-          return false;
-        },
-        child: SizeChangedLayoutNotifier(
-          child: ListView(
-            key: contentKey,
-            controller: scrollController,
-            children: [
-              const GeneralPane(),
-              const AppearancePane(),
-              const TerminalPane(),
-              const QuickLookPane(),
-            ],
-          ),
-        ),
-      ),
-    );
+    return switch (category) {
+      Category.general => const GeneralPane(),
+      Category.appearance => const AppearancePane(),
+      Category.terminal => const TerminalPane(),
+      Category.quickLook => const QuickLookPane(),
+    };
   }
 }
 
@@ -1299,13 +935,9 @@ class SettingsPaneScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return ListView(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: children,
-      ),
+      children: children,
     );
   }
 }

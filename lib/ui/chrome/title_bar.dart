@@ -10,6 +10,8 @@ import '../../app/app_info.dart';
 import '../../app/waydir_app.dart';
 import '../../features/help/changelog_dialog.dart';
 import '../../features/help/help_dialog.dart';
+import '../../features/plugins/plugin_icons.dart';
+import '../../features/plugins/plugin_models.dart';
 import '../../features/settings/keybindings_help_view.dart';
 import '../../features/settings/panes/about_pane.dart';
 import '../../features/settings/panes/diagnostics_pane.dart';
@@ -30,7 +32,7 @@ void _openKeybindingsHelp() {
   if (ctx != null) showKeybindingsHelp(ctx);
 }
 
-void _openHelp() {
+void _openInAppTutorial() {
   final ctx = waydirNavigatorKey.currentContext;
   if (ctx != null) showHelpDialog(ctx);
 }
@@ -55,27 +57,37 @@ void _openAbout() {
   if (ctx != null) showWaydirAboutDialog(ctx);
 }
 
-void _openGithub() {
+void _openUrl(String url) {
   final cmd = Platform.isWindows
       ? 'explorer'
       : Platform.isMacOS
       ? 'open'
       : 'xdg-open';
-  Process.start(cmd, [
-    'https://github.com/Waydir/Waydir',
-  ], mode: ProcessStartMode.detached);
+  Process.start(cmd, [url], mode: ProcessStartMode.detached);
+}
+
+void _openRepository() {
+  _openUrl('https://github.com/Waydir/Waydir');
+}
+
+void _openIssue() {
+  _openUrl('https://github.com/Waydir/Waydir/issues/new');
 }
 
 class TitleBar extends StatelessWidget {
   final Widget child;
   final Widget? menuTrailing;
   final List<PlatformMenu> platformMenus;
+  final List<PluginContribution> pluginContributions;
+  final ValueChanged<String>? onPluginAction;
 
   const TitleBar({
     super.key,
     required this.child,
     this.menuTrailing,
     this.platformMenus = const [],
+    this.pluginContributions = const [],
+    this.onPluginAction,
   });
 
   @override
@@ -85,7 +97,11 @@ class TitleBar extends StatelessWidget {
         menus: _platformMenus(),
         child: Column(
           children: [
-            _TitleBarRow(menuTrailing: menuTrailing),
+            _TitleBarRow(
+              menuTrailing: menuTrailing,
+              pluginContributions: pluginContributions,
+              onPluginAction: onPluginAction,
+            ),
             Expanded(child: child),
           ],
         ),
@@ -94,7 +110,11 @@ class TitleBar extends StatelessWidget {
 
     return Column(
       children: [
-        _TitleBarRow(menuTrailing: menuTrailing),
+        _TitleBarRow(
+          menuTrailing: menuTrailing,
+          pluginContributions: pluginContributions,
+          onPluginAction: onPluginAction,
+        ),
         Expanded(child: child),
       ],
     );
@@ -120,45 +140,12 @@ class TitleBar extends StatelessWidget {
           PlatformMenuItemGroup(
             members: [
               PlatformMenuItem(
-                label: t.help.menuLabel,
-                shortcut: const SingleActivator(
-                  LogicalKeyboardKey.slash,
-                  meta: true,
-                  shift: true,
-                ),
-                onSelected: _openHelp,
-              ),
-              PlatformMenuItem(
-                label: t.keybindings.menuLabel,
-                shortcut: const SingleActivator(
-                  LogicalKeyboardKey.slash,
-                  meta: true,
-                ),
-                onSelected: _openKeybindingsHelp,
-              ),
-              PlatformMenuItem(
-                label: t.preferences.plugins.title,
-                onSelected: _openPlugins,
-              ),
-              PlatformMenuItem(
-                label: t.preferences.diagnostics.title,
-                onSelected: _openDiagnostics,
+                label: t.preferences.categories.about,
+                onSelected: _openAbout,
               ),
               PlatformMenuItem(
                 label: t.appMenu.changelog,
                 onSelected: _openChangelog,
-              ),
-              PlatformMenuItem(
-                label: t.preferences.categories.about,
-                onSelected: _openAbout,
-              ),
-            ],
-          ),
-          PlatformMenuItemGroup(
-            members: [
-              PlatformMenuItem(
-                label: t.appMenu.starOnGithub,
-                onSelected: _openGithub,
               ),
             ],
           ),
@@ -177,14 +164,84 @@ class TitleBar extends StatelessWidget {
         ],
       ),
       ...platformMenus,
+      _platformPluginsMenu(),
+      _platformHelpMenu(),
     ];
+  }
+
+  PlatformMenu _platformPluginsMenu() {
+    return PlatformMenu(
+      label: t.preferences.plugins.title,
+      menus: [
+        PlatformMenuItem(
+          label: t.appMenu.managePlugins,
+          onSelected: _openPlugins,
+        ),
+        if (pluginContributions.isNotEmpty)
+          PlatformMenuItemGroup(
+            members: [
+              for (final c in pluginContributions)
+                PlatformMenuItem(
+                  label: c.title,
+                  onSelected: onPluginAction == null
+                      ? null
+                      : () => onPluginAction!(c.fullActionId),
+                ),
+            ],
+          ),
+      ],
+    );
+  }
+
+  PlatformMenu _platformHelpMenu() {
+    return PlatformMenu(
+      label: t.appMenu.help,
+      menus: [
+        PlatformMenuItem(
+          label: t.help.menuLabel,
+          shortcut: const SingleActivator(
+            LogicalKeyboardKey.slash,
+            meta: true,
+            shift: true,
+          ),
+          onSelected: _openInAppTutorial,
+        ),
+        PlatformMenuItem(
+          label: t.keybindings.menuLabel,
+          shortcut: const SingleActivator(LogicalKeyboardKey.slash, meta: true),
+          onSelected: _openKeybindingsHelp,
+        ),
+        PlatformMenuItem(
+          label: t.preferences.diagnostics.title,
+          onSelected: _openDiagnostics,
+        ),
+        PlatformMenuItemGroup(
+          members: [
+            PlatformMenuItem(
+              label: t.appMenu.repository,
+              onSelected: _openRepository,
+            ),
+            PlatformMenuItem(
+              label: t.appMenu.createIssue,
+              onSelected: _openIssue,
+            ),
+          ],
+        ),
+      ],
+    );
   }
 }
 
 class _TitleBarRow extends StatelessWidget {
   final Widget? menuTrailing;
+  final List<PluginContribution> pluginContributions;
+  final ValueChanged<String>? onPluginAction;
 
-  const _TitleBarRow({this.menuTrailing});
+  const _TitleBarRow({
+    this.menuTrailing,
+    required this.pluginContributions,
+    required this.onPluginAction,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -200,7 +257,11 @@ class _TitleBarRow extends StatelessWidget {
           if (!Platform.isMacOS) ...[
             Image.asset(AppInfo.iconAsset, width: 13, height: 13),
             const SizedBox(width: 12),
-            _MenuBar(trailing: menuTrailing),
+            _MenuBar(
+              trailing: menuTrailing,
+              pluginContributions: pluginContributions,
+              onPluginAction: onPluginAction,
+            ),
           ],
           const Expanded(child: MoveWindow()),
           if (!Platform.isMacOS) const _WindowButtons(),
@@ -212,8 +273,14 @@ class _TitleBarRow extends StatelessWidget {
 
 class _MenuBar extends StatelessWidget {
   final Widget? trailing;
+  final List<PluginContribution> pluginContributions;
+  final ValueChanged<String>? onPluginAction;
 
-  const _MenuBar({this.trailing});
+  const _MenuBar({
+    this.trailing,
+    required this.pluginContributions,
+    required this.onPluginAction,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -230,40 +297,13 @@ class _MenuBar extends StatelessWidget {
             ),
             ContextMenuItem(
               icon: WaydirIconsRegular.info,
-              label: t.help.menuLabel,
-              action: 'help',
-              shortcut: '?',
-            ),
-            ContextMenuItem(
-              icon: WaydirIconsRegular.keyboard,
-              label: t.keybindings.menuLabel,
-              action: 'keybindings',
-            ),
-            ContextMenuItem(
-              icon: WaydirIconsRegular.gearSix,
-              label: t.preferences.plugins.title,
-              action: 'plugins',
-            ),
-            ContextMenuItem(
-              icon: WaydirIconsRegular.bug,
-              label: t.preferences.diagnostics.title,
-              action: 'diagnostics',
+              label: t.preferences.categories.about,
+              action: 'about',
             ),
             ContextMenuItem(
               icon: WaydirIconsRegular.notebook,
               label: t.appMenu.changelog,
               action: 'changelog',
-            ),
-            ContextMenuItem(
-              icon: WaydirIconsRegular.info,
-              label: t.preferences.categories.about,
-              action: 'about',
-            ),
-            ContextMenuItem.divider,
-            ContextMenuItem(
-              icon: WaydirIconsRegular.gitBranch,
-              label: t.appMenu.starOnGithub,
-              action: 'star',
             ),
             ContextMenuItem.divider,
             ContextMenuItem(
@@ -276,26 +316,88 @@ class _MenuBar extends StatelessWidget {
             switch (action) {
               case 'preferences':
                 _openPreferences();
-              case 'help':
-                _openHelp();
-              case 'keybindings':
-                _openKeybindingsHelp();
-              case 'plugins':
-                _openPlugins();
-              case 'diagnostics':
-                _openDiagnostics();
-              case 'changelog':
-                _openChangelog();
               case 'about':
                 _openAbout();
-              case 'star':
-                _openGithub();
+              case 'changelog':
+                _openChangelog();
               case 'quit':
                 SystemNavigator.pop();
             }
           },
         ),
         ?trailing,
+        TitleMenuButton(
+          label: t.preferences.plugins.title,
+          items: [
+            ContextMenuItem(
+              icon: WaydirIconsRegular.gearSix,
+              label: t.appMenu.managePlugins,
+              action: 'manage_plugins',
+            ),
+            if (pluginContributions.isNotEmpty) ContextMenuItem.divider,
+            for (final c in pluginContributions)
+              ContextMenuItem(
+                icon: pluginGlyph(c.icon),
+                label: c.title,
+                action: c.fullActionId,
+                iconPath: c.iconPath,
+                shortcut: c.shortcut,
+              ),
+          ],
+          onSelect: (action) {
+            if (action == 'manage_plugins') {
+              _openPlugins();
+            } else if (action.startsWith('plugin:')) {
+              onPluginAction?.call(action);
+            }
+          },
+        ),
+        TitleMenuButton(
+          label: t.appMenu.help,
+          items: [
+            ContextMenuItem(
+              icon: WaydirIconsRegular.info,
+              label: t.help.menuLabel,
+              action: 'tutorial',
+              shortcut: '?',
+            ),
+            ContextMenuItem(
+              icon: WaydirIconsRegular.keyboard,
+              label: t.keybindings.menuLabel,
+              action: 'keybindings',
+            ),
+            ContextMenuItem(
+              icon: WaydirIconsRegular.bug,
+              label: t.preferences.diagnostics.title,
+              action: 'diagnostics',
+            ),
+            ContextMenuItem.divider,
+            ContextMenuItem(
+              icon: WaydirIconsRegular.gitBranch,
+              label: t.appMenu.repository,
+              action: 'repository',
+            ),
+            ContextMenuItem(
+              icon: WaydirIconsRegular.arrowSquareOut,
+              label: t.appMenu.createIssue,
+              action: 'issue',
+            ),
+          ],
+          onSelect: (action) {
+            switch (action) {
+              case 'tutorial':
+                _openInAppTutorial();
+              case 'keybindings':
+                _openKeybindingsHelp();
+              case 'diagnostics':
+                _openDiagnostics();
+              case 'repository':
+                _openRepository();
+              case 'issue':
+                _openIssue();
+            }
+          },
+        ),
       ],
     );
   }

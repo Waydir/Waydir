@@ -428,7 +428,10 @@
   },
   "appMenu": {
     "help": "Help",
+    "managePlugins": "Manage Plugins",
     "changelog": "Changelog",
+    "repository": "Repository",
+    "createIssue": "Report Bug",
     "starOnGithub": "Star on GitHub",
     "quit": "Quit"
   },
@@ -437,8 +440,8 @@
     "loadError": "Could not load the changelog."
   },
   "help": {
-    "title": "Help",
-    "menuLabel": "Help",
+    "title": "In-app tutorial",
+    "menuLabel": "In-app tutorial",
     "groups": {
       "gettingStarted": {
         "title": "Getting Started",

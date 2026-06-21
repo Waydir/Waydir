@@ -1506,31 +1506,8 @@ mixin _WaydirMenuMixin
                 }
               },
             ),
-            ?_buildPluginMenu(),
           ],
         );
-      },
-    );
-  }
-
-  Widget? _buildPluginMenu() {
-    final contributions = PluginStore.instance.menubarContributions();
-    if (contributions.isEmpty) return null;
-
-    return TitleMenuButton(
-      label: t.preferences.plugins.title,
-      items: [
-        for (final c in contributions)
-          ContextMenuItem(
-            icon: pluginGlyph(c.icon),
-            label: c.title,
-            action: c.fullActionId,
-            iconPath: _pluginIconPath(c),
-            shortcut: c.shortcut,
-          ),
-      ],
-      onSelect: (action) {
-        if (action.startsWith('plugin:')) _runPluginAction(action);
       },
     );
   }
@@ -1645,7 +1622,6 @@ mixin _WaydirMenuMixin
         ],
       ),
       ?_platformTerminalMenu(),
-      ?_platformPluginMenu(),
     ];
   }
 
@@ -1694,22 +1670,6 @@ mixin _WaydirMenuMixin
             if (tab != null) _closeTerminalTab(tab.id);
           },
         ),
-      ],
-    );
-  }
-
-  PlatformMenu? _platformPluginMenu() {
-    final contributions = PluginStore.instance.menubarContributions();
-    if (contributions.isEmpty) return null;
-
-    return PlatformMenu(
-      label: t.preferences.plugins.title,
-      menus: [
-        for (final c in contributions)
-          PlatformMenuItem(
-            label: c.title,
-            onSelected: () => _runPluginAction(c.fullActionId),
-          ),
       ],
     );
   }

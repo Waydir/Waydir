@@ -359,6 +359,9 @@ class _WaydirShellState extends State<WaydirShell>
                 return TitleBar(
                   menuTrailing: _buildViewMenu(),
                   platformMenus: _platformViewMenus(),
+                  pluginContributions: PluginStore.instance
+                      .menubarContributions(),
+                  onPluginAction: _runPluginAction,
                   child: SignalBuilder(
                     builder: (context) {
                       if (!_shell.ready.value) {

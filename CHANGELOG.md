@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Folder compare and sync between panes.
 - Color tags for files, with a sidebar section and filtering.
 - Setting to make dragging move files by default (Alt copies). ([#184](https://github.com/Waydir/Waydir/issues/184))
+- Menu bar: dedicated Help menu with in-app tutorial, keybindings, diagnostics, repository and bug report links.
+- Preferences: in-dialog search to jump to any setting.
 
 ### Changed
 - Reworked the Help dialog.
