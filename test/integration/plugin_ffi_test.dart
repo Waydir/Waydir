@@ -297,6 +297,45 @@ void main() {
     });
   });
 
+  test('ctx exposes other_pane and panes', () async {
+    final path = writePlugin('''
+      waydir.register({
+        id = "panes",
+        title = "Panes",
+        run = function(ctx)
+          local other = ctx.other_pane and ctx.other_pane.dir or "?"
+          waydir.toast(other .. ":" .. #ctx.panes .. ":" .. tostring(ctx.panes[1].active))
+        end,
+      })
+    ''');
+    final raw = await PluginFfi.invoke(
+      initLuaPath: path,
+      actionId: 'panes',
+      ctxJson: jsonEncode({
+        'paths': <String>[],
+        'dir': '/left',
+        'plugin_dir': tmp.path,
+        'other_pane': {
+          'dir': '/right',
+          'paths': ['/right/a.txt'],
+        },
+        'panes': [
+          {'dir': '/left', 'paths': <String>[], 'active': true},
+          {
+            'dir': '/right',
+            'paths': ['/right/a.txt'],
+            'active': false,
+          },
+        ],
+      }),
+    );
+    final json = jsonDecode(raw!) as Map<String, dynamic>;
+    expect((json['effects'] as List).first, {
+      'type': 'toast',
+      'message': '/right:2:true',
+    });
+  });
+
   test('notify, set_setting and dialog effects round-trip', () async {
     final path = writePlugin('''
       waydir.register({

@@ -207,6 +207,28 @@ The `ctx` table tells your action where it is running:
 | `ctx.plugin_dir` | Absolute path to your plugin folder. |
 | `ctx.settings` | Settings values, with defaults merged with saved user values. |
 | `ctx.form` | Dialog result after a `waydir.dialog` submit. |
+| `ctx.other_pane` | The inactive pane in a dual-pane layout as `{ dir, paths }`, or absent when only one pane is open. |
+| `ctx.panes` | Every open pane as `{ dir, paths, active }`, in layout order. |
+
+`ctx.other_pane` and `ctx.panes` are only populated for action runs (context menu, menubar, toolbar, shortcuts), not for status bars. Use them for copy-to-other-pane, compare and sync workflows:
+
+```lua
+waydir.register({
+  id = "copy_to_other",
+  title = "Copy to other pane",
+  when = { min = 1 },
+  run = function(ctx)
+    local target = ctx.other_pane and ctx.other_pane.dir
+    if not target then
+      waydir.toast("Open a second pane first")
+      return
+    end
+    for _, path in ipairs(ctx.paths) do
+      waydir.copy(path, target)
+    end
+  end,
+})
+```
 
 Example:
 

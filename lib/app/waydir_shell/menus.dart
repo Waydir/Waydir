@@ -488,6 +488,8 @@ mixin _WaydirMenuMixin
         paths: paths,
         dir: store.currentPath.value,
         form: form,
+        otherPane: _otherPaneContext(store),
+        panes: _allPaneContexts(store),
       );
       if (!mounted) return;
       await _applyPluginEffects(
@@ -503,6 +505,36 @@ mixin _WaydirMenuMixin
       );
       if (mounted) _notifyPluginError(contribution, '$e');
     }
+  }
+
+  Map<String, dynamic> _paneContext(NavigationStore store) {
+    return {
+      'dir': store.currentPath.value,
+      'paths': store.selectedEntries.map((e) => e.realPath).toList(),
+    };
+  }
+
+  /// The active tab's store for each open pane, tagged with `active`, so a
+  /// plugin can target either side of a dual-pane layout.
+  List<Map<String, dynamic>> _allPaneContexts(NavigationStore active) {
+    return [
+      for (final pane in _shell.panes.value)
+        {
+          ..._paneContext(pane.tabs.activeTab.value.store),
+          'active': identical(pane.tabs.activeTab.value.store, active),
+        },
+    ];
+  }
+
+  /// The inactive pane's context in a dual-pane layout, or null when only one
+  /// pane is open. Lets plugins implement copy-to-other-pane, compare, sync.
+  Map<String, dynamic>? _otherPaneContext(NavigationStore active) {
+    for (final pane in _shell.panes.value) {
+      final store = pane.tabs.activeTab.value.store;
+      if (!identical(store, active)) return _paneContext(store);
+    }
+
+    return null;
   }
 
   void _notifyPluginError(PluginRuntimeTarget c, String? message) {

@@ -342,6 +342,8 @@ class PluginStore {
     required List<String> paths,
     required String dir,
     Map<String, dynamic>? form,
+    Map<String, dynamic>? otherPane,
+    List<Map<String, dynamic>>? panes,
   }) async {
     final ctx = <String, dynamic>{
       'paths': paths,
@@ -350,6 +352,8 @@ class PluginStore {
       'settings': mergedSettings(contribution.pluginId),
     };
     if (form != null) ctx['form'] = form;
+    if (otherPane != null) ctx['other_pane'] = otherPane;
+    if (panes != null) ctx['panes'] = panes;
     final ctxJson = jsonEncode(ctx);
     final raw = await PluginFfi.invoke(
       initLuaPath: contribution.initLuaPath,
