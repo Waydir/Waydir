@@ -160,10 +160,6 @@ class _PluginRow extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       Text('v${m.version}', style: context.txt.muted),
-                      for (final perm in m.permissions) ...[
-                        const SizedBox(width: 6),
-                        _Pill(label: perm, color: AppColors.warning),
-                      ],
                       if (hasError) ...[
                         const SizedBox(width: 6),
                         _Pill(label: 'error', color: AppColors.danger),

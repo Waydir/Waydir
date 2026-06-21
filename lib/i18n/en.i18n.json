@@ -194,7 +194,6 @@
       "configure": "Configure",
       "configureTitle": "$name settings",
       "noSettings": "This plugin has no settings.",
-      "permissionsLabel": "Permissions",
       "shortcutPrefix": "Plugin: $name"
     },
     "general": {

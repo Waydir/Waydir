@@ -4,6 +4,5 @@
   "version": "1.0.0",
   "author": "waydir",
   "description": "Toolbar button that opens the current folder in VS Code (or any editor command).",
-  "api_version": 2,
-  "permissions": ["exec"]
+  "api_version": 2
 }

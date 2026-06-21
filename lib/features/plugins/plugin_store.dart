@@ -124,7 +124,6 @@ class PluginStore {
           author: '',
           description: '',
           apiVersion: 0,
-          permissions: const {},
         ),
         dir: dirPath,
         enabled: false,
@@ -351,7 +350,6 @@ class PluginStore {
       initLuaPath: contribution.initLuaPath,
       actionId: contribution.actionId,
       ctxJson: ctxJson,
-      perms: contribution.manifest.permsBitmask,
     );
     if (raw == null) {
       return [
@@ -371,7 +369,6 @@ class PluginStore {
       initLuaPath: bar.initLuaPath,
       barId: bar.barId,
       ctxJson: jsonEncode(ctx),
-      perms: bar.manifest.permsBitmask,
     );
     if (raw == null) {
       return PluginBarInvokeResult(
@@ -394,7 +391,6 @@ class PluginStore {
       barId: bar.barId,
       itemId: itemId,
       ctxJson: jsonEncode(ctx),
-      perms: bar.manifest.permsBitmask,
     );
     if (raw == null) {
       return PluginBarInvokeResult(

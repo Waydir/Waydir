@@ -5,7 +5,6 @@ import '../../core/models/file_entry.dart';
 abstract class PluginRuntimeTarget {
   String get pluginId;
   PluginManifest get manifest;
-  bool get allowExec;
   String get runtimeId;
 }
 
@@ -16,7 +15,6 @@ class PluginManifest {
   final String author;
   final String description;
   final int apiVersion;
-  final Set<String> permissions;
 
   const PluginManifest({
     required this.id,
@@ -25,15 +23,12 @@ class PluginManifest {
     required this.author,
     required this.description,
     required this.apiVersion,
-    required this.permissions,
   });
 
   factory PluginManifest.fromJson(
     Map<String, dynamic> json,
     String fallbackId,
   ) {
-    final perms = json['permissions'];
-
     return PluginManifest(
       id: (json['id'] as String?)?.trim().isNotEmpty == true
           ? json['id'] as String
@@ -43,20 +38,7 @@ class PluginManifest {
       author: json['author'] as String? ?? '',
       description: json['description'] as String? ?? '',
       apiVersion: (json['api_version'] as num?)?.toInt() ?? 1,
-      permissions: perms is List
-          ? perms.whereType<String>().toSet()
-          : const <String>{},
     );
-  }
-
-  /// Permission bitmask passed to the native invoke call. Keep in sync with
-  /// the `PERM_*` constants in `rust/waydir_core/src/plugin.rs`.
-  int get permsBitmask {
-    var bits = 0;
-    if (permissions.contains('exec')) bits |= 1 << 0;
-    if (permissions.contains('fs')) bits |= 1 << 1;
-
-    return bits;
   }
 }
 
@@ -226,9 +208,6 @@ class PluginContribution implements PluginRuntimeTarget {
     return null;
   }
 
-  @override
-  bool get allowExec => manifest.permissions.contains('exec');
-
   bool showsOn(String surface) => surfaces.contains(surface);
 }
 
@@ -275,9 +254,6 @@ class PluginBarContribution implements PluginRuntimeTarget {
 
     return null;
   }
-
-  @override
-  bool get allowExec => manifest.permissions.contains('exec');
 }
 
 class PluginBarItem {

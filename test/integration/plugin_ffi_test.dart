@@ -70,7 +70,6 @@ void main() {
       initLuaPath: path,
       actionId: 'greet',
       ctxJson: ctx,
-      perms: 0,
     );
     expect(raw, isNotNull);
     final json = jsonDecode(raw!) as Map<String, dynamic>;
@@ -121,7 +120,6 @@ void main() {
                 initLuaPath: path,
                 barId: 'status',
                 ctxJson: ctx,
-                perms: 0,
               ))!,
             )
             as Map<String, dynamic>;
@@ -136,7 +134,6 @@ void main() {
                 barId: 'status',
                 itemId: 'refresh',
                 ctxJson: ctx,
-                perms: 0,
               ))!,
             )
             as Map<String, dynamic>;
@@ -147,12 +144,15 @@ void main() {
     });
   });
 
-  test('exec is denied without permission', () async {
+  test('exec runs without any permission declaration', () async {
     final path = writePlugin('''
       waydir.register({
         id = "danger",
         title = "Danger",
-        run = function(ctx) waydir.exec("echo", {"hi"}) end,
+        run = function(ctx)
+          local stdout = waydir.exec("echo", {"hi"})
+          waydir.toast(stdout)
+        end,
       })
     ''');
 
@@ -164,14 +164,16 @@ void main() {
         'dir': '/',
         'plugin_dir': tmp.path,
       }),
-      perms: 0,
     );
     final json = jsonDecode(raw!) as Map<String, dynamic>;
-    expect(json['ok'], isFalse);
-    expect(json['error'].toString(), contains('permission'));
+    expect(json['ok'], isTrue);
+    expect((json['effects'] as List).last, {
+      'type': 'toast',
+      'message': 'hi\n',
+    });
   });
 
-  test('exec returns stdout, stderr and exit code with permission', () async {
+  test('exec returns stdout, stderr and exit code', () async {
     final path = writePlugin('''
       waydir.register({
         id = "exec_out",
@@ -194,7 +196,6 @@ void main() {
         'dir': '/',
         'plugin_dir': tmp.path,
       }),
-      perms: 1,
     );
     final json = jsonDecode(raw!) as Map<String, dynamic>;
     expect(json['ok'], isTrue);
@@ -229,7 +230,7 @@ void main() {
     });
   });
 
-  test('fs read_text works with fs permission and is denied without', () async {
+  test('fs read_text works', () async {
     final dataFile = File(p.join(tmp.path, 'data.txt'))
       ..writeAsStringSync('payload');
     final path = writePlugin('''
@@ -252,7 +253,6 @@ void main() {
       initLuaPath: path,
       actionId: 'reader',
       ctxJson: ctx,
-      perms: 2,
     );
     final grantedJson = jsonDecode(granted!) as Map<String, dynamic>;
     expect(grantedJson['ok'], isTrue);
@@ -260,15 +260,6 @@ void main() {
       'type': 'toast',
       'message': 'payload',
     });
-
-    final denied = await PluginFfi.invoke(
-      initLuaPath: path,
-      actionId: 'reader',
-      ctxJson: ctx,
-      perms: 0,
-    );
-    final deniedJson = jsonDecode(denied!) as Map<String, dynamic>;
-    expect(deniedJson['ok'], isFalse);
   });
 
   test('notify, set_setting and dialog effects round-trip', () async {
@@ -295,7 +286,6 @@ void main() {
         'dir': '/',
         'plugin_dir': tmp.path,
       }),
-      perms: 0,
     );
     final json = jsonDecode(raw!) as Map<String, dynamic>;
     final effects = (json['effects'] as List).cast<Map<String, dynamic>>();
@@ -326,7 +316,6 @@ void main() {
         'settings': {'greeting': 'hi'},
         'form': {'x': 'y'},
       }),
-      perms: 0,
     );
     final json = jsonDecode(raw!) as Map<String, dynamic>;
     expect((json['effects'] as List).first, {
@@ -359,7 +348,6 @@ void main() {
           'dir': '/',
           'plugin_dir': tmp.path,
         }),
-        perms: 0,
       );
       final json = jsonDecode(raw!) as Map<String, dynamic>;
       expect((json['effects'] as List).first, {
@@ -369,7 +357,7 @@ void main() {
     },
   );
 
-  test('run_task emits a task effect with timeout (needs exec)', () async {
+  test('run_task emits a task effect with timeout', () async {
     final path = writePlugin('''
       waydir.register({
         id = "job",
@@ -387,7 +375,6 @@ void main() {
         'dir': '/',
         'plugin_dir': tmp.path,
       }),
-      perms: 1,
     );
     final json = jsonDecode(raw!) as Map<String, dynamic>;
     final effect = (json['effects'] as List).first as Map<String, dynamic>;
@@ -423,7 +410,6 @@ void main() {
           'dir': '/',
           'plugin_dir': tmp.path,
         }),
-        perms: 1,
       );
       final json = jsonDecode(raw!) as Map<String, dynamic>;
       final effect = (json['effects'] as List).first as Map<String, dynamic>;
@@ -465,7 +451,6 @@ void main() {
         'dir': '/',
         'plugin_dir': tmp.path,
       }),
-      perms: 0,
     );
     final json = jsonDecode(raw!) as Map<String, dynamic>;
     final effects = (json['effects'] as List).cast<Map<String, dynamic>>();

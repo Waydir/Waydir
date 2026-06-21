@@ -737,7 +737,6 @@ mixin _WaydirMenuMixin
     PluginRuntimeTarget c,
     PluginEffect effect,
   ) async {
-    if (!c.allowExec) return;
     final cmd = effect.data['cmd'] as String?;
     if (cmd == null) return;
     final title = effect.data['title'] as String? ?? c.manifest.name;

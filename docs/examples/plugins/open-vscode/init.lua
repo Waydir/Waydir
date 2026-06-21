@@ -1,6 +1,6 @@
--- A toolbar button that opens the current folder in VS Code. Needs the `exec`
--- permission and the `code` CLI on PATH (set a different command - e.g.
--- `code-insiders`, `codium`, or a flatpak wrapper - under Configure).
+-- A toolbar button that opens the current folder in VS Code. Needs the `code`
+-- CLI on PATH (set a different command - e.g. `code-insiders`, `codium`, or a
+-- flatpak wrapper - under Configure).
 
 local function editor_command(ctx)
   local cmd = (ctx.settings or {}).command
