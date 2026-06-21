@@ -145,6 +145,12 @@ mixin _WaydirMenuMixin
         !PlatformPaths.isRemoteUri(entries.first.realPath) &&
         !FileSystemService.isInsideArchive(entries.first.realPath);
     final isRecursive = store.searchActive.value && store.searchRecursive.value;
+    final canTag = entries.every(
+      (e) =>
+          !PlatformPaths.isRemoteUri(e.path) &&
+          !PlatformPaths.isNetworkPath(e.path) &&
+          !FileSystemService.isInsideArchive(e.realPath),
+    );
 
     final openWithItems = isSingleFile
         ? _openWithItemsFor(entries.first)
@@ -315,7 +321,7 @@ mixin _WaydirMenuMixin
           label: t.menu.verifyChecksum,
           action: 'verify_checksum',
         ),
-      if (count >= 1) _tagsSubmenu(entries),
+      if (count >= 1 && canTag) _tagsSubmenu(entries),
       ContextMenuItem.divider,
       if (count == 1)
         ContextMenuItem(

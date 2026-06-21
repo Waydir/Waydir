@@ -1500,12 +1500,19 @@ class NavigationStore {
     return out;
   }
 
+  static bool isTaggablePath(String path) =>
+      !PlatformPaths.isRemoteUri(path) &&
+      !PlatformPaths.isNetworkPath(path) &&
+      !FileSystemService.isInsideArchive(path);
+
   Future<void> toggleTag(Iterable<String> paths, int tagId) async {
+    final taggable = paths.where(isTaggablePath).toList();
+    if (taggable.isEmpty) return;
     final db = SettingsStore.instance.db;
-    final allTagged = paths.every(
+    final allTagged = taggable.every(
       (p) => fileTags.value[p]?.contains(tagId) ?? false,
     );
-    for (final p in paths) {
+    for (final p in taggable) {
       if (allTagged) {
         await db.removeFileTag(p, tagId);
       } else {
@@ -1516,8 +1523,10 @@ class NavigationStore {
   }
 
   Future<void> clearTags(Iterable<String> paths) async {
+    final taggable = paths.where(isTaggablePath).toList();
+    if (taggable.isEmpty) return;
     final db = SettingsStore.instance.db;
-    for (final p in paths) {
+    for (final p in taggable) {
       await db.clearFileTags(p);
     }
     await _refreshTagsForVisible();
