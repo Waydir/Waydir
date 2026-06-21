@@ -25,6 +25,8 @@ import '../../i18n/strings.g.dart';
 import '../files/row_decorations.dart';
 import '../git/git_status_store.dart';
 import '../operations/operation_store.dart';
+import '../tags/tag_path.dart';
+import '../tags/tag_store.dart';
 import 'filter_query.dart';
 import 'folder_size_scanner.dart';
 
@@ -67,11 +69,14 @@ class NavigationStore {
   final foldersFirst = signal<bool>(true);
   final folderSizes = FolderSizeScanner();
   final decorations = RowDecorationStore();
+  final fileTags = signal<Map<String, Set<int>>>({});
   int _sortLoadToken = 0;
   void Function()? _sortDefaultsDisposer;
   void Function()? _gitStatusDisposer;
+  void Function()? _tagsDisposer;
 
   bool get isTrashView => isTrashPath(currentPath.value);
+  bool get isTagView => isTagPath(currentPath.value);
   bool get isTrashRoot => currentPath.value == kTrashPath;
 
   /// Translate a logical smb:// path to its physical gvfs mountpoint when
@@ -281,7 +286,10 @@ class NavigationStore {
         final filter = parsed.query;
         results = filter == null
             ? const []
-            : results.where((f) => filter.matches(f)).toList();
+            : _filterByTags(
+                results.where((f) => filter.matches(f)).toList(),
+                filter,
+              );
       }
       final sorted = sortEntries(
         results,
@@ -304,7 +312,10 @@ class NavigationStore {
         final parsed = parseFilterQuery(q);
         final filter = parsed.query;
         if (filter != null) {
-          list = list.where((f) => filter.matches(f)).toList();
+          list = _filterByTags(
+            list.where((f) => filter.matches(f)).toList(),
+            filter,
+          );
         } else {
           list = const [];
         }
@@ -369,6 +380,42 @@ class NavigationStore {
     _setupShowHiddenEffect();
     _setupSortDefaultsEffect();
     _setupGitStatusEffect();
+    _setupTagsEffect();
+  }
+
+  void _setupTagsEffect() {
+    _tagsDisposer = effect(() {
+      final assigned = fileTags.value;
+      final defs = TagStore.instance.tags.value;
+      if (assigned.isEmpty) {
+        decorations.clearLayer('tags');
+
+        return;
+      }
+      final deco = <String, RowDecoration>{};
+      for (final entry in assigned.entries) {
+        final colors = <Color>[];
+        for (final def in defs) {
+          if (entry.value.contains(def.id)) colors.add(def.color);
+        }
+        if (colors.isEmpty) continue;
+        deco[entry.key] = RowDecoration(
+          tint: colors.first,
+          badgeColors: colors,
+        );
+      }
+      decorations.setLayer('tags', deco);
+    });
+  }
+
+  Future<void> _loadFileTags(List<FileEntry> entries) async {
+    final paths = [for (final e in entries) e.path];
+    final rows = await SettingsStore.instance.db.getFileTagsForPaths(paths);
+    final map = <String, Set<int>>{};
+    for (final row in rows) {
+      (map[row.path] ??= <int>{}).add(row.tagId);
+    }
+    fileTags.value = map;
   }
 
   void _setupGitStatusEffect() {
@@ -1289,7 +1336,9 @@ class NavigationStore {
     });
     try {
       final List<FileEntry> entries;
-      if (isTrashPath(path)) {
+      if (isTagPath(path)) {
+        entries = await _loadTagView(path);
+      } else if (isTrashPath(path)) {
         entries = await _loadTrash(path);
       } else if (PlatformPaths.isSmbUri(path)) {
         final uri = LocationUri.parse(path);
@@ -1358,7 +1407,10 @@ class NavigationStore {
       });
       _restoreFolderStateIfMatches(path);
       _applyPendingSelect();
-      if (isTrashPath(path) || PlatformPaths.isNetworkPath(path)) {
+      if (token == _loadToken) await _loadFileTags(entries);
+      if (isTagPath(path) ||
+          isTrashPath(path) ||
+          PlatformPaths.isNetworkPath(path)) {
         _watcher.stop();
       } else {
         _watcher.watch(
@@ -1429,6 +1481,72 @@ class NavigationStore {
 
       return false;
     }
+  }
+
+  Future<List<FileEntry>> _loadTagView(String path) async {
+    final id = tagIdFromPath(path);
+    if (id == null) return const [];
+    final paths = await SettingsStore.instance.db.getPathsForTag(id);
+    final out = <FileEntry>[];
+    for (final p in paths) {
+      final type = FileSystemEntity.typeSync(p);
+      if (type == FileSystemEntityType.notFound) continue;
+      out.add(
+        FileEntry.fromFileSystemEntity(
+          type == FileSystemEntityType.directory ? Directory(p) : File(p),
+        ),
+      );
+    }
+
+    return out;
+  }
+
+  Future<void> toggleTag(Iterable<String> paths, int tagId) async {
+    final db = SettingsStore.instance.db;
+    final allTagged = paths.every(
+      (p) => fileTags.value[p]?.contains(tagId) ?? false,
+    );
+    for (final p in paths) {
+      if (allTagged) {
+        await db.removeFileTag(p, tagId);
+      } else {
+        await db.addFileTag(p, tagId);
+      }
+    }
+    await _refreshTagsForVisible();
+  }
+
+  Future<void> clearTags(Iterable<String> paths) async {
+    final db = SettingsStore.instance.db;
+    for (final p in paths) {
+      await db.clearFileTags(p);
+    }
+    await _refreshTagsForVisible();
+  }
+
+  List<FileEntry> _filterByTags(List<FileEntry> list, FilterQuery filter) {
+    if (filter.tagNames.isEmpty) return list;
+    final ids = <int>{};
+    for (final def in TagStore.instance.tags.value) {
+      if (filter.tagNames.contains(def.name.toLowerCase())) ids.add(def.id);
+    }
+    if (ids.isEmpty) return const [];
+    final assigned = fileTags.value;
+
+    return list.where((f) {
+      final tags = assigned[f.path];
+
+      return tags != null && tags.any(ids.contains);
+    }).toList();
+  }
+
+  Future<void> _refreshTagsForVisible() async {
+    if (isTagView) {
+      await refresh();
+
+      return;
+    }
+    await _loadFileTags(files.value);
   }
 
   Future<List<FileEntry>> _loadTrash(String path) async {
@@ -1737,6 +1855,7 @@ class NavigationStore {
           renameError.value = null;
           selectedPaths.value = {logicalNew};
         });
+        await SettingsStore.instance.db.moveFileTags(oldPath, logicalNew);
         if (searchActive.value && searchRecursive.value) {
           final updated = searchResults.value.map((e) {
             if (e.path != oldPath) return e;
@@ -2209,6 +2328,8 @@ class NavigationStore {
     _sortDefaultsDisposer = null;
     _gitStatusDisposer?.call();
     _gitStatusDisposer = null;
+    _tagsDisposer?.call();
+    _tagsDisposer = null;
     gitStatus.dispose();
     _searchDebounce?.cancel();
     _searchUiFlush?.cancel();

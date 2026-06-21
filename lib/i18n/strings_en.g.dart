@@ -53,6 +53,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$appMenu$en appMenu = Translations$appMenu$en.internal(_root);
 	late final Translations$changelog$en changelog = Translations$changelog$en.internal(_root);
 	late final Translations$help$en help = Translations$help$en.internal(_root);
+	late final Translations$tags$en tags = Translations$tags$en.internal(_root);
 	late final Translations$keybindings$en keybindings = Translations$keybindings$en.internal(_root);
 	late final Translations$commandPalette$en commandPalette = Translations$commandPalette$en.internal(_root);
 	late final Translations$quickLook$en quickLook = Translations$quickLook$en.internal(_root);
@@ -760,6 +761,36 @@ class Translations$help$en {
 	late final Translations$help$groups$en groups = Translations$help$groups$en.internal(_root);
 }
 
+// Path: tags
+class Translations$tags$en {
+	Translations$tags$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Tags'
+	String get menuLabel => 'Tags';
+
+	/// en: 'New Tag'
+	String get newTag => 'New Tag';
+
+	/// en: 'New tag…'
+	String get newTagDots => 'New tag…';
+
+	/// en: 'Edit Tag'
+	String get editTag => 'Edit Tag';
+
+	/// en: 'Delete Tag'
+	String get deleteTag => 'Delete Tag';
+
+	/// en: 'Clear Tags'
+	String get clear => 'Clear Tags';
+
+	/// en: 'Save'
+	String get save => 'Save';
+}
+
 // Path: keybindings
 class Translations$keybindings$en {
 	Translations$keybindings$en.internal(this._root);
@@ -1423,6 +1454,12 @@ class Translations$sidebar$en {
 
 	/// en: 'Bookmarks'
 	String get bookmarks => 'Bookmarks';
+
+	/// en: 'Tags'
+	String get tags => 'Tags';
+
+	/// en: 'Tag files to see them here'
+	String get noTags => 'Tag files to see them here';
 
 	/// en: 'Drop folder to bookmark'
 	String get dropBookmark => 'Drop folder to bookmark';
@@ -4416,6 +4453,13 @@ extension on Translations {
 			'help.groups.resources.title' => 'Resources',
 			'help.groups.resources.links.title' => 'Links & Resources',
 			'help.groups.resources.links.body' => 'More about Waydir and where to go next.\n\n- **Changelog** - what\'s new in each release (in the menu).\n- **Keyboard shortcuts** - the full reference in **Preferences -> Keyboard**.\n- **GitHub** - [source code, issues and releases](https://github.com/Waydir/Waydir).\n- **Plugin guide** - [how to write your own plugins](https://github.com/Waydir/Waydir/blob/main/docs/plugins.md).',
+			'tags.menuLabel' => 'Tags',
+			'tags.newTag' => 'New Tag',
+			'tags.newTagDots' => 'New tag…',
+			'tags.editTag' => 'Edit Tag',
+			'tags.deleteTag' => 'Delete Tag',
+			'tags.clear' => 'Clear Tags',
+			'tags.save' => 'Save',
 			'keybindings.title' => 'Keyboard Shortcuts',
 			'keybindings.menuLabel' => 'Shortcuts',
 			'keybindings.categories.navigation' => 'Navigation',
@@ -4461,6 +4505,8 @@ extension on Translations {
 			'keybindings.prevTab' => 'Previous tab',
 			'keybindings.switchTab' => 'Switch to tab',
 			'keybindings.toggleDual' => 'Toggle dual pane',
+			_ => null,
+		} ?? switch (path) {
 			'keybindings.switchPane' => 'Switch active pane',
 			'keybindings.compare' => 'Compare folders',
 			'keybindings.compareSyncRight' => 'Sync left to right',
@@ -4468,8 +4514,6 @@ extension on Translations {
 			'keybindings.compareExit' => 'Exit compare mode',
 			'keybindings.focusTerminal' => 'Open / focus terminal',
 			'keybindings.toggleTerminal' => 'Toggle terminal',
-			_ => null,
-		} ?? switch (path) {
 			'keybindings.newTerminalTab' => 'New terminal tab',
 			'keybindings.closeTerminalTab' => 'Close terminal tab',
 			'keybindings.insertRelativePaths' => 'Insert relative paths in terminal',
@@ -4638,6 +4682,8 @@ extension on Translations {
 			'sidebar.containers' => 'Containers',
 			'sidebar.containerRunning' => 'Running',
 			'sidebar.bookmarks' => 'Bookmarks',
+			'sidebar.tags' => 'Tags',
+			'sidebar.noTags' => 'Tag files to see them here',
 			'sidebar.dropBookmark' => 'Drop folder to bookmark',
 			'sidebar.editLayout' => 'Edit sidebar',
 			'sidebar.editDone' => 'Done',

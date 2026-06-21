@@ -198,6 +198,23 @@ class DisabledPlugins extends Table {
   Set<Column> get primaryKey => {pluginId};
 }
 
+/// User-defined file tags: a colour and name, ordered for display.
+class Tags extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text()();
+  IntColumn get color => integer()();
+  IntColumn get orderIndex => integer().withDefault(const Constant(0))();
+}
+
+/// Tag assignments. A file path may carry several tags.
+class FileTags extends Table {
+  TextColumn get path => text()();
+  IntColumn get tagId => integer().references(Tags, #id)();
+
+  @override
+  Set<Column> get primaryKey => {path, tagId};
+}
+
 /// User overrides for sidebar layout: section and item order plus visibility.
 /// [scope] is `section` for whole sections, otherwise the section id
 /// (`favorites`, `devices`, `network`) whose items are being ordered. [itemKey]
@@ -225,17 +242,22 @@ class SidebarPrefs extends Table {
     PluginSettings,
     DisabledPlugins,
     SidebarPrefs,
+    Tags,
+    FileTags,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 41;
+  int get schemaVersion => 42;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-    onCreate: (m) => m.createAll(),
+    onCreate: (m) async {
+      await m.createAll();
+      await _seedDefaultTags();
+    },
     onUpgrade: (m, from, to) async {
       if (from < 2) {
         await m.createTable(bookmarks);
@@ -407,8 +429,35 @@ class AppDatabase extends _$AppDatabase {
       if (from < 41) {
         await addSettingColumn(appSettings.showGlobalToolbar);
       }
+      if (from < 42) {
+        await m.createTable(tags);
+        await m.createTable(fileTags);
+        await _seedDefaultTags();
+      }
     },
   );
+
+  static const _defaultTags = <(String, int)>[
+    ('Red', 0xFFE5484D),
+    ('Yellow', 0xFFE2A610),
+    ('Green', 0xFF46A758),
+    ('Blue', 0xFF3E63DD),
+  ];
+
+  Future<void> _seedDefaultTags() async {
+    await batch((b) {
+      for (var i = 0; i < _defaultTags.length; i++) {
+        b.insert(
+          tags,
+          TagsCompanion.insert(
+            name: _defaultTags[i].$1,
+            color: _defaultTags[i].$2,
+            orderIndex: Value(i),
+          ),
+        );
+      }
+    });
+  }
 
   Future<List<String>> getDisabledPlugins() {
     return select(disabledPlugins).map((r) => r.pluginId).get();
@@ -468,6 +517,83 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> clearShortcutBindings() {
     return delete(shortcutBindings).go();
+  }
+
+  Future<List<Tag>> getTags() {
+    return (select(
+      tags,
+    )..orderBy([(t) => OrderingTerm(expression: t.orderIndex)])).get();
+  }
+
+  Future<int> createTag(String name, int color, int orderIndex) {
+    return into(tags).insert(
+      TagsCompanion.insert(
+        name: name,
+        color: color,
+        orderIndex: Value(orderIndex),
+      ),
+    );
+  }
+
+  Future<void> updateTag(int id, {String? name, int? color}) {
+    return (update(tags)..where((t) => t.id.equals(id))).write(
+      TagsCompanion(
+        name: name == null ? const Value.absent() : Value(name),
+        color: color == null ? const Value.absent() : Value(color),
+      ),
+    );
+  }
+
+  Future<void> deleteTag(int id) async {
+    await (delete(fileTags)..where((t) => t.tagId.equals(id))).go();
+    await (delete(tags)..where((t) => t.id.equals(id))).go();
+  }
+
+  Future<void> setTagOrder(List<int> idsInOrder) async {
+    await batch((b) {
+      for (var i = 0; i < idsInOrder.length; i++) {
+        final idx = i;
+        b.update(
+          tags,
+          TagsCompanion(orderIndex: Value(idx)),
+          where: (t) => t.id.equals(idsInOrder[idx]),
+        );
+      }
+    });
+  }
+
+  Future<List<FileTag>> getFileTagsForPaths(List<String> paths) {
+    if (paths.isEmpty) return Future.value(const []);
+
+    return (select(fileTags)..where((t) => t.path.isIn(paths))).get();
+  }
+
+  Future<List<String>> getPathsForTag(int tagId) {
+    return (select(
+      fileTags,
+    )..where((t) => t.tagId.equals(tagId))).map((r) => r.path).get();
+  }
+
+  Future<void> addFileTag(String path, int tagId) {
+    return into(fileTags).insertOnConflictUpdate(
+      FileTagsCompanion.insert(path: path, tagId: tagId),
+    );
+  }
+
+  Future<void> removeFileTag(String path, int tagId) {
+    return (delete(
+      fileTags,
+    )..where((t) => t.path.equals(path) & t.tagId.equals(tagId))).go();
+  }
+
+  Future<void> clearFileTags(String path) {
+    return (delete(fileTags)..where((t) => t.path.equals(path))).go();
+  }
+
+  Future<void> moveFileTags(String oldPath, String newPath) async {
+    await (update(fileTags)..where((t) => t.path.equals(oldPath))).write(
+      FileTagsCompanion(path: Value(newPath)),
+    );
   }
 
   Future<List<SidebarPref>> getSidebarPrefs() {

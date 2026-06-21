@@ -597,6 +597,15 @@
       }
     }
   },
+  "tags": {
+    "menuLabel": "Tags",
+    "newTag": "New Tag",
+    "newTagDots": "New tag…",
+    "editTag": "Edit Tag",
+    "deleteTag": "Delete Tag",
+    "clear": "Clear Tags",
+    "save": "Save"
+  },
   "keybindings": {
     "title": "Keyboard Shortcuts",
     "menuLabel": "Shortcuts",
@@ -856,6 +865,8 @@
     "containers": "Containers",
     "containerRunning": "Running",
     "bookmarks": "Bookmarks",
+    "tags": "Tags",
+    "noTags": "Tag files to see them here",
     "dropBookmark": "Drop folder to bookmark",
     "editLayout": "Edit sidebar",
     "editDone": "Done",

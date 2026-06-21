@@ -10,12 +10,14 @@ const sidebarSectionDevices = 'devices';
 const sidebarSectionContainers = 'containers';
 const sidebarSectionNetwork = 'network';
 const sidebarSectionBookmarks = 'bookmarks';
+const sidebarSectionTags = 'tags';
 
 const _defaultSectionOrder = [
   sidebarSectionFavorites,
   sidebarSectionDevices,
   sidebarSectionContainers,
   sidebarSectionNetwork,
+  sidebarSectionTags,
   sidebarSectionBookmarks,
 ];
 

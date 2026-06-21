@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Global toolbar.
 - Folder compare and sync between panes.
+- Color tags for files, with a sidebar section, filtering and `Ctrl+Shift+1..9` shortcuts.
 - Setting to make dragging move files by default (Alt copies). ([#184](https://github.com/Waydir/Waydir/issues/184))
 - Setting to hide the global toolbar.
 

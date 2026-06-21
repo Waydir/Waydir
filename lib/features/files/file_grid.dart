@@ -737,6 +737,33 @@ class _GridTileState extends State<_GridTile> {
                           ),
                         ),
                       ),
+                    if (widget.rowDecoration?.badgeColors case final colors?
+                        when colors.isNotEmpty)
+                      Positioned(
+                        right: 0,
+                        bottom: 0,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            for (final color in colors)
+                              Padding(
+                                padding: const EdgeInsets.only(left: 2),
+                                child: Container(
+                                  width: 9,
+                                  height: 9,
+                                  decoration: BoxDecoration(
+                                    color: color,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: AppColors.bg,
+                                      width: 1,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
                   ],
                 ),
                 SizedBox(height: widget.thumbGap),

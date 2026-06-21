@@ -1452,6 +1452,29 @@ class _ListRowState extends State<_ListRow> {
     return null;
   }
 
+  Widget _buildTagDots() {
+    final colors = widget.rowDecoration?.badgeColors ?? const [];
+    if (colors.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 6),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final color in colors)
+            Padding(
+              padding: const EdgeInsets.only(left: 2),
+              child: Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildIconWithBadge(BuildContext context, FileEntry e, bool isFolder) {
     final icon = buildFileIcon(
       name: e.name,
@@ -1797,17 +1820,24 @@ class _ListRowState extends State<_ListRow> {
                 const SizedBox(width: 6),
                 SizedBox(
                   width: widget.nameWidth,
-                  child: Text(
-                    e.name,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.txt.body.copyWith(
-                      color: widget.selected
-                          ? AppColors.fg
-                          : AppColors.fg.withValues(alpha: 0.9),
-                      fontWeight: widget.selected
-                          ? FontWeight.w500
-                          : FontWeight.normal,
-                    ),
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          e.name,
+                          overflow: TextOverflow.ellipsis,
+                          style: context.txt.body.copyWith(
+                            color: widget.selected
+                                ? AppColors.fg
+                                : AppColors.fg.withValues(alpha: 0.9),
+                            fontWeight: widget.selected
+                                ? FontWeight.w500
+                                : FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                      _buildTagDots(),
+                    ],
                   ),
                 ),
                 if (widget.recursive) ...[

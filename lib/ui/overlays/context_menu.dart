@@ -25,6 +25,9 @@ class ContextMenuItem {
   /// Optional path to a real icon file (PNG/SVG) shown instead of [icon].
   final String? iconPath;
 
+  /// Optional widget shown instead of [icon]; used for tag colour dots.
+  final Widget? leading;
+
   const ContextMenuItem({
     required this.icon,
     required this.label,
@@ -36,6 +39,7 @@ class ContextMenuItem {
     this.enabled = true,
     this.children,
     this.iconPath,
+    this.leading,
   });
 
   static const divider = ContextMenuItem._divider();
@@ -50,7 +54,8 @@ class ContextMenuItem {
       shortcut = null,
       enabled = true,
       children = null,
-      iconPath = null;
+      iconPath = null,
+      leading = null;
 
   bool get isDivider => action == '__divider__';
   bool get hasChildren => children != null && children!.isNotEmpty;
@@ -309,7 +314,13 @@ class _ContextMenuItemTileState extends State<_ContextMenuItemTile> {
           ),
           child: Row(
             children: [
-              if (item.iconPath != null)
+              if (item.leading != null)
+                SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: Center(child: item.leading),
+                )
+              else if (item.iconPath != null)
                 AppIcon(path: item.iconPath, size: 16)
               else
                 Icon(item.icon, size: 14, color: fg),

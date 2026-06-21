@@ -4,8 +4,13 @@ import 'package:signals/signals.dart';
 class RowDecoration {
   final Color tint;
   final String? badge;
+  final List<Color> badgeColors;
 
-  const RowDecoration({required this.tint, this.badge});
+  const RowDecoration({
+    required this.tint,
+    this.badge,
+    this.badgeColors = const [],
+  });
 }
 
 class RowDecorationStore {
