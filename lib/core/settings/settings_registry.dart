@@ -353,14 +353,6 @@ class SettingsRegistry {
       searchTerms: const ['hidden', 'dotfiles', 'files'],
       signal: SettingsStore.instance.showHiddenDefault,
     ),
-    ToggleSetting(
-      id: 'appearance.showGlobalToolbar',
-      category: SettingsCategory.appearance,
-      label: () => t.preferences.appearance.showGlobalToolbar,
-      hint: () => t.preferences.appearance.showGlobalToolbarHint,
-      searchTerms: const ['toolbar', 'global', 'buttons', 'bar'],
-      signal: SettingsStore.instance.showGlobalToolbar,
-    ),
     ChoiceSetting<String>(
       id: 'appearance.rowDensity',
       category: SettingsCategory.appearance,

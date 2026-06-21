@@ -8,13 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Global toolbar.
 - Plugins: actions can read the other pane through `ctx.other_pane` and every pane through `ctx.panes`, enabling copy-to-other-pane, compare and sync workflows.
 - Plugins: reactive `navigate` and `selection_change` event handlers via the `event` field.
 - Folder compare and sync between panes.
 - Color tags for files, with a sidebar section and filtering.
 - Setting to make dragging move files by default (Alt copies). ([#184](https://github.com/Waydir/Waydir/issues/184))
-- Setting to hide the global toolbar.
 
 ### Changed
 - Reworked the Help dialog.

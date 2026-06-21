@@ -323,8 +323,6 @@
       "filesSection": "Files",
       "showHidden": "Show hidden files by default",
       "showHiddenHint": "Applies to new tabs. Existing tabs keep their setting.",
-      "showGlobalToolbar": "Show global toolbar",
-      "showGlobalToolbarHint": "Show the toolbar above the tabs with shared actions.",
       "rowDensity": "Row density",
       "rowDensityComfortable": "Comfortable",
       "rowDensityCompact": "Compact",
@@ -448,7 +446,7 @@
         },
         "interface": {
           "title": "The Interface",
-          "body": "The window is built from a few simple parts.\n\n- **Sidebar** - bookmarks, drives and remote locations. Toggle it with `Ctrl+B`.\n- **Global toolbar** - shared actions above the tabs (can be hidden in Preferences).\n- **Tab strip** - one tab per open folder.\n- **Breadcrumb bar** - the current path; click any segment to jump there.\n- **File list** - the main view, in list or grid mode.\n- **Status bar** - item counts, selection size and operation progress."
+          "body": "The window is built from a few simple parts.\n\n- **Sidebar** - bookmarks, drives and remote locations. Toggle it with `Ctrl+B`.\n- **Tab strip** - one tab per open folder.\n- **Breadcrumb bar** - the current path; click any segment to jump there.\n- **File list** - the main view, in list or grid mode.\n- **Status bar** - item counts, selection size and operation progress."
         },
         "keyboardBasics": {
           "title": "Keyboard-First Basics",
@@ -501,11 +499,7 @@
         },
         "pattern": {
           "title": "Select by Pattern",
-          "body": "Select files matching a wildcard pattern instead of picking them by hand.\n\n- `Ctrl+S` opens select-by-pattern.\n- Use wildcards like `*.png` or `report-*.pdf`.\n- The matching set is added to the current selection.\n- Also available from the global toolbar."
-        },
-        "toolbar": {
-          "title": "Global Toolbar",
-          "body": "The global toolbar sits above the tabs and holds shared actions, with buttons that enable or disable based on context.\n\n- **Multi Rename** and **Select by Pattern** activate when files are selected.\n- **Save Selection** writes the current selection to a text file; **Load Selection** restores it from one.\n- **Toggle Hidden** shows or hides dotfiles.\n- The toolbar can be hidden entirely in **Preferences -> Appearance**."
+          "body": "Select files matching a wildcard pattern instead of picking them by hand.\n\n- `Ctrl+S` opens select-by-pattern.\n- Use wildcards like `*.png` or `report-*.pdf`.\n- The matching set is added to the current selection."
         }
       },
       "files": {

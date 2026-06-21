@@ -792,21 +792,6 @@ class $AppSettingsTable extends AppSettings
     ),
     defaultValue: const Constant(false),
   );
-  static const VerificationMeta _showGlobalToolbarMeta = const VerificationMeta(
-    'showGlobalToolbar',
-  );
-  @override
-  late final GeneratedColumn<bool> showGlobalToolbar = GeneratedColumn<bool>(
-    'show_global_toolbar',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("show_global_toolbar" IN (0, 1))',
-    ),
-    defaultValue: const Constant(true),
-  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -867,7 +852,6 @@ class $AppSettingsTable extends AppSettings
     quickLookWrapLines,
     quickLookShowStatistics,
     dragMovesByDefault,
-    showGlobalToolbar,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1373,15 +1357,6 @@ class $AppSettingsTable extends AppSettings
         ),
       );
     }
-    if (data.containsKey('show_global_toolbar')) {
-      context.handle(
-        _showGlobalToolbarMeta,
-        showGlobalToolbar.isAcceptableOrUnknown(
-          data['show_global_toolbar']!,
-          _showGlobalToolbarMeta,
-        ),
-      );
-    }
     return context;
   }
 
@@ -1623,10 +1598,6 @@ class $AppSettingsTable extends AppSettings
         DriftSqlType.bool,
         data['${effectivePrefix}drag_moves_by_default'],
       )!,
-      showGlobalToolbar: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}show_global_toolbar'],
-      )!,
     );
   }
 
@@ -1695,7 +1666,6 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
   final bool quickLookWrapLines;
   final bool quickLookShowStatistics;
   final bool dragMovesByDefault;
-  final bool showGlobalToolbar;
   const AppSetting({
     required this.id,
     required this.themeMode,
@@ -1755,7 +1725,6 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     required this.quickLookWrapLines,
     required this.quickLookShowStatistics,
     required this.dragMovesByDefault,
-    required this.showGlobalToolbar,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1824,7 +1793,6 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     map['quick_look_wrap_lines'] = Variable<bool>(quickLookWrapLines);
     map['quick_look_show_statistics'] = Variable<bool>(quickLookShowStatistics);
     map['drag_moves_by_default'] = Variable<bool>(dragMovesByDefault);
-    map['show_global_toolbar'] = Variable<bool>(showGlobalToolbar);
     return map;
   }
 
@@ -1888,7 +1856,6 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       quickLookWrapLines: Value(quickLookWrapLines),
       quickLookShowStatistics: Value(quickLookShowStatistics),
       dragMovesByDefault: Value(dragMovesByDefault),
-      showGlobalToolbar: Value(showGlobalToolbar),
     );
   }
 
@@ -1990,7 +1957,6 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
         json['quickLookShowStatistics'],
       ),
       dragMovesByDefault: serializer.fromJson<bool>(json['dragMovesByDefault']),
-      showGlobalToolbar: serializer.fromJson<bool>(json['showGlobalToolbar']),
     );
   }
   @override
@@ -2065,7 +2031,6 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
         quickLookShowStatistics,
       ),
       'dragMovesByDefault': serializer.toJson<bool>(dragMovesByDefault),
-      'showGlobalToolbar': serializer.toJson<bool>(showGlobalToolbar),
     };
   }
 
@@ -2128,7 +2093,6 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     bool? quickLookWrapLines,
     bool? quickLookShowStatistics,
     bool? dragMovesByDefault,
-    bool? showGlobalToolbar,
   }) => AppSetting(
     id: id ?? this.id,
     themeMode: themeMode ?? this.themeMode,
@@ -2194,7 +2158,6 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     quickLookShowStatistics:
         quickLookShowStatistics ?? this.quickLookShowStatistics,
     dragMovesByDefault: dragMovesByDefault ?? this.dragMovesByDefault,
-    showGlobalToolbar: showGlobalToolbar ?? this.showGlobalToolbar,
   );
   AppSetting copyWithCompanion(AppSettingsCompanion data) {
     return AppSetting(
@@ -2362,9 +2325,6 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       dragMovesByDefault: data.dragMovesByDefault.present
           ? data.dragMovesByDefault.value
           : this.dragMovesByDefault,
-      showGlobalToolbar: data.showGlobalToolbar.present
-          ? data.showGlobalToolbar.value
-          : this.showGlobalToolbar,
     );
   }
 
@@ -2430,8 +2390,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           ..write('quickLookVimMode: $quickLookVimMode, ')
           ..write('quickLookWrapLines: $quickLookWrapLines, ')
           ..write('quickLookShowStatistics: $quickLookShowStatistics, ')
-          ..write('dragMovesByDefault: $dragMovesByDefault, ')
-          ..write('showGlobalToolbar: $showGlobalToolbar')
+          ..write('dragMovesByDefault: $dragMovesByDefault')
           ..write(')'))
         .toString();
   }
@@ -2496,7 +2455,6 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     quickLookWrapLines,
     quickLookShowStatistics,
     dragMovesByDefault,
-    showGlobalToolbar,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -2560,8 +2518,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           other.quickLookVimMode == this.quickLookVimMode &&
           other.quickLookWrapLines == this.quickLookWrapLines &&
           other.quickLookShowStatistics == this.quickLookShowStatistics &&
-          other.dragMovesByDefault == this.dragMovesByDefault &&
-          other.showGlobalToolbar == this.showGlobalToolbar);
+          other.dragMovesByDefault == this.dragMovesByDefault);
 }
 
 class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
@@ -2623,7 +2580,6 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
   final Value<bool> quickLookWrapLines;
   final Value<bool> quickLookShowStatistics;
   final Value<bool> dragMovesByDefault;
-  final Value<bool> showGlobalToolbar;
   const AppSettingsCompanion({
     this.id = const Value.absent(),
     this.themeMode = const Value.absent(),
@@ -2683,7 +2639,6 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.quickLookWrapLines = const Value.absent(),
     this.quickLookShowStatistics = const Value.absent(),
     this.dragMovesByDefault = const Value.absent(),
-    this.showGlobalToolbar = const Value.absent(),
   });
   AppSettingsCompanion.insert({
     this.id = const Value.absent(),
@@ -2744,7 +2699,6 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.quickLookWrapLines = const Value.absent(),
     this.quickLookShowStatistics = const Value.absent(),
     this.dragMovesByDefault = const Value.absent(),
-    this.showGlobalToolbar = const Value.absent(),
   });
   static Insertable<AppSetting> custom({
     Expression<int>? id,
@@ -2805,7 +2759,6 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Expression<bool>? quickLookWrapLines,
     Expression<bool>? quickLookShowStatistics,
     Expression<bool>? dragMovesByDefault,
-    Expression<bool>? showGlobalToolbar,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2886,7 +2839,6 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
         'quick_look_show_statistics': quickLookShowStatistics,
       if (dragMovesByDefault != null)
         'drag_moves_by_default': dragMovesByDefault,
-      if (showGlobalToolbar != null) 'show_global_toolbar': showGlobalToolbar,
     });
   }
 
@@ -2949,7 +2901,6 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Value<bool>? quickLookWrapLines,
     Value<bool>? quickLookShowStatistics,
     Value<bool>? dragMovesByDefault,
-    Value<bool>? showGlobalToolbar,
   }) {
     return AppSettingsCompanion(
       id: id ?? this.id,
@@ -3020,7 +2971,6 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       quickLookShowStatistics:
           quickLookShowStatistics ?? this.quickLookShowStatistics,
       dragMovesByDefault: dragMovesByDefault ?? this.dragMovesByDefault,
-      showGlobalToolbar: showGlobalToolbar ?? this.showGlobalToolbar,
     );
   }
 
@@ -3227,9 +3177,6 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     if (dragMovesByDefault.present) {
       map['drag_moves_by_default'] = Variable<bool>(dragMovesByDefault.value);
     }
-    if (showGlobalToolbar.present) {
-      map['show_global_toolbar'] = Variable<bool>(showGlobalToolbar.value);
-    }
     return map;
   }
 
@@ -3295,8 +3242,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
           ..write('quickLookVimMode: $quickLookVimMode, ')
           ..write('quickLookWrapLines: $quickLookWrapLines, ')
           ..write('quickLookShowStatistics: $quickLookShowStatistics, ')
-          ..write('dragMovesByDefault: $dragMovesByDefault, ')
-          ..write('showGlobalToolbar: $showGlobalToolbar')
+          ..write('dragMovesByDefault: $dragMovesByDefault')
           ..write(')'))
         .toString();
   }
@@ -7117,7 +7063,6 @@ typedef $$AppSettingsTableCreateCompanionBuilder =
       Value<bool> quickLookWrapLines,
       Value<bool> quickLookShowStatistics,
       Value<bool> dragMovesByDefault,
-      Value<bool> showGlobalToolbar,
     });
 typedef $$AppSettingsTableUpdateCompanionBuilder =
     AppSettingsCompanion Function({
@@ -7179,7 +7124,6 @@ typedef $$AppSettingsTableUpdateCompanionBuilder =
       Value<bool> quickLookWrapLines,
       Value<bool> quickLookShowStatistics,
       Value<bool> dragMovesByDefault,
-      Value<bool> showGlobalToolbar,
     });
 
 class $$AppSettingsTableFilterComposer
@@ -7478,11 +7422,6 @@ class $$AppSettingsTableFilterComposer
 
   ColumnFilters<bool> get dragMovesByDefault => $composableBuilder(
     column: $table.dragMovesByDefault,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<bool> get showGlobalToolbar => $composableBuilder(
-    column: $table.showGlobalToolbar,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -7785,11 +7724,6 @@ class $$AppSettingsTableOrderingComposer
     column: $table.dragMovesByDefault,
     builder: (column) => ColumnOrderings(column),
   );
-
-  ColumnOrderings<bool> get showGlobalToolbar => $composableBuilder(
-    column: $table.showGlobalToolbar,
-    builder: (column) => ColumnOrderings(column),
-  );
 }
 
 class $$AppSettingsTableAnnotationComposer
@@ -8080,11 +8014,6 @@ class $$AppSettingsTableAnnotationComposer
     column: $table.dragMovesByDefault,
     builder: (column) => column,
   );
-
-  GeneratedColumn<bool> get showGlobalToolbar => $composableBuilder(
-    column: $table.showGlobalToolbar,
-    builder: (column) => column,
-  );
 }
 
 class $$AppSettingsTableTableManager
@@ -8176,7 +8105,6 @@ class $$AppSettingsTableTableManager
                 Value<bool> quickLookWrapLines = const Value.absent(),
                 Value<bool> quickLookShowStatistics = const Value.absent(),
                 Value<bool> dragMovesByDefault = const Value.absent(),
-                Value<bool> showGlobalToolbar = const Value.absent(),
               }) => AppSettingsCompanion(
                 id: id,
                 themeMode: themeMode,
@@ -8236,7 +8164,6 @@ class $$AppSettingsTableTableManager
                 quickLookWrapLines: quickLookWrapLines,
                 quickLookShowStatistics: quickLookShowStatistics,
                 dragMovesByDefault: dragMovesByDefault,
-                showGlobalToolbar: showGlobalToolbar,
               ),
           createCompanionCallback:
               ({
@@ -8298,7 +8225,6 @@ class $$AppSettingsTableTableManager
                 Value<bool> quickLookWrapLines = const Value.absent(),
                 Value<bool> quickLookShowStatistics = const Value.absent(),
                 Value<bool> dragMovesByDefault = const Value.absent(),
-                Value<bool> showGlobalToolbar = const Value.absent(),
               }) => AppSettingsCompanion.insert(
                 id: id,
                 themeMode: themeMode,
@@ -8358,7 +8284,6 @@ class $$AppSettingsTableTableManager
                 quickLookWrapLines: quickLookWrapLines,
                 quickLookShowStatistics: quickLookShowStatistics,
                 dragMovesByDefault: dragMovesByDefault,
-                showGlobalToolbar: showGlobalToolbar,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

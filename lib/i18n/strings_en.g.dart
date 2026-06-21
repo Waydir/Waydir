@@ -2853,12 +2853,6 @@ class Translations$preferences$appearance$en {
 	/// en: 'Applies to new tabs. Existing tabs keep their setting.'
 	String get showHiddenHint => 'Applies to new tabs. Existing tabs keep their setting.';
 
-	/// en: 'Show global toolbar'
-	String get showGlobalToolbar => 'Show global toolbar';
-
-	/// en: 'Show the toolbar above the tabs with shared actions.'
-	String get showGlobalToolbarHint => 'Show the toolbar above the tabs with shared actions.';
-
 	/// en: 'Row density'
 	String get rowDensity => 'Row density';
 
@@ -3428,7 +3422,6 @@ class Translations$help$groups$selecting$en {
 
 	late final Translations$help$groups$selecting$basics$en basics = Translations$help$groups$selecting$basics$en.internal(_root);
 	late final Translations$help$groups$selecting$pattern$en pattern = Translations$help$groups$selecting$pattern$en.internal(_root);
-	late final Translations$help$groups$selecting$toolbar$en toolbar = Translations$help$groups$selecting$toolbar$en.internal(_root);
 }
 
 // Path: help.groups.files
@@ -3553,8 +3546,8 @@ class Translations$help$groups$gettingStarted$interface$en {
 	/// en: 'The Interface'
 	String get title => 'The Interface';
 
-	/// en: 'The window is built from a few simple parts. - **Sidebar** - bookmarks, drives and remote locations. Toggle it with `Ctrl+B`. - **Global toolbar** - shared actions above the tabs (can be hidden in Preferences). - **Tab strip** - one tab per open folder. - **Breadcrumb bar** - the current path; click any segment to jump there. - **File list** - the main view, in list or grid mode. - **Status bar** - item counts, selection size and operation progress.'
-	String get body => 'The window is built from a few simple parts.\n\n- **Sidebar** - bookmarks, drives and remote locations. Toggle it with `Ctrl+B`.\n- **Global toolbar** - shared actions above the tabs (can be hidden in Preferences).\n- **Tab strip** - one tab per open folder.\n- **Breadcrumb bar** - the current path; click any segment to jump there.\n- **File list** - the main view, in list or grid mode.\n- **Status bar** - item counts, selection size and operation progress.';
+	/// en: 'The window is built from a few simple parts. - **Sidebar** - bookmarks, drives and remote locations. Toggle it with `Ctrl+B`. - **Tab strip** - one tab per open folder. - **Breadcrumb bar** - the current path; click any segment to jump there. - **File list** - the main view, in list or grid mode. - **Status bar** - item counts, selection size and operation progress.'
+	String get body => 'The window is built from a few simple parts.\n\n- **Sidebar** - bookmarks, drives and remote locations. Toggle it with `Ctrl+B`.\n- **Tab strip** - one tab per open folder.\n- **Breadcrumb bar** - the current path; click any segment to jump there.\n- **File list** - the main view, in list or grid mode.\n- **Status bar** - item counts, selection size and operation progress.';
 }
 
 // Path: help.groups.gettingStarted.keyboardBasics
@@ -3718,23 +3711,8 @@ class Translations$help$groups$selecting$pattern$en {
 	/// en: 'Select by Pattern'
 	String get title => 'Select by Pattern';
 
-	/// en: 'Select files matching a wildcard pattern instead of picking them by hand. - `Ctrl+S` opens select-by-pattern. - Use wildcards like `*.png` or `report-*.pdf`. - The matching set is added to the current selection. - Also available from the global toolbar.'
-	String get body => 'Select files matching a wildcard pattern instead of picking them by hand.\n\n- `Ctrl+S` opens select-by-pattern.\n- Use wildcards like `*.png` or `report-*.pdf`.\n- The matching set is added to the current selection.\n- Also available from the global toolbar.';
-}
-
-// Path: help.groups.selecting.toolbar
-class Translations$help$groups$selecting$toolbar$en {
-	Translations$help$groups$selecting$toolbar$en.internal(this._root);
-
-	final Translations _root; // ignore: unused_field
-
-	// Translations
-
-	/// en: 'Global Toolbar'
-	String get title => 'Global Toolbar';
-
-	/// en: 'The global toolbar sits above the tabs and holds shared actions, with buttons that enable or disable based on context. - **Multi Rename** and **Select by Pattern** activate when files are selected. - **Save Selection** writes the current selection to a text file; **Load Selection** restores it from one. - **Toggle Hidden** shows or hides dotfiles. - The toolbar can be hidden entirely in **Preferences -> Appearance**.'
-	String get body => 'The global toolbar sits above the tabs and holds shared actions, with buttons that enable or disable based on context.\n\n- **Multi Rename** and **Select by Pattern** activate when files are selected.\n- **Save Selection** writes the current selection to a text file; **Load Selection** restores it from one.\n- **Toggle Hidden** shows or hides dotfiles.\n- The toolbar can be hidden entirely in **Preferences -> Appearance**.';
+	/// en: 'Select files matching a wildcard pattern instead of picking them by hand. - `Ctrl+S` opens select-by-pattern. - Use wildcards like `*.png` or `report-*.pdf`. - The matching set is added to the current selection.'
+	String get body => 'Select files matching a wildcard pattern instead of picking them by hand.\n\n- `Ctrl+S` opens select-by-pattern.\n- Use wildcards like `*.png` or `report-*.pdf`.\n- The matching set is added to the current selection.';
 }
 
 // Path: help.groups.files.operations
@@ -4301,8 +4279,6 @@ extension on Translations {
 			'preferences.appearance.filesSection' => 'Files',
 			'preferences.appearance.showHidden' => 'Show hidden files by default',
 			'preferences.appearance.showHiddenHint' => 'Applies to new tabs. Existing tabs keep their setting.',
-			'preferences.appearance.showGlobalToolbar' => 'Show global toolbar',
-			'preferences.appearance.showGlobalToolbarHint' => 'Show the toolbar above the tabs with shared actions.',
 			'preferences.appearance.rowDensity' => 'Row density',
 			'preferences.appearance.rowDensityComfortable' => 'Comfortable',
 			'preferences.appearance.rowDensityCompact' => 'Compact',
@@ -4406,7 +4382,7 @@ extension on Translations {
 			'help.groups.gettingStarted.welcome.title' => 'Welcome to Waydir',
 			'help.groups.gettingStarted.welcome.body' => 'Waydir is a fast, keyboard-driven file manager. This guide walks through everything from basic navigation to remote servers, the terminal and customization.\n\n- Use the tree on the left to jump between topics.\n- Most actions have a keyboard shortcut, shown inline as `Ctrl+C`.\n- Every shortcut can be rebound in **Preferences -> Keyboard**.\n\nPick a topic to get started, or read straight through from the top.',
 			'help.groups.gettingStarted.interface.title' => 'The Interface',
-			'help.groups.gettingStarted.interface.body' => 'The window is built from a few simple parts.\n\n- **Sidebar** - bookmarks, drives and remote locations. Toggle it with `Ctrl+B`.\n- **Global toolbar** - shared actions above the tabs (can be hidden in Preferences).\n- **Tab strip** - one tab per open folder.\n- **Breadcrumb bar** - the current path; click any segment to jump there.\n- **File list** - the main view, in list or grid mode.\n- **Status bar** - item counts, selection size and operation progress.',
+			'help.groups.gettingStarted.interface.body' => 'The window is built from a few simple parts.\n\n- **Sidebar** - bookmarks, drives and remote locations. Toggle it with `Ctrl+B`.\n- **Tab strip** - one tab per open folder.\n- **Breadcrumb bar** - the current path; click any segment to jump there.\n- **File list** - the main view, in list or grid mode.\n- **Status bar** - item counts, selection size and operation progress.',
 			'help.groups.gettingStarted.keyboardBasics.title' => 'Keyboard-First Basics',
 			'help.groups.gettingStarted.keyboardBasics.body' => 'Waydir is designed to be driven from the keyboard.\n\n- `↑` / `↓` move the cursor; `Enter` opens; `Backspace` goes up.\n- Start typing to jump to a matching file (type-ahead).\n- `Ctrl+F` searches, `Space` previews, `F2` renames.\n- Almost nothing requires the mouse - and every binding is customizable.',
 			'help.groups.navigating.title' => 'Navigating',
@@ -4431,9 +4407,7 @@ extension on Translations {
 			'help.groups.selecting.basics.title' => 'Selection Basics',
 			'help.groups.selecting.basics.body' => 'Build up exactly the set of files you want before acting on them.\n\n- `Ctrl+A` selects everything in the folder.\n- `Insert` toggles the current item and moves down.\n- `Esc` clears the selection.\n- Click, `Shift+Click` for a range and `Ctrl+Click` to add or remove single items.\n- `Ctrl+Shift+S` saves the current selection to a file; `Ctrl+Shift+L` loads it back.',
 			'help.groups.selecting.pattern.title' => 'Select by Pattern',
-			'help.groups.selecting.pattern.body' => 'Select files matching a wildcard pattern instead of picking them by hand.\n\n- `Ctrl+S` opens select-by-pattern.\n- Use wildcards like `*.png` or `report-*.pdf`.\n- The matching set is added to the current selection.\n- Also available from the global toolbar.',
-			'help.groups.selecting.toolbar.title' => 'Global Toolbar',
-			'help.groups.selecting.toolbar.body' => 'The global toolbar sits above the tabs and holds shared actions, with buttons that enable or disable based on context.\n\n- **Multi Rename** and **Select by Pattern** activate when files are selected.\n- **Save Selection** writes the current selection to a text file; **Load Selection** restores it from one.\n- **Toggle Hidden** shows or hides dotfiles.\n- The toolbar can be hidden entirely in **Preferences -> Appearance**.',
+			'help.groups.selecting.pattern.body' => 'Select files matching a wildcard pattern instead of picking them by hand.\n\n- `Ctrl+S` opens select-by-pattern.\n- Use wildcards like `*.png` or `report-*.pdf`.\n- The matching set is added to the current selection.',
 			'help.groups.files.title' => 'Working with Files',
 			'help.groups.files.operations.title' => 'Copy, Move & Delete',
 			'help.groups.files.operations.body' => 'Standard clipboard and file actions work everywhere, including across panes and tabs.\n\n- `Ctrl+C` / `Ctrl+X` / `Ctrl+V` copy, cut and paste.\n- `F2` renames the current item; `F7` creates a new folder.\n- `Delete` moves the selection to the Trash; use the context menu to delete permanently.\n- Long copies, moves and deletes run in the background, and a conflict prompt appears when names collide.',
@@ -4527,12 +4501,12 @@ extension on Translations {
 			'keybindings.nextTab' => 'Next tab',
 			'keybindings.prevTab' => 'Previous tab',
 			'keybindings.switchTab' => 'Switch to tab',
-			_ => null,
-		} ?? switch (path) {
 			'keybindings.jumpBookmark' => 'Jump to bookmark',
 			'keybindings.toggleDual' => 'Toggle dual pane',
 			'keybindings.switchPane' => 'Switch active pane',
 			'keybindings.compare' => 'Compare folders',
+			_ => null,
+		} ?? switch (path) {
 			'keybindings.compareSyncRight' => 'Sync left to right',
 			'keybindings.compareSyncLeft' => 'Sync right to left',
 			'keybindings.compareExit' => 'Exit compare mode',

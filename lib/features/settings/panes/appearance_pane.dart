@@ -198,9 +198,6 @@ class _AppearancePaneState extends State<AppearancePane> {
             RegistrySettingRow(
               setting: registry.byId('appearance.showHiddenDefault'),
             ),
-            RegistrySettingRow(
-              setting: registry.byId('appearance.showGlobalToolbar'),
-            ),
             RegistrySettingRow(setting: registry.byId('appearance.rowDensity')),
             RegistrySettingRow(
               setting: registry.byId('appearance.fileListHorizontalSpacing'),

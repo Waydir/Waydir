@@ -118,10 +118,6 @@ final _groups = <_HelpGroup>[
         title: () => t.help.groups.selecting.pattern.title,
         body: () => t.help.groups.selecting.pattern.body,
       ),
-      _HelpPage(
-        title: () => t.help.groups.selecting.toolbar.title,
-        body: () => t.help.groups.selecting.toolbar.body,
-      ),
     ],
   ),
   _HelpGroup(

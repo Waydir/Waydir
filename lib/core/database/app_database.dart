@@ -102,8 +102,6 @@ class AppSettings extends Table {
       boolean().withDefault(const Constant(true))();
   BoolColumn get dragMovesByDefault =>
       boolean().withDefault(const Constant(false))();
-  BoolColumn get showGlobalToolbar =>
-      boolean().withDefault(const Constant(true))();
 }
 
 class SessionTabs extends Table {
@@ -425,9 +423,6 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 40) {
         await addSettingColumn(appSettings.dragMovesByDefault);
-      }
-      if (from < 41) {
-        await addSettingColumn(appSettings.showGlobalToolbar);
       }
       if (from < 42) {
         await m.createTable(tags);

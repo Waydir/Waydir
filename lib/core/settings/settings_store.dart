@@ -35,7 +35,6 @@ class SettingsStore {
   final confirmMove = signal<bool>(true);
   final showHiddenDefault = signal<bool>(false);
   final dragMovesByDefault = signal<bool>(false);
-  final showGlobalToolbar = signal<bool>(true);
   final rowDensity = signal<String>('comfortable');
   final fileListHorizontalSpacing = signal<int>(6);
   final fileListVerticalSpacing = signal<int>(6);
@@ -124,7 +123,6 @@ class SettingsStore {
     confirmMove.value = row.confirmMove;
     showHiddenDefault.value = row.showHiddenDefault;
     dragMovesByDefault.value = row.dragMovesByDefault;
-    showGlobalToolbar.value = row.showGlobalToolbar;
     rowDensity.value = row.rowDensity;
     fileListHorizontalSpacing.value = row.fileListHorizontalSpacing;
     fileListVerticalSpacing.value = row.fileListVerticalSpacing;
@@ -240,7 +238,6 @@ class SettingsStore {
         confirmMove.value;
         showHiddenDefault.value;
         dragMovesByDefault.value;
-        showGlobalToolbar.value;
         rowDensity.value;
         fileListHorizontalSpacing.value;
         fileListVerticalSpacing.value;
@@ -313,7 +310,6 @@ class SettingsStore {
           confirmMove: Value(confirmMove.value),
           showHiddenDefault: Value(showHiddenDefault.value),
           dragMovesByDefault: Value(dragMovesByDefault.value),
-          showGlobalToolbar: Value(showGlobalToolbar.value),
           rowDensity: Value(rowDensity.value),
           fileListHorizontalSpacing: Value(fileListHorizontalSpacing.value),
           fileListVerticalSpacing: Value(fileListVerticalSpacing.value),

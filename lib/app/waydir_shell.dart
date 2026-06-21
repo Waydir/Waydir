@@ -52,7 +52,6 @@ import '../features/settings/preferences_view.dart';
 import '../features/tags/tag_edit_dialog.dart';
 import '../features/tags/tag_path.dart';
 import '../features/tags/tag_store.dart';
-import '../features/toolbar/global_toolbar.dart';
 import '../i18n/strings.g.dart';
 import '../ui/chrome/title_bar.dart';
 import '../ui/dialogs/compress_dialog.dart';
@@ -385,35 +384,7 @@ class _WaydirShellState extends State<WaydirShell>
                                   operationStore: _operationStore,
                                   onOpenInNewTab: _openInNewTab,
                                 ),
-                                Expanded(
-                                  child: Column(
-                                    children: [
-                                      SignalBuilder(
-                                        builder: (context) =>
-                                            SettingsStore
-                                                .instance
-                                                .showGlobalToolbar
-                                                .value
-                                            ? GlobalToolbar(
-                                                shell: _shell,
-                                                onMultiRename: _multiRename,
-                                                onCopyPath: (store) =>
-                                                    store.copySelectedPaths(),
-                                                onSelectByPattern:
-                                                    _openSelectPattern,
-                                                onSaveSelection:
-                                                    _saveSelectionToFile,
-                                                onLoadSelection:
-                                                    _loadSelectionFromFile,
-                                                onToggleHidden:
-                                                    _toggleShowHiddenGlobal,
-                                              )
-                                            : const SizedBox.shrink(),
-                                      ),
-                                      Expanded(child: _buildPaneArea()),
-                                    ],
-                                  ),
-                                ),
+                                Expanded(child: _buildPaneArea()),
                               ],
                             ),
                           ),
