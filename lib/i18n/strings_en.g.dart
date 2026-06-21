@@ -3441,6 +3441,7 @@ class Translations$help$groups$files$en {
 	late final Translations$help$groups$files$multiRename$en multiRename = Translations$help$groups$files$multiRename$en.internal(_root);
 	late final Translations$help$groups$files$archives$en archives = Translations$help$groups$files$archives$en.internal(_root);
 	late final Translations$help$groups$files$openWith$en openWith = Translations$help$groups$files$openWith$en.internal(_root);
+	late final Translations$help$groups$files$tags$en tags = Translations$help$groups$files$tags$en.internal(_root);
 }
 
 // Path: help.groups.previewing
@@ -3803,6 +3804,21 @@ class Translations$help$groups$files$openWith$en {
 
 	/// en: 'Open a file in any installed application, not just the system default. - **Open With** from the context menu lists available apps. - Set a default app per file type so future opens go straight there. - Recently used apps appear at the top for quick access.'
 	String get body => 'Open a file in any installed application, not just the system default.\n\n- **Open With** from the context menu lists available apps.\n- Set a default app per file type so future opens go straight there.\n- Recently used apps appear at the top for quick access.';
+}
+
+// Path: help.groups.files.tags
+class Translations$help$groups$files$tags$en {
+	Translations$help$groups$files$tags$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Color Tags'
+	String get title => 'Color Tags';
+
+	/// en: 'Mark files and folders with colored tags to find them again fast. Three tags - **Red**, **Green** and **Blue** - are ready out of the box. - Assign or remove tags from the **Tags** submenu in the context menu, or press `Ctrl+Shift+1`…`9` for the first nine tags. - Tagged items show a colored dot in the file list, and an item can carry several tags at once. - Each tag appears in the **Tags** section of the sidebar; click one to list every file that carries it, wherever it lives. - In a tag view, use **Open Location** from the context menu to jump to a file's real folder. - Right-click a tag in the sidebar to rename, recolor or delete it; deleting a tag removes it from every file. - Tags apply to local files only - not to SFTP, network shares or items inside archives.'
+	String get body => 'Mark files and folders with colored tags to find them again fast. Three tags - **Red**, **Green** and **Blue** - are ready out of the box.\n\n- Assign or remove tags from the **Tags** submenu in the context menu, or press `Ctrl+Shift+1`…`9` for the first nine tags.\n- Tagged items show a colored dot in the file list, and an item can carry several tags at once.\n- Each tag appears in the **Tags** section of the sidebar; click one to list every file that carries it, wherever it lives.\n- In a tag view, use **Open Location** from the context menu to jump to a file\'s real folder.\n- Right-click a tag in the sidebar to rename, recolor or delete it; deleting a tag removes it from every file.\n- Tags apply to local files only - not to SFTP, network shares or items inside archives.';
 }
 
 // Path: help.groups.previewing.quickLook
@@ -4424,6 +4440,8 @@ extension on Translations {
 			'help.groups.files.archives.body' => 'Archives behave like browsable folders, so you can look inside before extracting anything.\n\n- `Enter` opens a supported archive and lets you walk its contents.\n- The context menu can extract here, extract into a named folder, or extract each archive separately.\n- **Compress** builds a new archive from the selection - pick the format and compression level.\n- Extraction and compression run in the background, so the file list stays responsive.',
 			'help.groups.files.openWith.title' => 'Open With & Default Apps',
 			'help.groups.files.openWith.body' => 'Open a file in any installed application, not just the system default.\n\n- **Open With** from the context menu lists available apps.\n- Set a default app per file type so future opens go straight there.\n- Recently used apps appear at the top for quick access.',
+			'help.groups.files.tags.title' => 'Color Tags',
+			'help.groups.files.tags.body' => 'Mark files and folders with colored tags to find them again fast. Three tags - **Red**, **Green** and **Blue** - are ready out of the box.\n\n- Assign or remove tags from the **Tags** submenu in the context menu, or press `Ctrl+Shift+1`…`9` for the first nine tags.\n- Tagged items show a colored dot in the file list, and an item can carry several tags at once.\n- Each tag appears in the **Tags** section of the sidebar; click one to list every file that carries it, wherever it lives.\n- In a tag view, use **Open Location** from the context menu to jump to a file\'s real folder.\n- Right-click a tag in the sidebar to rename, recolor or delete it; deleting a tag removes it from every file.\n- Tags apply to local files only - not to SFTP, network shares or items inside archives.',
 			'help.groups.previewing.title' => 'Previewing',
 			'help.groups.previewing.quickLook.title' => 'Quick Look',
 			'help.groups.previewing.quickLook.body' => 'Inspect a file without opening another app. Quick Look handles images, text, code, Markdown and other supported types.\n\n- `Space` opens Quick Look for the current selection.\n- `↑` / `↓` step to the previous or next file without leaving the preview.\n- `Esc` closes the preview.\n- The info panel shows size, dates and permissions alongside the preview.',
@@ -4503,10 +4521,10 @@ extension on Translations {
 			'keybindings.closeTab' => 'Close tab',
 			'keybindings.nextTab' => 'Next tab',
 			'keybindings.prevTab' => 'Previous tab',
-			'keybindings.switchTab' => 'Switch to tab',
-			'keybindings.toggleDual' => 'Toggle dual pane',
 			_ => null,
 		} ?? switch (path) {
+			'keybindings.switchTab' => 'Switch to tab',
+			'keybindings.toggleDual' => 'Toggle dual pane',
 			'keybindings.switchPane' => 'Switch active pane',
 			'keybindings.compare' => 'Compare folders',
 			'keybindings.compareSyncRight' => 'Sync left to right',
