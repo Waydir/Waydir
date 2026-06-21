@@ -251,9 +251,7 @@ Omit `when` to show the action for any non-empty selection. For background actio
 
 ## Dialogs
 
-`waydir.dialog` opens a modal form. It does not return a value immediately. When the user submits the form, Waydir runs the same action again with `ctx.form` filled.
-
-`submit_action` is kept in examples to make the intent obvious. Current Waydir builds always re-run the same action that opened the dialog.
+`waydir.dialog` opens a modal form. It does not return a value immediately. When the user submits the form, Waydir runs the same action again with `ctx.form` filled. Branch on `ctx.form` to tell the two passes apart.
 
 ```lua
 waydir.register({
@@ -268,7 +266,6 @@ waydir.register({
         fields = {
           { id = "name", type = "input", label = "File name", default = "untitled.txt" },
         },
-        submit_action = "new_file",
       })
       return
     end
@@ -438,7 +435,7 @@ Button behavior:
 |----------|--------|
 | `waydir.toast(message)` | Shows a short toast. |
 | `waydir.notify({ title, message, level, persistent })` | Shows a notification. `level` can be `info`, `success`, `warn` or `error`. |
-| `waydir.dialog({ title, fields, submit_action })` | Opens a form and re-runs the same action with `ctx.form`. |
+| `waydir.dialog({ title, fields })` | Opens a form and re-runs the same action with `ctx.form`. |
 | `waydir.set_setting(key, value)` | Persists one setting for this plugin. |
 | `waydir.refresh()` | Refreshes the active file list. |
 | `waydir.log(message)` | Writes to Waydir's plugin log channel. |

@@ -17,7 +17,11 @@ class PluginStore {
   PluginStore._();
   static final PluginStore instance = PluginStore._();
 
-  static const int supportedApiVersion = 2;
+  /// Inclusive range of manifest `api_version` values this build accepts.
+  /// Kept as a range so a future build can raise [maxApiVersion] for new
+  /// features while still loading plugins written against an older version.
+  static const int minApiVersion = 2;
+  static const int maxApiVersion = 2;
 
   final plugins = signal<List<LoadedPlugin>>(const []);
 
@@ -133,7 +137,8 @@ class PluginStore {
       );
     }
 
-    if (manifest.apiVersion != supportedApiVersion) {
+    if (manifest.apiVersion < minApiVersion ||
+        manifest.apiVersion > maxApiVersion) {
       return LoadedPlugin(
         manifest: manifest,
         dir: dirPath,
@@ -142,7 +147,7 @@ class PluginStore {
         bars: const [],
         error:
             'api_version ${manifest.apiVersion} not supported '
-            '(this build: $supportedApiVersion)',
+            '(this build: $minApiVersion-$maxApiVersion)',
       );
     }
 

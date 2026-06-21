@@ -97,7 +97,6 @@ waydir.register({
               { value = "9", label = "Ultra" },
             }, default = "5" },
         },
-        submit_action = "custom",
       })
       return
     end
