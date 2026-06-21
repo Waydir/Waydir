@@ -248,7 +248,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 42;
+  int get schemaVersion => 43;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -429,6 +429,31 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(fileTags);
         await _seedDefaultTags();
       }
+      if (from < 43) {
+        // A previous over-eager seeding path could insert the default tags
+        // twice. Collapse duplicates by (name, color), keeping the lowest id,
+        // and reassign file tag mappings to the surviving row.
+        await customStatement('''
+          UPDATE file_tags
+          SET tag_id = (
+            SELECT MIN(id) FROM tags AS canon
+            WHERE canon.name = (SELECT name FROM tags WHERE id = file_tags.tag_id)
+              AND canon.color = (SELECT color FROM tags WHERE id = file_tags.tag_id)
+          )
+          WHERE EXISTS (
+            SELECT 1 FROM tags AS t1
+            WHERE t1.id = file_tags.tag_id
+              AND t1.id > (
+                SELECT MIN(id) FROM tags AS canon
+                WHERE canon.name = t1.name AND canon.color = t1.color
+              )
+          );
+        ''');
+        await customStatement('''
+          DELETE FROM tags
+          WHERE id NOT IN (SELECT MIN(id) FROM tags GROUP BY name, color);
+        ''');
+      }
     },
   );
 
@@ -439,6 +464,8 @@ class AppDatabase extends _$AppDatabase {
   ];
 
   Future<void> _seedDefaultTags() async {
+    final existing = await (select(tags)..limit(1)).getSingleOrNull();
+    if (existing != null) return;
     await batch((b) {
       for (var i = 0; i < _defaultTags.length; i++) {
         b.insert(

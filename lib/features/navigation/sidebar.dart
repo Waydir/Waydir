@@ -758,6 +758,23 @@ class _SidebarState extends State<Sidebar> {
 
       return;
     }
+    if (section.id == sidebarSectionTags) {
+      final ids = section.entries
+          .map((e) => e.key)
+          .where((k) => k.startsWith('tag:'))
+          .map((k) => int.parse(k.substring(4)))
+          .toList();
+      if (oldIndex < 0 || oldIndex >= ids.length) return;
+      var to = newIndex;
+      if (to < 0) to = 0;
+      if (to > ids.length - 1) to = ids.length - 1;
+      if (to == oldIndex) return;
+      final moved = ids.removeAt(oldIndex);
+      ids.insert(to, moved);
+      TagStore.instance.reorder(ids);
+
+      return;
+    }
     SidebarStore.instance.reorderItems(
       section.id,
       oldIndex,
