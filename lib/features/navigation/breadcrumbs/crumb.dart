@@ -6,23 +6,40 @@ import '../../../i18n/strings.g.dart';
 import '../../../ui/icons/distro_icons.dart';
 import '../../../ui/icons/waydir_icons.dart';
 import '../../containers/wsl_path.dart';
+import '../../tags/tag_path.dart';
+import '../../tags/tag_store.dart';
 
 class Crumb {
   final String label;
   final String fullPath;
   final IconData? icon;
   final Color? iconColor;
+  final Color? dotColor;
 
   const Crumb({
     required this.label,
     required this.fullPath,
     this.icon,
     this.iconColor,
+    this.dotColor,
   });
 }
 
 List<Crumb> crumbsFromPath(String path) {
   if (path.isEmpty) return const [];
+
+  if (isTagPath(path)) {
+    final id = tagIdFromPath(path);
+    final tag = id == null ? null : TagStore.instance.byId.value[id];
+
+    return [
+      Crumb(
+        label: tag?.name ?? t.sidebar.tags,
+        fullPath: path,
+        dotColor: tag?.color,
+      ),
+    ];
+  }
 
   if (isTrashPath(path)) {
     final crumbs = <Crumb>[

@@ -124,7 +124,8 @@ class BreadcrumbBar extends StatelessWidget {
         textDirection: TextDirection.ltr,
         maxLines: 1,
       )..layout();
-      final iconExtra = c.icon != null ? _iconSize + _iconGap : 0;
+      final hasLeading = c.icon != null || c.dotColor != null;
+      final iconExtra = hasLeading ? _iconSize + _iconGap : 0;
       widths[i] = _segHPad * 2 + iconExtra + tp.width;
     }
 
@@ -172,6 +173,7 @@ class _CrumbSegmentState extends State<_CrumbSegment> {
   Widget build(BuildContext context) {
     final clickable = widget.onTap != null;
     final icon = widget.crumb.icon;
+    final dotColor = widget.crumb.dotColor;
     final textStyle = context.txt.body.copyWith(
       color: widget.isLast
           ? AppColors.fg
@@ -182,7 +184,14 @@ class _CrumbSegmentState extends State<_CrumbSegment> {
     final content = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (icon != null) ...[
+        if (dotColor != null) ...[
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 6),
+        ] else if (icon != null) ...[
           Icon(
             icon,
             size: 13,

@@ -53,6 +53,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$appMenu$en appMenu = Translations$appMenu$en.internal(_root);
 	late final Translations$changelog$en changelog = Translations$changelog$en.internal(_root);
 	late final Translations$help$en help = Translations$help$en.internal(_root);
+	late final Translations$tags$en tags = Translations$tags$en.internal(_root);
 	late final Translations$keybindings$en keybindings = Translations$keybindings$en.internal(_root);
 	late final Translations$commandPalette$en commandPalette = Translations$commandPalette$en.internal(_root);
 	late final Translations$quickLook$en quickLook = Translations$quickLook$en.internal(_root);
@@ -760,6 +761,36 @@ class Translations$help$en {
 	late final Translations$help$groups$en groups = Translations$help$groups$en.internal(_root);
 }
 
+// Path: tags
+class Translations$tags$en {
+	Translations$tags$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Tags'
+	String get menuLabel => 'Tags';
+
+	/// en: 'New Tag'
+	String get newTag => 'New Tag';
+
+	/// en: 'New tag…'
+	String get newTagDots => 'New tag…';
+
+	/// en: 'Edit Tag'
+	String get editTag => 'Edit Tag';
+
+	/// en: 'Delete Tag'
+	String get deleteTag => 'Delete Tag';
+
+	/// en: 'Clear Tags'
+	String get clear => 'Clear Tags';
+
+	/// en: 'Save'
+	String get save => 'Save';
+}
+
 // Path: keybindings
 class Translations$keybindings$en {
 	Translations$keybindings$en.internal(this._root);
@@ -1423,6 +1454,12 @@ class Translations$sidebar$en {
 
 	/// en: 'Bookmarks'
 	String get bookmarks => 'Bookmarks';
+
+	/// en: 'Tags'
+	String get tags => 'Tags';
+
+	/// en: 'Tag files to see them here'
+	String get noTags => 'Tag files to see them here';
 
 	/// en: 'Drop folder to bookmark'
 	String get dropBookmark => 'Drop folder to bookmark';
@@ -3404,6 +3441,7 @@ class Translations$help$groups$files$en {
 	late final Translations$help$groups$files$multiRename$en multiRename = Translations$help$groups$files$multiRename$en.internal(_root);
 	late final Translations$help$groups$files$archives$en archives = Translations$help$groups$files$archives$en.internal(_root);
 	late final Translations$help$groups$files$openWith$en openWith = Translations$help$groups$files$openWith$en.internal(_root);
+	late final Translations$help$groups$files$tags$en tags = Translations$help$groups$files$tags$en.internal(_root);
 }
 
 // Path: help.groups.previewing
@@ -3766,6 +3804,21 @@ class Translations$help$groups$files$openWith$en {
 
 	/// en: 'Open a file in any installed application, not just the system default. - **Open With** from the context menu lists available apps. - Set a default app per file type so future opens go straight there. - Recently used apps appear at the top for quick access.'
 	String get body => 'Open a file in any installed application, not just the system default.\n\n- **Open With** from the context menu lists available apps.\n- Set a default app per file type so future opens go straight there.\n- Recently used apps appear at the top for quick access.';
+}
+
+// Path: help.groups.files.tags
+class Translations$help$groups$files$tags$en {
+	Translations$help$groups$files$tags$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Color Tags'
+	String get title => 'Color Tags';
+
+	/// en: 'Mark files and folders with colored tags to find them again fast. Three tags - **Red**, **Green** and **Blue** - are ready out of the box. - Assign or remove tags from the **Tags** submenu in the context menu, or press `Ctrl+Shift+1`…`9` for the first nine tags. - Tagged items show a colored dot in the file list, and an item can carry several tags at once. - Each tag appears in the **Tags** section of the sidebar; click one to list every file that carries it, wherever it lives. - In a tag view, use **Open Location** from the context menu to jump to a file's real folder. - Right-click a tag in the sidebar to rename, recolor or delete it; deleting a tag removes it from every file. - Tags apply to local files only - not to SFTP, network shares or items inside archives.'
+	String get body => 'Mark files and folders with colored tags to find them again fast. Three tags - **Red**, **Green** and **Blue** - are ready out of the box.\n\n- Assign or remove tags from the **Tags** submenu in the context menu, or press `Ctrl+Shift+1`…`9` for the first nine tags.\n- Tagged items show a colored dot in the file list, and an item can carry several tags at once.\n- Each tag appears in the **Tags** section of the sidebar; click one to list every file that carries it, wherever it lives.\n- In a tag view, use **Open Location** from the context menu to jump to a file\'s real folder.\n- Right-click a tag in the sidebar to rename, recolor or delete it; deleting a tag removes it from every file.\n- Tags apply to local files only - not to SFTP, network shares or items inside archives.';
 }
 
 // Path: help.groups.previewing.quickLook
@@ -4387,6 +4440,8 @@ extension on Translations {
 			'help.groups.files.archives.body' => 'Archives behave like browsable folders, so you can look inside before extracting anything.\n\n- `Enter` opens a supported archive and lets you walk its contents.\n- The context menu can extract here, extract into a named folder, or extract each archive separately.\n- **Compress** builds a new archive from the selection - pick the format and compression level.\n- Extraction and compression run in the background, so the file list stays responsive.',
 			'help.groups.files.openWith.title' => 'Open With & Default Apps',
 			'help.groups.files.openWith.body' => 'Open a file in any installed application, not just the system default.\n\n- **Open With** from the context menu lists available apps.\n- Set a default app per file type so future opens go straight there.\n- Recently used apps appear at the top for quick access.',
+			'help.groups.files.tags.title' => 'Color Tags',
+			'help.groups.files.tags.body' => 'Mark files and folders with colored tags to find them again fast. Three tags - **Red**, **Green** and **Blue** - are ready out of the box.\n\n- Assign or remove tags from the **Tags** submenu in the context menu, or press `Ctrl+Shift+1`…`9` for the first nine tags.\n- Tagged items show a colored dot in the file list, and an item can carry several tags at once.\n- Each tag appears in the **Tags** section of the sidebar; click one to list every file that carries it, wherever it lives.\n- In a tag view, use **Open Location** from the context menu to jump to a file\'s real folder.\n- Right-click a tag in the sidebar to rename, recolor or delete it; deleting a tag removes it from every file.\n- Tags apply to local files only - not to SFTP, network shares or items inside archives.',
 			'help.groups.previewing.title' => 'Previewing',
 			'help.groups.previewing.quickLook.title' => 'Quick Look',
 			'help.groups.previewing.quickLook.body' => 'Inspect a file without opening another app. Quick Look handles images, text, code, Markdown and other supported types.\n\n- `Space` opens Quick Look for the current selection.\n- `↑` / `↓` step to the previous or next file without leaving the preview.\n- `Esc` closes the preview.\n- The info panel shows size, dates and permissions alongside the preview.',
@@ -4416,6 +4471,13 @@ extension on Translations {
 			'help.groups.resources.title' => 'Resources',
 			'help.groups.resources.links.title' => 'Links & Resources',
 			'help.groups.resources.links.body' => 'More about Waydir and where to go next.\n\n- **Changelog** - what\'s new in each release (in the menu).\n- **Keyboard shortcuts** - the full reference in **Preferences -> Keyboard**.\n- **GitHub** - [source code, issues and releases](https://github.com/Waydir/Waydir).\n- **Plugin guide** - [how to write your own plugins](https://github.com/Waydir/Waydir/blob/main/docs/plugins.md).',
+			'tags.menuLabel' => 'Tags',
+			'tags.newTag' => 'New Tag',
+			'tags.newTagDots' => 'New tag…',
+			'tags.editTag' => 'Edit Tag',
+			'tags.deleteTag' => 'Delete Tag',
+			'tags.clear' => 'Clear Tags',
+			'tags.save' => 'Save',
 			'keybindings.title' => 'Keyboard Shortcuts',
 			'keybindings.menuLabel' => 'Shortcuts',
 			'keybindings.categories.navigation' => 'Navigation',
@@ -4459,6 +4521,8 @@ extension on Translations {
 			'keybindings.closeTab' => 'Close tab',
 			'keybindings.nextTab' => 'Next tab',
 			'keybindings.prevTab' => 'Previous tab',
+			_ => null,
+		} ?? switch (path) {
 			'keybindings.switchTab' => 'Switch to tab',
 			'keybindings.toggleDual' => 'Toggle dual pane',
 			'keybindings.switchPane' => 'Switch active pane',
@@ -4468,8 +4532,6 @@ extension on Translations {
 			'keybindings.compareExit' => 'Exit compare mode',
 			'keybindings.focusTerminal' => 'Open / focus terminal',
 			'keybindings.toggleTerminal' => 'Toggle terminal',
-			_ => null,
-		} ?? switch (path) {
 			'keybindings.newTerminalTab' => 'New terminal tab',
 			'keybindings.closeTerminalTab' => 'Close terminal tab',
 			'keybindings.insertRelativePaths' => 'Insert relative paths in terminal',
@@ -4638,6 +4700,8 @@ extension on Translations {
 			'sidebar.containers' => 'Containers',
 			'sidebar.containerRunning' => 'Running',
 			'sidebar.bookmarks' => 'Bookmarks',
+			'sidebar.tags' => 'Tags',
+			'sidebar.noTags' => 'Tag files to see them here',
 			'sidebar.dropBookmark' => 'Drop folder to bookmark',
 			'sidebar.editLayout' => 'Edit sidebar',
 			'sidebar.editDone' => 'Done',

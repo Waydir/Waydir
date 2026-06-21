@@ -12,6 +12,7 @@ const filterQueryKeys = [
   'modified',
   'created',
   'hidden',
+  'tag',
 ];
 
 const filterKindValues = [
@@ -227,6 +228,7 @@ class FilterQuery {
   final DateFilter? modified;
   final DateFilter? created;
   final bool? hidden;
+  final Set<String> tagNames;
 
   const FilterQuery({
     this.nameTerms = const [],
@@ -237,6 +239,7 @@ class FilterQuery {
     this.modified,
     this.created,
     this.hidden,
+    this.tagNames = const {},
   });
 
   String get recursiveNameQuery => nameTerms.join(' ').trim();
@@ -334,6 +337,7 @@ FilterQueryParseResult parseFilterQuery(String input) {
   DateFilter? modified;
   DateFilter? created;
   bool? hidden;
+  final tagNames = <String>{};
 
   for (final raw in input.trim().split(RegExp(r'\s+'))) {
     if (raw.isEmpty) continue;
@@ -410,6 +414,10 @@ FilterQueryParseResult parseFilterQuery(String input) {
           );
         }
         hidden = value == 'true';
+      case 'tag':
+        tagNames.addAll(
+          value.split(',').map((v) => v.trim()).where((v) => v.isNotEmpty),
+        );
     }
   }
 
@@ -423,6 +431,7 @@ FilterQueryParseResult parseFilterQuery(String input) {
       modified: modified,
       created: created,
       hidden: hidden,
+      tagNames: tagNames,
     ),
   );
 }

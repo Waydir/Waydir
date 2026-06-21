@@ -145,6 +145,12 @@ mixin _WaydirMenuMixin
         !PlatformPaths.isRemoteUri(entries.first.realPath) &&
         !FileSystemService.isInsideArchive(entries.first.realPath);
     final isRecursive = store.searchActive.value && store.searchRecursive.value;
+    final canTag = entries.every(
+      (e) =>
+          !PlatformPaths.isRemoteUri(e.path) &&
+          !PlatformPaths.isNetworkPath(e.path) &&
+          !FileSystemService.isInsideArchive(e.realPath),
+    );
 
     final openWithItems = isSingleFile
         ? _openWithItemsFor(entries.first)
@@ -268,7 +274,7 @@ mixin _WaydirMenuMixin
       ...openWithItems,
       ?extractItem,
       ?compressItem,
-      if (isRecursive && count == 1)
+      if ((isRecursive || store.isTagView) && count == 1)
         ContextMenuItem(
           icon: WaydirIconsRegular.arrowSquareOut,
           label: t.menu.openLocation,
@@ -315,6 +321,7 @@ mixin _WaydirMenuMixin
           label: t.menu.verifyChecksum,
           action: 'verify_checksum',
         ),
+      if (count >= 1 && canTag) _tagsSubmenu(entries),
       ContextMenuItem.divider,
       if (count == 1)
         ContextMenuItem(
@@ -364,6 +371,50 @@ mixin _WaydirMenuMixin
       position: position,
       items: items,
       onSelect: _handleMenuAction,
+    );
+  }
+
+  ContextMenuItem _tagsSubmenu(List<FileEntry> entries) {
+    final paths = [for (final e in entries) e.path];
+
+    return ContextMenuItem(
+      icon: WaydirIconsRegular.bookmarkSimple,
+      label: t.tags.menuLabel,
+      action: 'tags',
+      children: [
+        for (final tag in TagStore.instance.tags.value)
+          ContextMenuItem(
+            icon: WaydirIconsRegular.bookmarkSimple,
+            leading: Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                color: tag.color,
+                shape: BoxShape.circle,
+              ),
+            ),
+            label: tag.name,
+            action: 'tag_toggle:${tag.id}',
+            isToggle: true,
+            toggleSignal: computed(() {
+              final assigned = _active.fileTags.value;
+
+              return paths.isNotEmpty &&
+                  paths.every((p) => assigned[p]?.contains(tag.id) ?? false);
+            }),
+          ),
+        ContextMenuItem.divider,
+        ContextMenuItem(
+          icon: WaydirIconsRegular.plus,
+          label: t.tags.newTagDots,
+          action: 'tag_new',
+        ),
+        ContextMenuItem(
+          icon: WaydirIconsRegular.x,
+          label: t.tags.clear,
+          action: 'tag_clear',
+        ),
+      ],
     );
   }
 
@@ -1091,6 +1142,34 @@ mixin _WaydirMenuMixin
 
   void _handleMenuAction(String action) {
     final store = _active;
+    if (action.startsWith('tag_toggle:')) {
+      final id = int.tryParse(action.substring('tag_toggle:'.length));
+      if (id != null) {
+        final paths = [for (final e in store.selectedEntries) e.path];
+        store.toggleTag(paths, id);
+      }
+
+      return;
+    }
+    if (action == 'tag_clear') {
+      final paths = [for (final e in store.selectedEntries) e.path];
+      store.clearTags(paths);
+
+      return;
+    }
+    if (action == 'tag_new') {
+      final paths = [for (final e in store.selectedEntries) e.path];
+      showTagEditDialog(context).then((created) {
+        if (!mounted) return;
+        _restoreFocus();
+        if (created && paths.isNotEmpty) {
+          final newest = TagStore.instance.tags.value.lastOrNull;
+          if (newest != null) store.toggleTag(paths, newest.id);
+        }
+      });
+
+      return;
+    }
     switch (action) {
       case 'open':
         store.openSelected();

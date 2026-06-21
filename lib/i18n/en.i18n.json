@@ -530,6 +530,10 @@
         "openWith": {
           "title": "Open With & Default Apps",
           "body": "Open a file in any installed application, not just the system default.\n\n- **Open With** from the context menu lists available apps.\n- Set a default app per file type so future opens go straight there.\n- Recently used apps appear at the top for quick access."
+        },
+        "tags": {
+          "title": "Color Tags",
+          "body": "Mark files and folders with colored tags to find them again fast. Three tags - **Red**, **Green** and **Blue** - are ready out of the box.\n\n- Assign or remove tags from the **Tags** submenu in the context menu, or press `Ctrl+Shift+1`…`9` for the first nine tags.\n- Tagged items show a colored dot in the file list, and an item can carry several tags at once.\n- Each tag appears in the **Tags** section of the sidebar; click one to list every file that carries it, wherever it lives.\n- In a tag view, use **Open Location** from the context menu to jump to a file's real folder.\n- Right-click a tag in the sidebar to rename, recolor or delete it; deleting a tag removes it from every file.\n- Tags apply to local files only - not to SFTP, network shares or items inside archives."
         }
       },
       "previewing": {
@@ -596,6 +600,15 @@
         }
       }
     }
+  },
+  "tags": {
+    "menuLabel": "Tags",
+    "newTag": "New Tag",
+    "newTagDots": "New tag…",
+    "editTag": "Edit Tag",
+    "deleteTag": "Delete Tag",
+    "clear": "Clear Tags",
+    "save": "Save"
   },
   "keybindings": {
     "title": "Keyboard Shortcuts",
@@ -856,6 +869,8 @@
     "containers": "Containers",
     "containerRunning": "Running",
     "bookmarks": "Bookmarks",
+    "tags": "Tags",
+    "noTags": "Tag files to see them here",
     "dropBookmark": "Drop folder to bookmark",
     "editLayout": "Edit sidebar",
     "editDone": "Done",

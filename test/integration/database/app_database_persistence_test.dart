@@ -7,7 +7,7 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
-import 'package:waydir/core/database/app_database.dart';
+import 'package:waydir/core/database/app_database.dart' hide Tags;
 
 void main() {
   late Directory tmpDir;

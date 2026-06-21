@@ -17,6 +17,7 @@ import 'core/update/update_store.dart';
 import 'features/navigation/sidebar_store.dart';
 import 'features/plugins/plugin_settings_store.dart';
 import 'features/plugins/plugin_store.dart';
+import 'features/tags/tag_store.dart';
 import 'i18n/strings.g.dart';
 import 'ui/theme/app_theme_registry.dart';
 
@@ -62,6 +63,7 @@ void main(List<String> args) async {
       await SettingsStore.instance.load();
       await SidebarStore.instance.load();
       await PluginSettingsStore.instance.load(SettingsStore.instance.db);
+      await TagStore.instance.load(SettingsStore.instance.db);
       await AppInfo.init();
       if (LaunchArgs.options.showVersion) {
         stdout.writeln('Waydir ${AppInfo.version.value}');

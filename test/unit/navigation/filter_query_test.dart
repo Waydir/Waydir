@@ -114,4 +114,25 @@ void main() {
       expect(next, 'type:');
     });
   });
+
+  group('tag filter', () {
+    test('parses a single tag value', () {
+      final query = parseFilterQuery('tag:work').query;
+
+      expect(query, isNotNull);
+      expect(query!.tagNames, {'work'});
+    });
+
+    test('parses a comma-separated tag list', () {
+      final query = parseFilterQuery('tag:work,red').query;
+
+      expect(query!.tagNames, {'work', 'red'});
+    });
+
+    test('tag value is lowercased', () {
+      final query = parseFilterQuery('tag:Important').query;
+
+      expect(query!.tagNames, {'important'});
+    });
+  });
 }

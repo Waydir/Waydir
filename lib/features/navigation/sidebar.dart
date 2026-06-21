@@ -35,6 +35,9 @@ import '../operations/drag_hint.dart';
 import '../operations/operation_store.dart';
 import '../operations/operations_panel.dart';
 import '../../core/models/file_operation.dart';
+import '../tags/tag_edit_dialog.dart';
+import '../tags/tag_path.dart';
+import '../tags/tag_store.dart';
 
 const double _sectionGap = 12;
 const double _gutter = 8;
@@ -52,12 +55,14 @@ class _SidebarItem {
   final String path;
   final String? key;
   final Color? iconColor;
+  final Widget? leading;
   const _SidebarItem(
     this.label,
     this.icon,
     this.path, {
     this.key,
     this.iconColor,
+    this.leading,
   });
 }
 
@@ -72,6 +77,7 @@ class _SidebarEntry {
   final ValueChanged<String> onTap;
   final VoidCallback? onMiddleTap;
   final void Function(List<String> paths, {bool move})? onDropFiles;
+  final bool isTagTarget;
   final VoidCallback? onUnmount;
   final void Function(Offset position)? onContextMenu;
 
@@ -85,6 +91,7 @@ class _SidebarEntry {
     required this.onTap,
     this.onMiddleTap,
     this.onDropFiles,
+    this.isTagTarget = false,
     this.onUnmount,
     this.onContextMenu,
   });
@@ -554,6 +561,7 @@ class _SidebarState extends State<Sidebar> {
     final currentDrives = driveStore.drives.value;
     final distributions = containerStore.distributions.value;
     final bookmarks = _bookmarkStore.bookmarks.value;
+    final tags = TagStore.instance.tags.value;
 
     // Read layout signals so the body re-renders on reorder/visibility edits.
     final sectionOrder = store.sectionOrder.value;
@@ -598,6 +606,11 @@ class _SidebarState extends State<Sidebar> {
         id: sidebarSectionNetwork,
         title: t.sidebar.network,
         entries: _networkEntries(networkDrives, networkLocations, currentPath),
+      ),
+      sidebarSectionTags: _SidebarSection(
+        id: sidebarSectionTags,
+        title: t.sidebar.tags,
+        entries: _tagEntries(tags, currentPath),
       ),
       sidebarSectionBookmarks: _SidebarSection(
         id: sidebarSectionBookmarks,
@@ -678,6 +691,18 @@ class _SidebarState extends State<Sidebar> {
           ),
         );
       }
+      if (section.id == sidebarSectionTags && visible.isEmpty && !collapsed) {
+        children.add(
+          Padding(
+            padding: const EdgeInsets.fromLTRB(_rowPadH, 2, _rowPadH, 8),
+            child: Text(
+              t.sidebar.noTags,
+              overflow: TextOverflow.ellipsis,
+              style: context.txt.caption.copyWith(color: AppColors.fgMuted),
+            ),
+          ),
+        );
+      }
     }
 
     return ListView(
@@ -698,6 +723,7 @@ class _SidebarState extends State<Sidebar> {
       onTap: entry.onTap,
       onMiddleTap: entry.onMiddleTap,
       onDropFiles: entry.onDropFiles ?? (paths, {bool move = false}) {},
+      isTagTarget: entry.isTagTarget,
       onUnmount: entry.onUnmount,
       onContextMenu: entry.onContextMenu,
     );
@@ -941,6 +967,82 @@ class _SidebarState extends State<Sidebar> {
         onContextMenu: (position) => _showBookmarkMenu(bookmark, position),
       );
     }).toList();
+  }
+
+  List<_SidebarEntry> _tagEntries(List<TagDef> tags, String currentPath) {
+    return tags.map((tag) {
+      final path = tagPathFor(tag.id);
+
+      return _SidebarEntry(
+        key: 'tag:${tag.id}',
+        item: _SidebarItem(
+          tag.name,
+          WaydirIconsRegular.bookmarkSimple,
+          path,
+          leading: Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(color: tag.color, shape: BoxShape.circle),
+          ),
+        ),
+        isSelected: currentPath == path,
+        onTap: widget.store.navigateTo,
+        onMiddleTap: widget.onOpenInNewTab != null
+            ? () => widget.onOpenInNewTab!(path)
+            : null,
+        onDropFiles: (paths, {bool move = false}) =>
+            widget.store.addTag(paths, tag.id),
+        isTagTarget: true,
+        onContextMenu: (position) => _showTagMenu(tag, position),
+      );
+    }).toList();
+  }
+
+  void _showTagMenu(TagDef tag, Offset position) {
+    final path = tagPathFor(tag.id);
+    showContextMenu(
+      context: context,
+      position: position,
+      items: [
+        ContextMenuItem(
+          icon: WaydirIconsRegular.folderOpen,
+          label: t.menu.open,
+          action: 'open',
+        ),
+        ContextMenuItem(
+          icon: WaydirIconsRegular.arrowSquareOut,
+          label: t.menu.openInNewTab,
+          action: 'open_in_new_tab',
+        ),
+        ContextMenuItem.divider,
+        ContextMenuItem(
+          icon: WaydirIconsRegular.pencilSimple,
+          label: t.tags.editTag,
+          action: 'edit',
+        ),
+        ContextMenuItem(
+          icon: WaydirIconsRegular.trash,
+          label: t.tags.deleteTag,
+          action: 'delete',
+          danger: true,
+        ),
+      ],
+      onSelect: (action) async {
+        switch (action) {
+          case 'open':
+            widget.store.navigateTo(path);
+          case 'open_in_new_tab':
+            widget.onOpenInNewTab?.call(path);
+          case 'edit':
+            await showTagEditDialog(context, existing: tag);
+          case 'delete':
+            await TagStore.instance.deleteTag(tag.id);
+            if (widget.store.currentPath.value == path) {
+              widget.store.navigateTo(PlatformPaths.homePath);
+            }
+        }
+      },
+    );
   }
 
   Future<void> _onDriveTap(Drive drive, String path) async {
@@ -1842,6 +1944,7 @@ class _ItemRow extends StatefulWidget {
   final ValueChanged<String> onTap;
   final VoidCallback? onMiddleTap;
   final void Function(List<String> paths, {bool move}) onDropFiles;
+  final bool isTagTarget;
   final VoidCallback? onUnmount;
   final void Function(Offset position)? onContextMenu;
   final String? tooltip;
@@ -1855,6 +1958,7 @@ class _ItemRow extends StatefulWidget {
     required this.onTap,
     this.onMiddleTap,
     required this.onDropFiles,
+    this.isTagTarget = false,
     this.onUnmount,
     this.onContextMenu,
     this.tooltip,
@@ -1875,6 +1979,7 @@ class _ItemRowState extends State<_ItemRow> {
       hitTestBehavior: HitTestBehavior.opaque,
       onDropOver: (event) {
         if (!_dragOver) setState(() => _dragOver = true);
+        if (widget.isTagTarget) return DropOperation.link;
 
         return DragHintController.instance.mode.value == DragMode.move
             ? DropOperation.move
@@ -1962,7 +2067,9 @@ class _ItemRowState extends State<_ItemRow> {
               child: _SelectionAccent(),
             ),
           Center(
-            child: Icon(widget.item.icon, size: _iconSize, color: _iconColor),
+            child:
+                widget.item.leading ??
+                Icon(widget.item.icon, size: _iconSize, color: _iconColor),
           ),
         ],
       ),
@@ -1972,7 +2079,8 @@ class _ItemRowState extends State<_ItemRow> {
   Widget _expandedRow(BuildContext context) {
     final content = Row(
       children: [
-        Icon(widget.item.icon, size: _iconSize, color: _iconColor),
+        widget.item.leading ??
+            Icon(widget.item.icon, size: _iconSize, color: _iconColor),
         const SizedBox(width: _iconGap),
         Expanded(
           child: Text(
