@@ -206,7 +206,6 @@ Start here:
 
 - [Plugin guide](docs/plugins.md)
 - [Example plugins](docs/examples/plugins/)
-- [Full plugin docs](https://waydir.dev/docs/plugins)
 
 Example plugin ideas already covered in the repository include opening the current folder in VS Code, adding 7-Zip actions, showing selection counts and running backup copies.
 
