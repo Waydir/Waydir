@@ -439,7 +439,6 @@ class AppDatabase extends _$AppDatabase {
 
   static const _defaultTags = <(String, int)>[
     ('Red', 0xFFE5484D),
-    ('Yellow', 0xFFE2A610),
     ('Green', 0xFF46A758),
     ('Blue', 0xFF3E63DD),
   ];

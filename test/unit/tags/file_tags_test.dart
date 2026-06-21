@@ -17,9 +17,9 @@ void main() {
     test('seeds the default palette on first open', () async {
       final tags = await db.getTags();
 
-      expect(tags.length, 4);
-      expect(tags.first.name, 'Red');
-      expect(tags.map((t) => t.orderIndex), [0, 1, 2, 3]);
+      expect(tags.length, 3);
+      expect(tags.map((t) => t.name), ['Red', 'Green', 'Blue']);
+      expect(tags.map((t) => t.orderIndex), [0, 1, 2]);
     });
 
     test('create, update and delete a tag', () async {
