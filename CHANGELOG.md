@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Setting to make dragging move files by default (Alt copies). ([#184](https://github.com/Waydir/Waydir/issues/184))
 - Setting to hide the global toolbar.
 
+### Changed
+- Reworked the Help dialog.
+
 ## [0.19.0] - 2026-06-20
 
 ### Added

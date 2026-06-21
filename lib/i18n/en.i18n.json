@@ -438,53 +438,162 @@
     "loadError": "Could not load the changelog."
   },
   "help": {
-    "title": "Features",
-    "menuLabel": "Features",
-    "demoComingSoon": "Demo coming soon",
-    "pages": {
-      "navigation": {
-        "title": "Navigation",
-        "body": "Browse without reaching for the mouse. Waydir keeps the cursor, selection and history close to the main file list.\n\n- `↑` / `↓` move the cursor through visible files.\n- `Enter` opens the selected item; double-click does the same.\n- `Backspace` goes to the parent folder.\n- `Alt+←` / `Alt+→` step back and forward through folder history.\n- `Ctrl+R` refreshes the current folder.\n- `Ctrl+B` shows or hides the sidebar; `Ctrl+H` toggles hidden files.\n- Click a segment in the breadcrumb bar to jump straight to that folder."
+    "title": "Help",
+    "menuLabel": "Help",
+    "groups": {
+      "gettingStarted": {
+        "title": "Getting Started",
+        "welcome": {
+          "title": "Welcome to Waydir",
+          "body": "Waydir is a fast, keyboard-driven file manager. This guide walks through everything from basic navigation to remote servers, the terminal and customization.\n\n- Use the tree on the left to jump between topics.\n- Most actions have a keyboard shortcut, shown inline as `Ctrl+C`.\n- Every shortcut can be rebound in **Preferences -> Keyboard**.\n\nPick a topic to get started, or read straight through from the top."
+        },
+        "interface": {
+          "title": "The Interface",
+          "body": "The window is built from a few simple parts.\n\n- **Sidebar** - bookmarks, drives and remote locations. Toggle it with `Ctrl+B`.\n- **Global toolbar** - shared actions above the tabs (can be hidden in Preferences).\n- **Tab strip** - one tab per open folder.\n- **Breadcrumb bar** - the current path; click any segment to jump there.\n- **File list** - the main view, in list or grid mode.\n- **Status bar** - item counts, selection size and operation progress."
+        },
+        "keyboardBasics": {
+          "title": "Keyboard-First Basics",
+          "body": "Waydir is designed to be driven from the keyboard.\n\n- `↑` / `↓` move the cursor; `Enter` opens; `Backspace` goes up.\n- Start typing to jump to a matching file (type-ahead).\n- `Ctrl+F` searches, `Space` previews, `F2` renames.\n- Almost nothing requires the mouse - and every binding is customizable."
+        }
       },
-      "tabs": {
-        "title": "Tabs",
-        "body": "Keep several folders open at once and switch between them instantly. Each tab remembers its own folder, selection and history.\n\n- `Ctrl+T` opens a new tab.\n- `Ctrl+W` closes the current tab.\n- `Ctrl+Tab` / `Ctrl+Shift+Tab` cycle to the next or previous tab.\n- `Ctrl+1`…`Ctrl+9` jump straight to a tab by position.\n- The `+` button on the tab strip opens a new tab in the current folder."
+      "navigating": {
+        "title": "Navigating",
+        "moving": {
+          "title": "Moving Around",
+          "body": "Browse without reaching for the mouse. Waydir keeps the cursor, selection and history close to the main file list.\n\n- `↑` / `↓` move the cursor through visible files.\n- `Enter` opens the selected item; double-click does the same.\n- `Backspace` goes to the parent folder.\n- `Alt+←` / `Alt+→` step back and forward through folder history.\n- `Ctrl+R` refreshes the current folder."
+        },
+        "breadcrumb": {
+          "title": "Breadcrumb Bar",
+          "body": "The breadcrumb bar shows where you are and lets you move quickly.\n\n- Click any segment to jump straight to that folder.\n- The path stays in sync as you navigate.\n- Type a path directly to go somewhere specific."
+        },
+        "bookmarks": {
+          "title": "Bookmarks & Sidebar",
+          "body": "The sidebar keeps your favourite folders one click away.\n\n- Drag a folder into the sidebar to bookmark it.\n- Reorder, rename or hide sidebar entries to suit your workflow.\n- `Ctrl+B` shows or hides the sidebar entirely.\n- Sections (Favourites, Devices, Network) can be collapsed independently."
+        },
+        "drives": {
+          "title": "Drives & Devices",
+          "body": "Mounted drives and removable devices appear in the sidebar under Devices.\n\n- Click a device to open it.\n- Eject removable devices from the context menu.\n- Network shares and remote mounts show up alongside local drives."
+        },
+        "typeAhead": {
+          "title": "Type-Ahead Jump",
+          "body": "Start typing while the file list is focused to jump to a matching name.\n\n- Matching is incremental - keep typing to refine.\n- The cursor moves to the first match as you type.\n- Type-ahead can be turned off in **Preferences -> General**."
+        }
       },
-      "dualPane": {
-        "title": "Dual Pane",
-        "body": "Show a source and a destination side by side. The active pane owns keyboard focus, and the copy / move shortcuts target the opposite pane.\n\n- `F9` (or `Ctrl+D`) toggles dual pane mode.\n- `Tab` switches the active pane.\n- `F5` copies the selected files to the other pane.\n- `F6` moves the selected files to the other pane.\n- Drag the divider to change how the space is split."
+      "tabsPanes": {
+        "title": "Tabs & Panes",
+        "tabs": {
+          "title": "Tabs",
+          "body": "Keep several folders open at once and switch between them instantly. Each tab remembers its own folder, selection and history.\n\n- `Ctrl+T` opens a new tab.\n- `Ctrl+W` closes the current tab.\n- `Ctrl+Tab` / `Ctrl+Shift+Tab` cycle to the next or previous tab.\n- `Ctrl+1`…`Ctrl+9` jump straight to a tab by position.\n- The `+` button on the tab strip opens a new tab in the current folder."
+        },
+        "dualPane": {
+          "title": "Dual Pane",
+          "body": "Show a source and a destination side by side. The active pane owns keyboard focus, and the copy / move shortcuts target the opposite pane.\n\n- `F9` (or `Ctrl+D`) toggles dual pane mode.\n- `Tab` switches the active pane.\n- `F5` copies the selected files to the other pane.\n- `F6` moves the selected files to the other pane.\n- Drag the divider to change how the space is split."
+        },
+        "compare": {
+          "title": "Folder Compare & Sync",
+          "body": "Compare the two panes in dual mode to see what differs, then sync one side to the other.\n\n- `F8` turns compare on while dual pane is active.\n- Rows are colour-coded: unique, newer, older or identical.\n- Toggle **Recursive** to compare nested folders or just the top level.\n- `Ctrl+→` / `Ctrl+←` sync the differences left-to-right or right-to-left.\n- Compare turns off automatically when you navigate out of the compared folders. `Esc` exits."
+        }
       },
-      "selection": {
-        "title": "Selection",
-        "body": "Build up exactly the set of files you want before acting on them.\n\n- `Ctrl+A` selects everything in the folder.\n- `Insert` toggles the current item and moves down.\n- `Ctrl+S` selects by pattern (wildcards like `*.png`).\n- `Esc` clears the selection.\n- Click, `Shift+Click` for a range and `Ctrl+Click` to add or remove single items.\n- `Ctrl+Shift+S` saves the current selection to a file; `Ctrl+Shift+L` loads it back."
+      "selecting": {
+        "title": "Selecting",
+        "basics": {
+          "title": "Selection Basics",
+          "body": "Build up exactly the set of files you want before acting on them.\n\n- `Ctrl+A` selects everything in the folder.\n- `Insert` toggles the current item and moves down.\n- `Esc` clears the selection.\n- Click, `Shift+Click` for a range and `Ctrl+Click` to add or remove single items.\n- `Ctrl+Shift+S` saves the current selection to a file; `Ctrl+Shift+L` loads it back."
+        },
+        "pattern": {
+          "title": "Select by Pattern",
+          "body": "Select files matching a wildcard pattern instead of picking them by hand.\n\n- `Ctrl+S` opens select-by-pattern.\n- Use wildcards like `*.png` or `report-*.pdf`.\n- The matching set is added to the current selection.\n- Also available from the global toolbar."
+        },
+        "toolbar": {
+          "title": "Global Toolbar",
+          "body": "The global toolbar sits above the tabs and holds shared actions, with buttons that enable or disable based on context.\n\n- **Multi Rename** and **Select by Pattern** activate when files are selected.\n- **Toggle Hidden** shows or hides dotfiles.\n- The toolbar can be hidden entirely in **Preferences -> Appearance**."
+        }
       },
-      "fileOps": {
-        "title": "File Operations",
-        "body": "Standard clipboard and file actions work everywhere, including across panes and tabs.\n\n- `Ctrl+C` / `Ctrl+X` / `Ctrl+V` copy, cut and paste.\n- `F2` renames the current item; `F7` creates a new folder.\n- `Delete` moves the selection to the Trash; use the context menu to delete permanently.\n- **Copy Path** is available from the context menu.\n- Long copies, moves and deletes run in the operations panel, and a conflict prompt appears when names collide."
+      "files": {
+        "title": "Working with Files",
+        "operations": {
+          "title": "Copy, Move & Delete",
+          "body": "Standard clipboard and file actions work everywhere, including across panes and tabs.\n\n- `Ctrl+C` / `Ctrl+X` / `Ctrl+V` copy, cut and paste.\n- `F2` renames the current item; `F7` creates a new folder.\n- `Delete` moves the selection to the Trash; use the context menu to delete permanently.\n- Long copies, moves and deletes run in the background, and a conflict prompt appears when names collide."
+        },
+        "dragDrop": {
+          "title": "Drag & Drop",
+          "body": "Drag files between panes, tabs and the sidebar - or in and out of other apps.\n\n- By default dragging **copies** files; hold `Alt` to **move** them.\n- Flip the default in **Preferences -> General** so dragging moves and `Alt` copies.\n- The drag hint shows whether the drop will copy or move.\n- Drop onto a folder to put files inside it, or onto empty space for the current folder."
+        },
+        "multiRename": {
+          "title": "Multi Rename",
+          "body": "Rename many files at once with a live before / after preview. Select several items, then choose **Multi Rename** from the context menu.\n\n- **Template** mode builds names from tokens: `{name}`, `{ext}`, `{n}` (sequence from 1), `{index}` (from 0) and `{date}`.\n- **Find & Replace** mode swaps text, with optional regular expressions and case sensitivity.\n- The preview lists every result before you commit, and *Show only changed* hides untouched rows."
+        },
+        "archives": {
+          "title": "Archives",
+          "body": "Archives behave like browsable folders, so you can look inside before extracting anything.\n\n- `Enter` opens a supported archive and lets you walk its contents.\n- The context menu can extract here, extract into a named folder, or extract each archive separately.\n- **Compress** builds a new archive from the selection - pick the format and compression level.\n- Extraction and compression run in the background, so the file list stays responsive."
+        },
+        "openWith": {
+          "title": "Open With & Default Apps",
+          "body": "Open a file in any installed application, not just the system default.\n\n- **Open With** from the context menu lists available apps.\n- Set a default app per file type so future opens go straight there.\n- Recently used apps appear at the top for quick access."
+        }
       },
-      "quickLook": {
-        "title": "Quick Look",
-        "body": "Inspect a file without opening another app. Quick Look handles images, text, code and other supported types.\n\n- `Space` opens Quick Look for the current selection.\n- `↑` / `↓` step to the previous or next file without leaving the preview.\n- `Esc` closes the preview.\n- Text and code previews are editable - `Ctrl+S` saves changes in place.\n- The info panel shows size, dates and permissions alongside the preview."
+      "previewing": {
+        "title": "Previewing",
+        "quickLook": {
+          "title": "Quick Look",
+          "body": "Inspect a file without opening another app. Quick Look handles images, text, code, Markdown and other supported types.\n\n- `Space` opens Quick Look for the current selection.\n- `↑` / `↓` step to the previous or next file without leaving the preview.\n- `Esc` closes the preview.\n- The info panel shows size, dates and permissions alongside the preview."
+        },
+        "editor": {
+          "title": "Quick Look Editor",
+          "body": "Text and code previews are fully editable in place.\n\n- `Ctrl+S` saves changes without leaving the preview.\n- Toggle line numbers, relative line numbers and line wrapping.\n- Enable **Vim mode** for modal editing.\n- Markdown files can render formatted or show raw source.\n- All editor options live in **Preferences -> Quick Look**."
+        }
       },
-      "search": {
-        "title": "Search",
-        "body": "Filter the current folder or sweep through everything beneath it.\n\n- `Ctrl+F` filters the current folder by name as you type.\n- `Ctrl+Shift+F` extends the search into all subfolders.\n- Turn on **Content** to search inside file contents (local folders only - not over SFTP).\n- Switch between **Substring**, **Glob** and **Regex** matching.\n- `Esc` closes the search and restores the full list."
-      },
-      "multiRename": {
-        "title": "Multi Rename",
-        "body": "Rename many files at once with a live before / after preview. Select several items, then choose **Multi Rename** from the context menu.\n\n- **Template** mode builds names from tokens: `{name}`, `{ext}`, `{n}` (sequence from 1), `{index}` (from 0) and `{date}`.\n- **Find & Replace** mode swaps text, with optional regular expressions and case sensitivity.\n- The preview lists every result before you commit, and *Show only changed* hides untouched rows."
-      },
-      "archives": {
-        "title": "Archives",
-        "body": "Archives behave like browsable folders, so you can look inside before extracting anything.\n\n- `Enter` opens a supported archive and lets you walk its contents.\n- The context menu can extract here, extract into a named folder, or extract each archive separately.\n- **Compress** builds a new archive from the selection - pick the format and compression level.\n- Extraction and compression run in the background, so the file list stays responsive."
+      "searching": {
+        "title": "Searching",
+        "folder": {
+          "title": "Search in a Folder",
+          "body": "Filter the current folder or sweep through everything beneath it.\n\n- `Ctrl+F` filters the current folder by name as you type.\n- `Ctrl+Shift+F` extends the search into all subfolders.\n- Turn on **Content** to search inside file contents (local folders only - not over SFTP).\n- Switch between **Substring**, **Glob** and **Regex** matching.\n- `Esc` closes the search and restores the full list."
+        },
+        "function": {
+          "title": "Function & Command Search",
+          "body": "Find and run any Waydir action without hunting through menus.\n\n- Open the command search and start typing an action name.\n- Results show the matching command and its current shortcut.\n- Run it straight from the list - handy for actions you use rarely."
+        }
       },
       "remote": {
-        "title": "Remote Locations",
-        "body": "Work with SFTP servers right next to your local folders.\n\n- Use **Connect to Server** from the sidebar to add a remote location.\n- Once connected, open and browse remote folders exactly like local ones.\n- Bookmark folders you visit often so they stay one click away.\n- Selection, the context menu and file operations all behave the same as locally - only content search is unavailable over SFTP."
+        "title": "Remote & Integrations",
+        "sftp": {
+          "title": "SFTP & Remote Servers",
+          "body": "Work with SFTP servers right next to your local folders.\n\n- Use **Connect to Server** from the sidebar to add a remote location.\n- Once connected, open and browse remote folders exactly like local ones.\n- Bookmark folders you visit often so they stay one click away.\n- Selection, the context menu and file operations all behave the same as locally - only content search is unavailable over SFTP."
+        },
+        "network": {
+          "title": "Network Paths & WSL",
+          "body": "Waydir handles network shares and Windows Subsystem for Linux paths.\n\n- Browse mounted SMB / network shares like local folders.\n- On Windows, WSL distribution paths are recognised and openable.\n- Network locations are guarded so a slow share never freezes the UI."
+        },
+        "terminal": {
+          "title": "Terminal",
+          "body": "Each pane has its own embedded terminal that opens in the folder you are viewing.\n\n- `Ctrl` + backtick opens or focuses the terminal (`Ctrl+J` on macOS).\n- `Ctrl+Shift` + backtick shows or hides the terminal panel.\n- `Ctrl+Shift+T` opens a new terminal tab; `Ctrl+Shift+W` closes one.\n- `Ctrl++` / `Ctrl+-` adjust the font size and `Ctrl+0` resets it.\n- Prefer an external terminal? Choose one in **Preferences -> Terminal**."
+        },
+        "git": {
+          "title": "Git Status",
+          "body": "Waydir surfaces Git information for folders under version control.\n\n- Changed, staged and untracked files are marked in the list.\n- The current branch is shown for the folder.\n- Status updates as you work in the repository."
+        }
       },
-      "terminal": {
-        "title": "Terminal",
-        "body": "Each pane has its own embedded terminal that opens in the folder you are viewing.\n\n- `Ctrl` + backtick opens or focuses the terminal (`Ctrl+J` on macOS).\n- `Ctrl+Shift` + backtick shows or hides the terminal panel.\n- `Ctrl+Shift+T` opens a new terminal tab; `Ctrl+Shift+W` closes one.\n- `Ctrl++` / `Ctrl+-` adjust the font size and `Ctrl+0` resets it."
+      "customization": {
+        "title": "Customization",
+        "themes": {
+          "title": "Themes & Appearance",
+          "body": "Make Waydir look the way you like.\n\n- Pick a built-in theme or add your own in **Preferences -> Appearance**.\n- Choose list or grid view, row density and column layout.\n- Configure date formats, spacing and which columns show.\n- Resizable columns can be turned on for fine control."
+        },
+        "shortcuts": {
+          "title": "Keyboard Shortcuts",
+          "body": "Almost every action can be rebound to a key of your choosing.\n\n- Open **Preferences -> Keyboard** to see and edit all shortcuts.\n- Conflicts are flagged so two actions never fight over a key.\n- Reset a single binding, or all of them, back to the defaults at any time."
+        },
+        "plugins": {
+          "title": "Plugins",
+          "body": "Extend Waydir with plugins written in Lua.\n\n- Plugins run through the native core and can add new actions.\n- Enable or disable installed plugins in **Preferences -> Plugins**.\n- See the plugin authoring guide in the project's docs to build your own."
+        }
+      },
+      "resources": {
+        "title": "Resources",
+        "links": {
+          "title": "Links & Resources",
+          "body": "More about Waydir and where to go next.\n\n- **Changelog** - what's new in each release (in the menu).\n- **Keyboard shortcuts** - the full reference in **Preferences -> Keyboard**.\n- **GitHub** - [source code, issues and releases](https://github.com/Waydir/Waydir).\n- **Plugin guide** - [how to write your own plugins](https://github.com/Waydir/Waydir/blob/main/docs/plugins.md)."
+        }
       }
     }
   },
