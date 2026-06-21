@@ -400,6 +400,13 @@ fn install_api(lua: &Lua, effects: &Effects) -> mlua::Result<Table> {
         )?;
     }
 
+    // Default no-op so top-level `register_column` calls are safe in every
+    // entry point; load and column-compute override it below.
+    waydir.set(
+        "register_column",
+        lua.create_function(|_, _: Table| Ok(()))?,
+    )?;
+
     Ok(waydir)
 }
 
@@ -499,13 +506,39 @@ fn load_impl(path: &str) -> mlua::Result<Json> {
             Ok(())
         })?,
     )?;
+    let columns: Rc<RefCell<Vec<Json>>> = Rc::new(RefCell::new(Vec::new()));
+    let col_sink = columns.clone();
+    waydir.set(
+        "register_column",
+        lua.create_function(move |lua, spec: Table| {
+            let id: String = spec.get("id")?;
+            let title: String = spec
+                .get::<Option<String>>("title")?
+                .unwrap_or_else(|| id.clone());
+            let width: Option<i64> = spec.get("width")?;
+            let settings = settings_to_json(lua, &spec)?;
+            col_sink.borrow_mut().push(json!({
+                "id": id,
+                "title": title,
+                "width": width,
+                "settings": settings,
+            }));
+            Ok(())
+        })?,
+    )?;
     lua.globals().set("waydir", waydir)?;
 
     lua.load(&code).set_name(path).exec()?;
 
     let list = contribs.borrow().clone();
     let bar_list = bars.borrow().clone();
-    Ok(json!({ "ok": true, "contributions": list, "bars": bar_list }))
+    let col_list = columns.borrow().clone();
+    Ok(json!({
+        "ok": true,
+        "contributions": list,
+        "bars": bar_list,
+        "columns": col_list,
+    }))
 }
 
 fn invoke_impl(path: &str, action_id: &str, ctx_json: &str) -> mlua::Result<Json> {
@@ -640,6 +673,50 @@ fn bar_click_impl(
     Ok(json!({ "ok": true, "state": state, "effects": list }))
 }
 
+fn column_compute_impl(path: &str, column_id: &str, ctx_json: &str) -> mlua::Result<Json> {
+    let code = std::fs::read_to_string(path).map_err(|e| err(format!("read {path}: {e}")))?;
+    let ctx: Json = serde_json::from_str(ctx_json).map_err(|e| err(format!("ctx json: {e}")))?;
+
+    let lua = new_sandbox()?;
+    let effects: Effects = Rc::new(RefCell::new(Vec::new()));
+    let waydir = install_api(&lua, &effects)?;
+    waydir.set("register", lua.create_function(move |_, _: Table| Ok(()))?)?;
+    waydir.set(
+        "register_bar",
+        lua.create_function(move |_, _: Table| Ok(()))?,
+    )?;
+
+    let target = column_id.to_string();
+    let found: Rc<RefCell<Option<mlua::Function>>> = Rc::new(RefCell::new(None));
+    let slot = found.clone();
+    waydir.set(
+        "register_column",
+        lua.create_function(move |_, spec: Table| {
+            let id: String = spec.get("id")?;
+            if id == target {
+                if let Some(compute) = spec.get::<Option<mlua::Function>>("compute")? {
+                    *slot.borrow_mut() = Some(compute);
+                }
+            }
+            Ok(())
+        })?,
+    )?;
+    lua.globals().set("waydir", waydir)?;
+
+    lua.load(&code).set_name(path).exec()?;
+
+    let compute = found.borrow_mut().take();
+    let compute =
+        compute.ok_or_else(|| err(format!("column {column_id} compute not found")))?;
+    let value = compute.call::<Value>(ctx_to_lua_table(&lua, &ctx)?)?;
+    let values = match value {
+        Value::Nil => Json::Null,
+        value => lua.from_value(value)?,
+    };
+    let list = effects.borrow().clone();
+    Ok(json!({ "ok": true, "values": values, "effects": list }))
+}
+
 fn to_cstring(value: Json) -> *mut c_char {
     let s = value.to_string();
     match CString::new(s) {
@@ -760,6 +837,39 @@ pub unsafe extern "C" fn waydir_plugin_bar_click(
         Err(e) => return to_cstring(err_json(e)),
     };
     match bar_click_impl(path, bar_id, item_id, ctx_json) {
+        Ok(v) => to_cstring(v),
+        Err(e) => to_cstring(err_json(e)),
+    }
+}
+
+/// Computes a registered column's values for a batch of files. `ctx_json`'s
+/// `paths` lists the files; the column's `compute(ctx)` returns a table mapping
+/// path to display string. Result JSON carries `values` and `effects`.
+///
+/// # Safety
+/// All pointer args must be valid NUL-terminated UTF-8 C strings.
+#[no_mangle]
+pub unsafe extern "C" fn waydir_plugin_column_compute(
+    path: *const c_char,
+    column_id: *const c_char,
+    ctx_json: *const c_char,
+) -> *mut c_char {
+    if path.is_null() || column_id.is_null() || ctx_json.is_null() {
+        return to_cstring(err_json("null argument"));
+    }
+    let path = match CStr::from_ptr(path).to_str() {
+        Ok(s) => s,
+        Err(e) => return to_cstring(err_json(e)),
+    };
+    let column_id = match CStr::from_ptr(column_id).to_str() {
+        Ok(s) => s,
+        Err(e) => return to_cstring(err_json(e)),
+    };
+    let ctx_json = match CStr::from_ptr(ctx_json).to_str() {
+        Ok(s) => s,
+        Err(e) => return to_cstring(err_json(e)),
+    };
+    match column_compute_impl(path, column_id, ctx_json) {
         Ok(v) => to_cstring(v),
         Err(e) => to_cstring(err_json(e)),
     }

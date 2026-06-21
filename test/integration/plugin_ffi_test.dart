@@ -555,6 +555,48 @@ void main() {
     }
   });
 
+  test('columns register and compute values for a batch of files', () async {
+    final path = writePlugin('''
+      waydir.register_column({
+        id = "tag",
+        title = "Tag",
+        width = 80,
+        compute = function(ctx)
+          local out = {}
+          for _, file in ipairs(ctx.paths) do
+            out[file] = "T:" .. file
+          end
+          return out
+        end,
+      })
+    ''');
+    final loaded =
+        jsonDecode((await PluginFfi.load(path))!) as Map<String, dynamic>;
+    final cols = loaded['columns'] as List;
+    expect(cols, hasLength(1));
+    expect((cols.first as Map)['id'], 'tag');
+    expect((cols.first as Map)['title'], 'Tag');
+    expect((cols.first as Map)['width'], 80);
+
+    final computed =
+        jsonDecode(
+              (await PluginFfi.columnCompute(
+                initLuaPath: path,
+                columnId: 'tag',
+                ctxJson: jsonEncode({
+                  'paths': ['/a.txt', '/b.txt'],
+                  'dir': '/',
+                  'plugin_dir': tmp.path,
+                }),
+              ))!,
+            )
+            as Map<String, dynamic>;
+    expect(computed['ok'], isTrue);
+    final values = computed['values'] as Map;
+    expect(values['/a.txt'], 'T:/a.txt');
+    expect(values['/b.txt'], 'T:/b.txt');
+  });
+
   test('event handlers round-trip through load', () async {
     final path = writePlugin('''
       waydir.register({

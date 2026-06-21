@@ -262,6 +262,35 @@ class PluginBarContribution implements PluginRuntimeTarget {
   }
 }
 
+class PluginColumnContribution implements PluginRuntimeTarget {
+  @override
+  final String pluginId;
+  final String columnId;
+  final String title;
+  final double width;
+  final List<PluginFormField> settings;
+  final String initLuaPath;
+  final String pluginDir;
+  @override
+  final PluginManifest manifest;
+
+  const PluginColumnContribution({
+    required this.pluginId,
+    required this.columnId,
+    required this.title,
+    required this.width,
+    required this.settings,
+    required this.initLuaPath,
+    required this.pluginDir,
+    required this.manifest,
+  });
+
+  String get fullColumnId => 'plugin:$pluginId:col:$columnId';
+
+  @override
+  String get runtimeId => fullColumnId;
+}
+
 class PluginBarItem {
   final String type;
   final String id;
@@ -362,6 +391,7 @@ class LoadedPlugin {
   final bool enabled;
   final List<PluginContribution> contributions;
   final List<PluginBarContribution> bars;
+  final List<PluginColumnContribution> columns;
   final String? error;
 
   const LoadedPlugin({
@@ -370,6 +400,7 @@ class LoadedPlugin {
     required this.enabled,
     required this.contributions,
     this.bars = const [],
+    this.columns = const [],
     this.error,
   });
 
@@ -385,6 +416,11 @@ class LoadedPlugin {
     }
     for (final b in bars) {
       for (final f in b.settings) {
+        if (seen.add(f.id)) out.add(f);
+      }
+    }
+    for (final c in columns) {
+      for (final f in c.settings) {
         if (seen.add(f.id)) out.add(f);
       }
     }

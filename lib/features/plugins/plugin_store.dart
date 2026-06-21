@@ -246,12 +246,33 @@ class PluginStore {
       );
     }
 
+    final columns = <PluginColumnContribution>[];
+    for (final item in (parsed['columns'] as List? ?? const [])) {
+      final c = item as Map<String, dynamic>;
+      final columnId = c['id'] as String?;
+      if (columnId == null || columnId.trim().isEmpty) continue;
+      final width = (c['width'] as num?)?.toDouble();
+      columns.add(
+        PluginColumnContribution(
+          pluginId: manifest.id,
+          columnId: columnId,
+          title: c['title'] as String? ?? columnId,
+          width: width == null ? 120 : width.clamp(40, 600),
+          settings: PluginFormField.listFromJson(c['settings']),
+          initLuaPath: initFile.path,
+          pluginDir: dirPath,
+          manifest: manifest,
+        ),
+      );
+    }
+
     return LoadedPlugin(
       manifest: manifest,
       dir: dirPath,
       enabled: true,
       contributions: contributions,
       bars: bars,
+      columns: columns,
     );
   }
 
@@ -276,6 +297,18 @@ class PluginStore {
       yield* plugin.bars;
     }
   }
+
+  Iterable<PluginColumnContribution> get _activeColumns sync* {
+    final disabled = PluginSettingsStore.instance.disabled.value;
+    for (final plugin in plugins.value) {
+      if (!plugin.enabled || plugin.error != null) continue;
+      if (disabled.contains(plugin.manifest.id)) continue;
+      yield* plugin.columns;
+    }
+  }
+
+  List<PluginColumnContribution> columnContributions() =>
+      _activeColumns.toList();
 
   List<PluginContribution> contextContributionsFor(List<FileEntry> entries) {
     final out = <PluginContribution>[];
@@ -422,6 +455,48 @@ class PluginStore {
     }
 
     return _parseBarResponse(raw);
+  }
+
+  /// Runs [column]'s `compute` for [paths] in [dir] and returns a map of file
+  /// path to display string. Missing or non-string values are dropped.
+  Future<Map<String, String>> computeColumn(
+    PluginColumnContribution column, {
+    required List<String> paths,
+    required String dir,
+  }) async {
+    final ctx = <String, dynamic>{
+      'paths': paths,
+      'dir': dir,
+      'plugin_dir': column.pluginDir,
+      'settings': mergedSettings(column.pluginId),
+    };
+    final raw = await PluginFfi.columnCompute(
+      initLuaPath: column.initLuaPath,
+      columnId: column.columnId,
+      ctxJson: jsonEncode(ctx),
+    );
+    if (raw == null) return const {};
+    try {
+      final parsed = jsonDecode(raw) as Map<String, dynamic>;
+      if (parsed['ok'] != true) {
+        log.error('plugins', 'column compute failed: ${parsed['error']}');
+
+        return const {};
+      }
+      final values = parsed['values'];
+      final out = <String, String>{};
+      if (values is Map) {
+        values.forEach((key, value) {
+          if (value != null) out[key.toString()] = value.toString();
+        });
+      }
+
+      return out;
+    } catch (e) {
+      log.error('plugins', 'column compute parse: $e');
+
+      return const {};
+    }
   }
 
   Map<String, dynamic> _barContext(

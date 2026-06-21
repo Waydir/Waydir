@@ -35,6 +35,11 @@ typedef _BarClickDart =
       Pointer<Utf8>,
     );
 
+typedef _ColumnNative =
+    Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>, Pointer<Utf8>);
+typedef _ColumnDart =
+    Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>, Pointer<Utf8>);
+
 typedef _FreeNative = Void Function(Pointer<Utf8>);
 typedef _FreeDart = void Function(Pointer<Utf8>);
 
@@ -79,6 +84,16 @@ class PluginFfi {
     required String ctxJson,
   }) {
     return _request(['barClick', initLuaPath, barId, itemId, ctxJson]);
+  }
+
+  /// Computes a column's values for a batch of files. Runs on the shared worker
+  /// since it fires once per directory load.
+  static Future<String?> columnCompute({
+    required String initLuaPath,
+    required String columnId,
+    required String ctxJson,
+  }) {
+    return _request(['columnCompute', initLuaPath, columnId, ctxJson]);
   }
 
   // --- Long-lived worker isolate ---------------------------------------------
@@ -143,6 +158,12 @@ class PluginFfi {
             m[3] as String,
             m[4] as String,
             m[5] as String,
+          );
+        case 'columnCompute':
+          result = _columnComputeSync(
+            m[2] as String,
+            m[3] as String,
+            m[4] as String,
           );
       }
       reply.send(result);
@@ -237,6 +258,40 @@ class PluginFfi {
     } finally {
       calloc.free(pathPtr);
       calloc.free(barPtr);
+      calloc.free(ctxPtr);
+    }
+  }
+
+  static String? _columnComputeSync(
+    String initLuaPath,
+    String columnId,
+    String ctxJson,
+  ) {
+    final lib = WaydirCoreLoader.load();
+    if (lib == null) return null;
+    final fn = lib.lookupFunction<_ColumnNative, _ColumnDart>(
+      'waydir_plugin_column_compute',
+    );
+    final free = lib.lookupFunction<_FreeNative, _FreeDart>(
+      'waydir_plugin_str_free',
+    );
+    final pathPtr = initLuaPath.toNativeUtf8();
+    final colPtr = columnId.toNativeUtf8();
+    final ctxPtr = ctxJson.toNativeUtf8();
+    try {
+      final res = fn(pathPtr, colPtr, ctxPtr);
+      if (res == nullptr) return null;
+      final out = res.toDartString();
+      free(res);
+
+      return out;
+    } catch (e, st) {
+      log.error('plugins', 'plugin column compute failed', error: e, stack: st);
+
+      return null;
+    } finally {
+      calloc.free(pathPtr);
+      calloc.free(colPtr);
       calloc.free(ctxPtr);
     }
   }
