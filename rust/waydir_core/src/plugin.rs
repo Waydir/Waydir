@@ -457,6 +457,7 @@ fn load_impl(path: &str) -> mlua::Result<Json> {
             };
             let where_ = opt_string_array(&spec, "where")?;
             let shortcut: Option<String> = spec.get("shortcut")?;
+            let event: Option<String> = spec.get("event")?;
             let settings = settings_to_json(lua, &spec)?;
             sink.borrow_mut().push(json!({
                 "id": id,
@@ -467,6 +468,7 @@ fn load_impl(path: &str) -> mlua::Result<Json> {
                 "when": when,
                 "where": where_,
                 "shortcut": shortcut,
+                "event": event,
                 "settings": settings,
             }));
             Ok(())

@@ -555,6 +555,21 @@ void main() {
     }
   });
 
+  test('event handlers round-trip through load', () async {
+    final path = writePlugin('''
+      waydir.register({
+        id = "watch",
+        title = "Watch",
+        event = "navigate",
+        run = function(ctx) waydir.log("at " .. ctx.dir) end,
+      })
+    ''');
+    final json =
+        jsonDecode((await PluginFfi.load(path))!) as Map<String, dynamic>;
+    final c = (json['contributions'] as List).first as Map<String, dynamic>;
+    expect(c['event'], 'navigate');
+  });
+
   test('toolbar menu and icon round-trip through load', () async {
     final path = writePlugin('''
       waydir.register({

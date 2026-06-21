@@ -96,6 +96,7 @@ void main() {
         when: PluginWhen(),
         surfaces: {'selection'},
         shortcut: null,
+        event: null,
         settings: [],
         initLuaPath: '/x/init.lua',
         pluginDir: '/x',

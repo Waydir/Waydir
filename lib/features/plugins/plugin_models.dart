@@ -169,6 +169,11 @@ class PluginContribution implements PluginRuntimeTarget {
   final PluginWhen when;
   final Set<String> surfaces;
   final String? shortcut;
+
+  /// When non-null, this contribution is a reactive event handler (e.g.
+  /// `navigate`, `selection_change`) rather than a menu/toolbar action, and is
+  /// hidden from every menu surface.
+  final String? event;
   final List<PluginFormField> settings;
   final String initLuaPath;
   final String pluginDir;
@@ -185,6 +190,7 @@ class PluginContribution implements PluginRuntimeTarget {
     required this.when,
     required this.surfaces,
     required this.shortcut,
+    required this.event,
     required this.settings,
     required this.initLuaPath,
     required this.pluginDir,

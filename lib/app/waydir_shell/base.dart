@@ -24,6 +24,8 @@ mixin _WaydirStateBase on State<WaydirShell> {
   final Set<String> _openWithWarming = {};
   final _renameErrorDisposers = <NavigationStore, void Function()>{};
   final _renameFocusDisposers = <NavigationStore, void Function()>{};
+  Timer? _navEventTimer;
+  Timer? _selectionEventTimer;
   DateTime? _lastCursorRepeatAt;
   DateTime? _terminalInteractionAt;
 

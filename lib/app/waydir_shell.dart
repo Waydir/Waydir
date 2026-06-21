@@ -188,6 +188,7 @@ class _WaydirShellState extends State<WaydirShell>
       }),
     );
     _installUpdateNotification();
+    _installPluginEventEffects();
     _maybePromptFullDiskAccess();
   }
 
@@ -215,6 +216,8 @@ class _WaydirShellState extends State<WaydirShell>
       d();
     }
     _renameFocusDisposers.clear();
+    _navEventTimer?.cancel();
+    _selectionEventTimer?.cancel();
     _focusNode.dispose();
     _notificationStore.dispose();
     _shell.dispose();

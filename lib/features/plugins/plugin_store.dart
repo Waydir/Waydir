@@ -199,11 +199,13 @@ class PluginStore {
           ? whereRaw.whereType<String>().map((e) => e.toLowerCase()).toSet()
           : <String>{'selection'};
       if (surfaces.isEmpty) surfaces.add('selection');
+      final event = (c['event'] as String?)?.trim().toLowerCase();
+      final hasEvent = event != null && event.isNotEmpty;
       contributions.add(
         PluginContribution(
           pluginId: manifest.id,
           actionId: actionId,
-          menu: c['menu'] as String? ?? 'context',
+          menu: hasEvent ? 'event' : (c['menu'] as String? ?? 'context'),
           title: title,
           group: (c['group'] as String?)?.trim().isNotEmpty == true
               ? c['group'] as String
@@ -211,7 +213,8 @@ class PluginStore {
           icon: c['icon'] as String?,
           when: PluginWhen.fromJson(c['when'] as Map<String, dynamic>?),
           surfaces: surfaces,
-          shortcut: c['shortcut'] as String?,
+          shortcut: hasEvent ? null : c['shortcut'] as String?,
+          event: hasEvent ? event : null,
           settings: PluginFormField.listFromJson(c['settings']),
           initLuaPath: initFile.path,
           pluginDir: dirPath,
@@ -310,6 +313,16 @@ class PluginStore {
     return [
       for (final c in _activeContributions)
         if (c.shortcut != null && c.shortcut!.trim().isNotEmpty) c,
+    ];
+  }
+
+  /// Active handlers registered for the lifecycle [event] (e.g. `navigate`,
+  /// `selection_change`). Empty when no plugin listens, so callers can skip
+  /// building context.
+  List<PluginContribution> eventContributions(String event) {
+    return [
+      for (final c in _activeContributions)
+        if (c.event == event) c,
     ];
   }
 

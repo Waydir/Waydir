@@ -169,6 +169,7 @@ Action fields:
 | `group` | string | Context submenu label. Actions with the same group are nested together. |
 | `icon` | string | Built-in icon name or bundled `.svg` or `.png` path. |
 | `shortcut` | string | Chord such as `ctrl+shift+x` or `alt+f5`. |
+| `event` | string | Run reactively on a lifecycle event (`navigate`, `selection_change`) instead of from a menu. See [Events](#events). |
 | `when` | table | Selection filter. Applies to selection context actions. |
 | `settings` | list | User-editable plugin settings schema. |
 
@@ -270,6 +271,28 @@ when = {
 | `in_archive` | `false` hides the action inside archives. `true` shows it only inside archives. |
 
 Omit `when` to show the action for any non-empty selection. For background actions, use `where = { "background" }`.
+
+## Events
+
+Add an `event` field instead of a menu to run when something changes in the active pane, with no menu entry, toolbar button or shortcut. The `run(ctx)` receives the same context as an action (including `ctx.other_pane` and `ctx.panes`).
+
+```lua
+waydir.register({
+  id = "log_navigation",
+  title = "Log navigation",
+  event = "navigate",
+  run = function(ctx)
+    waydir.log("entered " .. ctx.dir)
+  end,
+})
+```
+
+| Event | Fires when |
+|-------|------------|
+| `navigate` | The active pane's folder changes. |
+| `selection_change` | The active pane's selection changes. |
+
+Events are debounced so rapid cursor or selection changes coalesce into one run. Keep handlers cheap; offload slow work to `waydir.run_task`.
 
 ## Dialogs
 
