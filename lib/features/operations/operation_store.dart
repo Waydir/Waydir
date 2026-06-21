@@ -17,6 +17,7 @@ import '../../core/settings/settings_store.dart';
 import '../../i18n/strings.g.dart';
 import '../../ui/overlays/notification_store.dart';
 import '../../ui/theme/app_theme.dart';
+import '../tags/tag_store.dart';
 import 'sftp_task_executor.dart';
 
 class _WorkerHandle {
@@ -95,7 +96,7 @@ class OperationStore {
   Timer? _currentCancelWatchdog;
   void Function()? _completeCurrentAsCancelled;
 
-  void _followTags(FileTask task) {
+  Future<void> _followTags(FileTask task) async {
     if (task.status != TaskStatus.completed) return;
     final settings = SettingsStore.instance;
     if (!settings.isLoaded) return;
@@ -105,16 +106,17 @@ class OperationStore {
         final dest = task.destination;
         if (dest == null) return;
         for (final src in task.sources) {
-          db.moveFileTags(src, p.join(dest, p.basename(src)));
+          await db.moveFileTags(src, p.join(dest, p.basename(src)));
         }
       case TaskType.delete:
       case TaskType.trashDelete:
         for (final src in task.sources) {
-          db.clearFileTags(src);
+          await db.clearFileTags(src);
         }
       default:
         return;
     }
+    TagStore.instance.notifyFileTagsChanged();
   }
 
   void enqueueCopy(List<String> sources, String destination) =>
@@ -698,7 +700,7 @@ class OperationStore {
         _updateTask(task);
         _dismissTaskConflictNotification(task.id);
         _showFinishNotification(task);
-        _followTags(task);
+        unawaited(_followTags(task));
         taskCompleted.value = task.id;
         _scheduleCleanup(task);
         handle.dispose();

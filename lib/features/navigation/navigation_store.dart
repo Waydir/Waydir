@@ -73,6 +73,7 @@ class NavigationStore {
   int _sortLoadToken = 0;
   void Function()? _sortDefaultsDisposer;
   void Function()? _gitStatusDisposer;
+  void Function()? _fileTagsDisposer;
 
   bool get isTrashView => isTrashPath(currentPath.value);
   bool get isTagView => isTagPath(currentPath.value);
@@ -380,6 +381,7 @@ class NavigationStore {
     _setupSortDefaultsEffect();
     _setupGitStatusEffect();
     _setupTagsEffect();
+    _setupFileTagsEffect();
   }
 
   late final _tagDecorations = computed<Map<String, RowDecoration>>(() {
@@ -400,6 +402,19 @@ class NavigationStore {
 
   void _setupTagsEffect() {
     decorations.addReactiveLayer(_tagDecorations);
+  }
+
+  void _setupFileTagsEffect() {
+    var first = true;
+    _fileTagsDisposer = effect(() {
+      TagStore.instance.fileTagsRevision.value;
+      if (first) {
+        first = false;
+
+        return;
+      }
+      unawaited(_refreshTagsForVisible());
+    });
   }
 
   Future<void> _loadFileTags(List<FileEntry> entries) async {
@@ -1519,7 +1534,7 @@ class NavigationStore {
         await db.addFileTag(p, tagId);
       }
     }
-    await _refreshTagsForVisible();
+    TagStore.instance.notifyFileTagsChanged();
   }
 
   Future<void> addTag(Iterable<String> paths, int tagId) async {
@@ -1529,7 +1544,7 @@ class NavigationStore {
     for (final p in taggable) {
       await db.addFileTag(p, tagId);
     }
-    await _refreshTagsForVisible();
+    TagStore.instance.notifyFileTagsChanged();
   }
 
   Future<void> clearTags(Iterable<String> paths) async {
@@ -1539,7 +1554,7 @@ class NavigationStore {
     for (final p in taggable) {
       await db.clearFileTags(p);
     }
-    await _refreshTagsForVisible();
+    TagStore.instance.notifyFileTagsChanged();
   }
 
   List<FileEntry> _filterByTags(List<FileEntry> list, FilterQuery filter) {
@@ -2346,6 +2361,8 @@ class NavigationStore {
     _sortDefaultsDisposer = null;
     _gitStatusDisposer?.call();
     _gitStatusDisposer = null;
+    _fileTagsDisposer?.call();
+    _fileTagsDisposer = null;
     _tagDecorations.dispose();
     gitStatus.dispose();
     _searchDebounce?.cancel();

@@ -28,6 +28,10 @@ class TagStore {
     () => {for (final tag in tags.value) tag.id: tag},
   );
 
+  final fileTagsRevision = signal(0);
+
+  void notifyFileTagsChanged() => fileTagsRevision.value++;
+
   late final AppDatabase _db;
   bool _loaded = false;
 
