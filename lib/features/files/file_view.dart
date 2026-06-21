@@ -1589,9 +1589,7 @@ class _ListRowState extends State<_ListRow> {
     final pathsToDrag = _pathsToDrag();
     final item = _dragItemForPaths(pathsToDrag);
 
-    final initialMode = HardwareKeyboard.instance.isAltPressed
-        ? DragMode.move
-        : DragMode.copy;
+    final initialMode = initialDragMode();
 
     void updateDragging() {
       final isDragging = request.session.dragging.value;

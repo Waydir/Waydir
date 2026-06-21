@@ -2477,6 +2477,12 @@ class Translations$preferences$general$en {
 	/// en: 'Show a dialog before moving files or folders.'
 	String get confirmMoveHint => 'Show a dialog before moving files or folders.';
 
+	/// en: 'Drag moves files instead of copying'
+	String get dragMovesByDefault => 'Drag moves files instead of copying';
+
+	/// en: 'When on, dragging files moves them and holding Alt copies instead. When off, dragging copies and Alt moves.'
+	String get dragMovesByDefaultHint => 'When on, dragging files moves them and holding Alt copies instead. When off, dragging copies and Alt moves.';
+
 	/// en: 'Remember selection per folder'
 	String get rememberFolderState => 'Remember selection per folder';
 
@@ -2806,6 +2812,12 @@ class Translations$preferences$appearance$en {
 
 	/// en: 'Applies to new tabs. Existing tabs keep their setting.'
 	String get showHiddenHint => 'Applies to new tabs. Existing tabs keep their setting.';
+
+	/// en: 'Show global toolbar'
+	String get showGlobalToolbar => 'Show global toolbar';
+
+	/// en: 'Show the toolbar above the tabs with shared actions.'
+	String get showGlobalToolbarHint => 'Show the toolbar above the tabs with shared actions.';
 
 	/// en: 'Row density'
 	String get rowDensity => 'Row density';
@@ -3671,6 +3683,8 @@ extension on Translations {
 			'preferences.general.confirmCopyHint' => 'Show a dialog before copying files or folders.',
 			'preferences.general.confirmMove' => 'Confirm before move',
 			'preferences.general.confirmMoveHint' => 'Show a dialog before moving files or folders.',
+			'preferences.general.dragMovesByDefault' => 'Drag moves files instead of copying',
+			'preferences.general.dragMovesByDefaultHint' => 'When on, dragging files moves them and holding Alt copies instead. When off, dragging copies and Alt moves.',
 			'preferences.general.rememberFolderState' => 'Remember selection per folder',
 			'preferences.general.rememberFolderStateHint' => 'Restore the cursor and selected files when you return to a folder.',
 			'preferences.general.rememberFolderSort' => 'Remember sort per folder',
@@ -3772,6 +3786,8 @@ extension on Translations {
 			'preferences.appearance.filesSection' => 'Files',
 			'preferences.appearance.showHidden' => 'Show hidden files by default',
 			'preferences.appearance.showHiddenHint' => 'Applies to new tabs. Existing tabs keep their setting.',
+			'preferences.appearance.showGlobalToolbar' => 'Show global toolbar',
+			'preferences.appearance.showGlobalToolbarHint' => 'Show the toolbar above the tabs with shared actions.',
 			'preferences.appearance.rowDensity' => 'Row density',
 			'preferences.appearance.rowDensityComfortable' => 'Comfortable',
 			'preferences.appearance.rowDensityCompact' => 'Compact',
@@ -3995,12 +4011,12 @@ extension on Translations {
 			'quickLook.tooLarge' => 'File too large to preview',
 			'quickLook.readError' => 'Could not read file',
 			'quickLook.save' => 'Save',
+			_ => null,
+		} ?? switch (path) {
 			'quickLook.saved' => 'Saved',
 			'quickLook.unsaved' => 'Unsaved',
 			'quickLook.saveError' => 'Could not save file',
 			'quickLook.largeFileReadOnly' => 'Large file - opened read-only for speed',
-			_ => null,
-		} ?? switch (path) {
 			'quickLook.editAnyway' => 'Edit',
 			'quickLook.unsavedTitle' => 'Unsaved changes',
 			'quickLook.unsavedMessage' => 'You have unsaved changes. Save them before closing?',

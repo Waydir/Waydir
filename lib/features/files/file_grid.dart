@@ -607,9 +607,7 @@ class _GridTileState extends State<_GridTile> {
         FileSelectionEvent(entry: widget.entry, index: widget.index),
       );
     }
-    final initialMode = HardwareKeyboard.instance.isAltPressed
-        ? DragMode.move
-        : DragMode.copy;
+    final initialMode = initialDragMode();
 
     void updateDragging() {
       final isDragging = request.session.dragging.value;

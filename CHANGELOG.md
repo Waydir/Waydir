@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Global toolbar.
 - Folder compare and sync between panes.
+- Setting to make dragging move files by default (Alt copies). ([#184](https://github.com/Waydir/Waydir/issues/184))
+- Setting to hide the global toolbar.
 
 ## [0.19.0] - 2026-06-20
 

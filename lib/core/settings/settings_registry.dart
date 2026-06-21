@@ -159,6 +159,14 @@ class SettingsRegistry {
       signal: SettingsStore.instance.confirmMove,
     ),
     ToggleSetting(
+      id: 'general.dragMovesByDefault',
+      category: SettingsCategory.general,
+      label: () => t.preferences.general.dragMovesByDefault,
+      hint: () => t.preferences.general.dragMovesByDefaultHint,
+      searchTerms: const ['drag', 'drop', 'move', 'copy', 'file operations'],
+      signal: SettingsStore.instance.dragMovesByDefault,
+    ),
+    ToggleSetting(
       id: 'general.rememberFolderState',
       category: SettingsCategory.general,
       label: () => t.preferences.general.rememberFolderState,
@@ -344,6 +352,14 @@ class SettingsRegistry {
       hint: () => t.preferences.appearance.showHiddenHint,
       searchTerms: const ['hidden', 'dotfiles', 'files'],
       signal: SettingsStore.instance.showHiddenDefault,
+    ),
+    ToggleSetting(
+      id: 'appearance.showGlobalToolbar',
+      category: SettingsCategory.appearance,
+      label: () => t.preferences.appearance.showGlobalToolbar,
+      hint: () => t.preferences.appearance.showGlobalToolbarHint,
+      searchTerms: const ['toolbar', 'global', 'buttons', 'bar'],
+      signal: SettingsStore.instance.showGlobalToolbar,
     ),
     ChoiceSetting<String>(
       id: 'appearance.rowDensity',

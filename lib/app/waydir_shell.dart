@@ -382,13 +382,23 @@ class _WaydirShellState extends State<WaydirShell>
                                 Expanded(
                                   child: Column(
                                     children: [
-                                      GlobalToolbar(
-                                        shell: _shell,
-                                        onMultiRename: _multiRename,
-                                        onCopyPath: (store) =>
-                                            store.copySelectedPaths(),
-                                        onSelectByPattern: _openSelectPattern,
-                                        onToggleHidden: _toggleShowHiddenGlobal,
+                                      SignalBuilder(
+                                        builder: (context) =>
+                                            SettingsStore
+                                                .instance
+                                                .showGlobalToolbar
+                                                .value
+                                            ? GlobalToolbar(
+                                                shell: _shell,
+                                                onMultiRename: _multiRename,
+                                                onCopyPath: (store) =>
+                                                    store.copySelectedPaths(),
+                                                onSelectByPattern:
+                                                    _openSelectPattern,
+                                                onToggleHidden:
+                                                    _toggleShowHiddenGlobal,
+                                              )
+                                            : const SizedBox.shrink(),
                                       ),
                                       Expanded(child: _buildPaneArea()),
                                     ],

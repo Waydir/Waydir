@@ -100,6 +100,10 @@ class AppSettings extends Table {
       boolean().withDefault(const Constant(true))();
   BoolColumn get quickLookShowStatistics =>
       boolean().withDefault(const Constant(true))();
+  BoolColumn get dragMovesByDefault =>
+      boolean().withDefault(const Constant(false))();
+  BoolColumn get showGlobalToolbar =>
+      boolean().withDefault(const Constant(true))();
 }
 
 class SessionTabs extends Table {
@@ -227,7 +231,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 39;
+  int get schemaVersion => 41;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -396,6 +400,12 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 39) {
         await addSettingColumn(appSettings.terminalCopyPasteMode);
+      }
+      if (from < 40) {
+        await addSettingColumn(appSettings.dragMovesByDefault);
+      }
+      if (from < 41) {
+        await addSettingColumn(appSettings.showGlobalToolbar);
       }
     },
   );
