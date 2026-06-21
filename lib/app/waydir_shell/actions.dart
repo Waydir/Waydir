@@ -460,11 +460,17 @@ mixin _WaydirActionsMixin on State<WaydirShell>, _WaydirStateBase {
     final activeIdx = _shell.activePaneIndex.value;
     final otherStore =
         _shell.panes.value[1 - activeIdx].tabs.activeTab.value.store;
+    final otherPath = otherStore.currentPath.value;
+    if (isTagPath(otherPath)) {
+      final id = tagIdFromPath(otherPath);
+      final paths = _dualPaneEntries(store).map((e) => e.path).toList();
+      if (id != null && paths.isNotEmpty) await otherStore.addTag(paths, id);
+
+      return;
+    }
     final sources = _dualPaneSources(store);
     if (sources.isEmpty) return;
-    final dest = await otherStore.resolveForOperation(
-      otherStore.currentPath.value,
-    );
+    final dest = await otherStore.resolveForOperation(otherPath);
     if (dest == null) return;
     if (move) {
       _operationStore.enqueueMove(sources, dest);
@@ -473,15 +479,16 @@ mixin _WaydirActionsMixin on State<WaydirShell>, _WaydirStateBase {
     }
   }
 
-  List<String> _dualPaneSources(NavigationStore store) {
+  List<FileEntry> _dualPaneEntries(NavigationStore store) {
     final entries = store.selectedEntries;
-    if (entries.isNotEmpty) {
-      return entries.map((e) => e.realPath).toList();
-    }
+    if (entries.isNotEmpty) return entries;
     final idx = store.cursorIndex.value;
     final files = store.visibleFiles.value;
-    if (idx >= 0 && idx < files.length) return [files[idx].realPath];
+    if (idx >= 0 && idx < files.length) return [files[idx]];
 
     return const [];
   }
+
+  List<String> _dualPaneSources(NavigationStore store) =>
+      _dualPaneEntries(store).map((e) => e.realPath).toList();
 }

@@ -2762,6 +2762,15 @@ class NavigationStore {
 
   void paste() async {
     if (isTrashView) return;
+    if (isTagView) {
+      final id = tagIdFromPath(currentPath.value);
+      if (id == null) return;
+      var paths = await FileClipboard.readFilePaths();
+      if (paths.isEmpty) paths = clipboardPaths.value.toList();
+      if (paths.isNotEmpty) await addTag(paths, id);
+
+      return;
+    }
     final internalPaths = Set<String>.from(clipboardPaths.value);
     final internalCut = clipboardMode.value == ClipboardMode.cut;
 

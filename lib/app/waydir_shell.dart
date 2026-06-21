@@ -50,6 +50,7 @@ import '../features/plugins/plugin_settings_store.dart';
 import '../features/plugins/plugin_store.dart';
 import '../features/settings/preferences_view.dart';
 import '../features/tags/tag_edit_dialog.dart';
+import '../features/tags/tag_path.dart';
 import '../features/tags/tag_store.dart';
 import '../features/toolbar/global_toolbar.dart';
 import '../i18n/strings.g.dart';
