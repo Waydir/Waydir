@@ -903,6 +903,9 @@ class Translations$keybindings$en {
 	/// en: 'Switch to tab'
 	String get switchTab => 'Switch to tab';
 
+	/// en: 'Jump to bookmark'
+	String get jumpBookmark => 'Jump to bookmark';
+
 	/// en: 'Toggle dual pane'
 	String get toggleDual => 'Toggle dual pane';
 
@@ -3817,8 +3820,8 @@ class Translations$help$groups$files$tags$en {
 	/// en: 'Color Tags'
 	String get title => 'Color Tags';
 
-	/// en: 'Mark files and folders with colored tags to find them again fast. Three tags - **Red**, **Green** and **Blue** - are ready out of the box. - Assign or remove tags from the **Tags** submenu in the context menu, or press `Ctrl+Shift+1`…`9` for the first nine tags. - Tagged items show a colored dot in the file list, and an item can carry several tags at once. - Each tag appears in the **Tags** section of the sidebar; click one to list every file that carries it, wherever it lives. - In a tag view, use **Open Location** from the context menu to jump to a file's real folder. - Right-click a tag in the sidebar to rename, recolor or delete it; deleting a tag removes it from every file. - Tags apply to local files only - not to SFTP, network shares or items inside archives.'
-	String get body => 'Mark files and folders with colored tags to find them again fast. Three tags - **Red**, **Green** and **Blue** - are ready out of the box.\n\n- Assign or remove tags from the **Tags** submenu in the context menu, or press `Ctrl+Shift+1`…`9` for the first nine tags.\n- Tagged items show a colored dot in the file list, and an item can carry several tags at once.\n- Each tag appears in the **Tags** section of the sidebar; click one to list every file that carries it, wherever it lives.\n- In a tag view, use **Open Location** from the context menu to jump to a file\'s real folder.\n- Right-click a tag in the sidebar to rename, recolor or delete it; deleting a tag removes it from every file.\n- Tags apply to local files only - not to SFTP, network shares or items inside archives.';
+	/// en: 'Mark files and folders with colored tags to find them again fast. Three tags - **Red**, **Green** and **Blue** - are ready out of the box. - Assign or remove tags from the **Tags** submenu in the context menu, or drag files onto a tag in the sidebar. - Tagged items show a colored dot in the file list, and an item can carry several tags at once. - Each tag appears in the **Tags** section of the sidebar; click one to list every file that carries it, wherever it lives. - In a tag view, use **Open Location** from the context menu to jump to a file's real folder. - Right-click a tag in the sidebar to rename, recolor or delete it; deleting a tag removes it from every file. - Tags apply to local files only - not to SFTP, network shares or items inside archives.'
+	String get body => 'Mark files and folders with colored tags to find them again fast. Three tags - **Red**, **Green** and **Blue** - are ready out of the box.\n\n- Assign or remove tags from the **Tags** submenu in the context menu, or drag files onto a tag in the sidebar.\n- Tagged items show a colored dot in the file list, and an item can carry several tags at once.\n- Each tag appears in the **Tags** section of the sidebar; click one to list every file that carries it, wherever it lives.\n- In a tag view, use **Open Location** from the context menu to jump to a file\'s real folder.\n- Right-click a tag in the sidebar to rename, recolor or delete it; deleting a tag removes it from every file.\n- Tags apply to local files only - not to SFTP, network shares or items inside archives.';
 }
 
 // Path: help.groups.previewing.quickLook
@@ -4441,7 +4444,7 @@ extension on Translations {
 			'help.groups.files.openWith.title' => 'Open With & Default Apps',
 			'help.groups.files.openWith.body' => 'Open a file in any installed application, not just the system default.\n\n- **Open With** from the context menu lists available apps.\n- Set a default app per file type so future opens go straight there.\n- Recently used apps appear at the top for quick access.',
 			'help.groups.files.tags.title' => 'Color Tags',
-			'help.groups.files.tags.body' => 'Mark files and folders with colored tags to find them again fast. Three tags - **Red**, **Green** and **Blue** - are ready out of the box.\n\n- Assign or remove tags from the **Tags** submenu in the context menu, or press `Ctrl+Shift+1`…`9` for the first nine tags.\n- Tagged items show a colored dot in the file list, and an item can carry several tags at once.\n- Each tag appears in the **Tags** section of the sidebar; click one to list every file that carries it, wherever it lives.\n- In a tag view, use **Open Location** from the context menu to jump to a file\'s real folder.\n- Right-click a tag in the sidebar to rename, recolor or delete it; deleting a tag removes it from every file.\n- Tags apply to local files only - not to SFTP, network shares or items inside archives.',
+			'help.groups.files.tags.body' => 'Mark files and folders with colored tags to find them again fast. Three tags - **Red**, **Green** and **Blue** - are ready out of the box.\n\n- Assign or remove tags from the **Tags** submenu in the context menu, or drag files onto a tag in the sidebar.\n- Tagged items show a colored dot in the file list, and an item can carry several tags at once.\n- Each tag appears in the **Tags** section of the sidebar; click one to list every file that carries it, wherever it lives.\n- In a tag view, use **Open Location** from the context menu to jump to a file\'s real folder.\n- Right-click a tag in the sidebar to rename, recolor or delete it; deleting a tag removes it from every file.\n- Tags apply to local files only - not to SFTP, network shares or items inside archives.',
 			'help.groups.previewing.title' => 'Previewing',
 			'help.groups.previewing.quickLook.title' => 'Quick Look',
 			'help.groups.previewing.quickLook.body' => 'Inspect a file without opening another app. Quick Look handles images, text, code, Markdown and other supported types.\n\n- `Space` opens Quick Look for the current selection.\n- `↑` / `↓` step to the previous or next file without leaving the preview.\n- `Esc` closes the preview.\n- The info panel shows size, dates and permissions alongside the preview.',
@@ -4524,6 +4527,7 @@ extension on Translations {
 			_ => null,
 		} ?? switch (path) {
 			'keybindings.switchTab' => 'Switch to tab',
+			'keybindings.jumpBookmark' => 'Jump to bookmark',
 			'keybindings.toggleDual' => 'Toggle dual pane',
 			'keybindings.switchPane' => 'Switch active pane',
 			'keybindings.compare' => 'Compare folders',

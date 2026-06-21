@@ -397,18 +397,6 @@ mixin _WaydirKeyboardMixin
       return KeyEventResult.handled;
     }
 
-    for (var i = 1; i <= 9; i++) {
-      if (AppShortcuts.matches('tag_$i', key)) {
-        final defs = TagStore.instance.tags.value;
-        if (i <= defs.length) {
-          final paths = [for (final e in store.selectedEntries) e.path];
-          if (paths.isNotEmpty) store.toggleTag(paths, defs[i - 1].id);
-        }
-
-        return KeyEventResult.handled;
-      }
-    }
-
     if (AppShortcuts.matches('toggle_select', key)) {
       store.toggleSelectAndAdvance();
 

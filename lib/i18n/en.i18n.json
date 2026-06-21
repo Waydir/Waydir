@@ -533,7 +533,7 @@
         },
         "tags": {
           "title": "Color Tags",
-          "body": "Mark files and folders with colored tags to find them again fast. Three tags - **Red**, **Green** and **Blue** - are ready out of the box.\n\n- Assign or remove tags from the **Tags** submenu in the context menu, or press `Ctrl+Shift+1`…`9` for the first nine tags.\n- Tagged items show a colored dot in the file list, and an item can carry several tags at once.\n- Each tag appears in the **Tags** section of the sidebar; click one to list every file that carries it, wherever it lives.\n- In a tag view, use **Open Location** from the context menu to jump to a file's real folder.\n- Right-click a tag in the sidebar to rename, recolor or delete it; deleting a tag removes it from every file.\n- Tags apply to local files only - not to SFTP, network shares or items inside archives."
+          "body": "Mark files and folders with colored tags to find them again fast. Three tags - **Red**, **Green** and **Blue** - are ready out of the box.\n\n- Assign or remove tags from the **Tags** submenu in the context menu, or drag files onto a tag in the sidebar.\n- Tagged items show a colored dot in the file list, and an item can carry several tags at once.\n- Each tag appears in the **Tags** section of the sidebar; click one to list every file that carries it, wherever it lives.\n- In a tag view, use **Open Location** from the context menu to jump to a file's real folder.\n- Right-click a tag in the sidebar to rename, recolor or delete it; deleting a tag removes it from every file.\n- Tags apply to local files only - not to SFTP, network shares or items inside archives."
         }
       },
       "previewing": {
@@ -657,6 +657,7 @@
     "nextTab": "Next tab",
     "prevTab": "Previous tab",
     "switchTab": "Switch to tab",
+    "jumpBookmark": "Jump to bookmark",
     "toggleDual": "Toggle dual pane",
     "switchPane": "Switch active pane",
     "compare": "Compare folders",

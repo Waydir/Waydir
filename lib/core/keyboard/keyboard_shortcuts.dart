@@ -227,18 +227,6 @@ class AppShortcuts {
     return null;
   }
 
-  static const List<LogicalKeyboardKey> _digitKeys = [
-    LogicalKeyboardKey.digit1,
-    LogicalKeyboardKey.digit2,
-    LogicalKeyboardKey.digit3,
-    LogicalKeyboardKey.digit4,
-    LogicalKeyboardKey.digit5,
-    LogicalKeyboardKey.digit6,
-    LogicalKeyboardKey.digit7,
-    LogicalKeyboardKey.digit8,
-    LogicalKeyboardKey.digit9,
-  ];
-
   static final List<ShortcutDef> _builtin = <ShortcutDef>[
     ShortcutDef(
       id: 'open_item',
@@ -414,6 +402,16 @@ class AppShortcuts {
       group: ShortcutGroup.tabs,
       key: LogicalKeyboardKey.digit1,
       ctrl: true,
+      customKeyDisplay: '1…9',
+      editable: false,
+    ),
+    ShortcutDef(
+      id: 'jump_bookmark',
+      label: () => '',
+      group: ShortcutGroup.navigation,
+      key: LogicalKeyboardKey.digit1,
+      ctrl: true,
+      shift: true,
       customKeyDisplay: '1…9',
       editable: false,
     ),
@@ -695,15 +693,6 @@ class AppShortcuts {
       key: LogicalKeyboardKey.keyS,
       alt: true,
     ),
-    for (var i = 0; i < 9; i++)
-      ShortcutDef(
-        id: 'tag_${i + 1}',
-        label: () => '',
-        group: ShortcutGroup.selection,
-        key: _digitKeys[i],
-        ctrl: true,
-        shift: true,
-      ),
     ShortcutDef(
       id: 'search',
       label: () => '',

@@ -93,6 +93,7 @@ String _labelFor(ShortcutDef s) => switch (s.id) {
   'next_tab' => t.keybindings.nextTab,
   'prev_tab' => t.keybindings.prevTab,
   'switch_tab' => t.keybindings.switchTab,
+  'jump_bookmark' => t.keybindings.jumpBookmark,
   'toggle_dual' => t.keybindings.toggleDual,
   'switch_pane' => t.keybindings.switchPane,
   'compare' => t.keybindings.compare,
