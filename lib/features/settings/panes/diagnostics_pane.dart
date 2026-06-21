@@ -10,7 +10,28 @@ import '../../../i18n/strings.g.dart';
 import '../../../ui/overlays/toast.dart';
 import '../../../ui/theme/app_theme.dart';
 import '../../../ui/theme/app_text_styles.dart';
+import '../../../ui/widgets/app_modal.dart';
 import '../preferences_view.dart';
+
+Future<void> showDiagnosticsDialog(BuildContext context) {
+  final size = MediaQuery.of(context).size;
+  final width = size.width * 0.78 > 820 ? 820.0 : size.width * 0.78;
+  final height = size.height - 112 > 620 ? 620.0 : size.height - 112;
+
+  return showDialog<void>(
+    context: context,
+    barrierDismissible: true,
+    barrierColor: Colors.black.withValues(alpha: 0.55),
+    builder: (ctx) => AppModal(
+      icon: WaydirIconsRegular.bug,
+      title: t.preferences.diagnostics.title,
+      width: width,
+      height: height,
+      onClose: () => Navigator.of(ctx).pop(),
+      child: const SingleChildScrollView(child: DiagnosticsPane()),
+    ),
+  );
+}
 
 class DiagnosticsPane extends StatefulWidget {
   const DiagnosticsPane({super.key});

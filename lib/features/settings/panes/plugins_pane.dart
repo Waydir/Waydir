@@ -7,12 +7,33 @@ import '../../../i18n/strings.g.dart';
 import '../../../ui/overlays/toast.dart';
 import '../../../ui/theme/app_theme.dart';
 import '../../../ui/theme/app_text_styles.dart';
+import '../../../ui/widgets/app_modal.dart';
 import '../../panes/shell_store.dart';
 import '../../plugins/plugin_form_dialog.dart';
 import '../../plugins/plugin_models.dart';
 import '../../plugins/plugin_settings_store.dart';
 import '../../plugins/plugin_store.dart';
 import '../preferences_view.dart';
+
+Future<void> showPluginsDialog(BuildContext context) {
+  final size = MediaQuery.of(context).size;
+  final width = size.width * 0.75 > 760 ? 760.0 : size.width * 0.75;
+  final height = size.height - 112 > 620 ? 620.0 : size.height - 112;
+
+  return showDialog<void>(
+    context: context,
+    barrierDismissible: true,
+    barrierColor: Colors.black.withValues(alpha: 0.55),
+    builder: (ctx) => AppModal(
+      icon: WaydirIconsRegular.gearSix,
+      title: t.preferences.plugins.title,
+      width: width,
+      height: height,
+      onClose: () => Navigator.of(ctx).pop(),
+      child: const SingleChildScrollView(child: PluginsPane()),
+    ),
+  );
+}
 
 class PluginsPane extends StatefulWidget {
   const PluginsPane({super.key});

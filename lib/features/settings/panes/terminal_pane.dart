@@ -51,6 +51,7 @@ class _TerminalPaneState extends State<TerminalPane> {
     return SettingsPaneScaffold(
       children: [
         SettingsSection(
+          anchorId: 'terminal.appearance',
           title: t.preferences.terminal.appearanceSection,
           children: [
             RegistrySettingRow(setting: useSystemFont),
@@ -66,14 +67,17 @@ class _TerminalPaneState extends State<TerminalPane> {
           ],
         ),
         SettingsSection(
+          anchorId: 'terminal.behavior',
           title: t.preferences.terminal.behaviorSection,
           children: [RegistrySettingRow(setting: copyPasteMode)],
         ),
         SettingsSection(
+          anchorId: 'terminal.shell',
           title: t.preferences.terminal.shellSection,
           children: [RegistrySettingRow(setting: shell)],
         ),
         SettingsSection(
+          anchorId: 'terminal.external',
           title: t.preferences.terminal.externalSection,
           children: [
             RegistrySettingRow(setting: external),

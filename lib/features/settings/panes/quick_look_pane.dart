@@ -44,6 +44,7 @@ class _QuickLookPaneState extends State<QuickLookPane> {
     return SettingsPaneScaffold(
       children: [
         SettingsSection(
+          anchorId: 'quickLook.font',
           title: t.preferences.quickLook.fontSection,
           children: [
             RegistrySettingRow(setting: useSystemFont),
@@ -59,6 +60,7 @@ class _QuickLookPaneState extends State<QuickLookPane> {
           ],
         ),
         SettingsSection(
+          anchorId: 'quickLook.editor',
           title: t.preferences.quickLook.editorSection,
           children: [
             RegistrySettingRow(setting: showLineNumbers),

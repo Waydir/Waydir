@@ -565,6 +565,12 @@ class Translations$preferences$en {
 	/// en: 'Close'
 	String get close => 'Close';
 
+	/// en: 'Search settings…'
+	String get searchPlaceholder => 'Search settings…';
+
+	/// en: 'No settings found'
+	String get searchNoResults => 'No settings found';
+
 	/// en: 'Coming soon'
 	String get comingSoon => 'Coming soon';
 
@@ -4128,6 +4134,8 @@ extension on Translations {
 			'preferences.title' => 'Preferences',
 			'preferences.menuLabel' => 'Preferences…',
 			'preferences.close' => 'Close',
+			'preferences.searchPlaceholder' => 'Search settings…',
+			'preferences.searchNoResults' => 'No settings found',
 			'preferences.comingSoon' => 'Coming soon',
 			'preferences.categories.general' => 'General',
 			'preferences.categories.appearance' => 'Appearance',
@@ -4503,10 +4511,10 @@ extension on Translations {
 			'keybindings.switchTab' => 'Switch to tab',
 			'keybindings.jumpBookmark' => 'Jump to bookmark',
 			'keybindings.toggleDual' => 'Toggle dual pane',
-			'keybindings.switchPane' => 'Switch active pane',
-			'keybindings.compare' => 'Compare folders',
 			_ => null,
 		} ?? switch (path) {
+			'keybindings.switchPane' => 'Switch active pane',
+			'keybindings.compare' => 'Compare folders',
 			'keybindings.compareSyncRight' => 'Sync left to right',
 			'keybindings.compareSyncLeft' => 'Sync right to left',
 			'keybindings.compareExit' => 'Exit compare mode',

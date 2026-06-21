@@ -169,6 +169,7 @@ class _AppearancePaneState extends State<AppearancePane> {
     return SettingsPaneScaffold(
       children: [
         SettingsSection(
+          anchorId: 'appearance.theme',
           title: t.preferences.appearance.themeSection,
           children: [
             RegistrySettingRow(
@@ -193,6 +194,7 @@ class _AppearancePaneState extends State<AppearancePane> {
           ],
         ),
         SettingsSection(
+          anchorId: 'appearance.files',
           title: t.preferences.appearance.filesSection,
           children: [
             RegistrySettingRow(

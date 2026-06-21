@@ -24,6 +24,7 @@ class GeneralPane extends StatelessWidget {
     return SettingsPaneScaffold(
       children: [
         SettingsSection(
+          anchorId: 'general.startup',
           title: t.preferences.general.startupSection,
           children: [
             RegistrySettingRow(setting: restoreSession),
@@ -31,6 +32,7 @@ class GeneralPane extends StatelessWidget {
           ],
         ),
         SettingsSection(
+          anchorId: 'general.folders',
           title: t.preferences.general.foldersSection,
           children: [
             RegistrySettingRow(setting: rememberFolderState),
@@ -39,6 +41,7 @@ class GeneralPane extends StatelessWidget {
           ],
         ),
         SettingsSection(
+          anchorId: 'general.fileOps',
           title: t.preferences.general.fileOpsSection,
           children: [
             RegistrySettingRow(setting: deleteKeyBehavior),

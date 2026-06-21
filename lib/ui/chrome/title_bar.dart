@@ -11,6 +11,9 @@ import '../../app/waydir_app.dart';
 import '../../features/help/changelog_dialog.dart';
 import '../../features/help/help_dialog.dart';
 import '../../features/settings/keybindings_help_view.dart';
+import '../../features/settings/panes/about_pane.dart';
+import '../../features/settings/panes/diagnostics_pane.dart';
+import '../../features/settings/panes/plugins_pane.dart';
 import '../../features/settings/preferences_view.dart';
 import '../../i18n/strings.g.dart';
 import '../overlays/context_menu.dart';
@@ -35,6 +38,21 @@ void _openHelp() {
 void _openChangelog() {
   final ctx = waydirNavigatorKey.currentContext;
   if (ctx != null) showChangelogDialog(ctx);
+}
+
+void _openPlugins() {
+  final ctx = waydirNavigatorKey.currentContext;
+  if (ctx != null) showPluginsDialog(ctx);
+}
+
+void _openDiagnostics() {
+  final ctx = waydirNavigatorKey.currentContext;
+  if (ctx != null) showDiagnosticsDialog(ctx);
+}
+
+void _openAbout() {
+  final ctx = waydirNavigatorKey.currentContext;
+  if (ctx != null) showWaydirAboutDialog(ctx);
 }
 
 void _openGithub() {
@@ -119,8 +137,20 @@ class TitleBar extends StatelessWidget {
                 onSelected: _openKeybindingsHelp,
               ),
               PlatformMenuItem(
+                label: t.preferences.plugins.title,
+                onSelected: _openPlugins,
+              ),
+              PlatformMenuItem(
+                label: t.preferences.diagnostics.title,
+                onSelected: _openDiagnostics,
+              ),
+              PlatformMenuItem(
                 label: t.appMenu.changelog,
                 onSelected: _openChangelog,
+              ),
+              PlatformMenuItem(
+                label: t.preferences.categories.about,
+                onSelected: _openAbout,
               ),
             ],
           ),
@@ -210,9 +240,24 @@ class _MenuBar extends StatelessWidget {
               action: 'keybindings',
             ),
             ContextMenuItem(
+              icon: WaydirIconsRegular.gearSix,
+              label: t.preferences.plugins.title,
+              action: 'plugins',
+            ),
+            ContextMenuItem(
+              icon: WaydirIconsRegular.bug,
+              label: t.preferences.diagnostics.title,
+              action: 'diagnostics',
+            ),
+            ContextMenuItem(
               icon: WaydirIconsRegular.notebook,
               label: t.appMenu.changelog,
               action: 'changelog',
+            ),
+            ContextMenuItem(
+              icon: WaydirIconsRegular.info,
+              label: t.preferences.categories.about,
+              action: 'about',
             ),
             ContextMenuItem.divider,
             ContextMenuItem(
@@ -235,8 +280,14 @@ class _MenuBar extends StatelessWidget {
                 _openHelp();
               case 'keybindings':
                 _openKeybindingsHelp();
+              case 'plugins':
+                _openPlugins();
+              case 'diagnostics':
+                _openDiagnostics();
               case 'changelog':
                 _openChangelog();
+              case 'about':
+                _openAbout();
               case 'star':
                 _openGithub();
               case 'quit':

@@ -12,7 +12,23 @@ import '../../../i18n/strings.g.dart';
 import '../../../ui/overlays/toast.dart';
 import '../../../ui/theme/app_theme.dart';
 import '../../../ui/theme/app_text_styles.dart';
+import '../../../ui/widgets/app_modal.dart';
 import '../preferences_view.dart';
+
+Future<void> showWaydirAboutDialog(BuildContext context) {
+  return showDialog<void>(
+    context: context,
+    barrierDismissible: true,
+    barrierColor: Colors.black.withValues(alpha: 0.55),
+    builder: (ctx) => AppModal(
+      icon: WaydirIconsRegular.info,
+      title: t.preferences.categories.about,
+      width: 540,
+      onClose: () => Navigator.of(ctx).pop(),
+      child: const AboutPane(),
+    ),
+  );
+}
 
 class AboutPane extends StatelessWidget {
   const AboutPane({super.key});
