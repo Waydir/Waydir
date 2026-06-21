@@ -3,6 +3,7 @@ import 'package:signals/signals_flutter.dart';
 
 import '../../core/keyboard/keyboard_shortcuts.dart';
 import '../../i18n/strings.g.dart';
+import '../../ui/icons/waydir_icons.dart';
 import '../../ui/theme/app_theme.dart';
 import '../../ui/theme/app_text_styles.dart';
 import 'compare_controller.dart';
@@ -30,32 +31,50 @@ class CompareModeBar extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Row(
             children: [
-              _LegendDot(
-                color: AppColors.compareUnique,
-                label: t.compare.unique,
+              Expanded(
+                child: ClipRect(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    physics: const NeverScrollableScrollPhysics(),
+                    child: Row(
+                      children: [
+                        _LegendDot(
+                          color: AppColors.compareUnique,
+                          label: t.compare.unique,
+                        ),
+                        const SizedBox(width: 12),
+                        _LegendDot(
+                          color: AppColors.compareNewer,
+                          label: t.compare.newer,
+                        ),
+                        const SizedBox(width: 12),
+                        _LegendDot(
+                          color: AppColors.compareOlder,
+                          label: t.compare.older,
+                        ),
+                        const SizedBox(width: 12),
+                        _LegendDot(
+                          color: AppColors.compareDiffer,
+                          label: t.compare.differ,
+                        ),
+                        const SizedBox(width: 16),
+                        Text(
+                          running
+                              ? t.compare.running
+                              : t.compare.counts(
+                                  identical: counts.identical,
+                                  differ: counts.differ,
+                                  uniqueLeft: counts.uniqueLeft,
+                                  uniqueRight: counts.uniqueRight,
+                                ),
+                          style: context.txt.captionSmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
-              const SizedBox(width: 12),
-              _LegendDot(color: AppColors.compareNewer, label: t.compare.newer),
-              const SizedBox(width: 12),
-              _LegendDot(color: AppColors.compareOlder, label: t.compare.older),
-              const SizedBox(width: 12),
-              _LegendDot(
-                color: AppColors.compareDiffer,
-                label: t.compare.differ,
-              ),
-              const SizedBox(width: 16),
-              Text(
-                running
-                    ? t.compare.running
-                    : t.compare.counts(
-                        identical: counts.identical,
-                        differ: counts.differ,
-                        uniqueLeft: counts.uniqueLeft,
-                        uniqueRight: counts.uniqueRight,
-                      ),
-                style: context.txt.captionSmall,
-              ),
-              const Spacer(),
+              const SizedBox(width: 8),
               _CompareButton(
                 label: t.compare.recursive,
                 active: recursive,
@@ -74,15 +93,51 @@ class CompareModeBar extends StatelessWidget {
                 onTap: controller.syncRightToLeft,
               ),
               const SizedBox(width: 6),
-              _CompareButton(
-                label: t.compare.done,
-                shortcutId: 'compare_exit',
-                onTap: controller.stop,
-              ),
+              _CompareCloseButton(onTap: controller.stop),
             ],
           ),
         );
       },
+    );
+  }
+}
+
+class _CompareCloseButton extends StatefulWidget {
+  final VoidCallback onTap;
+
+  const _CompareCloseButton({required this.onTap});
+
+  @override
+  State<_CompareCloseButton> createState() => _CompareCloseButtonState();
+}
+
+class _CompareCloseButtonState extends State<_CompareCloseButton> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: t.compare.done,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: Container(
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              color: _hovered ? AppColors.bgHover : Colors.transparent,
+              borderRadius: BorderRadius.zero,
+            ),
+            child: Icon(
+              WaydirIconsRegular.x,
+              size: 14,
+              color: AppColors.fgMuted,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
