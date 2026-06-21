@@ -1502,6 +1502,15 @@ class Translations$toolbar$en {
 	/// en: 'Search'
 	String get search => 'Search';
 
+	/// en: 'Multi Rename…'
+	String get multiRename => 'Multi Rename…';
+
+	/// en: 'Select by Pattern…'
+	String get selectByPattern => 'Select by Pattern…';
+
+	/// en: 'Show Hidden Files'
+	String get showHidden => 'Show Hidden Files';
+
 	/// en: 'List view'
 	String get listView => 'List view';
 
@@ -4084,6 +4093,9 @@ extension on Translations {
 			'toolbar.operations' => 'Operations',
 			'toolbar.notifications' => 'Notifications',
 			'toolbar.search' => 'Search',
+			'toolbar.multiRename' => 'Multi Rename…',
+			'toolbar.selectByPattern' => 'Select by Pattern…',
+			'toolbar.showHidden' => 'Show Hidden Files',
 			'toolbar.listView' => 'List view',
 			'toolbar.gridView' => 'Grid view',
 			'toolbar.more' => 'More',

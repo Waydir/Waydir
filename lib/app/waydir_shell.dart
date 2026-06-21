@@ -48,6 +48,7 @@ import '../features/plugins/plugin_models.dart';
 import '../features/plugins/plugin_settings_store.dart';
 import '../features/plugins/plugin_store.dart';
 import '../features/settings/preferences_view.dart';
+import '../features/toolbar/global_toolbar.dart';
 import '../i18n/strings.g.dart';
 import '../ui/chrome/title_bar.dart';
 import '../ui/dialogs/compress_dialog.dart';
@@ -231,7 +232,6 @@ class _WaydirShellState extends State<WaydirShell>
       onContextMenu: _handleContextMenu,
       onMenuAction: _handleMenuAction,
       onOpenInNewTab: _openInNewTab,
-      onMultiRename: _multiRename,
       onPluginToolbarAction: (id) => _runPluginAction(id, background: true),
       onPluginBarEffects: (effects, target) =>
           _applyPluginEffects(effects, target, background: true),
@@ -366,7 +366,19 @@ class _WaydirShellState extends State<WaydirShell>
                                   onOpenInNewTab: _openInNewTab,
                                 ),
                                 Container(width: 1, color: AppColors.bgDivider),
-                                Expanded(child: _buildPaneArea()),
+                                Expanded(
+                                  child: Column(
+                                    children: [
+                                      GlobalToolbar(
+                                        shell: _shell,
+                                        onMultiRename: _multiRename,
+                                        onSelectByPattern: _openSelectPattern,
+                                        onToggleHidden: _toggleShowHiddenGlobal,
+                                      ),
+                                      Expanded(child: _buildPaneArea()),
+                                    ],
+                                  ),
+                                ),
                               ],
                             ),
                           ),

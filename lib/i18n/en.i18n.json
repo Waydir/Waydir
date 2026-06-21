@@ -793,6 +793,9 @@
     "operations": "Operations",
     "notifications": "Notifications",
     "search": "Search",
+    "multiRename": "Multi Rename…",
+    "selectByPattern": "Select by Pattern…",
+    "showHidden": "Show Hidden Files",
     "listView": "List view",
     "gridView": "Grid view",
     "more": "More"

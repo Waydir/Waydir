@@ -41,7 +41,6 @@ class PaneView extends StatelessWidget {
   final FileContextMenuCallback? onContextMenu;
   final FileMenuActionCallback? onMenuAction;
   final OpenInNewTabCallback? onOpenInNewTab;
-  final void Function(NavigationStore store)? onMultiRename;
   final void Function(String fullActionId)? onPluginToolbarAction;
   final PluginBarEffectsHandler? onPluginBarEffects;
   final int terminalSlot;
@@ -70,7 +69,6 @@ class PaneView extends StatelessWidget {
     this.onContextMenu,
     this.onMenuAction,
     this.onOpenInNewTab,
-    this.onMultiRename,
     this.onPluginToolbarAction,
     this.onPluginBarEffects,
     required this.terminalSlot,
@@ -107,9 +105,6 @@ class PaneView extends StatelessWidget {
 
                   return PaneLocationBar(
                     store: tabStore,
-                    onMultiRename: onMultiRename == null
-                        ? null
-                        : () => onMultiRename!(tabStore),
                     onPluginAction: onPluginToolbarAction,
                   );
                 },

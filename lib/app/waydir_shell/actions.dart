@@ -216,7 +216,7 @@ mixin _WaydirActionsMixin on State<WaydirShell>, _WaydirStateBase {
 
   void _multiRename(NavigationStore store) async {
     final entries = store.selectedEntries;
-    if (entries.length < 2) return;
+    if (entries.isEmpty) return;
     if (store.isTrashView) {
       showToast(context: context, message: t.toast.multiRenameTrashBlocked);
 
