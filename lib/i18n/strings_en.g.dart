@@ -46,6 +46,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$multiRename$en multiRename = Translations$multiRename$en.internal(_root);
 	late final Translations$compress$en compress = Translations$compress$en.internal(_root);
 	late final Translations$checksum$en checksum = Translations$checksum$en.internal(_root);
+	late final Translations$compare$en compare = Translations$compare$en.internal(_root);
 	late final Translations$properties$en properties = Translations$properties$en.internal(_root);
 	late final Translations$preferences$en preferences = Translations$preferences$en.internal(_root);
 	late final Translations$update$en update = Translations$update$en.internal(_root);
@@ -444,6 +445,51 @@ class Translations$checksum$en {
 	String get readError => 'Could not read file';
 }
 
+// Path: compare
+class Translations$compare$en {
+	Translations$compare$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Compare folders'
+	String get toolbarTooltip => 'Compare folders';
+
+	/// en: 'Only here'
+	String get unique => 'Only here';
+
+	/// en: 'Newer'
+	String get newer => 'Newer';
+
+	/// en: 'Older'
+	String get older => 'Older';
+
+	/// en: 'Different'
+	String get differ => 'Different';
+
+	/// en: 'Identical'
+	String get identical => 'Identical';
+
+	/// en: 'Sync →'
+	String get syncRight => 'Sync →';
+
+	/// en: '← Sync'
+	String get syncLeft => '← Sync';
+
+	/// en: 'Recursive'
+	String get recursive => 'Recursive';
+
+	/// en: 'Done'
+	String get done => 'Done';
+
+	/// en: 'Comparing…'
+	String get running => 'Comparing…';
+
+	/// en: '$identical identical · $differ different · $uniqueLeft left only · $uniqueRight right only'
+	String counts({required Object identical, required Object differ, required Object uniqueLeft, required Object uniqueRight}) => '${identical} identical · ${differ} different · ${uniqueLeft} left only · ${uniqueRight} right only';
+}
+
 // Path: properties
 class Translations$properties$en {
 	Translations$properties$en.internal(this._root);
@@ -834,6 +880,18 @@ class Translations$keybindings$en {
 
 	/// en: 'Switch active pane'
 	String get switchPane => 'Switch active pane';
+
+	/// en: 'Compare folders'
+	String get compare => 'Compare folders';
+
+	/// en: 'Sync left to right'
+	String get compareSyncRight => 'Sync left to right';
+
+	/// en: 'Sync right to left'
+	String get compareSyncLeft => 'Sync right to left';
+
+	/// en: 'Exit compare mode'
+	String get compareExit => 'Exit compare mode';
 
 	/// en: 'Open / focus terminal'
 	String get focusTerminal => 'Open / focus terminal';
@@ -3533,6 +3591,18 @@ extension on Translations {
 			'checksum.copied' => 'Copied',
 			'checksum.invalidExpected' => ({required Object algorithm, required Object length}) => '${algorithm} checksum must be ${length} hexadecimal characters',
 			'checksum.readError' => 'Could not read file',
+			'compare.toolbarTooltip' => 'Compare folders',
+			'compare.unique' => 'Only here',
+			'compare.newer' => 'Newer',
+			'compare.older' => 'Older',
+			'compare.differ' => 'Different',
+			'compare.identical' => 'Identical',
+			'compare.syncRight' => 'Sync →',
+			'compare.syncLeft' => '← Sync',
+			'compare.recursive' => 'Recursive',
+			'compare.done' => 'Done',
+			'compare.running' => 'Comparing…',
+			'compare.counts' => ({required Object identical, required Object differ, required Object uniqueLeft, required Object uniqueRight}) => '${identical} identical · ${differ} different · ${uniqueLeft} left only · ${uniqueRight} right only',
 			'properties.title' => 'Properties',
 			'properties.name' => 'Name',
 			'properties.type' => 'Type',
@@ -3870,6 +3940,10 @@ extension on Translations {
 			'keybindings.switchTab' => 'Switch to tab',
 			'keybindings.toggleDual' => 'Toggle dual pane',
 			'keybindings.switchPane' => 'Switch active pane',
+			'keybindings.compare' => 'Compare folders',
+			'keybindings.compareSyncRight' => 'Sync left to right',
+			'keybindings.compareSyncLeft' => 'Sync right to left',
+			'keybindings.compareExit' => 'Exit compare mode',
 			'keybindings.focusTerminal' => 'Open / focus terminal',
 			'keybindings.toggleTerminal' => 'Toggle terminal',
 			'keybindings.newTerminalTab' => 'New terminal tab',
@@ -3925,6 +3999,8 @@ extension on Translations {
 			'quickLook.unsaved' => 'Unsaved',
 			'quickLook.saveError' => 'Could not save file',
 			'quickLook.largeFileReadOnly' => 'Large file - opened read-only for speed',
+			_ => null,
+		} ?? switch (path) {
 			'quickLook.editAnyway' => 'Edit',
 			'quickLook.unsavedTitle' => 'Unsaved changes',
 			'quickLook.unsavedMessage' => 'You have unsaved changes. Save them before closing?',
@@ -3941,8 +4017,6 @@ extension on Translations {
 			'quickLook.items' => ({required Object count}) => '${count} items',
 			'quickLook.pdfPages' => ({required Object count}) => '${count} pages',
 			'quickLook.sectionDetails' => 'Details',
-			_ => null,
-		} ?? switch (path) {
 			'quickLook.info' => 'Information',
 			'quickLook.name' => 'Name',
 			'quickLook.type' => 'Type',

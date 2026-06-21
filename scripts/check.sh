@@ -26,7 +26,10 @@ dart format .
 echo "==> flutter analyze"
 flutter analyze
 
-echo "==> flutter test"
-flutter test
+echo "==> flutter test (unit)"
+flutter test --exclude-tags=integration
+
+echo "==> flutter test (integration)"
+flutter test --tags=integration --concurrency=1
 
 echo "==> all checks passed"

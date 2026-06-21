@@ -123,6 +123,20 @@
     "invalidExpected": "$algorithm checksum must be $length hexadecimal characters",
     "readError": "Could not read file"
   },
+  "compare": {
+    "toolbarTooltip": "Compare folders",
+    "unique": "Only here",
+    "newer": "Newer",
+    "older": "Older",
+    "differ": "Different",
+    "identical": "Identical",
+    "syncRight": "Sync →",
+    "syncLeft": "← Sync",
+    "recursive": "Recursive",
+    "done": "Done",
+    "running": "Comparing…",
+    "counts": "$identical identical · $differ different · $uniqueLeft left only · $uniqueRight right only"
+  },
   "properties": {
     "title": "Properties",
     "name": "Name",
@@ -519,6 +533,10 @@
     "switchTab": "Switch to tab",
     "toggleDual": "Toggle dual pane",
     "switchPane": "Switch active pane",
+    "compare": "Compare folders",
+    "compareSyncRight": "Sync left to right",
+    "compareSyncLeft": "Sync right to left",
+    "compareExit": "Exit compare mode",
     "focusTerminal": "Open / focus terminal",
     "toggleTerminal": "Toggle terminal",
     "newTerminalTab": "New terminal tab",

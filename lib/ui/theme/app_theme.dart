@@ -57,6 +57,11 @@ class AppColors {
 
   static Color get folderColor => _p.accent;
 
+  static Color get compareUnique => _p.success;
+  static Color get compareNewer => _p.accent;
+  static Color get compareOlder => _p.neutral;
+  static Color get compareDiffer => _p.warning;
+
   static TerminalColors get terminal => _p.terminal;
 }
 

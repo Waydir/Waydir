@@ -17,6 +17,7 @@ import '../../utils/drag_drop.dart';
 import '../../utils/format.dart';
 import '../operations/drag_hint.dart';
 import 'file_icons.dart';
+import 'row_decorations.dart';
 import 'rubber_band_layer.dart' show RubberBandLayer, RubberBandSelectCallback;
 import 'file_view.dart'
     show
@@ -91,6 +92,7 @@ class FileGrid extends StatefulWidget {
   final ValueChanged<int>? onGridColumns;
   final VoidCallback? onBackgroundTap;
   final RubberBandSelectCallback? onRectSelect;
+  final Map<String, RowDecoration> rowDecorations;
 
   const FileGrid({
     super.key,
@@ -115,6 +117,7 @@ class FileGrid extends StatefulWidget {
     this.onGridColumns,
     this.onBackgroundTap,
     this.onRectSelect,
+    this.rowDecorations = const {},
   });
 
   @override
@@ -374,6 +377,9 @@ class _FileGridState extends State<FileGrid> {
                             captionBlock: _gridCaptionBlock(scale, compact),
                             selected: widget.selectedPaths.contains(entry.path),
                             selectedPaths: widget.selectedPaths,
+                            rowDecoration:
+                                widget.rowDecorations[entry.path] ??
+                                widget.rowDecorations[entry.realPath],
                             isCut: widget.cutPaths.contains(entry.path),
                             isFolderDragOver: _hoveredFolderPath == entry.path,
                             isRenaming: widget.renamingPath == entry.path,
@@ -436,6 +442,7 @@ class _GridTile extends StatefulWidget {
   final double captionBlock;
   final bool selected;
   final Set<String> selectedPaths;
+  final RowDecoration? rowDecoration;
   final bool isCut;
   final bool isFolderDragOver;
   final bool isRenaming;
@@ -459,6 +466,7 @@ class _GridTile extends StatefulWidget {
     required this.captionBlock,
     required this.selected,
     required this.selectedPaths,
+    this.rowDecoration,
     required this.isCut,
     required this.isFolderDragOver,
     required this.isRenaming,
@@ -678,12 +686,15 @@ class _GridTileState extends State<_GridTile> {
       color: AppColors.fgSubtle,
       height: 1.15,
     );
+    final tint = widget.rowDecoration?.tint;
     final bg = widget.isFolderDragOver
         ? AppColors.accent.withValues(alpha: 0.12)
         : selected
         ? AppColors.bgSelectedMuted
         : _hovered
         ? AppColors.bgHover
+        : tint != null
+        ? tint.withValues(alpha: 0.18)
         : Colors.transparent;
     final border = widget.isFolderDragOver
         ? Border.all(color: AppColors.accent.withValues(alpha: 0.4))
@@ -709,10 +720,26 @@ class _GridTileState extends State<_GridTile> {
             ),
             child: Column(
               children: [
-                SizedBox(
-                  width: thumbSize,
-                  height: thumbSize,
-                  child: _GridPreview(entry: entry, thumbSize: thumbSize),
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    SizedBox(
+                      width: thumbSize,
+                      height: thumbSize,
+                      child: _GridPreview(entry: entry, thumbSize: thumbSize),
+                    ),
+                    if (widget.rowDecoration?.badge case final badge?)
+                      Positioned(
+                        right: -2,
+                        top: -2,
+                        child: Text(
+                          badge,
+                          style: context.txt.badge.copyWith(
+                            color: widget.rowDecoration!.tint,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
                 SizedBox(height: widget.thumbGap),
                 if (widget.isRenaming &&

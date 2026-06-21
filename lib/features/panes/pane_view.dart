@@ -264,6 +264,7 @@ class _TabContent extends StatelessWidget {
                 ? store.clipboardPaths.value
                 : <String>{};
             final currentPath = store.currentPath.value;
+            final rowDecorations = store.decorations.byPath.value;
             final recursive =
                 store.searchActive.value && store.searchRecursive.value;
             if (SettingsStore.instance.fileViewMode.value == 'grid') {
@@ -289,6 +290,7 @@ class _TabContent extends StatelessWidget {
                 onPageRows: store.setPageRows,
                 onGridColumns: store.setGridColumns,
                 onRectSelect: onRectSelect,
+                rowDecorations: rowDecorations,
               );
             }
 
@@ -318,6 +320,7 @@ class _TabContent extends StatelessWidget {
               onSortColumn: store.cycleSortColumn,
               onPageRows: store.setPageRows,
               folderSizes: store.folderSizes.displaySizes.value,
+              rowDecorations: rowDecorations,
             );
           },
         );

@@ -29,6 +29,7 @@ import '../core/update/update_store.dart';
 import '../features/containers/container_store.dart';
 import '../features/containers/wsl_path.dart';
 import '../features/checksum/checksum_dialog.dart';
+import '../features/compare/compare_mode_bar.dart';
 import '../features/help/help_dialog.dart';
 import '../features/update/update_dialog.dart';
 import '../features/navigation/bookmark_store.dart';
@@ -400,25 +401,34 @@ class _WaydirShellState extends State<WaydirShell>
                             builder: (context) {
                               final bars = PluginStore.instance
                                   .globalBarContributions();
-                              if (bars.isEmpty) {
-                                return const SizedBox.shrink();
-                              }
-                              final ctx = _pluginBarContext(
-                                _active,
-                                scope: 'global',
-                              );
 
-                              return PluginBarHost(
-                                hostId: 'global',
-                                bars: bars,
-                                contextData: ctx,
-                                contextKey: jsonEncode(ctx),
-                                onEffects: (effects, target) =>
-                                    _applyPluginEffects(
-                                      effects,
-                                      target,
-                                      background: true,
+                              return Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (bars.isNotEmpty)
+                                    Builder(
+                                      builder: (context) {
+                                        final ctx = _pluginBarContext(
+                                          _active,
+                                          scope: 'global',
+                                        );
+
+                                        return PluginBarHost(
+                                          hostId: 'global',
+                                          bars: bars,
+                                          contextData: ctx,
+                                          contextKey: jsonEncode(ctx),
+                                          onEffects: (effects, target) =>
+                                              _applyPluginEffects(
+                                                effects,
+                                                target,
+                                                background: true,
+                                              ),
+                                        );
+                                      },
                                     ),
+                                  CompareModeBar(controller: _shell.compare),
+                                ],
                               );
                             },
                           ),

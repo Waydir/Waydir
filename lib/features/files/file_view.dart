@@ -20,6 +20,7 @@ import 'package:path/path.dart' as p;
 import '../../utils/format.dart';
 import '../operations/drag_hint.dart';
 import 'file_icons.dart';
+import 'row_decorations.dart';
 import 'rubber_band_layer.dart';
 
 typedef FileSelectCallback = void Function(FileSelectionEvent event);
@@ -255,12 +256,14 @@ class FileList extends StatefulWidget {
   final void Function(SortKey key)? onSortColumn;
   final ValueChanged<int>? onPageRows;
   final Map<String, int> folderSizes;
+  final Map<String, RowDecoration> rowDecorations;
 
   const FileList({
     super.key,
     required this.files,
     required this.currentPath,
     this.folderSizes = const {},
+    this.rowDecorations = const {},
     required this.onSelect,
     required this.onOpen,
     this.sortColumn = SortKey.name,
@@ -754,6 +757,15 @@ class _FileListState extends State<FileList> {
                                                     folderSize:
                                                         widget
                                                             .folderSizes[widget
+                                                            .files[i]
+                                                            .realPath],
+                                                    rowDecoration:
+                                                        widget
+                                                            .rowDecorations[widget
+                                                            .files[i]
+                                                            .path] ??
+                                                        widget
+                                                            .rowDecorations[widget
                                                             .files[i]
                                                             .realPath],
                                                     index: i,
@@ -1285,11 +1297,13 @@ class _ListRow extends StatefulWidget {
   final String? location;
   final OpenInNewTabCallback? onOpenInNewTab;
   final int? folderSize;
+  final RowDecoration? rowDecoration;
 
   const _ListRow({
     required this.entry,
     required this.index,
     this.folderSize,
+    this.rowDecoration,
     required this.selected,
     required this.selectedPaths,
     this.isCut = false,
@@ -1421,6 +1435,8 @@ class _ListRowState extends State<_ListRow> {
     if (_dragging) return AppColors.accent.withValues(alpha: 0.08);
     if (widget.selected) return AppColors.bgSelectedMuted;
     if (_hovered) return AppColors.bgHover;
+    final tint = widget.rowDecoration?.tint;
+    if (tint != null) return tint.withValues(alpha: 0.18);
 
     return Colors.transparent;
   }
@@ -1434,6 +1450,38 @@ class _ListRowState extends State<_ListRow> {
     }
 
     return null;
+  }
+
+  Widget _buildIconWithBadge(BuildContext context, FileEntry e, bool isFolder) {
+    final icon = buildFileIcon(
+      name: e.name,
+      ext: e.extension,
+      isFolder: isFolder,
+      size: widget.iconSize,
+    );
+    final badge = widget.rowDecoration?.badge;
+    if (badge == null) return icon;
+
+    return SizedBox(
+      width: widget.iconSize,
+      height: widget.iconSize,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned.fill(child: Center(child: icon)),
+          Positioned(
+            right: -2,
+            top: -4,
+            child: Text(
+              badge,
+              style: context.txt.badge.copyWith(
+                color: widget.rowDecoration!.tint,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   List<Widget> _buildColumnCells(BuildContext context, FileEntry e) {
@@ -1647,12 +1695,7 @@ class _ListRowState extends State<_ListRow> {
             opacity: opacity,
             child: Row(
               children: [
-                buildFileIcon(
-                  name: e.name,
-                  ext: e.extension,
-                  isFolder: isFolder,
-                  size: widget.iconSize,
-                ),
+                _buildIconWithBadge(context, e, isFolder),
                 const SizedBox(width: 6),
                 SizedBox(
                   width: widget.nameWidth,
@@ -1752,12 +1795,7 @@ class _ListRowState extends State<_ListRow> {
             opacity: opacity,
             child: Row(
               children: [
-                buildFileIcon(
-                  name: e.name,
-                  ext: e.extension,
-                  isFolder: isFolder,
-                  size: widget.iconSize,
-                ),
+                _buildIconWithBadge(context, e, isFolder),
                 const SizedBox(width: 6),
                 SizedBox(
                   width: widget.nameWidth,

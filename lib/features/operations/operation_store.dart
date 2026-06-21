@@ -25,6 +25,8 @@ class _WorkerHandle {
   final ReceivePort errorPort;
   final ReceivePort exitPort;
   final StreamSubscription subscription;
+  StreamSubscription? errorSubscription;
+  StreamSubscription? exitSubscription;
   bool _disposed = false;
 
   _WorkerHandle(
@@ -40,6 +42,8 @@ class _WorkerHandle {
     if (_disposed) return;
     _disposed = true;
     subscription.cancel();
+    errorSubscription?.cancel();
+    exitSubscription?.cancel();
     receivePort.close();
     errorPort.close();
     exitPort.close();
@@ -763,7 +767,7 @@ class OperationStore {
 
       handle.subscription.onData(handleMessage);
 
-      handle.errorPort.listen((err) {
+      handle.errorSubscription = handle.errorPort.listen((err) {
         if (completer.isCompleted) return;
         log.error('operation', 'task ${task.id} isolate error', error: err);
         finishTask(
@@ -775,7 +779,7 @@ class OperationStore {
         );
       });
 
-      handle.exitPort.listen((_) {
+      handle.exitSubscription = handle.exitPort.listen((_) {
         if (completer.isCompleted) return;
         if (task.status == TaskStatus.cancelling) {
           _cleanupCancelledTaskTemps(task);

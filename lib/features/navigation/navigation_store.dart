@@ -22,6 +22,7 @@ import '../locations/location_resolver.dart';
 import '../locations/location_uri.dart';
 import '../../core/settings/settings_store.dart';
 import '../../i18n/strings.g.dart';
+import '../files/row_decorations.dart';
 import '../git/git_status_store.dart';
 import '../operations/operation_store.dart';
 import 'filter_query.dart';
@@ -65,6 +66,7 @@ class NavigationStore {
   final sortAscending = signal<bool>(true);
   final foldersFirst = signal<bool>(true);
   final folderSizes = FolderSizeScanner();
+  final decorations = RowDecorationStore();
   int _sortLoadToken = 0;
   void Function()? _sortDefaultsDisposer;
   void Function()? _gitStatusDisposer;
@@ -2213,6 +2215,7 @@ class NavigationStore {
     _searchHandle?.cancel();
     _watcher.dispose();
     folderSizes.dispose();
+    decorations.dispose();
   }
 
   List<FileEntry> get _vf => visibleFiles.value;

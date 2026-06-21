@@ -66,6 +66,17 @@ class GlobalToolbar extends StatelessWidget {
     return [
       [
         ToolbarItem(
+          id: 'compare',
+          icon: WaydirIconsRegular.arrowsLeftRight,
+          tooltip: t.compare.toolbarTooltip,
+          shortcutId: 'compare',
+          isEnabled: () => shell.isDual.value && shell.compare.canStart,
+          isActive: () => shell.compare.active.value,
+          onTap: shell.compare.toggle,
+        ),
+      ],
+      [
+        ToolbarItem(
           id: 'multiRename',
           icon: WaydirIconsRegular.pencilSimple,
           tooltip: t.toolbar.multiRename,

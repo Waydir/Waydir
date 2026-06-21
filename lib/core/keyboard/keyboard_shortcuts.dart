@@ -414,6 +414,32 @@ class AppShortcuts {
       altCtrl: true,
     ),
     ShortcutDef(
+      id: 'compare',
+      label: () => '',
+      group: ShortcutGroup.panes,
+      key: LogicalKeyboardKey.f8,
+    ),
+    ShortcutDef(
+      id: 'compare_sync_right',
+      label: () => '',
+      group: ShortcutGroup.panes,
+      key: LogicalKeyboardKey.arrowRight,
+      ctrl: true,
+    ),
+    ShortcutDef(
+      id: 'compare_sync_left',
+      label: () => '',
+      group: ShortcutGroup.panes,
+      key: LogicalKeyboardKey.arrowLeft,
+      ctrl: true,
+    ),
+    ShortcutDef(
+      id: 'compare_exit',
+      label: () => '',
+      group: ShortcutGroup.panes,
+      key: LogicalKeyboardKey.escape,
+    ),
+    ShortcutDef(
       id: 'toggle_sidebar',
       label: () => '',
       group: ShortcutGroup.view,

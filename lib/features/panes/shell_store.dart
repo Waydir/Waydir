@@ -15,6 +15,7 @@ import '../../core/platform/trash_location.dart';
 import '../../core/settings/settings_store.dart';
 import '../../core/terminal/pty_session.dart';
 import '../../core/terminal/terminal_launch.dart';
+import '../compare/compare_controller.dart';
 import '../navigation/navigation_store.dart';
 import '../operations/operation_store.dart';
 import '../../ui/overlays/notification_store.dart';
@@ -39,6 +40,7 @@ class ShellStore {
   final terminalHeight = signal<List<double>>([260, 260]);
   final OperationStore operationStore;
   final NotificationStore notificationStore;
+  late final CompareController compare;
   final ready = signal(false);
 
   late final activePane = computed(() {
@@ -60,6 +62,11 @@ class ShellStore {
 
   ShellStore({required this.operationStore, required this.notificationStore}) {
     current = this;
+    compare = CompareController(
+      panes: panes,
+      isDual: isDual,
+      operationStore: operationStore,
+    );
     _restoreSession();
   }
 
@@ -491,6 +498,7 @@ class ShellStore {
   }
 
   void dispose() {
+    compare.dispose();
     _persistDisposer?.call();
     _persistDisposer = null;
     _tabPersistDebounce?.cancel();

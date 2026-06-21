@@ -85,6 +85,30 @@ mixin _WaydirKeyboardMixin
       return KeyEventResult.handled;
     }
 
+    if (AppShortcuts.matches('compare', key) && _shell.isDual.value) {
+      _shell.compare.toggle();
+
+      return KeyEventResult.handled;
+    }
+
+    if (_shell.compare.active.value) {
+      if (AppShortcuts.matches('compare_sync_right', key)) {
+        _shell.compare.syncLeftToRight();
+
+        return KeyEventResult.handled;
+      }
+      if (AppShortcuts.matches('compare_sync_left', key)) {
+        _shell.compare.syncRightToLeft();
+
+        return KeyEventResult.handled;
+      }
+      if (AppShortcuts.matches('compare_exit', key)) {
+        _shell.compare.stop();
+
+        return KeyEventResult.handled;
+      }
+    }
+
     if (AppShortcuts.matches('toggle_sidebar', key)) {
       final s = SettingsStore.instance.sidebarCollapsed;
       s.value = !s.value;
