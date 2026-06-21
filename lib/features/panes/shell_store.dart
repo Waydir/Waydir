@@ -18,6 +18,7 @@ import '../../core/terminal/terminal_launch.dart';
 import '../compare/compare_controller.dart';
 import '../navigation/navigation_store.dart';
 import '../operations/operation_store.dart';
+import '../tags/tag_path.dart';
 import '../../ui/overlays/notification_store.dart';
 import '../../i18n/strings.g.dart';
 import '../tabs/tabs_store.dart';
@@ -73,7 +74,8 @@ class ShellStore {
   void openInNewTab(String path) => activePane.value?.tabs.addTab(path);
 
   static bool _isRestorablePath(String path) {
-    if (isTrashPath(path) ||
+    if (isTagPath(path) ||
+        isTrashPath(path) ||
         PlatformPaths.isRemoteUri(path) ||
         PlatformPaths.isNetworkPath(path)) {
       return true;
