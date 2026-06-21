@@ -97,7 +97,9 @@ class OperationStore {
 
   void _followTags(FileTask task) {
     if (task.status != TaskStatus.completed) return;
-    final db = SettingsStore.instance.db;
+    final settings = SettingsStore.instance;
+    if (!settings.isLoaded) return;
+    final db = settings.db;
     switch (task.type) {
       case TaskType.move:
         final dest = task.destination;
