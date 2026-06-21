@@ -274,7 +274,7 @@ mixin _WaydirMenuMixin
       ...openWithItems,
       ?extractItem,
       ?compressItem,
-      if (isRecursive && count == 1)
+      if ((isRecursive || store.isTagView) && count == 1)
         ContextMenuItem(
           icon: WaydirIconsRegular.arrowSquareOut,
           label: t.menu.openLocation,
