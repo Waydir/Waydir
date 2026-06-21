@@ -146,7 +146,7 @@ class PluginStore {
       );
     }
 
-    final raw = PluginFfi.load(initFile.path);
+    final raw = await PluginFfi.load(initFile.path);
     if (raw == null) {
       return LoadedPlugin(
         manifest: manifest,

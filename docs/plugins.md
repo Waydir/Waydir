@@ -450,7 +450,7 @@ Button behavior:
 | `waydir.exec(cmd, args)` | Runs a short command and waits for it. Returns `stdout`, `stderr`, `exit_code`. |
 | `waydir.run_task(spec)` | Starts a long-running process outside the Lua action. |
 
-Use `waydir.exec` only for quick commands. Lua actions have a 5 second sandbox budget.
+Use `waydir.exec` only for quick commands. A single `exec` call is capped at 5 seconds; a command that runs longer is killed and returns exit code `-1`. Lua actions also have an overall 5 second sandbox budget. For anything slower, use `waydir.run_task`.
 
 ```lua
 local out, err, code = waydir.exec("git", { "branch", "--show-current" })

@@ -1,12 +1,21 @@
 use std::cell::RefCell;
 use std::ffi::{c_char, CStr, CString};
+use std::io::Read;
+use std::process::Stdio;
 use std::rc::Rc;
 use std::time::{Duration, Instant};
 
 use mlua::{HookTriggers, Lua, LuaOptions, LuaSerdeExt, StdLib, Table, Value, VmState};
 use serde_json::{json, Value as Json};
+use wait_timeout::ChildExt;
 
 const PLUGIN_TIMEOUT: Duration = Duration::from_secs(5);
+
+/// Hard cap on how long a synchronous `waydir.exec` may run. A blocked child
+/// does not execute Lua instructions, so the instruction-count hook cannot
+/// interrupt it; this bound is what actually stops a hung command from
+/// wedging the plugin isolate. Slow work belongs in `waydir.run_task`.
+const EXEC_TIMEOUT: Duration = Duration::from_secs(5);
 
 /// Cap on the size of a file `waydir.read_text` will load, in bytes.
 const READ_TEXT_CAP: u64 = 4 * 1024 * 1024;
@@ -160,29 +169,53 @@ fn install_api(lua: &Lua, effects: &Effects) -> mlua::Result<Table> {
         "exec",
         lua.create_function(move |_, (cmd, args): (String, Option<Vec<String>>)| {
             let args = args.unwrap_or_default();
-            match std::process::Command::new(&cmd).args(&args).output() {
-                Ok(out) if !out.status.success() => {
-                    let stdout = String::from_utf8_lossy(&out.stdout).to_string();
-                    let stderr = String::from_utf8_lossy(&out.stderr).to_string();
-                    let code = out.status.code().unwrap_or(-1);
+            let mut child = std::process::Command::new(&cmd)
+                .args(&args)
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .spawn()
+                .map_err(|error| err(format!("exec {cmd}: {error}")))?;
+
+            let status = match child
+                .wait_timeout(EXEC_TIMEOUT)
+                .map_err(|error| err(format!("exec {cmd}: {error}")))?
+            {
+                Some(status) => status,
+                None => {
+                    let _ = child.kill();
+                    let _ = child.wait();
                     e.borrow_mut().push(json!({
                         "type": "log",
                         "message": format!(
-                            "exec {} failed: code {}",
+                            "exec {} timed out after {}s",
                             cmd,
-                            code
+                            EXEC_TIMEOUT.as_secs()
                         )
                     }));
-                    Ok((stdout, stderr, code))
+                    return Ok((
+                        String::new(),
+                        format!("exec {cmd} timed out"),
+                        -1_i32,
+                    ));
                 }
-                Ok(out) => {
-                    let stdout = String::from_utf8_lossy(&out.stdout).to_string();
-                    let stderr = String::from_utf8_lossy(&out.stderr).to_string();
-                    let code = out.status.code().unwrap_or(0);
-                    Ok((stdout, stderr, code))
-                }
-                Err(error) => Err(err(format!("exec {cmd}: {error}"))),
+            };
+
+            let mut stdout = String::new();
+            if let Some(mut out) = child.stdout.take() {
+                let _ = out.read_to_string(&mut stdout);
             }
+            let mut stderr = String::new();
+            if let Some(mut out) = child.stderr.take() {
+                let _ = out.read_to_string(&mut stderr);
+            }
+            let code = status.code().unwrap_or(-1);
+            if !status.success() {
+                e.borrow_mut().push(json!({
+                    "type": "log",
+                    "message": format!("exec {} failed: code {}", cmd, code)
+                }));
+            }
+            Ok((stdout, stderr, code))
         })?,
     )?;
 

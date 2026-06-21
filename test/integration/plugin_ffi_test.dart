@@ -19,13 +19,15 @@ void main() {
     if (tmp.existsSync()) tmp.deleteSync(recursive: true);
   });
 
+  tearDownAll(PluginFfi.shutdown);
+
   String writePlugin(String lua) {
     final file = File(p.join(tmp.path, 'init.lua'));
     file.writeAsStringSync(lua);
     return file.path;
   }
 
-  test('load returns declared contributions', () {
+  test('load returns declared contributions', () async {
     final path = writePlugin('''
       waydir.register({
         id = "greet",
@@ -36,7 +38,7 @@ void main() {
       })
     ''');
 
-    final raw = PluginFfi.load(path);
+    final raw = await PluginFfi.load(path);
     expect(raw, isNotNull, reason: 'native core must be built/vendored');
     final json = jsonDecode(raw!) as Map<String, dynamic>;
     expect(json['ok'], isTrue);
@@ -103,7 +105,8 @@ void main() {
       })
     ''');
 
-    final loaded = jsonDecode(PluginFfi.load(path)!) as Map<String, dynamic>;
+    final loaded =
+        jsonDecode((await PluginFfi.load(path))!) as Map<String, dynamic>;
     expect(loaded['ok'], isTrue);
     final bars = loaded['bars'] as List;
     expect(bars, hasLength(1));
@@ -204,7 +207,39 @@ void main() {
     expect(effects.last, {'type': 'toast', 'message': 'out:err:7'});
   });
 
-  test('load returns where, shortcut and settings schema', () {
+  test('exec is bounded and a hung command times out', () async {
+    final path = writePlugin('''
+      waydir.register({
+        id = "hang",
+        title = "Hang",
+        run = function(ctx)
+          local stdout, stderr, code = waydir.exec("sleep", {"30"})
+          waydir.toast("code:" .. code)
+        end,
+      })
+    ''');
+
+    final sw = Stopwatch()..start();
+    final raw = await PluginFfi.invoke(
+      initLuaPath: path,
+      actionId: 'hang',
+      ctxJson: jsonEncode({
+        'paths': <String>[],
+        'dir': '/',
+        'plugin_dir': tmp.path,
+      }),
+    );
+    sw.stop();
+    expect(sw.elapsed, lessThan(const Duration(seconds: 20)));
+    final json = jsonDecode(raw!) as Map<String, dynamic>;
+    expect(json['ok'], isTrue);
+    expect((json['effects'] as List).last, {
+      'type': 'toast',
+      'message': 'code:-1',
+    });
+  });
+
+  test('load returns where, shortcut and settings schema', () async {
     final path = writePlugin('''
       waydir.register({
         id = "cfg",
@@ -217,7 +252,7 @@ void main() {
         run = function() end,
       })
     ''');
-    final raw = PluginFfi.load(path);
+    final raw = await PluginFfi.load(path);
     final json = jsonDecode(raw!) as Map<String, dynamic>;
     final c = (json['contributions'] as List).first as Map<String, dynamic>;
     expect(c['where'], ['selection', 'background']);
@@ -462,7 +497,7 @@ void main() {
     expect(effects[2]['success'], isTrue);
   });
 
-  test('bundled example plugins all load without error', () {
+  test('bundled example plugins all load without error', () async {
     final dir = Directory('docs/examples/plugins');
     expect(dir.existsSync(), isTrue, reason: 'examples dir missing');
     final examples = dir.listSync().whereType<Directory>();
@@ -470,7 +505,7 @@ void main() {
     for (final ex in examples) {
       final init = File(p.join(ex.path, 'init.lua'));
       expect(init.existsSync(), isTrue, reason: '${ex.path} has no init.lua');
-      final raw = PluginFfi.load(init.path);
+      final raw = await PluginFfi.load(init.path);
       final json = jsonDecode(raw!) as Map<String, dynamic>;
       expect(
         json['ok'],
@@ -481,7 +516,7 @@ void main() {
     }
   });
 
-  test('toolbar menu and icon round-trip through load', () {
+  test('toolbar menu and icon round-trip through load', () async {
     final path = writePlugin('''
       waydir.register({
         id = "bar",
@@ -491,14 +526,17 @@ void main() {
         run = function() end,
       })
     ''');
-    final json = jsonDecode(PluginFfi.load(path)!) as Map<String, dynamic>;
+    final json =
+        jsonDecode((await PluginFfi.load(path))!) as Map<String, dynamic>;
     final c = (json['contributions'] as List).first as Map<String, dynamic>;
     expect(c['menu'], 'toolbar');
     expect(c['icon'], 'icon.svg');
   });
 
-  test('templates example surfaces toolbar and menubar entries', () {
-    final raw = PluginFfi.load('docs/examples/plugins/templates/init.lua');
+  test('templates example surfaces toolbar and menubar entries', () async {
+    final raw = await PluginFfi.load(
+      'docs/examples/plugins/templates/init.lua',
+    );
     final json = jsonDecode(raw!) as Map<String, dynamic>;
     final menus = (json['contributions'] as List)
         .map((e) => (e as Map<String, dynamic>)['menu'])
@@ -506,14 +544,14 @@ void main() {
     expect(menus, containsAll(<String>['toolbar', 'menubar']));
   });
 
-  test('sandbox blocks os and io access', () {
+  test('sandbox blocks os and io access', () async {
     final path = writePlugin('''
       waydir.register({
         id = "x", title = "X",
         run = function() local _ = os.execute end,
       })
     ''');
-    final raw = PluginFfi.load(path);
+    final raw = await PluginFfi.load(path);
     final json = jsonDecode(raw!) as Map<String, dynamic>;
     // Loading succeeds (register runs); os is simply nil in the sandbox.
     expect(json['ok'], isTrue);
