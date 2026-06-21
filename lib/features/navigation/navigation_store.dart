@@ -1522,6 +1522,16 @@ class NavigationStore {
     await _refreshTagsForVisible();
   }
 
+  Future<void> addTag(Iterable<String> paths, int tagId) async {
+    final taggable = paths.where(isTaggablePath).toList();
+    if (taggable.isEmpty) return;
+    final db = SettingsStore.instance.db;
+    for (final p in taggable) {
+      await db.addFileTag(p, tagId);
+    }
+    await _refreshTagsForVisible();
+  }
+
   Future<void> clearTags(Iterable<String> paths) async {
     final taggable = paths.where(isTaggablePath).toList();
     if (taggable.isEmpty) return;
@@ -2685,6 +2695,12 @@ class NavigationStore {
     String destination, {
     bool move = false,
   }) async {
+    if (isTagPath(destination)) {
+      final id = tagIdFromPath(destination);
+      if (id != null) await addTag(sourcePaths, id);
+
+      return;
+    }
     if (isTrashPath(destination)) return;
     final sep = PlatformPaths.isSftpUri(destination)
         ? '/'

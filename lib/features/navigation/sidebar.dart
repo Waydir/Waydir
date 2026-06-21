@@ -77,6 +77,7 @@ class _SidebarEntry {
   final ValueChanged<String> onTap;
   final VoidCallback? onMiddleTap;
   final void Function(List<String> paths, {bool move})? onDropFiles;
+  final bool isTagTarget;
   final VoidCallback? onUnmount;
   final void Function(Offset position)? onContextMenu;
 
@@ -90,6 +91,7 @@ class _SidebarEntry {
     required this.onTap,
     this.onMiddleTap,
     this.onDropFiles,
+    this.isTagTarget = false,
     this.onUnmount,
     this.onContextMenu,
   });
@@ -721,6 +723,7 @@ class _SidebarState extends State<Sidebar> {
       onTap: entry.onTap,
       onMiddleTap: entry.onMiddleTap,
       onDropFiles: entry.onDropFiles ?? (paths, {bool move = false}) {},
+      isTagTarget: entry.isTagTarget,
       onUnmount: entry.onUnmount,
       onContextMenu: entry.onContextMenu,
     );
@@ -987,6 +990,9 @@ class _SidebarState extends State<Sidebar> {
         onMiddleTap: widget.onOpenInNewTab != null
             ? () => widget.onOpenInNewTab!(path)
             : null,
+        onDropFiles: (paths, {bool move = false}) =>
+            widget.store.addTag(paths, tag.id),
+        isTagTarget: true,
         onContextMenu: (position) => _showTagMenu(tag, position),
       );
     }).toList();
@@ -1938,6 +1944,7 @@ class _ItemRow extends StatefulWidget {
   final ValueChanged<String> onTap;
   final VoidCallback? onMiddleTap;
   final void Function(List<String> paths, {bool move}) onDropFiles;
+  final bool isTagTarget;
   final VoidCallback? onUnmount;
   final void Function(Offset position)? onContextMenu;
   final String? tooltip;
@@ -1951,6 +1958,7 @@ class _ItemRow extends StatefulWidget {
     required this.onTap,
     this.onMiddleTap,
     required this.onDropFiles,
+    this.isTagTarget = false,
     this.onUnmount,
     this.onContextMenu,
     this.tooltip,
@@ -1971,6 +1979,7 @@ class _ItemRowState extends State<_ItemRow> {
       hitTestBehavior: HitTestBehavior.opaque,
       onDropOver: (event) {
         if (!_dragOver) setState(() => _dragOver = true);
+        if (widget.isTagTarget) return DropOperation.link;
 
         return DragHintController.instance.mode.value == DragMode.move
             ? DropOperation.move
