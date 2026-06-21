@@ -1511,6 +1511,9 @@ class Translations$toolbar$en {
 	/// en: 'Show Hidden Files'
 	String get showHidden => 'Show Hidden Files';
 
+	/// en: 'Copy Path'
+	String get copyPath => 'Copy Path';
+
 	/// en: 'List view'
 	String get listView => 'List view';
 
@@ -4096,6 +4099,7 @@ extension on Translations {
 			'toolbar.multiRename' => 'Multi Rename…',
 			'toolbar.selectByPattern' => 'Select by Pattern…',
 			'toolbar.showHidden' => 'Show Hidden Files',
+			'toolbar.copyPath' => 'Copy Path',
 			'toolbar.listView' => 'List view',
 			'toolbar.gridView' => 'Grid view',
 			'toolbar.more' => 'More',

@@ -6,6 +6,8 @@ class PaneDivider extends StatefulWidget {
   final ShellStore shell;
   final double totalWidth;
 
+  static const double hitWidth = 10;
+
   const PaneDivider({super.key, required this.shell, required this.totalWidth});
 
   @override
@@ -18,7 +20,6 @@ class _PaneDividerState extends State<PaneDivider> {
   double _startRatio = 0.5;
 
   static const double _lineWidth = 1;
-  static const double _hitWidth = 10;
 
   @override
   Widget build(BuildContext context) {
@@ -34,11 +35,10 @@ class _PaneDividerState extends State<PaneDivider> {
         },
         onPanUpdate: (details) {
           final dx = details.globalPosition.dx - _startX;
-          final available = widget.totalWidth - _hitWidth;
-          widget.shell.setSplitRatio(_startRatio + dx / available);
+          widget.shell.setSplitRatio(_startRatio + dx / widget.totalWidth);
         },
         child: SizedBox(
-          width: _hitWidth,
+          width: PaneDivider.hitWidth,
           child: Center(
             child: Container(
               width: _hovered ? 3 : _lineWidth,

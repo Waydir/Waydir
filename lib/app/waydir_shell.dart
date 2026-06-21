@@ -272,13 +272,15 @@ class _WaydirShellState extends State<WaydirShell>
             }
 
             final ratio = _shell.splitRatio.value;
-            final leftFlex = (ratio * 1000).round();
-            final rightFlex = ((1 - ratio) * 1000).round();
+            final leftWidth = constraints.maxWidth * ratio;
 
-            return Row(
+            return Stack(
               children: [
-                Flexible(
-                  flex: leftFlex,
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: leftWidth,
                   child: _buildPane(
                     0,
                     isActive: activeIdx == 0,
@@ -286,14 +288,25 @@ class _WaydirShellState extends State<WaydirShell>
                     isSingleMode: false,
                   ),
                 ),
-                PaneDivider(shell: _shell, totalWidth: constraints.maxWidth),
-                Flexible(
-                  flex: rightFlex,
+                Positioned(
+                  left: leftWidth,
+                  top: 0,
+                  right: 0,
+                  bottom: 0,
                   child: _buildPane(
                     1,
                     isActive: activeIdx == 1,
                     onActivate: _activatePane(1),
                     isSingleMode: false,
+                  ),
+                ),
+                Positioned(
+                  left: leftWidth - PaneDivider.hitWidth / 2,
+                  top: 0,
+                  bottom: 0,
+                  child: PaneDivider(
+                    shell: _shell,
+                    totalWidth: constraints.maxWidth,
                   ),
                 ),
               ],
@@ -365,13 +378,14 @@ class _WaydirShellState extends State<WaydirShell>
                                   operationStore: _operationStore,
                                   onOpenInNewTab: _openInNewTab,
                                 ),
-                                Container(width: 1, color: AppColors.bgDivider),
                                 Expanded(
                                   child: Column(
                                     children: [
                                       GlobalToolbar(
                                         shell: _shell,
                                         onMultiRename: _multiRename,
+                                        onCopyPath: (store) =>
+                                            store.copySelectedPaths(),
                                         onSelectByPattern: _openSelectPattern,
                                         onToggleHidden: _toggleShowHiddenGlobal,
                                       ),
@@ -579,7 +593,8 @@ class _SidebarResizeHandleState extends State<_SidebarResizeHandle> {
         onHorizontalDragCancel: widget.onDragEnd,
         child: SizedBox(
           width: 8,
-          child: Center(
+          child: Align(
+            alignment: Alignment.centerRight,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 120),
               width: _hovered ? 2 : 1,

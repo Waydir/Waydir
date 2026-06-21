@@ -13,6 +13,7 @@ import 'toolbar_item.dart';
 class GlobalToolbar extends StatelessWidget {
   final ShellStore shell;
   final void Function(NavigationStore store) onMultiRename;
+  final void Function(NavigationStore store) onCopyPath;
   final VoidCallback onSelectByPattern;
   final VoidCallback onToggleHidden;
 
@@ -20,6 +21,7 @@ class GlobalToolbar extends StatelessWidget {
     super.key,
     required this.shell,
     required this.onMultiRename,
+    required this.onCopyPath,
     required this.onSelectByPattern,
     required this.onToggleHidden,
   });
@@ -46,6 +48,7 @@ class GlobalToolbar extends StatelessWidget {
                   ToolbarButton(
                     icon: item.icon,
                     tooltip: item.tooltip,
+                    shortcutId: item.shortcutId,
                     enabled: item.isEnabled(),
                     active: item.isActive?.call() ?? false,
                     onTap: item.onTap,
@@ -66,6 +69,7 @@ class GlobalToolbar extends StatelessWidget {
           id: 'multiRename',
           icon: WaydirIconsRegular.pencilSimple,
           tooltip: t.toolbar.multiRename,
+          shortcutId: 'rename',
           isEnabled: () => (active?.selectedCount.value ?? 0) > 0,
           onTap: () {
             final store = active;
@@ -74,9 +78,21 @@ class GlobalToolbar extends StatelessWidget {
           },
         ),
         ToolbarItem(
+          id: 'copyPath',
+          icon: WaydirIconsRegular.copy,
+          tooltip: t.toolbar.copyPath,
+          isEnabled: () => (active?.selectedCount.value ?? 0) > 0,
+          onTap: () {
+            final store = active;
+            if (store == null) return;
+            onCopyPath(store);
+          },
+        ),
+        ToolbarItem(
           id: 'selectByPattern',
           icon: WaydirIconsRegular.selectionAll,
           tooltip: t.toolbar.selectByPattern,
+          shortcutId: 'select_pattern',
           isEnabled: () => active != null,
           onTap: onSelectByPattern,
         ),
@@ -86,6 +102,7 @@ class GlobalToolbar extends StatelessWidget {
           id: 'toggleHiddenFiles',
           icon: WaydirIconsRegular.eye,
           tooltip: t.toolbar.showHidden,
+          shortcutId: 'toggle_hidden',
           isEnabled: () => active != null,
           isActive: () => SettingsStore.instance.showHiddenDefault.value,
           onTap: onToggleHidden,

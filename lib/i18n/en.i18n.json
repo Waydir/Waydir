@@ -796,6 +796,7 @@
     "multiRename": "Multi Rename…",
     "selectByPattern": "Select by Pattern…",
     "showHidden": "Show Hidden Files",
+    "copyPath": "Copy Path",
     "listView": "List view",
     "gridView": "Grid view",
     "more": "More"

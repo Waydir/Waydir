@@ -38,7 +38,7 @@ import '../../core/models/file_operation.dart';
 
 const double _sectionGap = 12;
 const double _gutter = 8;
-const double _expandedRightGutter = 12;
+const double _expandedRightGutter = 4;
 const double _rowPadH = 10;
 const double _rowHeight = 30;
 const double _rowHeightWithSpace = 40;
@@ -611,9 +611,9 @@ class _SidebarState extends State<Sidebar> {
     ];
 
     return Padding(
-      padding: EdgeInsets.only(
+      padding: const EdgeInsets.only(
         left: _gutter,
-        right: collapsed ? _gutter : _expandedRightGutter,
+        right: _expandedRightGutter,
       ),
       child: Scrollbar(
         controller: _scrollController,
