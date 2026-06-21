@@ -488,6 +488,8 @@ mixin _WaydirMenuMixin
         paths: paths,
         dir: store.currentPath.value,
         form: form,
+        otherPane: _otherPaneContext(store),
+        panes: _allPaneContexts(store),
       );
       if (!mounted) return;
       await _applyPluginEffects(
@@ -502,6 +504,92 @@ mixin _WaydirMenuMixin
         'action ${contribution.fullActionId} failed: $e\n$st',
       );
       if (mounted) _notifyPluginError(contribution, '$e');
+    }
+  }
+
+  Map<String, dynamic> _paneContext(NavigationStore store) {
+    return {
+      'dir': store.currentPath.value,
+      'paths': store.selectedEntries.map((e) => e.realPath).toList(),
+    };
+  }
+
+  /// The active tab's store for each open pane, tagged with `active`, so a
+  /// plugin can target either side of a dual-pane layout.
+  List<Map<String, dynamic>> _allPaneContexts(NavigationStore active) {
+    return [
+      for (final pane in _shell.panes.value)
+        {
+          ..._paneContext(pane.tabs.activeTab.value.store),
+          'active': identical(pane.tabs.activeTab.value.store, active),
+        },
+    ];
+  }
+
+  /// The inactive pane's context in a dual-pane layout, or null when only one
+  /// pane is open. Lets plugins implement copy-to-other-pane, compare, sync.
+  Map<String, dynamic>? _otherPaneContext(NavigationStore active) {
+    for (final pane in _shell.panes.value) {
+      final store = pane.tabs.activeTab.value.store;
+      if (!identical(store, active)) return _paneContext(store);
+    }
+
+    return null;
+  }
+
+  /// Reactive `navigate` and `selection_change` plugin events. Each fires for
+  /// the active pane, debounced so rapid cursor/selection changes coalesce.
+  void _installPluginEventEffects() {
+    _effectDisposers.add(
+      effect(() {
+        if (!_shell.ready.value) return;
+        _active.currentPath.value;
+        _navEventTimer?.cancel();
+        _navEventTimer = Timer(
+          const Duration(milliseconds: 120),
+          () => _dispatchPluginEvent('navigate'),
+        );
+      }),
+    );
+    _effectDisposers.add(
+      effect(() {
+        if (!_shell.ready.value) return;
+        _active.selectedPaths.value;
+        _selectionEventTimer?.cancel();
+        _selectionEventTimer = Timer(
+          const Duration(milliseconds: 200),
+          () => _dispatchPluginEvent('selection_change'),
+        );
+      }),
+    );
+  }
+
+  Future<void> _dispatchPluginEvent(String event) async {
+    if (!mounted) return;
+    final contributions = PluginStore.instance.eventContributions(event);
+    if (contributions.isEmpty) return;
+    final store = _active;
+    final paths = store.selectedEntries.map((e) => e.realPath).toList();
+    final dir = store.currentPath.value;
+    final otherPane = _otherPaneContext(store);
+    final panes = _allPaneContexts(store);
+    for (final c in contributions) {
+      try {
+        final effects = await PluginStore.instance.invoke(
+          c,
+          paths: paths,
+          dir: dir,
+          otherPane: otherPane,
+          panes: panes,
+        );
+        if (!mounted) return;
+        await _applyPluginEffects(effects, c, background: true);
+      } catch (e, st) {
+        log.error(
+          'plugins',
+          'event $event for ${c.fullActionId} failed: $e\n$st',
+        );
+      }
     }
   }
 
@@ -737,7 +825,6 @@ mixin _WaydirMenuMixin
     PluginRuntimeTarget c,
     PluginEffect effect,
   ) async {
-    if (!c.allowExec) return;
     final cmd = effect.data['cmd'] as String?;
     if (cmd == null) return;
     final title = effect.data['title'] as String? ?? c.manifest.name;

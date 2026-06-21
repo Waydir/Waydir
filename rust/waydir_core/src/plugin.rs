@@ -1,20 +1,24 @@
 use std::cell::RefCell;
 use std::ffi::{c_char, CStr, CString};
+use std::io::Read;
+use std::process::Stdio;
 use std::rc::Rc;
 use std::time::{Duration, Instant};
 
 use mlua::{HookTriggers, Lua, LuaOptions, LuaSerdeExt, StdLib, Table, Value, VmState};
 use serde_json::{json, Value as Json};
+use wait_timeout::ChildExt;
 
 const PLUGIN_TIMEOUT: Duration = Duration::from_secs(5);
 
+/// Hard cap on how long a synchronous `waydir.exec` may run. A blocked child
+/// does not execute Lua instructions, so the instruction-count hook cannot
+/// interrupt it; this bound is what actually stops a hung command from
+/// wedging the plugin isolate. Slow work belongs in `waydir.run_task`.
+const EXEC_TIMEOUT: Duration = Duration::from_secs(5);
+
 /// Cap on the size of a file `waydir.read_text` will load, in bytes.
 const READ_TEXT_CAP: u64 = 4 * 1024 * 1024;
-
-/// Permission bits passed from the host. Keep in sync with `PluginPerms`
-/// on the Dart side.
-const PERM_EXEC: i32 = 1 << 0;
-const PERM_FS: i32 = 1 << 1;
 
 type Effects = Rc<RefCell<Vec<Json>>>;
 
@@ -83,12 +87,7 @@ fn err(msg: impl Into<String>) -> mlua::Error {
     mlua::Error::RuntimeError(msg.into())
 }
 
-fn install_api(
-    lua: &Lua,
-    effects: &Effects,
-    allow_exec: bool,
-    allow_fs: bool,
-) -> mlua::Result<Table> {
+fn install_api(lua: &Lua, effects: &Effects) -> mlua::Result<Table> {
     let waydir = lua.create_table()?;
 
     let e = effects.clone();
@@ -169,33 +168,54 @@ fn install_api(
     waydir.set(
         "exec",
         lua.create_function(move |_, (cmd, args): (String, Option<Vec<String>>)| {
-            if !allow_exec {
-                return Err(err("exec permission not granted"));
-            }
             let args = args.unwrap_or_default();
-            match std::process::Command::new(&cmd).args(&args).output() {
-                Ok(out) if !out.status.success() => {
-                    let stdout = String::from_utf8_lossy(&out.stdout).to_string();
-                    let stderr = String::from_utf8_lossy(&out.stderr).to_string();
-                    let code = out.status.code().unwrap_or(-1);
+            let mut child = std::process::Command::new(&cmd)
+                .args(&args)
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .spawn()
+                .map_err(|error| err(format!("exec {cmd}: {error}")))?;
+
+            let status = match child
+                .wait_timeout(EXEC_TIMEOUT)
+                .map_err(|error| err(format!("exec {cmd}: {error}")))?
+            {
+                Some(status) => status,
+                None => {
+                    let _ = child.kill();
+                    let _ = child.wait();
                     e.borrow_mut().push(json!({
                         "type": "log",
                         "message": format!(
-                            "exec {} failed: code {}",
+                            "exec {} timed out after {}s",
                             cmd,
-                            code
+                            EXEC_TIMEOUT.as_secs()
                         )
                     }));
-                    Ok((stdout, stderr, code))
+                    return Ok((
+                        String::new(),
+                        format!("exec {cmd} timed out"),
+                        -1_i32,
+                    ));
                 }
-                Ok(out) => {
-                    let stdout = String::from_utf8_lossy(&out.stdout).to_string();
-                    let stderr = String::from_utf8_lossy(&out.stderr).to_string();
-                    let code = out.status.code().unwrap_or(0);
-                    Ok((stdout, stderr, code))
-                }
-                Err(error) => Err(err(format!("exec {cmd}: {error}"))),
+            };
+
+            let mut stdout = String::new();
+            if let Some(mut out) = child.stdout.take() {
+                let _ = out.read_to_string(&mut stdout);
             }
+            let mut stderr = String::new();
+            if let Some(mut out) = child.stderr.take() {
+                let _ = out.read_to_string(&mut stderr);
+            }
+            let code = status.code().unwrap_or(-1);
+            if !status.success() {
+                e.borrow_mut().push(json!({
+                    "type": "log",
+                    "message": format!("exec {} failed: code {}", cmd, code)
+                }));
+            }
+            Ok((stdout, stderr, code))
         })?,
     )?;
 
@@ -203,9 +223,6 @@ fn install_api(
     waydir.set(
         "run_task",
         lua.create_function(move |lua, spec: Table| {
-            if !allow_exec {
-                return Err(err("exec permission not granted"));
-            }
             let title: String = spec.get("title")?;
             let cmd: String = spec.get("cmd")?;
             let args: Vec<String> = opt_string_array(&spec, "args")?.unwrap_or_default();
@@ -290,9 +307,6 @@ fn install_api(
     waydir.set(
         "read_text",
         lua.create_function(move |_, path: String| {
-            if !allow_fs {
-                return Err(err("fs permission not granted"));
-            }
             let meta =
                 std::fs::metadata(&path).map_err(|er| err(format!("read_text {path}: {er}")))?;
             if meta.len() > READ_TEXT_CAP {
@@ -307,9 +321,6 @@ fn install_api(
     waydir.set(
         "file_size",
         lua.create_function(move |_, path: String| {
-            if !allow_fs {
-                return Err(err("fs permission not granted"));
-            }
             let meta =
                 std::fs::metadata(&path).map_err(|er| err(format!("file_size {path}: {er}")))?;
             Ok(meta.len())
@@ -319,9 +330,6 @@ fn install_api(
     waydir.set(
         "write_text",
         lua.create_function(move |_, (path, content): (String, String)| {
-            if !allow_fs {
-                return Err(err("fs permission not granted"));
-            }
             std::fs::write(&path, content).map_err(|er| err(format!("write_text {path}: {er}")))
         })?,
     )?;
@@ -329,9 +337,6 @@ fn install_api(
     waydir.set(
         "mkdir",
         lua.create_function(move |_, path: String| {
-            if !allow_fs {
-                return Err(err("fs permission not granted"));
-            }
             std::fs::create_dir_all(&path).map_err(|er| err(format!("mkdir {path}: {er}")))
         })?,
     )?;
@@ -339,9 +344,6 @@ fn install_api(
     waydir.set(
         "exists",
         lua.create_function(move |_, path: String| {
-            if !allow_fs {
-                return Err(err("fs permission not granted"));
-            }
             Ok(std::path::Path::new(&path).exists())
         })?,
     )?;
@@ -349,9 +351,6 @@ fn install_api(
     waydir.set(
         "list",
         lua.create_function(move |lua, path: String| {
-            if !allow_fs {
-                return Err(err("fs permission not granted"));
-            }
             let out = lua.create_table()?;
             let rd = std::fs::read_dir(&path).map_err(|er| err(format!("list {path}: {er}")))?;
             let mut i = 1;
@@ -374,9 +373,6 @@ fn install_api(
         waydir.set(
             name,
             lua.create_function(move |_, (src, dst): (String, String)| {
-                if !allow_fs {
-                    return Err(err("fs permission not granted"));
-                }
                 e.borrow_mut().push(json!({
                     "type": "operation",
                     "op": op,
@@ -394,9 +390,6 @@ fn install_api(
         waydir.set(
             name,
             lua.create_function(move |_, path: String| {
-                if !allow_fs {
-                    return Err(err("fs permission not granted"));
-                }
                 e.borrow_mut().push(json!({
                     "type": "operation",
                     "op": op,
@@ -406,6 +399,13 @@ fn install_api(
             })?,
         )?;
     }
+
+    // Default no-op so top-level `register_column` calls are safe in every
+    // entry point; load and column-compute override it below.
+    waydir.set(
+        "register_column",
+        lua.create_function(|_, _: Table| Ok(()))?,
+    )?;
 
     Ok(waydir)
 }
@@ -443,7 +443,7 @@ fn load_impl(path: &str) -> mlua::Result<Json> {
     let code = std::fs::read_to_string(path).map_err(|e| err(format!("read {path}: {e}")))?;
     let lua = new_sandbox()?;
     let effects: Effects = Rc::new(RefCell::new(Vec::new()));
-    let waydir = install_api(&lua, &effects, false, false)?;
+    let waydir = install_api(&lua, &effects)?;
 
     let contribs: Rc<RefCell<Vec<Json>>> = Rc::new(RefCell::new(Vec::new()));
     let bars: Rc<RefCell<Vec<Json>>> = Rc::new(RefCell::new(Vec::new()));
@@ -464,6 +464,7 @@ fn load_impl(path: &str) -> mlua::Result<Json> {
             };
             let where_ = opt_string_array(&spec, "where")?;
             let shortcut: Option<String> = spec.get("shortcut")?;
+            let event: Option<String> = spec.get("event")?;
             let settings = settings_to_json(lua, &spec)?;
             sink.borrow_mut().push(json!({
                 "id": id,
@@ -474,6 +475,7 @@ fn load_impl(path: &str) -> mlua::Result<Json> {
                 "when": when,
                 "where": where_,
                 "shortcut": shortcut,
+                "event": event,
                 "settings": settings,
             }));
             Ok(())
@@ -504,24 +506,48 @@ fn load_impl(path: &str) -> mlua::Result<Json> {
             Ok(())
         })?,
     )?;
+    let columns: Rc<RefCell<Vec<Json>>> = Rc::new(RefCell::new(Vec::new()));
+    let col_sink = columns.clone();
+    waydir.set(
+        "register_column",
+        lua.create_function(move |lua, spec: Table| {
+            let id: String = spec.get("id")?;
+            let title: String = spec
+                .get::<Option<String>>("title")?
+                .unwrap_or_else(|| id.clone());
+            let width: Option<i64> = spec.get("width")?;
+            let settings = settings_to_json(lua, &spec)?;
+            col_sink.borrow_mut().push(json!({
+                "id": id,
+                "title": title,
+                "width": width,
+                "settings": settings,
+            }));
+            Ok(())
+        })?,
+    )?;
     lua.globals().set("waydir", waydir)?;
 
     lua.load(&code).set_name(path).exec()?;
 
     let list = contribs.borrow().clone();
     let bar_list = bars.borrow().clone();
-    Ok(json!({ "ok": true, "contributions": list, "bars": bar_list }))
+    let col_list = columns.borrow().clone();
+    Ok(json!({
+        "ok": true,
+        "contributions": list,
+        "bars": bar_list,
+        "columns": col_list,
+    }))
 }
 
-fn invoke_impl(path: &str, action_id: &str, ctx_json: &str, perms: i32) -> mlua::Result<Json> {
-    let allow_exec = perms & PERM_EXEC != 0;
-    let allow_fs = perms & PERM_FS != 0;
+fn invoke_impl(path: &str, action_id: &str, ctx_json: &str) -> mlua::Result<Json> {
     let code = std::fs::read_to_string(path).map_err(|e| err(format!("read {path}: {e}")))?;
     let ctx: Json = serde_json::from_str(ctx_json).map_err(|e| err(format!("ctx json: {e}")))?;
 
     let lua = new_sandbox()?;
     let effects: Effects = Rc::new(RefCell::new(Vec::new()));
-    let waydir = install_api(&lua, &effects, allow_exec, allow_fs)?;
+    let waydir = install_api(&lua, &effects)?;
 
     let target = action_id.to_string();
     let found: Rc<RefCell<Option<mlua::Function>>> = Rc::new(RefCell::new(None));
@@ -557,15 +583,13 @@ fn invoke_impl(path: &str, action_id: &str, ctx_json: &str, perms: i32) -> mlua:
     Ok(json!({ "ok": true, "effects": list }))
 }
 
-fn bar_update_impl(path: &str, bar_id: &str, ctx_json: &str, perms: i32) -> mlua::Result<Json> {
-    let allow_exec = perms & PERM_EXEC != 0;
-    let allow_fs = perms & PERM_FS != 0;
+fn bar_update_impl(path: &str, bar_id: &str, ctx_json: &str) -> mlua::Result<Json> {
     let code = std::fs::read_to_string(path).map_err(|e| err(format!("read {path}: {e}")))?;
     let ctx: Json = serde_json::from_str(ctx_json).map_err(|e| err(format!("ctx json: {e}")))?;
 
     let lua = new_sandbox()?;
     let effects: Effects = Rc::new(RefCell::new(Vec::new()));
-    let waydir = install_api(&lua, &effects, allow_exec, allow_fs)?;
+    let waydir = install_api(&lua, &effects)?;
     waydir.set("register", lua.create_function(move |_, _: Table| Ok(()))?)?;
 
     let target = bar_id.to_string();
@@ -603,10 +627,7 @@ fn bar_click_impl(
     bar_id: &str,
     item_id: &str,
     ctx_json: &str,
-    perms: i32,
 ) -> mlua::Result<Json> {
-    let allow_exec = perms & PERM_EXEC != 0;
-    let allow_fs = perms & PERM_FS != 0;
     let code = std::fs::read_to_string(path).map_err(|e| err(format!("read {path}: {e}")))?;
     let mut ctx: Json =
         serde_json::from_str(ctx_json).map_err(|e| err(format!("ctx json: {e}")))?;
@@ -616,7 +637,7 @@ fn bar_click_impl(
 
     let lua = new_sandbox()?;
     let effects: Effects = Rc::new(RefCell::new(Vec::new()));
-    let waydir = install_api(&lua, &effects, allow_exec, allow_fs)?;
+    let waydir = install_api(&lua, &effects)?;
     waydir.set("register", lua.create_function(move |_, _: Table| Ok(()))?)?;
 
     let target = bar_id.to_string();
@@ -650,6 +671,50 @@ fn bar_click_impl(
     };
     let list = effects.borrow().clone();
     Ok(json!({ "ok": true, "state": state, "effects": list }))
+}
+
+fn column_compute_impl(path: &str, column_id: &str, ctx_json: &str) -> mlua::Result<Json> {
+    let code = std::fs::read_to_string(path).map_err(|e| err(format!("read {path}: {e}")))?;
+    let ctx: Json = serde_json::from_str(ctx_json).map_err(|e| err(format!("ctx json: {e}")))?;
+
+    let lua = new_sandbox()?;
+    let effects: Effects = Rc::new(RefCell::new(Vec::new()));
+    let waydir = install_api(&lua, &effects)?;
+    waydir.set("register", lua.create_function(move |_, _: Table| Ok(()))?)?;
+    waydir.set(
+        "register_bar",
+        lua.create_function(move |_, _: Table| Ok(()))?,
+    )?;
+
+    let target = column_id.to_string();
+    let found: Rc<RefCell<Option<mlua::Function>>> = Rc::new(RefCell::new(None));
+    let slot = found.clone();
+    waydir.set(
+        "register_column",
+        lua.create_function(move |_, spec: Table| {
+            let id: String = spec.get("id")?;
+            if id == target {
+                if let Some(compute) = spec.get::<Option<mlua::Function>>("compute")? {
+                    *slot.borrow_mut() = Some(compute);
+                }
+            }
+            Ok(())
+        })?,
+    )?;
+    lua.globals().set("waydir", waydir)?;
+
+    lua.load(&code).set_name(path).exec()?;
+
+    let compute = found.borrow_mut().take();
+    let compute =
+        compute.ok_or_else(|| err(format!("column {column_id} compute not found")))?;
+    let value = compute.call::<Value>(ctx_to_lua_table(&lua, &ctx)?)?;
+    let values = match value {
+        Value::Nil => Json::Null,
+        value => lua.from_value(value)?,
+    };
+    let list = effects.borrow().clone();
+    Ok(json!({ "ok": true, "values": values, "effects": list }))
 }
 
 fn to_cstring(value: Json) -> *mut c_char {
@@ -687,8 +752,7 @@ pub unsafe extern "C" fn waydir_plugin_load(path: *const c_char) -> *mut c_char 
 }
 
 /// Runs one registered action's `run` function in a fresh sandbox and returns
-/// the collected host effects as JSON. `perms` is a bitmask: bit0 = exec,
-/// bit1 = fs.
+/// the collected host effects as JSON.
 ///
 /// # Safety
 /// All pointer args must be valid NUL-terminated UTF-8 C strings.
@@ -697,7 +761,6 @@ pub unsafe extern "C" fn waydir_plugin_invoke(
     path: *const c_char,
     action_id: *const c_char,
     ctx_json: *const c_char,
-    perms: i32,
 ) -> *mut c_char {
     if path.is_null() || action_id.is_null() || ctx_json.is_null() {
         return to_cstring(err_json("null argument"));
@@ -714,7 +777,7 @@ pub unsafe extern "C" fn waydir_plugin_invoke(
         Ok(s) => s,
         Err(e) => return to_cstring(err_json(e)),
     };
-    match invoke_impl(path, action_id, ctx_json, perms) {
+    match invoke_impl(path, action_id, ctx_json) {
         Ok(v) => to_cstring(v),
         Err(e) => to_cstring(err_json(e)),
     }
@@ -725,7 +788,6 @@ pub unsafe extern "C" fn waydir_plugin_bar_update(
     path: *const c_char,
     bar_id: *const c_char,
     ctx_json: *const c_char,
-    perms: i32,
 ) -> *mut c_char {
     if path.is_null() || bar_id.is_null() || ctx_json.is_null() {
         return to_cstring(err_json("null argument"));
@@ -742,7 +804,7 @@ pub unsafe extern "C" fn waydir_plugin_bar_update(
         Ok(s) => s,
         Err(e) => return to_cstring(err_json(e)),
     };
-    match bar_update_impl(path, bar_id, ctx_json, perms) {
+    match bar_update_impl(path, bar_id, ctx_json) {
         Ok(v) => to_cstring(v),
         Err(e) => to_cstring(err_json(e)),
     }
@@ -754,7 +816,6 @@ pub unsafe extern "C" fn waydir_plugin_bar_click(
     bar_id: *const c_char,
     item_id: *const c_char,
     ctx_json: *const c_char,
-    perms: i32,
 ) -> *mut c_char {
     if path.is_null() || bar_id.is_null() || item_id.is_null() || ctx_json.is_null() {
         return to_cstring(err_json("null argument"));
@@ -775,7 +836,40 @@ pub unsafe extern "C" fn waydir_plugin_bar_click(
         Ok(s) => s,
         Err(e) => return to_cstring(err_json(e)),
     };
-    match bar_click_impl(path, bar_id, item_id, ctx_json, perms) {
+    match bar_click_impl(path, bar_id, item_id, ctx_json) {
+        Ok(v) => to_cstring(v),
+        Err(e) => to_cstring(err_json(e)),
+    }
+}
+
+/// Computes a registered column's values for a batch of files. `ctx_json`'s
+/// `paths` lists the files; the column's `compute(ctx)` returns a table mapping
+/// path to display string. Result JSON carries `values` and `effects`.
+///
+/// # Safety
+/// All pointer args must be valid NUL-terminated UTF-8 C strings.
+#[no_mangle]
+pub unsafe extern "C" fn waydir_plugin_column_compute(
+    path: *const c_char,
+    column_id: *const c_char,
+    ctx_json: *const c_char,
+) -> *mut c_char {
+    if path.is_null() || column_id.is_null() || ctx_json.is_null() {
+        return to_cstring(err_json("null argument"));
+    }
+    let path = match CStr::from_ptr(path).to_str() {
+        Ok(s) => s,
+        Err(e) => return to_cstring(err_json(e)),
+    };
+    let column_id = match CStr::from_ptr(column_id).to_str() {
+        Ok(s) => s,
+        Err(e) => return to_cstring(err_json(e)),
+    };
+    let ctx_json = match CStr::from_ptr(ctx_json).to_str() {
+        Ok(s) => s,
+        Err(e) => return to_cstring(err_json(e)),
+    };
+    match column_compute_impl(path, column_id, ctx_json) {
         Ok(v) => to_cstring(v),
         Err(e) => to_cstring(err_json(e)),
     }

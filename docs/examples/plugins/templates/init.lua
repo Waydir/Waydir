@@ -97,7 +97,6 @@ local function create_from_template(ctx)
           default = settings.default or "markdown",
         },
       },
-      submit_action = "new_from_template",
     })
     return
   end
@@ -175,7 +174,6 @@ waydir.register({
             default = (ctx.settings or {}).author or "",
           },
         },
-        submit_action = "set_author",
       })
       return
     end

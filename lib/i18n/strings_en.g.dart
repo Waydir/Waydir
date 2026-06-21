@@ -2454,9 +2454,6 @@ class Translations$preferences$plugins$en {
 	/// en: 'This plugin has no settings.'
 	String get noSettings => 'This plugin has no settings.';
 
-	/// en: 'Permissions'
-	String get permissionsLabel => 'Permissions';
-
 	/// en: 'Plugin: $name'
 	String shortcutPrefix({required Object name}) => 'Plugin: ${name}';
 }
@@ -4183,7 +4180,6 @@ extension on Translations {
 			'preferences.plugins.configure' => 'Configure',
 			'preferences.plugins.configureTitle' => ({required Object name}) => '${name} settings',
 			'preferences.plugins.noSettings' => 'This plugin has no settings.',
-			'preferences.plugins.permissionsLabel' => 'Permissions',
 			'preferences.plugins.shortcutPrefix' => ({required Object name}) => 'Plugin: ${name}',
 			'preferences.general.title' => 'General',
 			'preferences.general.subtitle' => 'Startup, file operations and terminal integration.',
@@ -4530,9 +4526,9 @@ extension on Translations {
 			'keybindings.closeTab' => 'Close tab',
 			'keybindings.nextTab' => 'Next tab',
 			'keybindings.prevTab' => 'Previous tab',
+			'keybindings.switchTab' => 'Switch to tab',
 			_ => null,
 		} ?? switch (path) {
-			'keybindings.switchTab' => 'Switch to tab',
 			'keybindings.jumpBookmark' => 'Jump to bookmark',
 			'keybindings.toggleDual' => 'Toggle dual pane',
 			'keybindings.switchPane' => 'Switch active pane',

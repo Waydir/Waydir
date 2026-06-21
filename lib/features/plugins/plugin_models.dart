@@ -5,7 +5,6 @@ import '../../core/models/file_entry.dart';
 abstract class PluginRuntimeTarget {
   String get pluginId;
   PluginManifest get manifest;
-  bool get allowExec;
   String get runtimeId;
 }
 
@@ -16,7 +15,6 @@ class PluginManifest {
   final String author;
   final String description;
   final int apiVersion;
-  final Set<String> permissions;
 
   const PluginManifest({
     required this.id,
@@ -25,15 +23,12 @@ class PluginManifest {
     required this.author,
     required this.description,
     required this.apiVersion,
-    required this.permissions,
   });
 
   factory PluginManifest.fromJson(
     Map<String, dynamic> json,
     String fallbackId,
   ) {
-    final perms = json['permissions'];
-
     return PluginManifest(
       id: (json['id'] as String?)?.trim().isNotEmpty == true
           ? json['id'] as String
@@ -43,20 +38,7 @@ class PluginManifest {
       author: json['author'] as String? ?? '',
       description: json['description'] as String? ?? '',
       apiVersion: (json['api_version'] as num?)?.toInt() ?? 1,
-      permissions: perms is List
-          ? perms.whereType<String>().toSet()
-          : const <String>{},
     );
-  }
-
-  /// Permission bitmask passed to the native invoke call. Keep in sync with
-  /// the `PERM_*` constants in `rust/waydir_core/src/plugin.rs`.
-  int get permsBitmask {
-    var bits = 0;
-    if (permissions.contains('exec')) bits |= 1 << 0;
-    if (permissions.contains('fs')) bits |= 1 << 1;
-
-    return bits;
   }
 }
 
@@ -187,6 +169,11 @@ class PluginContribution implements PluginRuntimeTarget {
   final PluginWhen when;
   final Set<String> surfaces;
   final String? shortcut;
+
+  /// When non-null, this contribution is a reactive event handler (e.g.
+  /// `navigate`, `selection_change`) rather than a menu/toolbar action, and is
+  /// hidden from every menu surface.
+  final String? event;
   final List<PluginFormField> settings;
   final String initLuaPath;
   final String pluginDir;
@@ -203,6 +190,7 @@ class PluginContribution implements PluginRuntimeTarget {
     required this.when,
     required this.surfaces,
     required this.shortcut,
+    required this.event,
     required this.settings,
     required this.initLuaPath,
     required this.pluginDir,
@@ -225,9 +213,6 @@ class PluginContribution implements PluginRuntimeTarget {
 
     return null;
   }
-
-  @override
-  bool get allowExec => manifest.permissions.contains('exec');
 
   bool showsOn(String surface) => surfaces.contains(surface);
 }
@@ -275,9 +260,35 @@ class PluginBarContribution implements PluginRuntimeTarget {
 
     return null;
   }
+}
+
+class PluginColumnContribution implements PluginRuntimeTarget {
+  @override
+  final String pluginId;
+  final String columnId;
+  final String title;
+  final double width;
+  final List<PluginFormField> settings;
+  final String initLuaPath;
+  final String pluginDir;
+  @override
+  final PluginManifest manifest;
+
+  const PluginColumnContribution({
+    required this.pluginId,
+    required this.columnId,
+    required this.title,
+    required this.width,
+    required this.settings,
+    required this.initLuaPath,
+    required this.pluginDir,
+    required this.manifest,
+  });
+
+  String get fullColumnId => 'plugin:$pluginId:col:$columnId';
 
   @override
-  bool get allowExec => manifest.permissions.contains('exec');
+  String get runtimeId => fullColumnId;
 }
 
 class PluginBarItem {
@@ -380,6 +391,7 @@ class LoadedPlugin {
   final bool enabled;
   final List<PluginContribution> contributions;
   final List<PluginBarContribution> bars;
+  final List<PluginColumnContribution> columns;
   final String? error;
 
   const LoadedPlugin({
@@ -388,6 +400,7 @@ class LoadedPlugin {
     required this.enabled,
     required this.contributions,
     this.bars = const [],
+    this.columns = const [],
     this.error,
   });
 
@@ -403,6 +416,11 @@ class LoadedPlugin {
     }
     for (final b in bars) {
       for (final f in b.settings) {
+        if (seen.add(f.id)) out.add(f);
+      }
+    }
+    for (final c in columns) {
+      for (final f in c.settings) {
         if (seen.add(f.id)) out.add(f);
       }
     }

@@ -38,8 +38,7 @@ hello-waydir/
   "version": "1.0.0",
   "author": "you",
   "description": "Shows a toast from the selection menu.",
-  "api_version": 2,
-  "permissions": []
+  "api_version": 2
 }
 ```
 
@@ -74,8 +73,7 @@ After copying a plugin:
 
 1. Open **Preferences -> Plugins**.
 2. Click **Reload plugins**.
-3. Review the permissions shown for the plugin.
-4. Enable or configure it if needed.
+3. Enable or configure it if needed.
 
 If a plugin does not appear, check these first:
 
@@ -117,7 +115,7 @@ Status bars follow the same fresh-VM rule. Waydir calls `update(ctx)` on load, w
 | Sandbox | Lua gets `table`, `string`, `math` and `waydir`. No `os`, `io` or `require`. |
 | Timeout | Lua load, action runs and bar updates are capped at 5 seconds. |
 | State | Lua globals do not persist between clicks. Use settings for durable state. |
-| Permissions | External commands need `exec`; file reads, writes and queued file operations need `fs`. |
+| Trust | Plugins run with your full user privileges. They can run any command and touch any file, so only install plugins you trust. |
 
 ## manifest.json
 
@@ -128,8 +126,7 @@ Status bars follow the same fresh-VM rule. Waydir calls `update(ctx)` on load, w
   "version": "1.0.0",
   "author": "you",
   "description": "One sentence explaining what it adds.",
-  "api_version": 2,
-  "permissions": []
+  "api_version": 2
 }
 ```
 
@@ -141,16 +138,8 @@ Status bars follow the same fresh-VM rule. Waydir calls `update(ctx)` on load, w
 | `author` | No | Author name. |
 | `description` | No | Short explanation shown in Preferences. |
 | `api_version` | Yes | Must be `2` for this Waydir build. |
-| `permissions` | No | List of permissions requested by the plugin. Defaults to no permissions. |
 
-Permissions:
-
-| Permission | Allows |
-|------------|--------|
-| `exec` | `waydir.exec` and `waydir.run_task` |
-| `fs` | `waydir.read_text`, `write_text`, `mkdir`, `exists`, `list`, `file_size`, `copy`, `move`, `delete`, `trash` |
-
-Ask for the least permission you need. Users see permissions before trusting a plugin.
+A legacy `permissions` field is accepted but ignored; plugins run with your full user privileges.
 
 ## Register An Action
 
@@ -180,6 +169,7 @@ Action fields:
 | `group` | string | Context submenu label. Actions with the same group are nested together. |
 | `icon` | string | Built-in icon name or bundled `.svg` or `.png` path. |
 | `shortcut` | string | Chord such as `ctrl+shift+x` or `alt+f5`. |
+| `event` | string | Run reactively on a lifecycle event (`navigate`, `selection_change`) instead of from a menu. See [Events](#events). |
 | `when` | table | Selection filter. Applies to selection context actions. |
 | `settings` | list | User-editable plugin settings schema. |
 
@@ -218,6 +208,28 @@ The `ctx` table tells your action where it is running:
 | `ctx.plugin_dir` | Absolute path to your plugin folder. |
 | `ctx.settings` | Settings values, with defaults merged with saved user values. |
 | `ctx.form` | Dialog result after a `waydir.dialog` submit. |
+| `ctx.other_pane` | The inactive pane in a dual-pane layout as `{ dir, paths }`, or absent when only one pane is open. |
+| `ctx.panes` | Every open pane as `{ dir, paths, active }`, in layout order. |
+
+`ctx.other_pane` and `ctx.panes` are only populated for action runs (context menu, menubar, toolbar, shortcuts), not for status bars. Use them for copy-to-other-pane, compare and sync workflows:
+
+```lua
+waydir.register({
+  id = "copy_to_other",
+  title = "Copy to other pane",
+  when = { min = 1 },
+  run = function(ctx)
+    local target = ctx.other_pane and ctx.other_pane.dir
+    if not target then
+      waydir.toast("Open a second pane first")
+      return
+    end
+    for _, path in ipairs(ctx.paths) do
+      waydir.copy(path, target)
+    end
+  end,
+})
+```
 
 Example:
 
@@ -260,11 +272,31 @@ when = {
 
 Omit `when` to show the action for any non-empty selection. For background actions, use `where = { "background" }`.
 
+## Events
+
+Add an `event` field instead of a menu to run when something changes in the active pane, with no menu entry, toolbar button or shortcut. The `run(ctx)` receives the same context as an action (including `ctx.other_pane` and `ctx.panes`).
+
+```lua
+waydir.register({
+  id = "log_navigation",
+  title = "Log navigation",
+  event = "navigate",
+  run = function(ctx)
+    waydir.log("entered " .. ctx.dir)
+  end,
+})
+```
+
+| Event | Fires when |
+|-------|------------|
+| `navigate` | The active pane's folder changes. |
+| `selection_change` | The active pane's selection changes. |
+
+Events are debounced so rapid cursor or selection changes coalesce into one run. Keep handlers cheap; offload slow work to `waydir.run_task`.
+
 ## Dialogs
 
-`waydir.dialog` opens a modal form. It does not return a value immediately. When the user submits the form, Waydir runs the same action again with `ctx.form` filled.
-
-`submit_action` is kept in examples to make the intent obvious. Current Waydir builds always re-run the same action that opened the dialog.
+`waydir.dialog` opens a modal form. It does not return a value immediately. When the user submits the form, Waydir runs the same action again with `ctx.form` filled. Branch on `ctx.form` to tell the two passes apart.
 
 ```lua
 waydir.register({
@@ -279,7 +311,6 @@ waydir.register({
         fields = {
           { id = "name", type = "input", label = "File name", default = "untitled.txt" },
         },
-        submit_action = "new_file",
       })
       return
     end
@@ -445,23 +476,23 @@ Button behavior:
 
 ### UI And State
 
-| Function | Permission | Effect |
-|----------|------------|--------|
-| `waydir.toast(message)` | None | Shows a short toast. |
-| `waydir.notify({ title, message, level, persistent })` | None | Shows a notification. `level` can be `info`, `success`, `warn` or `error`. |
-| `waydir.dialog({ title, fields, submit_action })` | None | Opens a form and re-runs the same action with `ctx.form`. |
-| `waydir.set_setting(key, value)` | None | Persists one setting for this plugin. |
-| `waydir.refresh()` | None | Refreshes the active file list. |
-| `waydir.log(message)` | None | Writes to Waydir's plugin log channel. |
+| Function | Effect |
+|----------|--------|
+| `waydir.toast(message)` | Shows a short toast. |
+| `waydir.notify({ title, message, level, persistent })` | Shows a notification. `level` can be `info`, `success`, `warn` or `error`. |
+| `waydir.dialog({ title, fields })` | Opens a form and re-runs the same action with `ctx.form`. |
+| `waydir.set_setting(key, value)` | Persists one setting for this plugin. |
+| `waydir.refresh()` | Refreshes the active file list. |
+| `waydir.log(message)` | Writes to Waydir's plugin log channel. |
 
 ### External Commands
 
-| Function | Permission | Effect |
-|----------|------------|--------|
-| `waydir.exec(cmd, args)` | `exec` | Runs a short command and waits for it. Returns `stdout`, `stderr`, `exit_code`. |
-| `waydir.run_task(spec)` | `exec` | Starts a long-running process outside the Lua action. |
+| Function | Effect |
+|----------|--------|
+| `waydir.exec(cmd, args)` | Runs a short command and waits for it. Returns `stdout`, `stderr`, `exit_code`. |
+| `waydir.run_task(spec)` | Starts a long-running process outside the Lua action. |
 
-Use `waydir.exec` only for quick commands. Lua actions have a 5 second sandbox budget.
+Use `waydir.exec` only for quick commands. A single `exec` call is capped at 5 seconds; a command that runs longer is killed and returns exit code `-1`. Lua actions also have an overall 5 second sandbox budget. For anything slower, use `waydir.run_task`.
 
 ```lua
 local out, err, code = waydir.exec("git", { "branch", "--show-current" })
@@ -517,18 +548,18 @@ waydir.run_task({
 
 ### File System
 
-| Function | Permission | Effect |
-|----------|------------|--------|
-| `waydir.read_text(path)` | `fs` | Reads UTF-8 text. Capped at 4 MiB. |
-| `waydir.write_text(path, text)` | `fs` | Writes UTF-8 text. |
-| `waydir.mkdir(path)` | `fs` | Creates a directory and parents. |
-| `waydir.exists(path)` | `fs` | Returns `true` if the path exists. |
-| `waydir.list(path)` | `fs` | Returns `{ { name, path, is_dir }, ... }`. |
-| `waydir.file_size(path)` | `fs` | Returns file size in bytes. |
-| `waydir.copy(src, dest_dir)` | `fs` | Queues a Waydir copy operation. |
-| `waydir.move(src, dest_dir)` | `fs` | Queues a Waydir move operation. |
-| `waydir.delete(path)` | `fs` | Queues a permanent delete after confirmation. |
-| `waydir.trash(path)` | `fs` | Queues move to trash, respecting delete confirmation settings. |
+| Function | Effect |
+|----------|--------|
+| `waydir.read_text(path)` | Reads UTF-8 text. Capped at 4 MiB. |
+| `waydir.write_text(path, text)` | Writes UTF-8 text. |
+| `waydir.mkdir(path)` | Creates a directory and parents. |
+| `waydir.exists(path)` | Returns `true` if the path exists. |
+| `waydir.list(path)` | Returns `{ { name, path, is_dir }, ... }`. |
+| `waydir.file_size(path)` | Returns file size in bytes. |
+| `waydir.copy(src, dest_dir)` | Queues a Waydir copy operation. |
+| `waydir.move(src, dest_dir)` | Queues a Waydir move operation. |
+| `waydir.delete(path)` | Queues a permanent delete after confirmation. |
+| `waydir.trash(path)` | Queues move to trash, respecting delete confirmation settings. |
 
 Queued file operations appear in Waydir's Operations panel and use the same copy, move, delete and trash machinery as the UI.
 
@@ -546,11 +577,11 @@ waydir.operation_update("sync", {
 waydir.operation_finish("sync", { success = true })
 ```
 
-| Function | Permission | Effect |
-|----------|------------|--------|
-| `waydir.operation_start({ id, title, total_bytes, total_files })` | None | Creates a custom Operations entry. |
-| `waydir.operation_update(id, spec)` | None | Updates progress, message, bytes and files. |
-| `waydir.operation_finish(id, spec)` | None | Marks the operation as successful, cancelled or failed. |
+| Function | Effect |
+|----------|--------|
+| `waydir.operation_start({ id, title, total_bytes, total_files })` | Creates a custom Operations entry. |
+| `waydir.operation_update(id, spec)` | Updates progress, message, bytes and files. |
+| `waydir.operation_finish(id, spec)` | Marks the operation as successful, cancelled or failed. |
 
 `operation_update` fields:
 
@@ -610,7 +641,7 @@ Waydir runs plugins in a restricted Lua sandbox:
 - Action and bar Lua execution has a 5 second budget.
 - Use `waydir.run_task` for slow external work.
 - Use `ctx.plugin_dir` to call bundled helper scripts or read bundled files.
-- `exec` and `fs` APIs fail unless the manifest requests the matching permission.
+- Plugins run with your full user privileges; there is no permission sandbox. Only install plugins you trust.
 
 ## Patterns
 
@@ -694,7 +725,7 @@ Ready-to-copy examples live in [examples/plugins/](examples/plugins/):
 
 | Example | Shows |
 |---------|-------|
-| `selection-count` | Tiny no-permission action using `ctx.count` and `waydir.toast`. |
+| `selection-count` | Tiny action using `ctx.count` and `waydir.toast`. |
 | `backup-copy` | External command action using `exec`. |
 | `open-vscode` | Toolbar and folder action with a configurable command. |
 | `templates` | Toolbar, background menu, top menu, shortcut, settings, dialog and `fs`. |
@@ -708,8 +739,6 @@ Ready-to-copy examples live in [examples/plugins/](examples/plugins/):
 | Load error says unsupported API | Set `api_version` to `2`. |
 | Action is missing from context menu | Check `where`, `menu`, `when`, current selection and archive state. |
 | Shortcut does nothing | Check for conflicts with built-in shortcuts or another plugin. |
-| `exec permission not granted` | Add `"exec"` to `permissions`. |
-| `fs permission not granted` | Add `"fs"` to `permissions`. |
 | Command works in terminal but not plugin | Use an absolute command path, configure `cwd`, or check PATH differences. |
 | Long command times out | Use `waydir.run_task` and set a suitable `timeout`. |
 | Progress does not update | Use `operation = true`, check regex capture groups and try `pty = true` on Linux. |

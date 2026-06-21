@@ -17,7 +17,11 @@ class PluginStore {
   PluginStore._();
   static final PluginStore instance = PluginStore._();
 
-  static const int supportedApiVersion = 2;
+  /// Inclusive range of manifest `api_version` values this build accepts.
+  /// Kept as a range so a future build can raise [maxApiVersion] for new
+  /// features while still loading plugins written against an older version.
+  static const int minApiVersion = 2;
+  static const int maxApiVersion = 2;
 
   final plugins = signal<List<LoadedPlugin>>(const []);
 
@@ -124,7 +128,6 @@ class PluginStore {
           author: '',
           description: '',
           apiVersion: 0,
-          permissions: const {},
         ),
         dir: dirPath,
         enabled: false,
@@ -134,7 +137,8 @@ class PluginStore {
       );
     }
 
-    if (manifest.apiVersion != supportedApiVersion) {
+    if (manifest.apiVersion < minApiVersion ||
+        manifest.apiVersion > maxApiVersion) {
       return LoadedPlugin(
         manifest: manifest,
         dir: dirPath,
@@ -143,11 +147,11 @@ class PluginStore {
         bars: const [],
         error:
             'api_version ${manifest.apiVersion} not supported '
-            '(this build: $supportedApiVersion)',
+            '(this build: $minApiVersion-$maxApiVersion)',
       );
     }
 
-    final raw = PluginFfi.load(initFile.path);
+    final raw = await PluginFfi.load(initFile.path);
     if (raw == null) {
       return LoadedPlugin(
         manifest: manifest,
@@ -195,11 +199,13 @@ class PluginStore {
           ? whereRaw.whereType<String>().map((e) => e.toLowerCase()).toSet()
           : <String>{'selection'};
       if (surfaces.isEmpty) surfaces.add('selection');
+      final event = (c['event'] as String?)?.trim().toLowerCase();
+      final hasEvent = event != null && event.isNotEmpty;
       contributions.add(
         PluginContribution(
           pluginId: manifest.id,
           actionId: actionId,
-          menu: c['menu'] as String? ?? 'context',
+          menu: hasEvent ? 'event' : (c['menu'] as String? ?? 'context'),
           title: title,
           group: (c['group'] as String?)?.trim().isNotEmpty == true
               ? c['group'] as String
@@ -207,7 +213,8 @@ class PluginStore {
           icon: c['icon'] as String?,
           when: PluginWhen.fromJson(c['when'] as Map<String, dynamic>?),
           surfaces: surfaces,
-          shortcut: c['shortcut'] as String?,
+          shortcut: hasEvent ? null : c['shortcut'] as String?,
+          event: hasEvent ? event : null,
           settings: PluginFormField.listFromJson(c['settings']),
           initLuaPath: initFile.path,
           pluginDir: dirPath,
@@ -239,12 +246,33 @@ class PluginStore {
       );
     }
 
+    final columns = <PluginColumnContribution>[];
+    for (final item in (parsed['columns'] as List? ?? const [])) {
+      final c = item as Map<String, dynamic>;
+      final columnId = c['id'] as String?;
+      if (columnId == null || columnId.trim().isEmpty) continue;
+      final width = (c['width'] as num?)?.toDouble();
+      columns.add(
+        PluginColumnContribution(
+          pluginId: manifest.id,
+          columnId: columnId,
+          title: c['title'] as String? ?? columnId,
+          width: width == null ? 120 : width.clamp(40, 600),
+          settings: PluginFormField.listFromJson(c['settings']),
+          initLuaPath: initFile.path,
+          pluginDir: dirPath,
+          manifest: manifest,
+        ),
+      );
+    }
+
     return LoadedPlugin(
       manifest: manifest,
       dir: dirPath,
       enabled: true,
       contributions: contributions,
       bars: bars,
+      columns: columns,
     );
   }
 
@@ -269,6 +297,18 @@ class PluginStore {
       yield* plugin.bars;
     }
   }
+
+  Iterable<PluginColumnContribution> get _activeColumns sync* {
+    final disabled = PluginSettingsStore.instance.disabled.value;
+    for (final plugin in plugins.value) {
+      if (!plugin.enabled || plugin.error != null) continue;
+      if (disabled.contains(plugin.manifest.id)) continue;
+      yield* plugin.columns;
+    }
+  }
+
+  List<PluginColumnContribution> columnContributions() =>
+      _activeColumns.toList();
 
   List<PluginContribution> contextContributionsFor(List<FileEntry> entries) {
     final out = <PluginContribution>[];
@@ -309,6 +349,16 @@ class PluginStore {
     ];
   }
 
+  /// Active handlers registered for the lifecycle [event] (e.g. `navigate`,
+  /// `selection_change`). Empty when no plugin listens, so callers can skip
+  /// building context.
+  List<PluginContribution> eventContributions(String event) {
+    return [
+      for (final c in _activeContributions)
+        if (c.event == event) c,
+    ];
+  }
+
   List<PluginBarContribution> globalBarContributions() {
     return [
       for (final b in _activeBars)
@@ -338,6 +388,8 @@ class PluginStore {
     required List<String> paths,
     required String dir,
     Map<String, dynamic>? form,
+    Map<String, dynamic>? otherPane,
+    List<Map<String, dynamic>>? panes,
   }) async {
     final ctx = <String, dynamic>{
       'paths': paths,
@@ -346,12 +398,13 @@ class PluginStore {
       'settings': mergedSettings(contribution.pluginId),
     };
     if (form != null) ctx['form'] = form;
+    if (otherPane != null) ctx['other_pane'] = otherPane;
+    if (panes != null) ctx['panes'] = panes;
     final ctxJson = jsonEncode(ctx);
     final raw = await PluginFfi.invoke(
       initLuaPath: contribution.initLuaPath,
       actionId: contribution.actionId,
       ctxJson: ctxJson,
-      perms: contribution.manifest.permsBitmask,
     );
     if (raw == null) {
       return [
@@ -371,7 +424,6 @@ class PluginStore {
       initLuaPath: bar.initLuaPath,
       barId: bar.barId,
       ctxJson: jsonEncode(ctx),
-      perms: bar.manifest.permsBitmask,
     );
     if (raw == null) {
       return PluginBarInvokeResult(
@@ -394,7 +446,6 @@ class PluginStore {
       barId: bar.barId,
       itemId: itemId,
       ctxJson: jsonEncode(ctx),
-      perms: bar.manifest.permsBitmask,
     );
     if (raw == null) {
       return PluginBarInvokeResult(
@@ -404,6 +455,48 @@ class PluginStore {
     }
 
     return _parseBarResponse(raw);
+  }
+
+  /// Runs [column]'s `compute` for [paths] in [dir] and returns a map of file
+  /// path to display string. Missing or non-string values are dropped.
+  Future<Map<String, String>> computeColumn(
+    PluginColumnContribution column, {
+    required List<String> paths,
+    required String dir,
+  }) async {
+    final ctx = <String, dynamic>{
+      'paths': paths,
+      'dir': dir,
+      'plugin_dir': column.pluginDir,
+      'settings': mergedSettings(column.pluginId),
+    };
+    final raw = await PluginFfi.columnCompute(
+      initLuaPath: column.initLuaPath,
+      columnId: column.columnId,
+      ctxJson: jsonEncode(ctx),
+    );
+    if (raw == null) return const {};
+    try {
+      final parsed = jsonDecode(raw) as Map<String, dynamic>;
+      if (parsed['ok'] != true) {
+        log.error('plugins', 'column compute failed: ${parsed['error']}');
+
+        return const {};
+      }
+      final values = parsed['values'];
+      final out = <String, String>{};
+      if (values is Map) {
+        values.forEach((key, value) {
+          if (value != null) out[key.toString()] = value.toString();
+        });
+      }
+
+      return out;
+    } catch (e) {
+      log.error('plugins', 'column compute parse: $e');
+
+      return const {};
+    }
   }
 
   Map<String, dynamic> _barContext(

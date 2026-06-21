@@ -4,6 +4,5 @@
   "version": "1.0.0",
   "author": "waydir",
   "description": "Create files from boilerplate templates: a toolbar button, a background entry, menubar actions, settings and a dialog.",
-  "api_version": 2,
-  "permissions": ["fs"]
+  "api_version": 2
 }

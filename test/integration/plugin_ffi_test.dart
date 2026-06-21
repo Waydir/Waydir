@@ -19,13 +19,15 @@ void main() {
     if (tmp.existsSync()) tmp.deleteSync(recursive: true);
   });
 
+  tearDownAll(PluginFfi.shutdown);
+
   String writePlugin(String lua) {
     final file = File(p.join(tmp.path, 'init.lua'));
     file.writeAsStringSync(lua);
     return file.path;
   }
 
-  test('load returns declared contributions', () {
+  test('load returns declared contributions', () async {
     final path = writePlugin('''
       waydir.register({
         id = "greet",
@@ -36,7 +38,7 @@ void main() {
       })
     ''');
 
-    final raw = PluginFfi.load(path);
+    final raw = await PluginFfi.load(path);
     expect(raw, isNotNull, reason: 'native core must be built/vendored');
     final json = jsonDecode(raw!) as Map<String, dynamic>;
     expect(json['ok'], isTrue);
@@ -70,7 +72,6 @@ void main() {
       initLuaPath: path,
       actionId: 'greet',
       ctxJson: ctx,
-      perms: 0,
     );
     expect(raw, isNotNull);
     final json = jsonDecode(raw!) as Map<String, dynamic>;
@@ -104,7 +105,8 @@ void main() {
       })
     ''');
 
-    final loaded = jsonDecode(PluginFfi.load(path)!) as Map<String, dynamic>;
+    final loaded =
+        jsonDecode((await PluginFfi.load(path))!) as Map<String, dynamic>;
     expect(loaded['ok'], isTrue);
     final bars = loaded['bars'] as List;
     expect(bars, hasLength(1));
@@ -121,7 +123,6 @@ void main() {
                 initLuaPath: path,
                 barId: 'status',
                 ctxJson: ctx,
-                perms: 0,
               ))!,
             )
             as Map<String, dynamic>;
@@ -136,7 +137,6 @@ void main() {
                 barId: 'status',
                 itemId: 'refresh',
                 ctxJson: ctx,
-                perms: 0,
               ))!,
             )
             as Map<String, dynamic>;
@@ -147,12 +147,15 @@ void main() {
     });
   });
 
-  test('exec is denied without permission', () async {
+  test('exec runs without any permission declaration', () async {
     final path = writePlugin('''
       waydir.register({
         id = "danger",
         title = "Danger",
-        run = function(ctx) waydir.exec("echo", {"hi"}) end,
+        run = function(ctx)
+          local stdout = waydir.exec("echo", {"hi"})
+          waydir.toast(stdout)
+        end,
       })
     ''');
 
@@ -164,14 +167,16 @@ void main() {
         'dir': '/',
         'plugin_dir': tmp.path,
       }),
-      perms: 0,
     );
     final json = jsonDecode(raw!) as Map<String, dynamic>;
-    expect(json['ok'], isFalse);
-    expect(json['error'].toString(), contains('permission'));
+    expect(json['ok'], isTrue);
+    expect((json['effects'] as List).last, {
+      'type': 'toast',
+      'message': 'hi\n',
+    });
   });
 
-  test('exec returns stdout, stderr and exit code with permission', () async {
+  test('exec returns stdout, stderr and exit code', () async {
     final path = writePlugin('''
       waydir.register({
         id = "exec_out",
@@ -194,7 +199,6 @@ void main() {
         'dir': '/',
         'plugin_dir': tmp.path,
       }),
-      perms: 1,
     );
     final json = jsonDecode(raw!) as Map<String, dynamic>;
     expect(json['ok'], isTrue);
@@ -203,7 +207,39 @@ void main() {
     expect(effects.last, {'type': 'toast', 'message': 'out:err:7'});
   });
 
-  test('load returns where, shortcut and settings schema', () {
+  test('exec is bounded and a hung command times out', () async {
+    final path = writePlugin('''
+      waydir.register({
+        id = "hang",
+        title = "Hang",
+        run = function(ctx)
+          local stdout, stderr, code = waydir.exec("sleep", {"30"})
+          waydir.toast("code:" .. code)
+        end,
+      })
+    ''');
+
+    final sw = Stopwatch()..start();
+    final raw = await PluginFfi.invoke(
+      initLuaPath: path,
+      actionId: 'hang',
+      ctxJson: jsonEncode({
+        'paths': <String>[],
+        'dir': '/',
+        'plugin_dir': tmp.path,
+      }),
+    );
+    sw.stop();
+    expect(sw.elapsed, lessThan(const Duration(seconds: 20)));
+    final json = jsonDecode(raw!) as Map<String, dynamic>;
+    expect(json['ok'], isTrue);
+    expect((json['effects'] as List).last, {
+      'type': 'toast',
+      'message': 'code:-1',
+    });
+  });
+
+  test('load returns where, shortcut and settings schema', () async {
     final path = writePlugin('''
       waydir.register({
         id = "cfg",
@@ -216,7 +252,7 @@ void main() {
         run = function() end,
       })
     ''');
-    final raw = PluginFfi.load(path);
+    final raw = await PluginFfi.load(path);
     final json = jsonDecode(raw!) as Map<String, dynamic>;
     final c = (json['contributions'] as List).first as Map<String, dynamic>;
     expect(c['where'], ['selection', 'background']);
@@ -229,7 +265,7 @@ void main() {
     });
   });
 
-  test('fs read_text works with fs permission and is denied without', () async {
+  test('fs read_text works', () async {
     final dataFile = File(p.join(tmp.path, 'data.txt'))
       ..writeAsStringSync('payload');
     final path = writePlugin('''
@@ -252,7 +288,6 @@ void main() {
       initLuaPath: path,
       actionId: 'reader',
       ctxJson: ctx,
-      perms: 2,
     );
     final grantedJson = jsonDecode(granted!) as Map<String, dynamic>;
     expect(grantedJson['ok'], isTrue);
@@ -260,15 +295,45 @@ void main() {
       'type': 'toast',
       'message': 'payload',
     });
+  });
 
-    final denied = await PluginFfi.invoke(
+  test('ctx exposes other_pane and panes', () async {
+    final path = writePlugin('''
+      waydir.register({
+        id = "panes",
+        title = "Panes",
+        run = function(ctx)
+          local other = ctx.other_pane and ctx.other_pane.dir or "?"
+          waydir.toast(other .. ":" .. #ctx.panes .. ":" .. tostring(ctx.panes[1].active))
+        end,
+      })
+    ''');
+    final raw = await PluginFfi.invoke(
       initLuaPath: path,
-      actionId: 'reader',
-      ctxJson: ctx,
-      perms: 0,
+      actionId: 'panes',
+      ctxJson: jsonEncode({
+        'paths': <String>[],
+        'dir': '/left',
+        'plugin_dir': tmp.path,
+        'other_pane': {
+          'dir': '/right',
+          'paths': ['/right/a.txt'],
+        },
+        'panes': [
+          {'dir': '/left', 'paths': <String>[], 'active': true},
+          {
+            'dir': '/right',
+            'paths': ['/right/a.txt'],
+            'active': false,
+          },
+        ],
+      }),
     );
-    final deniedJson = jsonDecode(denied!) as Map<String, dynamic>;
-    expect(deniedJson['ok'], isFalse);
+    final json = jsonDecode(raw!) as Map<String, dynamic>;
+    expect((json['effects'] as List).first, {
+      'type': 'toast',
+      'message': '/right:2:true',
+    });
   });
 
   test('notify, set_setting and dialog effects round-trip', () async {
@@ -295,7 +360,6 @@ void main() {
         'dir': '/',
         'plugin_dir': tmp.path,
       }),
-      perms: 0,
     );
     final json = jsonDecode(raw!) as Map<String, dynamic>;
     final effects = (json['effects'] as List).cast<Map<String, dynamic>>();
@@ -326,7 +390,6 @@ void main() {
         'settings': {'greeting': 'hi'},
         'form': {'x': 'y'},
       }),
-      perms: 0,
     );
     final json = jsonDecode(raw!) as Map<String, dynamic>;
     expect((json['effects'] as List).first, {
@@ -359,7 +422,6 @@ void main() {
           'dir': '/',
           'plugin_dir': tmp.path,
         }),
-        perms: 0,
       );
       final json = jsonDecode(raw!) as Map<String, dynamic>;
       expect((json['effects'] as List).first, {
@@ -369,7 +431,7 @@ void main() {
     },
   );
 
-  test('run_task emits a task effect with timeout (needs exec)', () async {
+  test('run_task emits a task effect with timeout', () async {
     final path = writePlugin('''
       waydir.register({
         id = "job",
@@ -387,7 +449,6 @@ void main() {
         'dir': '/',
         'plugin_dir': tmp.path,
       }),
-      perms: 1,
     );
     final json = jsonDecode(raw!) as Map<String, dynamic>;
     final effect = (json['effects'] as List).first as Map<String, dynamic>;
@@ -423,7 +484,6 @@ void main() {
           'dir': '/',
           'plugin_dir': tmp.path,
         }),
-        perms: 1,
       );
       final json = jsonDecode(raw!) as Map<String, dynamic>;
       final effect = (json['effects'] as List).first as Map<String, dynamic>;
@@ -465,7 +525,6 @@ void main() {
         'dir': '/',
         'plugin_dir': tmp.path,
       }),
-      perms: 0,
     );
     final json = jsonDecode(raw!) as Map<String, dynamic>;
     final effects = (json['effects'] as List).cast<Map<String, dynamic>>();
@@ -477,7 +536,7 @@ void main() {
     expect(effects[2]['success'], isTrue);
   });
 
-  test('bundled example plugins all load without error', () {
+  test('bundled example plugins all load without error', () async {
     final dir = Directory('docs/examples/plugins');
     expect(dir.existsSync(), isTrue, reason: 'examples dir missing');
     final examples = dir.listSync().whereType<Directory>();
@@ -485,7 +544,7 @@ void main() {
     for (final ex in examples) {
       final init = File(p.join(ex.path, 'init.lua'));
       expect(init.existsSync(), isTrue, reason: '${ex.path} has no init.lua');
-      final raw = PluginFfi.load(init.path);
+      final raw = await PluginFfi.load(init.path);
       final json = jsonDecode(raw!) as Map<String, dynamic>;
       expect(
         json['ok'],
@@ -496,7 +555,64 @@ void main() {
     }
   });
 
-  test('toolbar menu and icon round-trip through load', () {
+  test('columns register and compute values for a batch of files', () async {
+    final path = writePlugin('''
+      waydir.register_column({
+        id = "tag",
+        title = "Tag",
+        width = 80,
+        compute = function(ctx)
+          local out = {}
+          for _, file in ipairs(ctx.paths) do
+            out[file] = "T:" .. file
+          end
+          return out
+        end,
+      })
+    ''');
+    final loaded =
+        jsonDecode((await PluginFfi.load(path))!) as Map<String, dynamic>;
+    final cols = loaded['columns'] as List;
+    expect(cols, hasLength(1));
+    expect((cols.first as Map)['id'], 'tag');
+    expect((cols.first as Map)['title'], 'Tag');
+    expect((cols.first as Map)['width'], 80);
+
+    final computed =
+        jsonDecode(
+              (await PluginFfi.columnCompute(
+                initLuaPath: path,
+                columnId: 'tag',
+                ctxJson: jsonEncode({
+                  'paths': ['/a.txt', '/b.txt'],
+                  'dir': '/',
+                  'plugin_dir': tmp.path,
+                }),
+              ))!,
+            )
+            as Map<String, dynamic>;
+    expect(computed['ok'], isTrue);
+    final values = computed['values'] as Map;
+    expect(values['/a.txt'], 'T:/a.txt');
+    expect(values['/b.txt'], 'T:/b.txt');
+  });
+
+  test('event handlers round-trip through load', () async {
+    final path = writePlugin('''
+      waydir.register({
+        id = "watch",
+        title = "Watch",
+        event = "navigate",
+        run = function(ctx) waydir.log("at " .. ctx.dir) end,
+      })
+    ''');
+    final json =
+        jsonDecode((await PluginFfi.load(path))!) as Map<String, dynamic>;
+    final c = (json['contributions'] as List).first as Map<String, dynamic>;
+    expect(c['event'], 'navigate');
+  });
+
+  test('toolbar menu and icon round-trip through load', () async {
     final path = writePlugin('''
       waydir.register({
         id = "bar",
@@ -506,14 +622,17 @@ void main() {
         run = function() end,
       })
     ''');
-    final json = jsonDecode(PluginFfi.load(path)!) as Map<String, dynamic>;
+    final json =
+        jsonDecode((await PluginFfi.load(path))!) as Map<String, dynamic>;
     final c = (json['contributions'] as List).first as Map<String, dynamic>;
     expect(c['menu'], 'toolbar');
     expect(c['icon'], 'icon.svg');
   });
 
-  test('templates example surfaces toolbar and menubar entries', () {
-    final raw = PluginFfi.load('docs/examples/plugins/templates/init.lua');
+  test('templates example surfaces toolbar and menubar entries', () async {
+    final raw = await PluginFfi.load(
+      'docs/examples/plugins/templates/init.lua',
+    );
     final json = jsonDecode(raw!) as Map<String, dynamic>;
     final menus = (json['contributions'] as List)
         .map((e) => (e as Map<String, dynamic>)['menu'])
@@ -521,14 +640,14 @@ void main() {
     expect(menus, containsAll(<String>['toolbar', 'menubar']));
   });
 
-  test('sandbox blocks os and io access', () {
+  test('sandbox blocks os and io access', () async {
     final path = writePlugin('''
       waydir.register({
         id = "x", title = "X",
         run = function() local _ = os.execute end,
       })
     ''');
-    final raw = PluginFfi.load(path);
+    final raw = await PluginFfi.load(path);
     final json = jsonDecode(raw!) as Map<String, dynamic>;
     // Loading succeeds (register runs); os is simply nil in the sandbox.
     expect(json['ok'], isTrue);
