@@ -506,7 +506,7 @@
         },
         "toolbar": {
           "title": "Global Toolbar",
-          "body": "The global toolbar sits above the tabs and holds shared actions, with buttons that enable or disable based on context.\n\n- **Multi Rename** and **Select by Pattern** activate when files are selected.\n- **Toggle Hidden** shows or hides dotfiles.\n- The toolbar can be hidden entirely in **Preferences -> Appearance**."
+          "body": "The global toolbar sits above the tabs and holds shared actions, with buttons that enable or disable based on context.\n\n- **Multi Rename** and **Select by Pattern** activate when files are selected.\n- **Save Selection** writes the current selection to a text file; **Load Selection** restores it from one.\n- **Toggle Hidden** shows or hides dotfiles.\n- The toolbar can be hidden entirely in **Preferences -> Appearance**."
         }
       },
       "files": {
@@ -944,6 +944,8 @@
     "selectByPattern": "Select by Pattern…",
     "showHidden": "Show Hidden Files",
     "copyPath": "Copy Path",
+    "saveSelection": "Save Selection…",
+    "loadSelection": "Load Selection…",
     "listView": "List view",
     "gridView": "Grid view",
     "more": "More"

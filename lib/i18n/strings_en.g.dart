@@ -1609,6 +1609,12 @@ class Translations$toolbar$en {
 	/// en: 'Copy Path'
 	String get copyPath => 'Copy Path';
 
+	/// en: 'Save Selection…'
+	String get saveSelection => 'Save Selection…';
+
+	/// en: 'Load Selection…'
+	String get loadSelection => 'Load Selection…';
+
 	/// en: 'List view'
 	String get listView => 'List view';
 
@@ -3730,8 +3736,8 @@ class Translations$help$groups$selecting$toolbar$en {
 	/// en: 'Global Toolbar'
 	String get title => 'Global Toolbar';
 
-	/// en: 'The global toolbar sits above the tabs and holds shared actions, with buttons that enable or disable based on context. - **Multi Rename** and **Select by Pattern** activate when files are selected. - **Toggle Hidden** shows or hides dotfiles. - The toolbar can be hidden entirely in **Preferences -> Appearance**.'
-	String get body => 'The global toolbar sits above the tabs and holds shared actions, with buttons that enable or disable based on context.\n\n- **Multi Rename** and **Select by Pattern** activate when files are selected.\n- **Toggle Hidden** shows or hides dotfiles.\n- The toolbar can be hidden entirely in **Preferences -> Appearance**.';
+	/// en: 'The global toolbar sits above the tabs and holds shared actions, with buttons that enable or disable based on context. - **Multi Rename** and **Select by Pattern** activate when files are selected. - **Save Selection** writes the current selection to a text file; **Load Selection** restores it from one. - **Toggle Hidden** shows or hides dotfiles. - The toolbar can be hidden entirely in **Preferences -> Appearance**.'
+	String get body => 'The global toolbar sits above the tabs and holds shared actions, with buttons that enable or disable based on context.\n\n- **Multi Rename** and **Select by Pattern** activate when files are selected.\n- **Save Selection** writes the current selection to a text file; **Load Selection** restores it from one.\n- **Toggle Hidden** shows or hides dotfiles.\n- The toolbar can be hidden entirely in **Preferences -> Appearance**.';
 }
 
 // Path: help.groups.files.operations
@@ -4431,7 +4437,7 @@ extension on Translations {
 			'help.groups.selecting.pattern.title' => 'Select by Pattern',
 			'help.groups.selecting.pattern.body' => 'Select files matching a wildcard pattern instead of picking them by hand.\n\n- `Ctrl+S` opens select-by-pattern.\n- Use wildcards like `*.png` or `report-*.pdf`.\n- The matching set is added to the current selection.\n- Also available from the global toolbar.',
 			'help.groups.selecting.toolbar.title' => 'Global Toolbar',
-			'help.groups.selecting.toolbar.body' => 'The global toolbar sits above the tabs and holds shared actions, with buttons that enable or disable based on context.\n\n- **Multi Rename** and **Select by Pattern** activate when files are selected.\n- **Toggle Hidden** shows or hides dotfiles.\n- The toolbar can be hidden entirely in **Preferences -> Appearance**.',
+			'help.groups.selecting.toolbar.body' => 'The global toolbar sits above the tabs and holds shared actions, with buttons that enable or disable based on context.\n\n- **Multi Rename** and **Select by Pattern** activate when files are selected.\n- **Save Selection** writes the current selection to a text file; **Load Selection** restores it from one.\n- **Toggle Hidden** shows or hides dotfiles.\n- The toolbar can be hidden entirely in **Preferences -> Appearance**.',
 			'help.groups.files.title' => 'Working with Files',
 			'help.groups.files.operations.title' => 'Copy, Move & Delete',
 			'help.groups.files.operations.body' => 'Standard clipboard and file actions work everywhere, including across panes and tabs.\n\n- `Ctrl+C` / `Ctrl+X` / `Ctrl+V` copy, cut and paste.\n- `F2` renames the current item; `F7` creates a new folder.\n- `Delete` moves the selection to the Trash; use the context menu to delete permanently.\n- Long copies, moves and deletes run in the background, and a conflict prompt appears when names collide.',
@@ -4764,6 +4770,8 @@ extension on Translations {
 			'toolbar.selectByPattern' => 'Select by Pattern…',
 			'toolbar.showHidden' => 'Show Hidden Files',
 			'toolbar.copyPath' => 'Copy Path',
+			'toolbar.saveSelection' => 'Save Selection…',
+			'toolbar.loadSelection' => 'Load Selection…',
 			'toolbar.listView' => 'List view',
 			'toolbar.gridView' => 'Grid view',
 			'toolbar.more' => 'More',

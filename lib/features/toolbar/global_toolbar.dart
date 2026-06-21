@@ -15,6 +15,8 @@ class GlobalToolbar extends StatelessWidget {
   final void Function(NavigationStore store) onMultiRename;
   final void Function(NavigationStore store) onCopyPath;
   final VoidCallback onSelectByPattern;
+  final VoidCallback onSaveSelection;
+  final VoidCallback onLoadSelection;
   final VoidCallback onToggleHidden;
 
   const GlobalToolbar({
@@ -23,6 +25,8 @@ class GlobalToolbar extends StatelessWidget {
     required this.onMultiRename,
     required this.onCopyPath,
     required this.onSelectByPattern,
+    required this.onSaveSelection,
+    required this.onLoadSelection,
     required this.onToggleHidden,
   });
 
@@ -106,6 +110,22 @@ class GlobalToolbar extends StatelessWidget {
           shortcutId: 'select_pattern',
           isEnabled: () => active != null,
           onTap: onSelectByPattern,
+        ),
+        ToolbarItem(
+          id: 'saveSelection',
+          icon: WaydirIconsRegular.floppyDisk,
+          tooltip: t.toolbar.saveSelection,
+          shortcutId: 'save_selection',
+          isEnabled: () => (active?.selectedCount.value ?? 0) > 0,
+          onTap: onSaveSelection,
+        ),
+        ToolbarItem(
+          id: 'loadSelection',
+          icon: WaydirIconsRegular.fileTxt,
+          tooltip: t.toolbar.loadSelection,
+          shortcutId: 'load_selection',
+          isEnabled: () => active?.visibleFiles.value.isNotEmpty ?? false,
+          onTap: onLoadSelection,
         ),
       ],
       [

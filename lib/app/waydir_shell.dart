@@ -398,6 +398,10 @@ class _WaydirShellState extends State<WaydirShell>
                                                     store.copySelectedPaths(),
                                                 onSelectByPattern:
                                                     _openSelectPattern,
+                                                onSaveSelection:
+                                                    _saveSelectionToFile,
+                                                onLoadSelection:
+                                                    _loadSelectionFromFile,
                                                 onToggleHidden:
                                                     _toggleShowHiddenGlobal,
                                               )
