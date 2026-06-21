@@ -376,10 +376,6 @@ mixin _WaydirMenuMixin
 
   ContextMenuItem _tagsSubmenu(List<FileEntry> entries) {
     final paths = [for (final e in entries) e.path];
-    final assigned = _active.fileTags.value;
-    bool allHave(int tagId) =>
-        paths.isNotEmpty &&
-        paths.every((p) => assigned[p]?.contains(tagId) ?? false);
 
     return ContextMenuItem(
       icon: WaydirIconsRegular.bookmarkSimple,
@@ -400,7 +396,12 @@ mixin _WaydirMenuMixin
             label: tag.name,
             action: 'tag_toggle:${tag.id}',
             isToggle: true,
-            toggleSignal: signal(allHave(tag.id)),
+            toggleSignal: computed(() {
+              final assigned = _active.fileTags.value;
+
+              return paths.isNotEmpty &&
+                  paths.every((p) => assigned[p]?.contains(tag.id) ?? false);
+            }),
           ),
         ContextMenuItem.divider,
         ContextMenuItem(
