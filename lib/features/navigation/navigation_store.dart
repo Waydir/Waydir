@@ -770,6 +770,11 @@ class NavigationStore {
 
       return;
     }
+    if (isTagView) {
+      _searchTagView(q, mode);
+
+      return;
+    }
     final root = await _resolvePhysicalDestination(currentPath.value);
     if (token != _searchToken) return;
     if (root == null) {
@@ -858,6 +863,26 @@ class NavigationStore {
         });
       },
     );
+  }
+
+  void _searchTagView(String query, SearchMode mode) {
+    final filter = SettingsStore.instance.searchMode.value == filterSearchMode
+        ? parseFilterQuery(query).query
+        : null;
+    final nameQuery = filter?.recursiveNameQuery ?? query;
+    final matcher = filter != null && nameQuery.isEmpty
+        ? (String _) => true
+        : _localMatcher(nameQuery, mode);
+    var results = matcher == null
+        ? const <FileEntry>[]
+        : files.value.where((f) => matcher(f.name)).toList();
+    if (filter != null) {
+      results = _filterByTags(results.where(filter.matches).toList(), filter);
+    }
+    batch(() {
+      searchResults.value = results;
+      isSearching.value = false;
+    });
   }
 
   Future<void> _runSftpRecursiveSearch({
