@@ -113,6 +113,9 @@ class OperationStore {
         for (final src in task.sources) {
           await db.clearFileTags(src);
         }
+      case TaskType.trash:
+      case TaskType.trashRestore:
+        break;
       default:
         return;
     }
