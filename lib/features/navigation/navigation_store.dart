@@ -1061,6 +1061,11 @@ class NavigationStore {
     bool addToHistory = true,
     String? enteredPath,
   }) {
+    if (isTagPath(path)) {
+      _doNavigate(path, addToHistory: addToHistory, enteredPath: enteredPath);
+
+      return;
+    }
     final uri = LocationUri.parse(path);
     if (uri.scheme == LocationScheme.sftp) {
       _ensureSftpConnectedAndNavigate(
@@ -1090,7 +1095,7 @@ class NavigationStore {
     bool addToHistory = true,
     String? enteredPath,
   }) {
-    final normalized = isTrashPath(resolved)
+    final normalized = isTrashPath(resolved) || isTagPath(resolved)
         ? resolved
         : PlatformPaths.normalize(resolved);
     final previous = currentPath.value;
