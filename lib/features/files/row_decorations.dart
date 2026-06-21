@@ -15,6 +15,7 @@ class RowDecoration {
 
 class RowDecorationStore {
   final _layers = signal<Map<String, Map<String, RowDecoration>>>({});
+  final _reactiveLayers = <ReadonlySignal<Map<String, RowDecoration>>>[];
 
   void setLayer(String source, Map<String, RowDecoration> deco) {
     _layers.value = {..._layers.value, source: Map.unmodifiable(deco)};
@@ -27,10 +28,17 @@ class RowDecorationStore {
     _layers.value = next;
   }
 
+  void addReactiveLayer(ReadonlySignal<Map<String, RowDecoration>> layer) {
+    _reactiveLayers.add(layer);
+  }
+
   late final byPath = computed<Map<String, RowDecoration>>(() {
     final merged = <String, RowDecoration>{};
     for (final layer in _layers.value.values) {
       merged.addAll(layer);
+    }
+    for (final layer in _reactiveLayers) {
+      merged.addAll(layer.value);
     }
 
     return Map.unmodifiable(merged);

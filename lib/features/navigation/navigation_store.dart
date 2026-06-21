@@ -73,7 +73,6 @@ class NavigationStore {
   int _sortLoadToken = 0;
   void Function()? _sortDefaultsDisposer;
   void Function()? _gitStatusDisposer;
-  void Function()? _tagsDisposer;
 
   bool get isTrashView => isTrashPath(currentPath.value);
   bool get isTagView => isTagPath(currentPath.value);
@@ -383,29 +382,24 @@ class NavigationStore {
     _setupTagsEffect();
   }
 
-  void _setupTagsEffect() {
-    _tagsDisposer = effect(() {
-      final assigned = fileTags.value;
-      final defs = TagStore.instance.tags.value;
-      if (assigned.isEmpty) {
-        decorations.clearLayer('tags');
+  late final _tagDecorations = computed<Map<String, RowDecoration>>(() {
+    final assigned = fileTags.value;
+    final defs = TagStore.instance.tags.value;
+    final deco = <String, RowDecoration>{};
+    for (final entry in assigned.entries) {
+      final colors = <Color>[];
+      for (final def in defs) {
+        if (entry.value.contains(def.id)) colors.add(def.color);
+      }
+      if (colors.isEmpty) continue;
+      deco[entry.key] = RowDecoration(tint: colors.first, badgeColors: colors);
+    }
 
-        return;
-      }
-      final deco = <String, RowDecoration>{};
-      for (final entry in assigned.entries) {
-        final colors = <Color>[];
-        for (final def in defs) {
-          if (entry.value.contains(def.id)) colors.add(def.color);
-        }
-        if (colors.isEmpty) continue;
-        deco[entry.key] = RowDecoration(
-          tint: colors.first,
-          badgeColors: colors,
-        );
-      }
-      decorations.setLayer('tags', deco);
-    });
+    return deco;
+  });
+
+  void _setupTagsEffect() {
+    decorations.addReactiveLayer(_tagDecorations);
   }
 
   Future<void> _loadFileTags(List<FileEntry> entries) async {
@@ -2333,8 +2327,7 @@ class NavigationStore {
     _sortDefaultsDisposer = null;
     _gitStatusDisposer?.call();
     _gitStatusDisposer = null;
-    _tagsDisposer?.call();
-    _tagsDisposer = null;
+    _tagDecorations.dispose();
     gitStatus.dispose();
     _searchDebounce?.cancel();
     _searchUiFlush?.cancel();
