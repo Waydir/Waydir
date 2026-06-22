@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Command palette (`Ctrl+P`) to fuzzy-search and run any action.
+- Command palette (`Ctrl+P`) to fuzzy-search and run actions, jump to bookmarks, drives, recent locations and files, and run plugin actions.
 
 ### Changed
 - Removed the toast notification shown when a new version is available.

@@ -33,6 +33,7 @@ import '../features/command_palette/command_palette_launcher.dart';
 import '../features/command_palette/command_palette_view.dart';
 import '../features/command_palette/command_usage_store.dart';
 import '../features/compare/compare_mode_bar.dart';
+import '../features/drives/drive_store.dart';
 import '../features/help/help_dialog.dart';
 import '../features/navigation/bookmark_store.dart';
 import '../features/navigation/navigation_store.dart';

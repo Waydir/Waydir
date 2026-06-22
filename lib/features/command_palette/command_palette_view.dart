@@ -66,6 +66,7 @@ class _CommandPaletteState extends State<_CommandPalette> {
   late final FocusNode _focusNode;
   String _query = '';
   int _selected = 0;
+  List<(AppCommand, List<int>)> _resultsCache = const [];
 
   @override
   void initState() {
@@ -81,36 +82,39 @@ class _CommandPaletteState extends State<_CommandPalette> {
     super.dispose();
   }
 
-  List<AppCommand> get _results {
+  List<(AppCommand, List<int>)> get _results {
     final q = _query.trim();
     if (q.isEmpty) {
       final order = {
         for (var i = 0; i < widget.recentIds.length; i++)
           widget.recentIds[i]: i,
       };
-      final sorted = [...widget.commands];
+      final sorted = [
+        for (final c in widget.commands)
+          if (!c.queryOnly) c,
+      ];
       sorted.sort((a, b) {
         final ra = order[a.id] ?? 1 << 30;
         final rb = order[b.id] ?? 1 << 30;
         return ra.compareTo(rb);
       });
-      return sorted;
+      return [for (final c in sorted) (c, const <int>[])];
     }
 
-    final scored = <(AppCommand, int)>[];
+    final scored = <(AppCommand, int, List<int>)>[];
     for (final cmd in widget.commands) {
       final m = fuzzyMatch(q, cmd.label);
-      if (m != null) scored.add((cmd, m.score));
+      if (m != null) scored.add((cmd, m.score, m.matchedIndices));
     }
     scored.sort((a, b) => b.$2.compareTo(a.$2));
-    return [for (final s in scored) s.$1];
+    return [for (final s in scored) (s.$1, s.$3)];
   }
 
   KeyEventResult _onKeyEvent(FocusNode node, KeyEvent event) {
     if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
       return KeyEventResult.ignored;
     }
-    final results = _results;
+    final results = _resultsCache;
     switch (event.logicalKey) {
       case LogicalKeyboardKey.arrowDown:
         _moveSelection(1, results.length);
@@ -137,9 +141,9 @@ class _CommandPaletteState extends State<_CommandPalette> {
     _ensureVisible();
   }
 
-  void _runSelected(List<AppCommand> results) {
+  void _runSelected(List<(AppCommand, List<int>)> results) {
     if (results.isEmpty) return;
-    final cmd = results[_selected.clamp(0, results.length - 1)];
+    final cmd = results[_selected.clamp(0, results.length - 1)].$1;
     if (!cmd.enabled) return;
     widget.onRun(cmd);
   }
@@ -160,6 +164,7 @@ class _CommandPaletteState extends State<_CommandPalette> {
   @override
   Widget build(BuildContext context) {
     final results = _results;
+    _resultsCache = results;
     if (_selected >= results.length) _selected = 0;
 
     return Container(
@@ -190,9 +195,10 @@ class _CommandPaletteState extends State<_CommandPalette> {
                     shrinkWrap: true,
                     itemCount: results.length,
                     itemBuilder: (ctx, i) {
-                      final cmd = results[i];
+                      final (cmd, matched) = results[i];
                       return _CommandRow(
                         command: cmd,
+                        matchedIndices: matched,
                         binding: AppShortcuts.tryGetById(cmd.id)?.displayKeys,
                         selected: i == _selected,
                         onTap: cmd.enabled ? () => widget.onRun(cmd) : null,
@@ -258,6 +264,7 @@ class _CommandRow extends StatelessWidget {
   static const height = 46.0;
 
   final AppCommand command;
+  final List<int> matchedIndices;
   final String? binding;
   final bool selected;
   final VoidCallback? onTap;
@@ -265,11 +272,36 @@ class _CommandRow extends StatelessWidget {
 
   const _CommandRow({
     required this.command,
+    required this.matchedIndices,
     required this.binding,
     required this.selected,
     required this.onTap,
     required this.onHover,
   });
+
+  Widget _buildLabel(BuildContext context, Color color) {
+    final base = context.txt.row.copyWith(color: color);
+    if (matchedIndices.isEmpty) {
+      return Text(command.label, style: base, overflow: TextOverflow.ellipsis);
+    }
+    final matched = matchedIndices.toSet();
+    final highlight = base.copyWith(
+      color: AppColors.accent,
+      fontWeight: FontWeight.w600,
+    );
+    return Text.rich(
+      TextSpan(
+        children: [
+          for (var i = 0; i < command.label.length; i++)
+            TextSpan(
+              text: command.label[i],
+              style: matched.contains(i) ? highlight : base,
+            ),
+        ],
+      ),
+      overflow: TextOverflow.ellipsis,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -298,11 +330,7 @@ class _CommandRow extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      command.label,
-                      style: context.txt.row.copyWith(color: fg),
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    _buildLabel(context, fg),
                     if (command.description != null)
                       Text(
                         command.description!,

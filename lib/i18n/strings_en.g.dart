@@ -1068,6 +1068,24 @@ class Translations$commandPalette$en {
 	/// en: 'Not available right now'
 	String get unavailable => 'Not available right now';
 
+	/// en: 'Bookmark'
+	String get categoryBookmark => 'Bookmark';
+
+	/// en: 'Recent'
+	String get categoryRecent => 'Recent';
+
+	/// en: 'Drive'
+	String get categoryDrive => 'Drive';
+
+	/// en: 'File'
+	String get categoryFile => 'File';
+
+	/// en: 'Folder'
+	String get categoryFolder => 'Folder';
+
+	/// en: 'Plugin'
+	String get categoryPlugin => 'Plugin';
+
 	/// en: 'Open Preferences'
 	String get openPreferences => 'Open Preferences';
 
@@ -4573,6 +4591,12 @@ extension on Translations {
 			'commandPalette.placeholder' => 'Type a command or setting…',
 			'commandPalette.empty' => 'No matching commands',
 			'commandPalette.unavailable' => 'Not available right now',
+			'commandPalette.categoryBookmark' => 'Bookmark',
+			'commandPalette.categoryRecent' => 'Recent',
+			'commandPalette.categoryDrive' => 'Drive',
+			'commandPalette.categoryFile' => 'File',
+			'commandPalette.categoryFolder' => 'Folder',
+			'commandPalette.categoryPlugin' => 'Plugin',
 			'commandPalette.openPreferences' => 'Open Preferences',
 			'commandPalette.preferencesSubtitle' => 'Open the full settings dialog',
 			'commandPalette.enabled' => 'Enabled',

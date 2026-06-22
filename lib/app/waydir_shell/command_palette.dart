@@ -38,7 +38,7 @@ mixin _WaydirCommandPaletteMixin
     );
   }
 
-  List<AppCommand> _buildCommands() {
+  List<AppCommand> _buildCommands({List<String> recentPaths = const []}) {
     final store = _active;
     final dual = _shell.isDual.value;
     final hasTarget = _hasTarget(store);
@@ -134,13 +134,108 @@ mixin _WaydirCommandPaletteMixin
       _cmd('toggle_terminal', _toggleTerminal),
       _cmd('preferences', _openPreferences),
       _cmd('help', _openHelp),
+      ..._goToCommands(recentPaths),
+      ..._pluginCommands(),
+      ..._fileCommands(store),
+    ];
+  }
+
+  List<AppCommand> _goToCommands(List<String> recentPaths) {
+    final commands = <AppCommand>[];
+    final seen = <String>{};
+
+    for (final b in BookmarkStore.instance.bookmarks.value) {
+      if (!seen.add(b.path)) continue;
+      commands.add(
+        AppCommand(
+          id: 'goto:${b.path}',
+          label: b.label,
+          description: t.commandPalette.categoryBookmark,
+          icon: WaydirIconsRegular.bookmarkSimple,
+          run: () => _active.navigateTo(b.path),
+        ),
+      );
+    }
+
+    for (final drive in driveStore.drives.value) {
+      final mount = drive.mountPoint;
+      if (mount == null || !seen.add(mount)) continue;
+      commands.add(
+        AppCommand(
+          id: 'goto:$mount',
+          label: drive.label,
+          description: t.commandPalette.categoryDrive,
+          icon: WaydirIconsRegular.hardDrive,
+          run: () => _active.navigateTo(mount),
+        ),
+      );
+    }
+
+    for (final path in recentPaths) {
+      if (!seen.add(path)) continue;
+      commands.add(
+        AppCommand(
+          id: 'goto:$path',
+          label: p.basename(path).isEmpty ? path : p.basename(path),
+          description: '${t.commandPalette.categoryRecent} · $path',
+          icon: WaydirIconsRegular.clock,
+          run: () => _active.navigateTo(path),
+        ),
+      );
+    }
+
+    return commands;
+  }
+
+  List<AppCommand> _pluginCommands() {
+    final seen = <String>{};
+    final contributions = [
+      ...PluginStore.instance.menubarContributions(),
+      ...PluginStore.instance.toolbarContributions(),
+      ...PluginStore.instance.shortcutContributions(),
+    ];
+
+    return [
+      for (final c in contributions)
+        if (c.event == null && seen.add(c.fullActionId))
+          AppCommand(
+            id: c.fullActionId,
+            label: c.title,
+            description: t.commandPalette.categoryPlugin,
+            icon: WaydirIconsRegular.gearSix,
+            run: () => unawaited(_runPluginAction(c.fullActionId)),
+          ),
+    ];
+  }
+
+  List<AppCommand> _fileCommands(NavigationStore store) {
+    return [
+      for (final entry in store.visibleFiles.value)
+        AppCommand(
+          id: 'file:${entry.path}',
+          label: entry.name,
+          description: entry.type == FileItemType.folder
+              ? t.commandPalette.categoryFolder
+              : t.commandPalette.categoryFile,
+          icon: entry.type == FileItemType.folder
+              ? WaydirIconsRegular.folder
+              : WaydirIconsRegular.file,
+          queryOnly: true,
+          run: () => store.onOpen(entry),
+        ),
     ];
   }
 
   void _openCommandPalette() {
+    unawaited(_showCommandPalette());
+  }
+
+  Future<void> _showCommandPalette() async {
+    final recentPaths = await SettingsStore.instance.db.getRecentEnteredPaths();
+    if (!mounted) return;
     showCommandPalette(
       context: context,
-      commands: _buildCommands(),
+      commands: _buildCommands(recentPaths: recentPaths),
       onRun: (command) => CommandUsageStore.instance.record(command.id),
       recentIds: CommandUsageStore.instance.rankedIds(),
     );

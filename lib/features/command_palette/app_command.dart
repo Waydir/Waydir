@@ -20,6 +20,10 @@ class AppCommand {
   /// Optional reason shown when [enabled] is false.
   final String? disabledReason;
 
+  /// When true the entry is only shown once the user types a query (e.g. files
+  /// in the current directory), keeping the empty-query list focused.
+  final bool queryOnly;
+
   final VoidCallback run;
 
   const AppCommand({
@@ -30,5 +34,6 @@ class AppCommand {
     this.description,
     this.enabled = true,
     this.disabledReason,
+    this.queryOnly = false,
   });
 }
