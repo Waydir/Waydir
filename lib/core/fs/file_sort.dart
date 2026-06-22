@@ -55,9 +55,6 @@ List<FileEntry> sortEntries(
     final bothFolders = aFolder && bFolder;
     final aFolderSize = aFolder ? folderSize?.call(a) : null;
     final bFolderSize = bFolder ? folderSize?.call(b) : null;
-    // Folders without a computed size have no meaningful size: keep them
-    // name-ascending among themselves and treat them as size 0 relative to
-    // files. Folders with a computed size sort by it like ordinary entries.
     if (bothFolders &&
         (!sortFolders ||
             (key == SortKey.size &&

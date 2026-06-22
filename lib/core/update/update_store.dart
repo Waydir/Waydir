@@ -368,7 +368,6 @@ class UpdateStore {
       if (a.parts[i] > b.parts[i]) return true;
       if (a.parts[i] < b.parts[i]) return false;
     }
-    // Equal core: stable > prerelease.
     if (a.pre == null && b.pre != null) return true;
     if (a.pre != null && b.pre == null) return false;
     if (a.pre != null && b.pre != null) {

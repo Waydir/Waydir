@@ -40,10 +40,6 @@ class SftpTaskExecutor {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Workers
-// ---------------------------------------------------------------------------
-
 void sftpCopyWorker(List<dynamic> args) {
   _runTransferWorker(args, move: false);
 }
@@ -142,10 +138,6 @@ void sftpDeleteWorker(List<dynamic> args) {
     }
   });
 }
-
-// ---------------------------------------------------------------------------
-// Copy / move shared implementation
-// ---------------------------------------------------------------------------
 
 void _runTransferWorker(List<dynamic> args, {required bool move}) {
   final mainSendPort = args.first as SendPort;
@@ -454,10 +446,6 @@ void _runTransferWorker(List<dynamic> args, {required bool move}) {
   });
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 void _seedSessionsFromOptions(Map<String, String> options) {
   final raw = options[sftpSessionsOptionKey];
   if (raw == null || raw.isEmpty) return;
@@ -663,10 +651,6 @@ String _partPath(String dst) {
   return '$dst.waydir-${DateTime.now().microsecondsSinceEpoch}-$rand.part';
 }
 
-// ---------------------------------------------------------------------------
-// Copy primitives (atomic write)
-// ---------------------------------------------------------------------------
-
 Future<void> _copyEntity(
   String src,
   String dst,
@@ -859,7 +843,6 @@ Future<void> _uploadLocalToSftp(
     return;
   }
 
-  // Fallback (stary ABI < 10): per-chunk open/close.
   if (!WaydirCoreLoader.supportsSftpWriteChunk()) {
     final data = await File(src).readAsBytes();
     _checkCancelled(isCancelled);
@@ -944,7 +927,6 @@ Future<void> _downloadSftpToLocal(
     return;
   }
 
-  // Fallback (stary ABI < 10): chunkowane read_range z otwieraniem za każdym razem.
   final sink = File(dst).openWrite();
   var offset = 0;
   try {

@@ -96,13 +96,11 @@ class PluginFfi {
     return _request(['columnCompute', initLuaPath, columnId, ctxJson]);
   }
 
-  // --- Long-lived worker isolate ---------------------------------------------
-  //
-  // load() and the bar update/click paths fire frequently (bars poll on an
-  // interval, per pane). Spawning a fresh isolate and re-opening the native
-  // library on every call is wasteful, so they share one persistent isolate
-  // that opens the library once and dispatches commands over a port.
-
+  /// Long-lived worker isolate shared by load() and the bar update/click paths,
+  /// which fire frequently (bars poll on an interval, per pane). Spawning a
+  /// fresh isolate and re-opening the native library on every call is wasteful,
+  /// so they share one persistent isolate that opens the library once and
+  /// dispatches commands over a port.
   static Isolate? _workerIsolate;
   static Future<SendPort>? _commandPort;
 

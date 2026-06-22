@@ -430,9 +430,6 @@ class AppDatabase extends _$AppDatabase {
         await _seedDefaultTags();
       }
       if (from < 43) {
-        // A previous over-eager seeding path could insert the default tags
-        // twice. Collapse duplicates by (name, color), keeping the lowest id,
-        // and reassign file tag mappings to the surviving row.
         await customStatement('''
           UPDATE file_tags
           SET tag_id = (

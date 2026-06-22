@@ -48,7 +48,6 @@ class TerminalLayout {
     if (preferredId != null && allIds.contains(preferredId)) {
       next[0] = preferredId;
     } else if (next[0] != null && allIds.contains(next[0])) {
-      // keep the existing slot 0 terminal
     } else if (allIds.isNotEmpty) {
       next[0] = allIds.first;
     } else {

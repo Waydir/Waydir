@@ -84,9 +84,6 @@ class DirectoryWatcherService {
       return;
     }
     _pending.add(event.path);
-    if (event.path != _watchedPath) {
-      // Some backends report the directory itself; ignore for patching.
-    }
     if (_pending.length > _stormThreshold) _fullReload = true;
   }
 

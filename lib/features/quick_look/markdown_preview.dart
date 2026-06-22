@@ -163,8 +163,9 @@ final _htmlBlockPair = RegExp(
   dotAll: true,
 );
 final _brTag = RegExp(r'<br\s*/?>', caseSensitive: false);
-// Real HTML tags only: a tag name after `<` (or `</`). Leaves CommonMark
-// autolinks like `<https://…>` and `<a@b.com>` untouched (no `://`/`@` here).
+
+/// Real HTML tags only: a tag name after `<` (or `</`). Leaves CommonMark
+/// autolinks like `<https://…>` and `<a@b.com>` untouched (no `://`/`@` here).
 final _htmlTag = RegExp(r'</?[a-zA-Z][a-zA-Z0-9-]*(?:\s[^<>]*)?/?>');
 final _fence = RegExp(r'^\s*(```|~~~)');
 

@@ -563,7 +563,6 @@ class _SidebarState extends State<Sidebar> {
     final bookmarks = _bookmarkStore.bookmarks.value;
     final tags = TagStore.instance.tags.value;
 
-    // Read layout signals so the body re-renders on reorder/visibility edits.
     final sectionOrder = store.sectionOrder.value;
     store.hiddenSections.value;
     store.collapsedSections.value;
@@ -730,8 +729,6 @@ class _SidebarState extends State<Sidebar> {
   }
 
   Widget _buildEditList(List<_SidebarSection> sections) {
-    // Show every section while editing — including an empty Network — so its
-    // position in the order can be set before any network locations exist.
     return ReorderableListView.builder(
       scrollController: _scrollController,
       padding: const EdgeInsets.symmetric(vertical: 6),

@@ -67,12 +67,14 @@ class GitStatus {
 }
 
 class GitStatusStore {
+  static const _gitBurstCoalesceDelay = Duration(milliseconds: 500);
+
   final status = signal<GitStatus?>(null);
 
   Timer? _debounce;
   int _token = 0;
   bool _loading = false;
-  bool _pending = false;
+  bool _trailingRefreshRequested = false;
   String? _lastPath;
 
   void watchPath(String path) {
@@ -84,10 +86,7 @@ class GitStatusStore {
       return;
     }
     _lastPath = path;
-    // Coarser than the directory watcher's own debounce: in a file manager a
-    // single user action (extract, paste, build) fans out into many fs
-    // events; coalesce them so we don't spawn a git burst per event.
-    _debounce = Timer(const Duration(milliseconds: 500), () {
+    _debounce = Timer(_gitBurstCoalesceDelay, () {
       refresh(path);
     });
   }
@@ -104,9 +103,7 @@ class GitStatusStore {
   Future<void> refresh(String path) async {
     _lastPath = path;
     if (_loading) {
-      // Collapse overlapping refreshes into a single trailing run so rapid
-      // navigation can't stack concurrent multi-process git loads.
-      _pending = true;
+      _trailingRefreshRequested = true;
 
       return;
     }
@@ -117,8 +114,8 @@ class GitStatusStore {
       if (token == _token) status.value = next;
     } finally {
       _loading = false;
-      if (_pending) {
-        _pending = false;
+      if (_trailingRefreshRequested) {
+        _trailingRefreshRequested = false;
         unawaited(refresh(_lastPath ?? path));
       }
     }
@@ -195,16 +192,12 @@ class GitStatusStore {
     }
     final result = await checkout(branch);
     if (result.outcome == CheckoutOutcome.ok) return null;
-    // Changes are safely stashed but we did not switch — make that explicit
-    // so the user knows where their work went.
     final why = result.message ?? t.git.gitCheckoutFailed;
 
     return t.git.changesStashedSwitchFailed(message: why);
   }
 
   Future<GitStatus?> _load(String path) async {
-    // Cheap filesystem gate: most directories a file manager visits are not
-    // repos, so avoid spawning git at all unless a `.git` is found upward.
     if (!_hasGitUpward(path)) return null;
 
     final rootResult = await _git(path, ['rev-parse', '--show-toplevel']);
@@ -231,8 +224,6 @@ class GitStatusStore {
     for (final line in lines) {
       if (line.isEmpty) continue;
       if (line.startsWith('## ')) {
-        // Branch comes from the porcelain header — saves a separate
-        // `rev-parse` spawn per refresh.
         final (b, d) = _parseBranchHeader(line);
         branch = b;
         detached = d;
@@ -303,13 +294,13 @@ class GitStatusStore {
   }
 
   /// Parses a porcelain `## ` header into `(branchName, isDetached)`.
+  /// Example: `main...origin/main [ahead 1]` becomes `main`.
   (String, bool) _parseBranchHeader(String line) {
     final body = line.substring(3).trim();
     if (body.startsWith('HEAD (no branch)')) return ('detached', true);
     if (body.startsWith('No commits yet on ')) {
       return (body.substring('No commits yet on '.length).trim(), false);
     }
-    // "main...origin/main [ahead 1]" -> "main"
     final name = body.split('...').first.split(' ').first.trim();
 
     return name.isEmpty ? ('detached', true) : (name, false);
@@ -329,13 +320,14 @@ class GitStatusStore {
       final idxMatch = RegExp(r'stash@\{(\d+)\}').firstMatch(parts.first);
       if (idxMatch == null) continue;
       final index = int.tryParse(idxMatch.group(1)!) ?? 0;
-      // %gs looks like "WIP on main: 1a2b3c msg" or "On main: msg".
-      final raw = parts[1].trim();
-      final branchMatch = RegExp(r'^(?:WIP on|On) ([^:]+):').firstMatch(raw);
+      final stashSubject = parts[1].trim();
+      final branchMatch = RegExp(
+        r'^(?:WIP on|On) ([^:]+):',
+      ).firstMatch(stashSubject);
       entries.add(
         StashEntry(
           index: index,
-          message: raw,
+          message: stashSubject,
           branch: branchMatch?.group(1)?.trim() ?? '',
         ),
       );
@@ -435,8 +427,6 @@ class GitStatusStore {
         const Duration(seconds: 4),
         onTimeout: () {
           timedOut = true;
-          // Unlike Future.timeout alone, this actually reaps the child so
-          // slow `git status` calls can't pile up orphaned processes.
           p.kill(ProcessSignal.sigkill);
 
           return -1;

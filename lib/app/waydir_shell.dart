@@ -476,7 +476,8 @@ class _SidebarHostState extends State<_SidebarHost> {
   static const _railWidth = 52.0;
   static const _minExpanded = 160.0;
   static const _maxExpanded = 400.0;
-  // Drag the expanded sidebar narrower than this and it snaps to the icon rail.
+
+  /// Drag the expanded sidebar narrower than this and it snaps to the icon rail.
   static const _collapseThreshold = 120.0;
   static const _animDuration = Duration(milliseconds: 140);
 
@@ -490,8 +491,6 @@ class _SidebarHostState extends State<_SidebarHost> {
 
   void _onDragStart(DragStartDetails _) {
     final settings = SettingsStore.instance;
-    // Seed the live width from whatever is currently on screen so the handle
-    // tracks the pointer continuously in both directions.
     _dragWidth = settings.sidebarCollapsed.value
         ? _railWidth
         : settings.sidebarWidth.value.clamp(_minExpanded, _maxExpanded);
@@ -505,8 +504,6 @@ class _SidebarHostState extends State<_SidebarHost> {
       _maxExpanded,
     );
 
-    // Collapsed state is derived purely from the live width crossing the
-    // threshold, so collapse and expand are symmetric and repeatable.
     final shouldCollapse = next < _collapseThreshold;
     if (settings.sidebarCollapsed.value != shouldCollapse) {
       settings.sidebarCollapsed.value = shouldCollapse;

@@ -5,7 +5,6 @@ import 'package:ffi/ffi.dart';
 
 import '../logging/app_logger.dart';
 
-// Linux open() flags (x86_64/arm64 share these values).
 const int _oRdonly = 0;
 const int _oWronly = 1;
 const int _oCreat = 0x40;
@@ -18,7 +17,6 @@ typedef _OpenDart = int Function(Pointer<Utf8>, int, int);
 typedef _CloseNative = Int32 Function(Int32);
 typedef _CloseDart = int Function(int);
 
-// ssize_t copy_file_range(int, loff_t*, int, loff_t*, size_t, unsigned)
 typedef _CfrNative =
     IntPtr Function(
       Int32,
@@ -31,7 +29,6 @@ typedef _CfrNative =
 typedef _CfrDart =
     int Function(int, Pointer<Int64>, int, Pointer<Int64>, int, int);
 
-// int clonefile(const char*, const char*, int) — macOS.
 typedef _CloneNative = Int32 Function(Pointer<Utf8>, Pointer<Utf8>, Int32);
 typedef _CloneDart = int Function(Pointer<Utf8>, Pointer<Utf8>, int);
 
@@ -126,8 +123,7 @@ class NativeCopy {
     }
   }
 
-  // Cap per-syscall transfer so progress can be reported on big files.
-  static const int _cfrChunk = 32 * 1024 * 1024;
+  static const int _copyFileRangeProgressChunk = 32 * 1024 * 1024;
 
   static Future<FastCopyResult> _linuxCopyFileRange(
     DynamicLibrary lib,
@@ -164,27 +160,25 @@ class NativeCopy {
       fdOut = open(dPtr, _oWronly | _oCreat | _oTrunc | _oCloexec, 0x1A4);
       if (fdOut < 0) return FastCopyResult.unsupported;
 
-      if (total == 0) return FastCopyResult.done; // fds created the target.
+      if (total == 0) return FastCopyResult.done;
 
       var remaining = total;
       var emitted = 0;
       while (remaining > 0) {
-        final want = remaining < _cfrChunk ? remaining : _cfrChunk;
+        final want = remaining < _copyFileRangeProgressChunk
+            ? remaining
+            : _copyFileRangeProgressChunk;
         final n = cfr(fdIn, nullptr, fdOut, nullptr, want, 0);
         if (n < 0) {
-          // Partial fail: undo reported bytes so the portable fallback,
-          // which recopies the whole file, does not double-count.
-          if (emitted > 0) onProgress?.call(-emitted);
+          _rollbackReportedProgress(onProgress, emitted);
 
-          return FastCopyResult.unsupported; // EXDEV/ENOSYS → fall back.
+          return FastCopyResult.unsupported;
         }
-        if (n == 0) break; // unexpected short source.
+        if (n == 0) break;
         remaining -= n;
         emitted += n;
         onProgress?.call(n);
         if (remaining > 0) {
-          // Yield so the worker isolate can deliver a pending cancel
-          // before the next (blocking) syscall.
           await Future<void>.delayed(Duration.zero);
           if (shouldCancel != null && shouldCancel()) {
             return FastCopyResult.cancelled;
@@ -215,5 +209,12 @@ class NativeCopy {
       calloc.free(sPtr);
       calloc.free(dPtr);
     }
+  }
+
+  static void _rollbackReportedProgress(
+    void Function(int bytes)? onProgress,
+    int emitted,
+  ) {
+    if (emitted > 0) onProgress?.call(-emitted);
   }
 }

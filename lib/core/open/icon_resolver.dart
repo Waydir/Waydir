@@ -79,8 +79,8 @@ class IconResolver {
     return themes;
   }
 
-  // Largest first: app pickers look best with crisp icons; scalable (SVG)
-  // works at any size so it is tried early.
+  /// Largest first: app pickers look best with crisp icons; scalable (SVG)
+  /// works at any size so it is tried early.
   static const _sizeDirs = [
     'scalable',
     '512x512',
@@ -99,7 +99,6 @@ class IconResolver {
 
   String? _search(String name) {
     for (final base in _bases) {
-      // Flat dir (e.g. /usr/share/pixmaps).
       for (final ext in _exts) {
         final flat = p.join(base, '$name.$ext');
         if (File(flat).existsSync()) return flat;
@@ -114,7 +113,6 @@ class IconResolver {
                   ? p.join(themeDir, size, '$name.$ext')
                   : p.join(themeDir, size, cat, '$name.$ext');
               if (File(candidate).existsSync()) return candidate;
-              // Some themes nest size under category instead.
               final alt = cat.isEmpty
                   ? null
                   : p.join(themeDir, cat, size, '$name.$ext');
