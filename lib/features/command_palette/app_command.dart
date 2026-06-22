@@ -1,0 +1,29 @@
+import 'package:flutter/widgets.dart';
+
+/// A single entry in the command palette. Commands wrap the same handlers the
+/// keyboard dispatch invokes, so the palette never duplicates action logic.
+class AppCommand {
+  /// Stable identifier, shared with [ShortcutDef] ids where one exists. Used to
+  /// resolve the current key binding and to key usage history (frecency).
+  final String id;
+  final String label;
+  final IconData icon;
+
+  /// Whether the command can run in the current context. Disabled commands are
+  /// still shown (greyed out) for discoverability.
+  final bool enabled;
+
+  /// Optional reason shown when [enabled] is false.
+  final String? disabledReason;
+
+  final VoidCallback run;
+
+  const AppCommand({
+    required this.id,
+    required this.label,
+    required this.icon,
+    required this.run,
+    this.enabled = true,
+    this.disabledReason,
+  });
+}
