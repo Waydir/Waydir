@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Removed the toast notification shown when a new version is available.
+
 ## [0.20.1] - 2026-06-22
 
 ### Fixed

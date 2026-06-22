@@ -25,13 +25,11 @@ import '../core/models/file_operation.dart';
 import '../core/settings/settings_store.dart';
 import '../core/terminal/shell_detector.dart';
 import '../core/terminal/terminal_launch.dart';
-import '../core/update/update_store.dart';
 import '../features/containers/container_store.dart';
 import '../features/containers/wsl_path.dart';
 import '../features/checksum/checksum_dialog.dart';
 import '../features/compare/compare_mode_bar.dart';
 import '../features/help/help_dialog.dart';
-import '../features/update/update_dialog.dart';
 import '../features/navigation/bookmark_store.dart';
 import '../features/navigation/navigation_store.dart';
 import '../features/navigation/sidebar.dart';
@@ -186,7 +184,6 @@ class _WaydirShellState extends State<WaydirShell>
         _installRenameErrorEffects();
       }),
     );
-    _installUpdateNotification();
     _installPluginEventEffects();
     _maybePromptFullDiskAccess();
   }
