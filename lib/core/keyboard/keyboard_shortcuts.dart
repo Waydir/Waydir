@@ -716,6 +716,13 @@ class AppShortcuts {
       ctrl: true,
     ),
     ShortcutDef(
+      id: 'command_palette',
+      label: () => '',
+      group: ShortcutGroup.general,
+      key: LogicalKeyboardKey.keyP,
+      ctrl: true,
+    ),
+    ShortcutDef(
       id: 'preferences',
       label: () => '',
       group: ShortcutGroup.general,

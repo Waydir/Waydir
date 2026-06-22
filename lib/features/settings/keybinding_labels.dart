@@ -120,6 +120,7 @@ String shortcutLabel(ShortcutDef s) => switch (s.id) {
   'search' => t.keybindings.search,
   'recursive_search' => t.keybindings.recursiveSearch,
   'toggle_hidden' => t.menu.showHidden,
+  'command_palette' => t.keybindings.commandPalette,
   'preferences' => t.keybindings.preferences,
   'help' => t.help.menuLabel,
   'close_search' => t.keybindings.closeSearch,

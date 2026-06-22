@@ -28,6 +28,9 @@ import '../core/terminal/terminal_launch.dart';
 import '../features/containers/container_store.dart';
 import '../features/containers/wsl_path.dart';
 import '../features/checksum/checksum_dialog.dart';
+import '../features/command_palette/app_command.dart';
+import '../features/command_palette/command_palette_view.dart';
+import '../features/command_palette/command_usage_store.dart';
 import '../features/compare/compare_mode_bar.dart';
 import '../features/help/help_dialog.dart';
 import '../features/navigation/bookmark_store.dart';
@@ -46,6 +49,7 @@ import '../features/plugins/plugin_icons.dart';
 import '../features/plugins/plugin_models.dart';
 import '../features/plugins/plugin_settings_store.dart';
 import '../features/plugins/plugin_store.dart';
+import '../features/settings/keybinding_labels.dart';
 import '../features/settings/preferences_view.dart';
 import '../features/tags/tag_edit_dialog.dart';
 import '../features/tags/tag_path.dart';
@@ -71,6 +75,7 @@ part 'waydir_shell/base.dart';
 part 'waydir_shell/actions.dart';
 part 'waydir_shell/terminal.dart';
 part 'waydir_shell/menus.dart';
+part 'waydir_shell/command_palette.dart';
 part 'waydir_shell/keyboard.dart';
 
 class WaydirShell extends StatefulWidget {
@@ -86,6 +91,7 @@ class _WaydirShellState extends State<WaydirShell>
         _WaydirActionsMixin,
         _WaydirTerminalMixin,
         _WaydirMenuMixin,
+        _WaydirCommandPaletteMixin,
         _WaydirKeyboardMixin {
   @override
   void initState() {

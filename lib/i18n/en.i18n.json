@@ -703,6 +703,7 @@
     "title": "Command Palette",
     "placeholder": "Type a command or setting…",
     "empty": "No matching commands",
+    "unavailable": "Not available right now",
     "openPreferences": "Open Preferences",
     "preferencesSubtitle": "Open the full settings dialog",
     "enabled": "Enabled",

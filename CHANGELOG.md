@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Command palette (`Ctrl+P`) to fuzzy-search and run any action.
+
 ### Changed
 - Removed the toast notification shown when a new version is available.
 

@@ -1065,6 +1065,9 @@ class Translations$commandPalette$en {
 	/// en: 'No matching commands'
 	String get empty => 'No matching commands';
 
+	/// en: 'Not available right now'
+	String get unavailable => 'Not available right now';
+
 	/// en: 'Open Preferences'
 	String get openPreferences => 'Open Preferences';
 
@@ -4569,6 +4572,7 @@ extension on Translations {
 			'commandPalette.title' => 'Command Palette',
 			'commandPalette.placeholder' => 'Type a command or setting…',
 			'commandPalette.empty' => 'No matching commands',
+			'commandPalette.unavailable' => 'Not available right now',
 			'commandPalette.openPreferences' => 'Open Preferences',
 			'commandPalette.preferencesSubtitle' => 'Open the full settings dialog',
 			'commandPalette.enabled' => 'Enabled',
