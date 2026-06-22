@@ -29,6 +29,7 @@ import '../features/containers/container_store.dart';
 import '../features/containers/wsl_path.dart';
 import '../features/checksum/checksum_dialog.dart';
 import '../features/command_palette/app_command.dart';
+import '../features/command_palette/command_palette_launcher.dart';
 import '../features/command_palette/command_palette_view.dart';
 import '../features/command_palette/command_usage_store.dart';
 import '../features/compare/compare_mode_bar.dart';
@@ -192,6 +193,7 @@ class _WaydirShellState extends State<WaydirShell>
     );
     _installPluginEventEffects();
     _maybePromptFullDiskAccess();
+    CommandPaletteLauncher.instance.open = _openCommandPalette;
   }
 
   void _maybePromptFullDiskAccess() {
@@ -206,6 +208,9 @@ class _WaydirShellState extends State<WaydirShell>
 
   @override
   void dispose() {
+    if (CommandPaletteLauncher.instance.open == _openCommandPalette) {
+      CommandPaletteLauncher.instance.open = null;
+    }
     for (final d in _effectDisposers) {
       d();
     }

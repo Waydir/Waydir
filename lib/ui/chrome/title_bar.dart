@@ -8,6 +8,8 @@ import 'package:waydir/ui/icons/waydir_icons.dart';
 
 import '../../app/app_info.dart';
 import '../../app/waydir_app.dart';
+import '../../core/keyboard/keyboard_shortcuts.dart';
+import '../../features/command_palette/command_palette_launcher.dart';
 import '../../features/help/changelog_dialog.dart';
 import '../../features/help/help_dialog.dart';
 import '../../features/plugins/plugin_icons.dart';
@@ -263,7 +265,14 @@ class _TitleBarRow extends StatelessWidget {
               onPluginAction: onPluginAction,
             ),
           ],
-          const Expanded(child: MoveWindow()),
+          Expanded(
+            child: Stack(
+              children: [
+                const MoveWindow(),
+                const Center(child: _CommandPaletteButton()),
+              ],
+            ),
+          ),
           if (!Platform.isMacOS) const _WindowButtons(),
         ],
       ),
@@ -459,6 +468,54 @@ class _TitleMenuButtonState extends State<TitleMenuButton> {
             style: context.txt.captionSmall.copyWith(
               color: _hovered ? AppColors.fg : AppColors.fgMuted,
               fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CommandPaletteButton extends StatefulWidget {
+  const _CommandPaletteButton();
+
+  @override
+  State<_CommandPaletteButton> createState() => _CommandPaletteButtonState();
+}
+
+class _CommandPaletteButtonState extends State<_CommandPaletteButton> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final binding = AppShortcuts.getById('command_palette').displayKeys;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: Tooltip(
+        message: t.commandPalette.title,
+        child: GestureDetector(
+          onTap: () => CommandPaletteLauncher.instance.open?.call(),
+          child: Container(
+            height: 22,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            decoration: BoxDecoration(
+              color: _hovered ? AppColors.bgHover : AppColors.bgInput,
+              border: Border.all(color: AppColors.borderColor),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  WaydirIconsRegular.magnifyingGlass,
+                  size: 11,
+                  color: AppColors.fgSubtle,
+                ),
+                const SizedBox(width: 7),
+                Text(binding, style: context.txt.keyCap),
+              ],
             ),
           ),
         ),
