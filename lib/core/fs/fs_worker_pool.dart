@@ -16,6 +16,8 @@ enum _Op {
   exists,
   mkdir,
   stat,
+  createSymlink,
+  updateSymlinkTarget,
   archiveList,
   archiveExtract,
   archiveExtractTree,
@@ -237,6 +239,12 @@ class FsWorkerPool {
     return _run<FileEntry?>(_Op.stat, [path]);
   }
 
+  Future<void> createSymlink(String linkPath, String target) =>
+      _run<void>(_Op.createSymlink, [linkPath, target]);
+
+  Future<void> updateSymlinkTarget(String linkPath, String newTarget) =>
+      _run<void>(_Op.updateSymlinkTarget, [linkPath, newTarget]);
+
   Future<List<FileEntry>> listArchive(String archivePath, String innerPath) =>
       _run<List<FileEntry>>(_Op.archiveList, [archivePath, innerPath]);
 
@@ -323,6 +331,19 @@ class FsWorkerPool {
         return Directory(args.first as String).existsSync();
       case _Op.mkdir:
         Directory(args.first as String).createSync(recursive: true);
+
+        return null;
+      case _Op.createSymlink:
+        final linkPath = args.first as String;
+        final target = args[1] as String;
+        Link(linkPath).createSync(target);
+
+        return null;
+      case _Op.updateSymlinkTarget:
+        final linkPath = args.first as String;
+        final newTarget = args[1] as String;
+        Link(linkPath).deleteSync();
+        Link(linkPath).createSync(newTarget);
 
         return null;
       case _Op.stat:

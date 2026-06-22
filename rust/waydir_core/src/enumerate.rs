@@ -59,6 +59,8 @@ pub unsafe extern "C" fn waydir_enumerate(
                 name: os_bytes(dirent.file_name()),
                 path: os_bytes(dirent.path().as_os_str()),
                 disk_path: std::path::PathBuf::new(),
+                is_symlink: false,
+                link_target: Vec::new(),
             });
             WalkState::Continue
         })

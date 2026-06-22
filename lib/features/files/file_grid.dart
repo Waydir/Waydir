@@ -864,6 +864,7 @@ class _GridPreview extends StatelessWidget {
             ext: entry.extension,
             isFolder: isFolder,
             size: thumbSize * (isFolder ? 0.78 : 0.7),
+            isSymlink: entry.isSymlink,
           ),
     );
   }
@@ -896,6 +897,7 @@ class _ImageThumbnail extends StatelessWidget {
             ext: entry.extension,
             isFolder: false,
             size: thumbSize * 0.7,
+            isSymlink: entry.isSymlink,
           ),
         ),
       ),

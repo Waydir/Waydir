@@ -42,6 +42,15 @@ class FileEntry {
   final int uid;
   final int gid;
 
+  /// Whether this entry itself is a symlink. [type] still reflects the
+  /// resolved target (folder/file) so existing folder/file logic keeps
+  /// working transparently for symlinks.
+  final bool isSymlink;
+
+  /// Raw `readlink()` result, possibly relative. Empty when [isSymlink] is
+  /// false.
+  final String linkTarget;
+
   DateTime? _modified;
   DateTime get modified =>
       _modified ??= DateTime.fromMillisecondsSinceEpoch(modifiedMs);
@@ -72,6 +81,8 @@ class FileEntry {
     this.mode = 0,
     this.uid = 0,
     this.gid = 0,
+    this.isSymlink = false,
+    this.linkTarget = '',
     String? realPath,
   }) : modifiedMs = modified.millisecondsSinceEpoch,
        createdMs = (created ?? modified).millisecondsSinceEpoch,
@@ -92,20 +103,31 @@ class FileEntry {
     this.mode = 0,
     this.uid = 0,
     this.gid = 0,
+    this.isSymlink = false,
+    this.linkTarget = '',
     String? realPath,
   }) : _realPath = realPath;
 
   factory FileEntry.fromFileSystemEntity(FileSystemEntity entity) {
     final stat = entity.statSync();
+    final isLink = entity is Link;
+    final type = isLink
+        ? (FileSystemEntity.typeSync(entity.path, followLinks: true) ==
+                  FileSystemEntityType.directory
+              ? FileItemType.folder
+              : FileItemType.file)
+        : (entity is Directory ? FileItemType.folder : FileItemType.file);
 
     return FileEntry(
       name: PlatformPaths.fileName(entity.path),
       path: entity.path,
-      type: entity is Directory ? FileItemType.folder : FileItemType.file,
+      type: type,
       size: stat.size,
       modified: stat.modified,
       created: stat.changed,
       mode: stat.mode,
+      isSymlink: isLink,
+      linkTarget: isLink ? entity.targetSync() : '',
     );
   }
 
@@ -130,6 +152,11 @@ class FileEntry {
 
     return kindLabelForFile(name, extension);
   }
+
+  /// A symlink whose target couldn't be resolved when this entry was read.
+  /// Derived rather than stored: a broken link fails the stat lookup on the
+  /// native/Dart side, leaving [mode] and [modifiedMs] at their zero default.
+  bool get linkBroken => isSymlink && mode == 0 && modifiedMs == 0;
 
   /// Unix-style permission string (e.g. "drwxr-xr-x"), or "--" when [mode] is
   /// unknown (non-unix listings, archives, …).
@@ -162,8 +189,10 @@ class FileEntryCodec {
 
   /// Fixed-size record header, mirroring `codec.rs::RECORD_HEAD`. Layout
   /// (big-endian): u8 is_dir, i64 size, i64 mtime_ms, i64 ctime_ms,
-  /// i64 added_ms, u32 mode, u32 uid, u32 gid, u32 name_len, u32 path_len.
-  static const int _recordHead = 1 + 8 + 8 + 8 + 8 + 4 + 4 + 4 + 4 + 4;
+  /// i64 added_ms, u32 mode, u32 uid, u32 gid, u32 name_len, u32 path_len,
+  /// u8 is_symlink, u32 link_target_len. The symlink fields are appended
+  /// after the original head so every existing offset stays put.
+  static const int _recordHead = 1 + 8 + 8 + 8 + 8 + 4 + 4 + 4 + 4 + 4 + 1 + 4;
 
   static Uint8List encode(List<FileEntry> entries) {
     final b = BytesBuilder(copy: false);
@@ -175,6 +204,7 @@ class FileEntryCodec {
     for (final e in entries) {
       final nameB = utf8.encode(e.name);
       final pathB = utf8.encode(e.path);
+      final linkTargetB = utf8.encode(e.linkTarget);
       final rec = ByteData(_recordHead);
       rec.setUint8(0, e.type == FileItemType.folder ? 0 : 1);
       rec.setInt64(1, e.size);
@@ -186,9 +216,12 @@ class FileEntryCodec {
       rec.setUint32(41, e.gid);
       rec.setUint32(45, nameB.length);
       rec.setUint32(49, pathB.length);
+      rec.setUint8(53, e.isSymlink ? 1 : 0);
+      rec.setUint32(54, linkTargetB.length);
       b.add(rec.buffer.asUint8List());
       b.add(nameB);
       b.add(pathB);
+      b.add(linkTargetB);
     }
 
     return b.toBytes();
@@ -224,15 +257,23 @@ class FileEntryCodec {
       final gid = view.getUint32(off + 41);
       final nameLen = view.getUint32(off + 45);
       final pathLen = view.getUint32(off + 49);
+      final isSymlink = view.getUint8(off + 53) != 0;
+      final linkTargetLen = view.getUint32(off + 54);
       off += _recordHead;
       final name = utf8.decode(bytes.sublist(off, off + nameLen));
       off += nameLen;
       final path = utf8.decode(bytes.sublist(off, off + pathLen));
       off += pathLen;
+      final linkTarget = linkTargetLen == 0
+          ? ''
+          : utf8.decode(bytes.sublist(off, off + linkTargetLen));
+      off += linkTargetLen;
       out.add(
         FileEntry.raw(
           name: name,
           path: path,
+          isSymlink: isSymlink,
+          linkTarget: linkTarget,
           type: type,
           size: size,
           modifiedMs: modifiedMs,

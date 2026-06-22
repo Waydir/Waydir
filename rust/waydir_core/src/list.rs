@@ -33,6 +33,7 @@ pub unsafe extern "C" fn waydir_list(
     let mut entries: Vec<Entry> = Vec::new();
     for de in rd.flatten() {
         let ft = de.file_type();
+        let is_symlink = ft.as_ref().map(|t| t.is_symlink()).unwrap_or(false);
         let is_dir = match &ft {
             Ok(t) if t.is_symlink() => std::fs::metadata(de.path())
                 .map(|m| m.is_dir())
@@ -41,6 +42,13 @@ pub unsafe extern "C" fn waydir_list(
             Err(_) => false,
         };
         let dp = de.path();
+        let link_target = if is_symlink {
+            std::fs::read_link(&dp)
+                .map(|t| os_bytes(t.as_os_str()))
+                .unwrap_or_default()
+        } else {
+            Vec::new()
+        };
         entries.push(Entry {
             is_dir,
             size: 0,
@@ -53,6 +61,8 @@ pub unsafe extern "C" fn waydir_list(
             name: os_bytes(de.file_name().as_os_str()),
             path: os_bytes(dp.as_os_str()),
             disk_path: dp,
+            is_symlink,
+            link_target,
         });
     }
 

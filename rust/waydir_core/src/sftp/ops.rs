@@ -218,6 +218,8 @@ pub unsafe extern "C" fn waydir_sftp_list(
             attr.gid.unwrap_or(0),
             name.as_bytes(),
             full_path.as_bytes(),
+            false,
+            &[],
         );
         chunks.push(buf);
     }

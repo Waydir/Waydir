@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'ui/window/window.dart';
@@ -25,6 +26,11 @@ void main(List<String> args) async {
   runZonedGuarded(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
+
+      // Waydir doesn't run inside the macOS App Sandbox, so file_picker's
+      // sandbox-extension entitlement check is irrelevant and would
+      // otherwise reject every pick with ENTITLEMENT_NOT_FOUND.
+      await FilePicker.skipEntitlementsChecks();
 
       LaunchArgs.parse(args);
       if (LaunchArgs.options.showHelp) {

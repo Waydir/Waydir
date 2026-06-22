@@ -9,32 +9,55 @@ Widget buildFileIcon({
   required String ext,
   required bool isFolder,
   double size = 20,
+  bool isSymlink = false,
 }) {
+  final Widget icon;
   if (isFolder) {
     final folderName = materialFolderNames[name.toLowerCase()];
-    if (folderName != null) {
-      return SvgPicture.asset(
-        'assets/icons/material/$folderName.svg',
-        width: size,
-        height: size,
-      );
-    }
-
-    return Icon(
-      WaydirIconsFill.folder,
-      size: size,
-      color: AppColors.folderColor,
+    icon = folderName != null
+        ? SvgPicture.asset(
+            'assets/icons/material/$folderName.svg',
+            width: size,
+            height: size,
+          )
+        : Icon(
+            WaydirIconsFill.folder,
+            size: size,
+            color: AppColors.folderColor,
+          );
+  } else {
+    final lowerName = name.toLowerCase();
+    var iconName = materialFileNames[lowerName];
+    iconName ??= materialFileExtensions[ext.toLowerCase()];
+    iconName ??= 'document';
+    icon = SvgPicture.asset(
+      'assets/icons/material/$iconName.svg',
+      width: size,
+      height: size,
     );
   }
 
-  final lowerName = name.toLowerCase();
-  var iconName = materialFileNames[lowerName];
-  iconName ??= materialFileExtensions[ext.toLowerCase()];
-  iconName ??= 'document';
+  if (!isSymlink) return icon;
 
-  return SvgPicture.asset(
-    'assets/icons/material/$iconName.svg',
+  final badgeSize = size * 0.45;
+
+  return SizedBox(
     width: size,
     height: size,
+    child: Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Positioned.fill(child: Center(child: icon)),
+        Positioned(
+          right: -2,
+          bottom: -2,
+          child: Icon(
+            WaydirIconsFill.link,
+            size: badgeSize,
+            color: AppColors.fgMuted,
+          ),
+        ),
+      ],
+    ),
   );
 }

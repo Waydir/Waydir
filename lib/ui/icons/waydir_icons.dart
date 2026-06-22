@@ -309,6 +309,11 @@ class WaydirIconsRegular {
     fontFamily: 'PhosphorRegular',
     matchTextDirection: true,
   );
+  static const IconData link = IconData(
+    0xe2e2,
+    fontFamily: 'PhosphorRegular',
+    matchTextDirection: true,
+  );
   static const IconData list = IconData(
     0xe2f0,
     fontFamily: 'PhosphorRegular',
@@ -484,6 +489,11 @@ class WaydirIconsFill {
   );
   static const IconData folder = IconData(
     0xe24a,
+    fontFamily: 'PhosphorFill',
+    matchTextDirection: true,
+  );
+  static const IconData link = IconData(
+    0xe2e2,
     fontFamily: 'PhosphorFill',
     matchTextDirection: true,
   );

@@ -1481,6 +1481,7 @@ class _ListRowState extends State<_ListRow> {
       ext: e.extension,
       isFolder: isFolder,
       size: widget.iconSize,
+      isSymlink: e.isSymlink,
     );
     final badge = widget.rowDecoration?.badge;
     if (badge == null) return icon;

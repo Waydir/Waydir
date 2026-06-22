@@ -187,6 +187,17 @@ pub unsafe extern "C" fn waydir_search(
                 .unwrap_or(dirent.path());
             let is_dir = dirent.file_type().map(|t| t.is_dir()).unwrap_or(false);
             if matcher.matches(&name_lossy, rel, dirent.path(), is_dir) {
+                let is_symlink = dirent
+                    .file_type()
+                    .map(|t| t.is_symlink())
+                    .unwrap_or(false);
+                let link_target = if is_symlink {
+                    std::fs::read_link(dirent.path())
+                        .map(|t| os_bytes(t.as_os_str()))
+                        .unwrap_or_default()
+                } else {
+                    Vec::new()
+                };
                 put_record(
                     &mut sink.local,
                     is_dir,
@@ -199,6 +210,8 @@ pub unsafe extern "C" fn waydir_search(
                     0,
                     &os_bytes(os_name),
                     &os_bytes(dirent.path().as_os_str()),
+                    is_symlink,
+                    &link_target,
                 );
                 sink.count += 1;
             }
@@ -285,6 +298,17 @@ pub unsafe extern "C" fn waydir_search_start(
                     .unwrap_or(dirent.path());
                 let is_dir = dirent.file_type().map(|t| t.is_dir()).unwrap_or(false);
                 if matcher.matches(&name_lossy, rel, dirent.path(), is_dir) {
+                    let is_symlink = dirent
+                        .file_type()
+                        .map(|t| t.is_symlink())
+                        .unwrap_or(false);
+                    let link_target = if is_symlink {
+                        std::fs::read_link(dirent.path())
+                            .map(|t| os_bytes(t.as_os_str()))
+                            .unwrap_or_default()
+                    } else {
+                        Vec::new()
+                    };
                     let mut g = pending.lock().unwrap();
                     put_record(
                         &mut g.0,
@@ -298,6 +322,8 @@ pub unsafe extern "C" fn waydir_search_start(
                         0,
                         &os_bytes(os_name),
                         &os_bytes(dirent.path().as_os_str()),
+                        is_symlink,
+                        &link_target,
                     );
                     g.1 += 1;
                 }

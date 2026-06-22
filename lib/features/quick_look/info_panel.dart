@@ -403,12 +403,23 @@ List<Widget> propertyRows(FileEntry e) {
     SectionLabel(t.quickLook.sectionGeneral),
     PropRow(
       label: t.quickLook.type,
-      value: e.type == FileItemType.folder
+      value: e.isSymlink
+          ? (e.type == FileItemType.folder
+                ? t.quickLook.typeSymlinkFolder
+                : t.quickLook.typeSymlinkFile)
+          : e.type == FileItemType.folder
           ? t.quickLook.typeFolder
           : e.extension.isEmpty
           ? t.quickLook.typeFile
           : e.extension.toUpperCase(),
     ),
+    if (e.isSymlink)
+      PropRow(
+        label: t.quickLook.target,
+        value: e.linkBroken
+            ? '${e.linkTarget} (${t.quickLook.targetMissing})'
+            : e.linkTarget,
+      ),
     _SizeRows(entry: e),
     PropRow(label: t.quickLook.modified, value: _formatStatDate(e.modified)),
     PropRow(label: t.quickLook.created, value: _formatStatDate(e.created)),
