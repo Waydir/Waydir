@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:signals/signals_flutter.dart';
 import 'package:waydir/ui/icons/waydir_icons.dart';
 
 import '../../core/keyboard/keyboard_shortcuts.dart';
@@ -17,6 +18,9 @@ Future<void> showCommandPalette({
   required List<AppCommand> commands,
   required void Function(AppCommand command) onRun,
   List<String> recentIds = const [],
+  Signal<List<AppCommand>>? extraCommands,
+  Signal<String?>? status,
+  void Function(String query)? onQueryChanged,
 }) {
   return showDialog<void>(
     context: context,
@@ -30,6 +34,9 @@ Future<void> showCommandPalette({
           child: _CommandPalette(
             commands: commands,
             recentIds: recentIds,
+            extraCommands: extraCommands,
+            status: status,
+            onQueryChanged: onQueryChanged,
             onRun: (cmd) {
               Navigator.of(ctx).pop();
               onRun(cmd);
@@ -46,6 +53,9 @@ Future<void> showCommandPalette({
 class _CommandPalette extends StatefulWidget {
   final List<AppCommand> commands;
   final List<String> recentIds;
+  final Signal<List<AppCommand>>? extraCommands;
+  final Signal<String?>? status;
+  final void Function(String query)? onQueryChanged;
   final void Function(AppCommand command) onRun;
   final VoidCallback onClose;
 
@@ -54,6 +64,9 @@ class _CommandPalette extends StatefulWidget {
     required this.recentIds,
     required this.onRun,
     required this.onClose,
+    this.extraCommands,
+    this.status,
+    this.onQueryChanged,
   });
 
   @override
@@ -102,11 +115,18 @@ class _CommandPaletteState extends State<_CommandPalette> {
     }
 
     final scored = <(AppCommand, int, List<int>)>[];
-    for (final cmd in widget.commands) {
+    final all = widget.extraCommands == null
+        ? widget.commands
+        : [...widget.commands, ...widget.extraCommands!.value];
+    for (final cmd in all) {
       final m = fuzzyMatch(q, cmd.label);
       if (m != null) scored.add((cmd, m.score, m.matchedIndices));
     }
-    scored.sort((a, b) => b.$2.compareTo(a.$2));
+    scored.sort((a, b) {
+      final byPriority = b.$1.sortPriority.compareTo(a.$1.sortPriority);
+      if (byPriority != 0) return byPriority;
+      return b.$2.compareTo(a.$2);
+    });
     return [for (final s in scored) (s.$1, s.$3)];
   }
 
@@ -163,10 +183,6 @@ class _CommandPaletteState extends State<_CommandPalette> {
 
   @override
   Widget build(BuildContext context) {
-    final results = _results;
-    _resultsCache = results;
-    if (_selected >= results.length) _selected = 0;
-
     return Container(
       width: 560,
       constraints: const BoxConstraints(maxHeight: 440),
@@ -181,31 +197,66 @@ class _CommandPaletteState extends State<_CommandPalette> {
           ),
         ],
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      child: SignalBuilder(
+        builder: (context) {
+          final results = _results;
+          _resultsCache = results;
+          if (_selected >= results.length) _selected = 0;
+          final scanStatus = widget.status?.value;
+          final status =
+              scanStatus ?? t.commandPalette.ready(count: results.length);
+
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildInput(context),
+              Container(height: 1, color: AppColors.bgDivider),
+              Flexible(
+                child: results.isEmpty
+                    ? _buildEmpty(context)
+                    : ListView.builder(
+                        controller: _scrollController,
+                        padding: EdgeInsets.zero,
+                        shrinkWrap: true,
+                        itemCount: results.length,
+                        itemBuilder: (ctx, i) {
+                          final (cmd, matched) = results[i];
+                          return _CommandRow(
+                            command: cmd,
+                            matchedIndices: matched,
+                            binding: AppShortcuts.tryGetById(
+                              cmd.id,
+                            )?.displayKeys,
+                            selected: i == _selected,
+                            onTap: cmd.enabled ? () => widget.onRun(cmd) : null,
+                            onHover: () => setState(() => _selected = i),
+                          );
+                        },
+                      ),
+              ),
+              _buildStatusBar(context, status),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildStatusBar(BuildContext context, String status) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.bgStatus,
+        border: Border(top: BorderSide(color: AppColors.bgDivider)),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      child: Row(
         children: [
-          _buildInput(context),
-          Container(height: 1, color: AppColors.bgDivider),
-          Flexible(
-            child: results.isEmpty
-                ? _buildEmpty(context)
-                : ListView.builder(
-                    controller: _scrollController,
-                    padding: EdgeInsets.zero,
-                    shrinkWrap: true,
-                    itemCount: results.length,
-                    itemBuilder: (ctx, i) {
-                      final (cmd, matched) = results[i];
-                      return _CommandRow(
-                        command: cmd,
-                        matchedIndices: matched,
-                        binding: AppShortcuts.tryGetById(cmd.id)?.displayKeys,
-                        selected: i == _selected,
-                        onTap: cmd.enabled ? () => widget.onRun(cmd) : null,
-                        onHover: () => setState(() => _selected = i),
-                      );
-                    },
-                  ),
+          Expanded(
+            child: Text(
+              status,
+              style: context.txt.caption.copyWith(color: AppColors.fgMuted),
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),
@@ -231,10 +282,13 @@ class _CommandPaletteState extends State<_CommandPalette> {
               style: context.txt.rowEmphasis,
               cursorColor: AppColors.fg,
               cursorWidth: 1,
-              onChanged: (v) => setState(() {
-                _query = v;
-                _selected = 0;
-              }),
+              onChanged: (v) {
+                setState(() {
+                  _query = v;
+                  _selected = 0;
+                });
+                widget.onQueryChanged?.call(v);
+              },
               decoration: InputDecoration(
                 isCollapsed: true,
                 border: InputBorder.none,

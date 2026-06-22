@@ -24,6 +24,11 @@ class AppCommand {
   /// in the current directory), keeping the empty-query list focused.
   final bool queryOnly;
 
+  /// Tiebreak for ranking matched results: higher sorts first, so lower-priority
+  /// entries (e.g. files found in nested folders) fall below equally-matching
+  /// entries from the current folder.
+  final int sortPriority;
+
   final VoidCallback run;
 
   const AppCommand({
@@ -35,5 +40,6 @@ class AppCommand {
     this.enabled = true,
     this.disabledReason,
     this.queryOnly = false,
+    this.sortPriority = 0,
   });
 }

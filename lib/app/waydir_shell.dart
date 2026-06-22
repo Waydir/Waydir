@@ -12,6 +12,7 @@ import 'package:signals/signals_flutter.dart';
 import '../core/archive/archive_path.dart';
 import '../core/archive/archive_writer.dart';
 import '../core/fs/file_system_service.dart';
+import '../core/fs/recursive_search.dart';
 import '../core/logging/app_logger.dart';
 import '../features/files/sort_menu.dart';
 import '../features/locations/location_resolver.dart';

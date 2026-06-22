@@ -208,22 +208,109 @@ mixin _WaydirCommandPaletteMixin
     ];
   }
 
+  AppCommand _fileCommand(
+    NavigationStore store,
+    FileEntry entry, {
+    String? description,
+    int sortPriority = 0,
+  }) {
+    final isFolder = entry.type == FileItemType.folder;
+    return AppCommand(
+      id: 'file:${entry.path}',
+      label: entry.name,
+      description:
+          description ??
+          (isFolder
+              ? t.commandPalette.categoryFolder
+              : t.commandPalette.categoryFile),
+      icon: isFolder ? WaydirIconsRegular.folder : WaydirIconsRegular.file,
+      queryOnly: true,
+      sortPriority: sortPriority,
+      run: () => store.focusEntry(entry),
+    );
+  }
+
   List<AppCommand> _fileCommands(NavigationStore store) {
     return [
-      for (final entry in store.visibleFiles.value)
-        AppCommand(
-          id: 'file:${entry.path}',
-          label: entry.name,
-          description: entry.type == FileItemType.folder
-              ? t.commandPalette.categoryFolder
-              : t.commandPalette.categoryFile,
-          icon: entry.type == FileItemType.folder
-              ? WaydirIconsRegular.folder
-              : WaydirIconsRegular.file,
-          queryOnly: true,
-          run: () => store.onOpen(entry),
-        ),
+      for (final entry in store.visibleFiles.value) _fileCommand(store, entry),
     ];
+  }
+
+  static const _kMaxDeepResults = 50;
+  static const _kDeepDebounce = Duration(seconds: 1);
+  static const _kMinDeepQuery = 2;
+
+  Timer? _deepDebounce;
+  SearchHandle? _deepHandle;
+  int _deepToken = 0;
+
+  /// Restarts the recursive (unbounded-depth) search for [query] under the
+  /// current folder. Each keystroke cancels the in-flight search and waits
+  /// [_kDeepDebounce] before walking the tree again, streaming up to
+  /// [_kMaxDeepResults] matches into [out] with their folder shown as subtitle.
+  void _startDeepSearch(
+    NavigationStore store,
+    String query,
+    Signal<List<AppCommand>> out,
+    Signal<String?> status,
+  ) {
+    _deepDebounce?.cancel();
+    _deepHandle?.cancel();
+    _deepHandle = null;
+    final token = ++_deepToken;
+    out.value = const [];
+    status.value = null;
+
+    final q = query.trim();
+    final root = store.currentPath.value;
+    if (q.length < _kMinDeepQuery ||
+        root.isEmpty ||
+        PlatformPaths.isNetworkPath(root) ||
+        store.isTagView ||
+        store.isTrashView) {
+      return;
+    }
+
+    _deepDebounce = Timer(_kDeepDebounce, () {
+      if (token != _deepToken) return;
+      status.value = t.commandPalette.searchingDeep(count: 0);
+      final matches = <FileEntry>[];
+      _deepHandle = RecursiveSearch.start(
+        root: root,
+        query: q,
+        includeHidden: store.showHidden.value,
+        mode: SearchMode.substring,
+        onBatch: (batchEntries) {
+          if (token != _deepToken) return;
+          for (final entry in batchEntries) {
+            matches.add(entry);
+            if (matches.length >= _kMaxDeepResults) break;
+          }
+          out.value = [
+            for (final entry in matches)
+              _fileCommand(
+                store,
+                entry,
+                description: p.relative(p.dirname(entry.path), from: root),
+                sortPriority: -1,
+              ),
+          ];
+          status.value = t.commandPalette.searchingDeep(count: matches.length);
+          if (matches.length >= _kMaxDeepResults) {
+            _deepHandle?.cancel();
+            _deepHandle = null;
+            status.value = null;
+          }
+        },
+        onProgress: (_, _) {},
+        onDone: () {
+          if (token == _deepToken) status.value = null;
+        },
+        onError: (_) {
+          if (token == _deepToken) status.value = null;
+        },
+      );
+    });
   }
 
   void _openCommandPalette() {
@@ -233,11 +320,26 @@ mixin _WaydirCommandPaletteMixin
   Future<void> _showCommandPalette() async {
     final recentPaths = await SettingsStore.instance.db.getRecentEnteredPaths();
     if (!mounted) return;
-    showCommandPalette(
+    final store = _active;
+    final extra = signal<List<AppCommand>>(const []);
+    final status = signal<String?>(null);
+
+    await showCommandPalette(
       context: context,
       commands: _buildCommands(recentPaths: recentPaths),
+      extraCommands: extra,
+      status: status,
+      onQueryChanged: (q) => _startDeepSearch(store, q, extra, status),
       onRun: (command) => CommandUsageStore.instance.record(command.id),
       recentIds: CommandUsageStore.instance.rankedIds(),
     );
+
+    _deepDebounce?.cancel();
+    _deepDebounce = null;
+    _deepHandle?.cancel();
+    _deepHandle = null;
+    _deepToken++;
+    extra.dispose();
+    status.dispose();
   }
 }

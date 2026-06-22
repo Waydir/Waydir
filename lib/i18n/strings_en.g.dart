@@ -1097,6 +1097,12 @@ class Translations$commandPalette$en {
 
 	/// en: 'Disabled'
 	String get disabled => 'Disabled';
+
+	/// en: 'Searching subfolders… $count found'
+	String searchingDeep({required Object count}) => 'Searching subfolders… ${count} found';
+
+	/// en: '$count results'
+	String ready({required Object count}) => '${count} results';
 }
 
 // Path: quickLook
@@ -3084,6 +3090,7 @@ class Translations$help$groups$en {
 	late final Translations$help$groups$files$en files = Translations$help$groups$files$en.internal(_root);
 	late final Translations$help$groups$previewing$en previewing = Translations$help$groups$previewing$en.internal(_root);
 	late final Translations$help$groups$searching$en searching = Translations$help$groups$searching$en.internal(_root);
+	late final Translations$help$groups$commandPalette$en commandPalette = Translations$help$groups$commandPalette$en.internal(_root);
 	late final Translations$help$groups$remote$en remote = Translations$help$groups$remote$en.internal(_root);
 	late final Translations$help$groups$customization$en customization = Translations$help$groups$customization$en.internal(_root);
 	late final Translations$help$groups$resources$en resources = Translations$help$groups$resources$en.internal(_root);
@@ -3509,6 +3516,21 @@ class Translations$help$groups$searching$en {
 	late final Translations$help$groups$searching$function$en function = Translations$help$groups$searching$function$en.internal(_root);
 }
 
+// Path: help.groups.commandPalette
+class Translations$help$groups$commandPalette$en {
+	Translations$help$groups$commandPalette$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Command Palette'
+	String get title => 'Command Palette';
+
+	late final Translations$help$groups$commandPalette$basics$en basics = Translations$help$groups$commandPalette$basics$en.internal(_root);
+	late final Translations$help$groups$commandPalette$files$en files = Translations$help$groups$commandPalette$files$en.internal(_root);
+}
+
 // Path: help.groups.remote
 class Translations$help$groups$remote$en {
 	Translations$help$groups$remote$en.internal(this._root);
@@ -3899,6 +3921,36 @@ class Translations$help$groups$searching$function$en {
 
 	/// en: 'Find and run any Waydir action without hunting through menus. - Open the command search and start typing an action name. - Results show the matching command and its current shortcut. - Run it straight from the list - handy for actions you use rarely.'
 	String get body => 'Find and run any Waydir action without hunting through menus.\n\n- Open the command search and start typing an action name.\n- Results show the matching command and its current shortcut.\n- Run it straight from the list - handy for actions you use rarely.';
+}
+
+// Path: help.groups.commandPalette.basics
+class Translations$help$groups$commandPalette$basics$en {
+	Translations$help$groups$commandPalette$basics$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Run Commands'
+	String get title => 'Run Commands';
+
+	/// en: 'The command palette is the fastest way to trigger actions without leaving the keyboard. - Press `Ctrl+P` to open it. - Type an action, setting, bookmark, drive, recent path or plugin command. - Results include the current shortcut when one is assigned. - Disabled actions stay visible with a muted state when they do not apply to the current selection. - Press `Enter` to run the highlighted command or `Esc` to close the palette.'
+	String get body => 'The command palette is the fastest way to trigger actions without leaving the keyboard.\n\n- Press `Ctrl+P` to open it.\n- Type an action, setting, bookmark, drive, recent path or plugin command.\n- Results include the current shortcut when one is assigned.\n- Disabled actions stay visible with a muted state when they do not apply to the current selection.\n- Press `Enter` to run the highlighted command or `Esc` to close the palette.';
+}
+
+// Path: help.groups.commandPalette.files
+class Translations$help$groups$commandPalette$files$en {
+	Translations$help$groups$commandPalette$files$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Find Files from the Palette'
+	String get title => 'Find Files from the Palette';
+
+	/// en: 'The palette also works as a quick file jumper for the folder you are viewing. - Start typing a file or folder name to match visible items. - Keep typing for a moment and Waydir searches subfolders too. - Recursive file matches show their containing folder as the subtitle. - Choosing a file or folder focuses it in the current pane so you can open, preview or act on it.'
+	String get body => 'The palette also works as a quick file jumper for the folder you are viewing.\n\n- Start typing a file or folder name to match visible items.\n- Keep typing for a moment and Waydir searches subfolders too.\n- Recursive file matches show their containing folder as the subtitle.\n- Choosing a file or folder focuses it in the current pane so you can open, preview or act on it.';
 }
 
 // Path: help.groups.remote.sftp
@@ -4472,6 +4524,11 @@ extension on Translations {
 			'help.groups.searching.folder.body' => 'Filter the current folder or sweep through everything beneath it.\n\n- `Ctrl+F` filters the current folder by name as you type.\n- `Ctrl+Shift+F` extends the search into all subfolders.\n- Turn on **Content** to search inside file contents (local folders only - not over SFTP).\n- Switch between **Substring**, **Glob** and **Regex** matching.\n- `Esc` closes the search and restores the full list.',
 			'help.groups.searching.function.title' => 'Function & Command Search',
 			'help.groups.searching.function.body' => 'Find and run any Waydir action without hunting through menus.\n\n- Open the command search and start typing an action name.\n- Results show the matching command and its current shortcut.\n- Run it straight from the list - handy for actions you use rarely.',
+			'help.groups.commandPalette.title' => 'Command Palette',
+			'help.groups.commandPalette.basics.title' => 'Run Commands',
+			'help.groups.commandPalette.basics.body' => 'The command palette is the fastest way to trigger actions without leaving the keyboard.\n\n- Press `Ctrl+P` to open it.\n- Type an action, setting, bookmark, drive, recent path or plugin command.\n- Results include the current shortcut when one is assigned.\n- Disabled actions stay visible with a muted state when they do not apply to the current selection.\n- Press `Enter` to run the highlighted command or `Esc` to close the palette.',
+			'help.groups.commandPalette.files.title' => 'Find Files from the Palette',
+			'help.groups.commandPalette.files.body' => 'The palette also works as a quick file jumper for the folder you are viewing.\n\n- Start typing a file or folder name to match visible items.\n- Keep typing for a moment and Waydir searches subfolders too.\n- Recursive file matches show their containing folder as the subtitle.\n- Choosing a file or folder focuses it in the current pane so you can open, preview or act on it.',
 			'help.groups.remote.title' => 'Remote & Integrations',
 			'help.groups.remote.sftp.title' => 'SFTP & Remote Servers',
 			'help.groups.remote.sftp.body' => 'Work with SFTP servers right next to your local folders.\n\n- Use **Connect to Server** from the sidebar to add a remote location.\n- Once connected, open and browse remote folders exactly like local ones.\n- Bookmark folders you visit often so they stay one click away.\n- Selection, the context menu and file operations all behave the same as locally - only content search is unavailable over SFTP.',
@@ -4536,13 +4593,13 @@ extension on Translations {
 			'keybindings.pageUp' => 'Move up one page',
 			'keybindings.pageDown' => 'Move down one page',
 			'keybindings.home' => 'Jump to start',
+			_ => null,
+		} ?? switch (path) {
 			'keybindings.end' => 'Jump to end',
 			'keybindings.newTab' => 'New tab',
 			'keybindings.closeTab' => 'Close tab',
 			'keybindings.nextTab' => 'Next tab',
 			'keybindings.prevTab' => 'Previous tab',
-			_ => null,
-		} ?? switch (path) {
 			'keybindings.switchTab' => 'Switch to tab',
 			'keybindings.jumpBookmark' => 'Jump to bookmark',
 			'keybindings.toggleDual' => 'Toggle dual pane',
@@ -4601,6 +4658,8 @@ extension on Translations {
 			'commandPalette.preferencesSubtitle' => 'Open the full settings dialog',
 			'commandPalette.enabled' => 'Enabled',
 			'commandPalette.disabled' => 'Disabled',
+			'commandPalette.searchingDeep' => ({required Object count}) => 'Searching subfolders… ${count} found',
+			'commandPalette.ready' => ({required Object count}) => '${count} results',
 			'quickLook.title' => 'Quick Look',
 			'quickLook.noSelection' => 'No file selected',
 			'quickLook.folder' => 'Folder',

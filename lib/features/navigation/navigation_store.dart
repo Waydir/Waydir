@@ -1884,6 +1884,28 @@ class NavigationStore {
     selectedPaths.value = {path};
   }
 
+  /// Moves the cursor and selection to [entry] in the file list. When the entry
+  /// lives in the current folder it is focused in place; otherwise its parent
+  /// folder is opened and the entry is selected once the listing loads.
+  void focusEntry(FileEntry entry) {
+    final parent = PlatformPaths.parentOf(entry.path);
+    if (parent.isEmpty) return;
+    if (parent == currentPath.value) {
+      closeSearch();
+      final idx = _vf.indexWhere((f) => f.path == entry.path);
+      if (idx < 0) return;
+      batch(() {
+        selectedPaths.value = {entry.path};
+        cursorIndex.value = idx;
+        anchorIndex.value = idx;
+      });
+    } else {
+      _pendingInitialSelect = entry.path;
+      navigateTo(parent);
+    }
+    fileListFocusRequest.value++;
+  }
+
   void onOpen(FileEntry entry) => unawaited(_openEntry(entry));
 
   Future<void> _openEntry(FileEntry entry) async {

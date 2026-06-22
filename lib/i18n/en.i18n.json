@@ -556,6 +556,17 @@
           "body": "Find and run any Waydir action without hunting through menus.\n\n- Open the command search and start typing an action name.\n- Results show the matching command and its current shortcut.\n- Run it straight from the list - handy for actions you use rarely."
         }
       },
+      "commandPalette": {
+        "title": "Command Palette",
+        "basics": {
+          "title": "Run Commands",
+          "body": "The command palette is the fastest way to trigger actions without leaving the keyboard.\n\n- Press `Ctrl+P` to open it.\n- Type an action, setting, bookmark, drive, recent path or plugin command.\n- Results include the current shortcut when one is assigned.\n- Disabled actions stay visible with a muted state when they do not apply to the current selection.\n- Press `Enter` to run the highlighted command or `Esc` to close the palette."
+        },
+        "files": {
+          "title": "Find Files from the Palette",
+          "body": "The palette also works as a quick file jumper for the folder you are viewing.\n\n- Start typing a file or folder name to match visible items.\n- Keep typing for a moment and Waydir searches subfolders too.\n- Recursive file matches show their containing folder as the subtitle.\n- Choosing a file or folder focuses it in the current pane so you can open, preview or act on it."
+        }
+      },
       "remote": {
         "title": "Remote & Integrations",
         "sftp": {
@@ -713,7 +724,9 @@
     "openPreferences": "Open Preferences",
     "preferencesSubtitle": "Open the full settings dialog",
     "enabled": "Enabled",
-    "disabled": "Disabled"
+    "disabled": "Disabled",
+    "searchingDeep": "Searching subfolders… $count found",
+    "ready": "$count results"
   },
   "quickLook": {
     "title": "Quick Look",

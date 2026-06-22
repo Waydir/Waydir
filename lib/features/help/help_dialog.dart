@@ -185,6 +185,20 @@ final _groups = <_HelpGroup>[
     ],
   ),
   _HelpGroup(
+    title: () => t.help.groups.commandPalette.title,
+    icon: WaydirIconsRegular.magicWand,
+    pages: [
+      _HelpPage(
+        title: () => t.help.groups.commandPalette.basics.title,
+        body: () => t.help.groups.commandPalette.basics.body,
+      ),
+      _HelpPage(
+        title: () => t.help.groups.commandPalette.files.title,
+        body: () => t.help.groups.commandPalette.files.body,
+      ),
+    ],
+  ),
+  _HelpGroup(
     title: () => t.help.groups.remote.title,
     icon: WaydirIconsRegular.hardDrive,
     pages: [
