@@ -265,14 +265,9 @@ class _TitleBarRow extends StatelessWidget {
               onPluginAction: onPluginAction,
             ),
           ],
-          Expanded(
-            child: Stack(
-              children: [
-                const MoveWindow(),
-                const Center(child: _CommandPaletteButton()),
-              ],
-            ),
-          ),
+          const Expanded(child: MoveWindow()),
+          const _CommandPaletteButton(),
+          const SizedBox(width: 8),
           if (!Platform.isMacOS) const _WindowButtons(),
         ],
       ),
