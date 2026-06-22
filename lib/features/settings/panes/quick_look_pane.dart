@@ -7,7 +7,9 @@ import '../../../i18n/strings.g.dart';
 import '../preferences_view.dart';
 
 class QuickLookPane extends StatefulWidget {
-  const QuickLookPane({super.key});
+  final PreferenceAnchors anchors;
+
+  const QuickLookPane({super.key, required this.anchors});
 
   @override
   State<QuickLookPane> createState() => _QuickLookPaneState();
@@ -40,42 +42,47 @@ class _QuickLookPaneState extends State<QuickLookPane> {
     final showStatistics = registry.byId('quickLook.showStatistics');
     final wrapLines = registry.byId('quickLook.wrapLines');
     final vimMode = registry.byId('quickLook.vimMode');
+    Widget row(AppSetting<dynamic> setting) {
+      return RegistrySettingRow(setting: setting, anchors: widget.anchors);
+    }
 
     return SettingsPaneScaffold(
       children: [
         SettingsSection(
           anchorId: 'quickLook.font',
+          anchors: widget.anchors,
           title: t.preferences.quickLook.fontSection,
           children: [
-            RegistrySettingRow(setting: useSystemFont),
+            row(useSystemFont),
             SignalBuilder(
               builder: (_) {
                 if (useSystemFont.value == true) return const SizedBox.shrink();
 
-                return RegistrySettingRow(setting: fontFamily);
+                return row(fontFamily);
               },
             ),
-            RegistrySettingRow(setting: fontSize),
-            RegistrySettingRow(setting: lineHeight),
+            row(fontSize),
+            row(lineHeight),
           ],
         ),
         SettingsSection(
           anchorId: 'quickLook.editor',
+          anchors: widget.anchors,
           title: t.preferences.quickLook.editorSection,
           children: [
-            RegistrySettingRow(setting: showLineNumbers),
+            row(showLineNumbers),
             SignalBuilder(
               builder: (_) {
                 if (showLineNumbers.value != true) {
                   return const SizedBox.shrink();
                 }
 
-                return RegistrySettingRow(setting: relativeLineNumbers);
+                return row(relativeLineNumbers);
               },
             ),
-            RegistrySettingRow(setting: wrapLines),
-            RegistrySettingRow(setting: vimMode),
-            RegistrySettingRow(setting: showStatistics),
+            row(wrapLines),
+            row(vimMode),
+            row(showStatistics),
           ],
         ),
       ],

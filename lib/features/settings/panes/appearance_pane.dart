@@ -19,7 +19,9 @@ import '../../../ui/widgets/app_text_field.dart';
 import '../preferences_view.dart';
 
 class AppearancePane extends StatefulWidget {
-  const AppearancePane({super.key});
+  final PreferenceAnchors anchors;
+
+  const AppearancePane({super.key, required this.anchors});
 
   @override
   State<AppearancePane> createState() => _AppearancePaneState();
@@ -165,16 +167,24 @@ class _AppearancePaneState extends State<AppearancePane> {
   @override
   Widget build(BuildContext context) {
     final registry = SettingsRegistry.instance;
+    Widget row(AppSetting<dynamic> setting, {Key? key}) {
+      return RegistrySettingRow(
+        key: key,
+        setting: setting,
+        anchors: widget.anchors,
+      );
+    }
 
     return SettingsPaneScaffold(
       children: [
         SettingsSection(
           anchorId: 'appearance.theme',
+          anchors: widget.anchors,
           title: t.preferences.appearance.themeSection,
           children: [
-            RegistrySettingRow(
+            row(
+              registry.byId('appearance.theme'),
               key: ValueKey(_themeVersion),
-              setting: registry.byId('appearance.theme'),
             ),
             FutureBuilder<_ThemeFilesState>(
               future: _themeFiles,
@@ -195,34 +205,19 @@ class _AppearancePaneState extends State<AppearancePane> {
         ),
         SettingsSection(
           anchorId: 'appearance.files',
+          anchors: widget.anchors,
           title: t.preferences.appearance.filesSection,
           children: [
-            RegistrySettingRow(
-              setting: registry.byId('appearance.showHiddenDefault'),
-            ),
-            RegistrySettingRow(setting: registry.byId('appearance.rowDensity')),
-            RegistrySettingRow(
-              setting: registry.byId('appearance.fileListHorizontalSpacing'),
-            ),
-            RegistrySettingRow(
-              setting: registry.byId('appearance.fileListVerticalSpacing'),
-            ),
-            RegistrySettingRow(
-              setting: registry.byId('appearance.columnWidthMode'),
-            ),
-            RegistrySettingRow(setting: registry.byId('appearance.dateFormat')),
-            RegistrySettingRow(
-              setting: registry.byId('appearance.recentDatesRelative'),
-            ),
-            RegistrySettingRow(
-              setting: registry.byId('appearance.naturalSort'),
-            ),
-            RegistrySettingRow(
-              setting: registry.byId('appearance.foldersFirst'),
-            ),
-            RegistrySettingRow(
-              setting: registry.byId('appearance.sortFolders'),
-            ),
+            row(registry.byId('appearance.showHiddenDefault')),
+            row(registry.byId('appearance.rowDensity')),
+            row(registry.byId('appearance.fileListHorizontalSpacing')),
+            row(registry.byId('appearance.fileListVerticalSpacing')),
+            row(registry.byId('appearance.columnWidthMode')),
+            row(registry.byId('appearance.dateFormat')),
+            row(registry.byId('appearance.recentDatesRelative')),
+            row(registry.byId('appearance.naturalSort')),
+            row(registry.byId('appearance.foldersFirst')),
+            row(registry.byId('appearance.sortFolders')),
           ],
         ),
       ],

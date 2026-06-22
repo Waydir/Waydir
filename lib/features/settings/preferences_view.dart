@@ -236,29 +236,17 @@ bool _matchesQuery(String query, Iterable<String> values) {
   return tokens.every(haystack.contains);
 }
 
-class PreferenceAnchorScope extends InheritedWidget {
+class PreferenceAnchors {
   final Map<String, GlobalKey> sectionKeys;
   final Map<String, GlobalKey> settingKeys;
 
-  const PreferenceAnchorScope({
-    super.key,
+  const PreferenceAnchors({
     required this.sectionKeys,
     required this.settingKeys,
-    required super.child,
   });
-
-  static PreferenceAnchorScope? maybeOf(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType<PreferenceAnchorScope>();
-  }
 
   GlobalKey? sectionKey(String id) => sectionKeys[id];
   GlobalKey? settingKey(String id) => settingKeys[id];
-
-  @override
-  bool updateShouldNotify(PreferenceAnchorScope oldWidget) {
-    return sectionKeys != oldWidget.sectionKeys ||
-        settingKeys != oldWidget.settingKeys;
-  }
 }
 
 class _PreferenceSearchResult {
@@ -490,6 +478,10 @@ class _PreferencesDialogState extends State<_PreferencesDialog> {
     final dialogWidth = size.width * 0.8 > 920 ? 920.0 : size.width * 0.8;
     final dialogHeight = size.height - 96 > 640 ? 640.0 : size.height - 96;
     final results = _searchResults();
+    final anchors = PreferenceAnchors(
+      sectionKeys: _sectionKeys,
+      settingKeys: _settingKeys,
+    );
     if (_activeResult >= results.length) {
       _activeResult = results.isEmpty ? 0 : results.length - 1;
     }
@@ -526,11 +518,7 @@ class _PreferencesDialogState extends State<_PreferencesDialog> {
                   Expanded(
                     child: Stack(
                       children: [
-                        PreferenceAnchorScope(
-                          sectionKeys: _sectionKeys,
-                          settingKeys: _settingKeys,
-                          child: _ContentPane(category: _selected),
-                        ),
+                        _ContentPane(category: _selected, anchors: anchors),
                         if (_showResults && _query.trim().isNotEmpty)
                           Positioned(
                             left: 0,
@@ -686,9 +674,9 @@ class _SearchResultsPanelState extends State<_SearchResultsPanel> {
       decoration: BoxDecoration(
         color: AppColors.bgSidebar,
         border: Border(bottom: BorderSide(color: AppColors.bgDivider)),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Color(0x66000000),
+            color: AppColors.shadowSubtle,
             blurRadius: 12,
             offset: Offset(0, 6),
           ),
@@ -914,16 +902,17 @@ class _CategoryItemState extends State<_CategoryItem> {
 
 class _ContentPane extends StatelessWidget {
   final Category category;
+  final PreferenceAnchors anchors;
 
-  const _ContentPane({required this.category});
+  const _ContentPane({required this.category, required this.anchors});
 
   @override
   Widget build(BuildContext context) {
     return switch (category) {
-      Category.general => const GeneralPane(),
-      Category.appearance => const AppearancePane(),
-      Category.terminal => const TerminalPane(),
-      Category.quickLook => const QuickLookPane(),
+      Category.general => GeneralPane(anchors: anchors),
+      Category.appearance => AppearancePane(anchors: anchors),
+      Category.terminal => TerminalPane(anchors: anchors),
+      Category.quickLook => QuickLookPane(anchors: anchors),
     };
   }
 }
@@ -946,19 +935,19 @@ class SettingsSection extends StatelessWidget {
   final String? anchorId;
   final String title;
   final List<Widget> children;
+  final PreferenceAnchors? anchors;
 
   const SettingsSection({
     super.key,
     this.anchorId,
     required this.title,
     required this.children,
+    this.anchors,
   });
 
   @override
   Widget build(BuildContext context) {
-    final anchorKey = anchorId == null
-        ? null
-        : PreferenceAnchorScope.maybeOf(context)?.sectionKey(anchorId!);
+    final anchorKey = anchorId == null ? null : anchors?.sectionKey(anchorId!);
 
     return Column(
       key: anchorKey,
@@ -1046,13 +1035,14 @@ class SettingsRow extends StatelessWidget {
 
 class RegistrySettingRow extends StatelessWidget {
   final AppSetting<dynamic> setting;
+  final PreferenceAnchors? anchors;
 
-  const RegistrySettingRow({super.key, required this.setting});
+  const RegistrySettingRow({super.key, required this.setting, this.anchors});
 
   @override
   Widget build(BuildContext context) {
     return KeyedSubtree(
-      key: PreferenceAnchorScope.maybeOf(context)?.settingKey(setting.id),
+      key: anchors?.settingKey(setting.id),
       child: SignalBuilder(
         builder: (_) {
           final stretch = setting is ChoiceSetting || setting is TextSetting;
