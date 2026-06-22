@@ -39,7 +39,7 @@ import '../tags/tag_edit_dialog.dart';
 import '../tags/tag_path.dart';
 import '../tags/tag_store.dart';
 
-const double _sectionGap = 12;
+const double _sectionGap = 0;
 const double _gutter = 8;
 const double _expandedRightGutter = 4;
 const double _rowPadH = 10;
@@ -703,6 +703,8 @@ class _SidebarState extends State<Sidebar> {
         );
       }
     }
+
+    children.add(const SizedBox(height: 12));
 
     return ListView(
       controller: _scrollController,
