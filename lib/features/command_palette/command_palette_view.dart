@@ -22,18 +22,21 @@ Future<void> showCommandPalette({
     context: context,
     barrierColor: Colors.black.withValues(alpha: 0.4),
     builder: (ctx) => Align(
-      alignment: const Alignment(0, -0.6),
-      child: Material(
-        type: MaterialType.transparency,
-        child: _CommandPalette(
-          commands: commands,
-          recentIds: recentIds,
-          onRun: (cmd) {
-            Navigator.of(ctx).pop();
-            onRun(cmd);
-            cmd.run();
-          },
-          onClose: () => Navigator.of(ctx).pop(),
+      alignment: Alignment.topCenter,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 96),
+        child: Material(
+          type: MaterialType.transparency,
+          child: _CommandPalette(
+            commands: commands,
+            recentIds: recentIds,
+            onRun: (cmd) {
+              Navigator.of(ctx).pop();
+              onRun(cmd);
+              cmd.run();
+            },
+            onClose: () => Navigator.of(ctx).pop(),
+          ),
         ),
       ),
     ),
@@ -252,7 +255,7 @@ class _CommandPaletteState extends State<_CommandPalette> {
 }
 
 class _CommandRow extends StatelessWidget {
-  static const height = 38.0;
+  static const height = 46.0;
 
   final AppCommand command;
   final String? binding;
@@ -291,12 +294,25 @@ class _CommandRow extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  command.label,
-                  style: context.txt.row.copyWith(color: fg),
-                  overflow: TextOverflow.ellipsis,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      command.label,
+                      style: context.txt.row.copyWith(color: fg),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (command.description != null)
+                      Text(
+                        command.description!,
+                        style: context.txt.muted,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                  ],
                 ),
               ),
+              const SizedBox(width: 12),
               if (disabled && command.disabledReason != null)
                 Text(command.disabledReason!, style: context.txt.muted)
               else if (binding != null && binding!.isNotEmpty)

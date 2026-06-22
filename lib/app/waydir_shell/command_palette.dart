@@ -18,17 +18,20 @@ mixin _WaydirCommandPaletteMixin
     VoidCallback run, {
     bool enabled = true,
     String? label,
+    String? category,
+    ShortcutGroup? group,
     IconData? icon,
   }) {
     final def = AppShortcuts.tryGetById(id);
+    final effectiveGroup = group ?? def?.group;
+    final meta = effectiveGroup != null
+        ? shortcutGroupMeta[effectiveGroup]
+        : null;
     return AppCommand(
       id: id,
       label: label ?? (def != null ? shortcutLabel(def) : id),
-      icon:
-          icon ??
-          (def != null
-              ? shortcutGroupMeta[def.group]!.icon
-              : WaydirIconsRegular.gearSix),
+      description: category ?? meta?.title(),
+      icon: icon ?? meta?.icon ?? WaydirIconsRegular.gearSix,
       enabled: enabled,
       disabledReason: enabled ? null : t.commandPalette.unavailable,
       run: run,
@@ -77,6 +80,7 @@ mixin _WaydirCommandPaletteMixin
         () => _openPropertiesFromMenu(store),
         enabled: hasTarget,
         label: t.menu.properties,
+        group: ShortcutGroup.fileOps,
         icon: WaydirIconsRegular.info,
       ),
       _cmd(
@@ -84,6 +88,7 @@ mixin _WaydirCommandPaletteMixin
         () => unawaited(_compressWithOptions()),
         enabled: hasTarget,
         label: t.menu.compressOptions,
+        group: ShortcutGroup.fileOps,
         icon: WaydirIconsRegular.archive,
       ),
       _cmd(
@@ -91,6 +96,7 @@ mixin _WaydirCommandPaletteMixin
         () => _extractSelected(toOwnFolder: false),
         enabled: hasTarget,
         label: t.menu.extractHere,
+        group: ShortcutGroup.fileOps,
         icon: WaydirIconsRegular.archive,
       ),
       _cmd('select_all', store.selectAll),

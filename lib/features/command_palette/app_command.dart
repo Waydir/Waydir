@@ -7,6 +7,10 @@ class AppCommand {
   /// resolve the current key binding and to key usage history (frecency).
   final String id;
   final String label;
+
+  /// Light secondary text shown under the label (usually the command's
+  /// category) to give the entry context.
+  final String? description;
   final IconData icon;
 
   /// Whether the command can run in the current context. Disabled commands are
@@ -23,6 +27,7 @@ class AppCommand {
     required this.label,
     required this.icon,
     required this.run,
+    this.description,
     this.enabled = true,
     this.disabledReason,
   });
