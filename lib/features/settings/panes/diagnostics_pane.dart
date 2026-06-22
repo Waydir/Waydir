@@ -28,7 +28,7 @@ Future<void> showDiagnosticsDialog(BuildContext context) {
       width: width,
       height: height,
       onClose: () => Navigator.of(ctx).pop(),
-      child: const SingleChildScrollView(child: DiagnosticsPane()),
+      child: const DiagnosticsPane(),
     ),
   );
 }
