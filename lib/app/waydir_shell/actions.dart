@@ -491,4 +491,67 @@ mixin _WaydirActionsMixin on State<WaydirShell>, _WaydirStateBase {
 
   List<String> _dualPaneSources(NavigationStore store) =>
       _dualPaneEntries(store).map((e) => e.realPath).toList();
+
+  void _copySelectedWithToast(NavigationStore store) {
+    store.copySelected();
+    final count = store.selectedPaths.value.length;
+    if (count > 0) {
+      showToast(
+        context: context,
+        message: t.toast.copiedItems(count: count),
+      );
+    }
+  }
+
+  void _cutSelectedWithToast(NavigationStore store) {
+    store.cutSelected();
+    final count = store.selectedPaths.value.length;
+    if (count > 0) {
+      showToast(
+        context: context,
+        message: t.toast.cutItems(count: count),
+      );
+    }
+  }
+
+  void _toggleViewMode() {
+    final mode = SettingsStore.instance.fileViewMode;
+    mode.value = mode.value == 'grid' ? 'list' : 'grid';
+  }
+
+  void _toggleSidebarCollapsed() {
+    final s = SettingsStore.instance.sidebarCollapsed;
+    s.value = !s.value;
+  }
+
+  void _newTabHere() {
+    _shell.activePane.value!.tabs.addTab(_active.currentPath.value);
+  }
+
+  void _closeActiveTab() {
+    final tabsStore = _shell.activePane.value!.tabs;
+    if (tabsStore.tabs.value.length > 1) {
+      tabsStore.closeTab(tabsStore.activeTab.value.id);
+    }
+  }
+
+  void _selectNextTab() {
+    final tabsStore = _shell.activePane.value!.tabs;
+    final count = tabsStore.tabs.value.length;
+    tabsStore.selectTab((tabsStore.activeIndex.value + 1) % count);
+  }
+
+  void _selectPrevTab() {
+    final tabsStore = _shell.activePane.value!.tabs;
+    final count = tabsStore.tabs.value.length;
+    tabsStore.selectTab((tabsStore.activeIndex.value - 1 + count) % count);
+  }
+
+  void _renameOrMultiRename(NavigationStore store) {
+    if (store.selectedCount.value >= 2) {
+      _multiRename(store);
+    } else {
+      store.startRename();
+    }
+  }
 }
