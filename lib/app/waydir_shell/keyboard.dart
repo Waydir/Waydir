@@ -18,7 +18,8 @@ mixin _WaydirKeyboardMixin
         _WaydirStateBase,
         _WaydirActionsMixin,
         _WaydirTerminalMixin,
-        _WaydirMenuMixin {
+        _WaydirMenuMixin,
+        _WaydirCommandPaletteMixin {
   bool _acceptCursorRepeat() {
     final now = DateTime.now();
     final last = _lastCursorRepeatAt;
@@ -41,6 +42,12 @@ mixin _WaydirKeyboardMixin
     final ctrl = AppShortcuts.isControl;
     final shift = HardwareKeyboard.instance.isShiftPressed;
     final alt = HardwareKeyboard.instance.isAltPressed;
+
+    if (!_isModalRouteOnTop() && AppShortcuts.matches('command_palette', key)) {
+      _openCommandPalette();
+
+      return KeyEventResult.handled;
+    }
 
     if (!_isModalRouteOnTop() && AppShortcuts.matches('preferences', key)) {
       _openPreferences();
@@ -110,8 +117,7 @@ mixin _WaydirKeyboardMixin
     }
 
     if (AppShortcuts.matches('toggle_sidebar', key)) {
-      final s = SettingsStore.instance.sidebarCollapsed;
-      s.value = !s.value;
+      _toggleSidebarCollapsed();
 
       return KeyEventResult.handled;
     }
@@ -123,8 +129,7 @@ mixin _WaydirKeyboardMixin
     }
 
     if (AppShortcuts.matches('toggle_view', key)) {
-      final mode = SettingsStore.instance.fileViewMode;
-      mode.value = mode.value == 'grid' ? 'list' : 'grid';
+      _toggleViewMode();
 
       return KeyEventResult.handled;
     }
@@ -160,36 +165,25 @@ mixin _WaydirKeyboardMixin
     }
 
     if (AppShortcuts.matches('new_tab', key)) {
-      _shell.activePane.value!.tabs.addTab(_active.currentPath.value);
+      _newTabHere();
 
       return KeyEventResult.handled;
     }
 
     if (AppShortcuts.matches('close_tab', key)) {
-      final tabsStore = _shell.activePane.value!.tabs;
-      final tab = tabsStore.activeTab.value;
-      if (tabsStore.tabs.value.length > 1) {
-        tabsStore.closeTab(tab.id);
-      }
+      _closeActiveTab();
 
       return KeyEventResult.handled;
     }
 
     if (AppShortcuts.matches('next_tab', key)) {
-      final tabsStore = _shell.activePane.value!.tabs;
-      final idx = tabsStore.activeIndex.value;
-      final next = (idx + 1) % tabsStore.tabs.value.length;
-      tabsStore.selectTab(next);
+      _selectNextTab();
 
       return KeyEventResult.handled;
     }
 
     if (AppShortcuts.matches('prev_tab', key)) {
-      final tabsStore = _shell.activePane.value!.tabs;
-      final idx = tabsStore.activeIndex.value;
-      final prev =
-          (idx - 1 + tabsStore.tabs.value.length) % tabsStore.tabs.value.length;
-      tabsStore.selectTab(prev);
+      _selectPrevTab();
 
       return KeyEventResult.handled;
     }
@@ -323,27 +317,13 @@ mixin _WaydirKeyboardMixin
     }
 
     if (AppShortcuts.matches('copy', key)) {
-      store.copySelected();
-      final count = store.selectedPaths.value.length;
-      if (count > 0) {
-        showToast(
-          context: context,
-          message: t.toast.copiedItems(count: count),
-        );
-      }
+      _copySelectedWithToast(store);
 
       return KeyEventResult.handled;
     }
 
     if (AppShortcuts.matches('cut', key)) {
-      store.cutSelected();
-      final count = store.selectedPaths.value.length;
-      if (count > 0) {
-        showToast(
-          context: context,
-          message: t.toast.cutItems(count: count),
-        );
-      }
+      _cutSelectedWithToast(store);
 
       return KeyEventResult.handled;
     }
@@ -518,11 +498,7 @@ mixin _WaydirKeyboardMixin
     }
 
     if (AppShortcuts.matches('rename', key)) {
-      if (store.selectedCount.value >= 2) {
-        _multiRename(store);
-      } else {
-        store.startRename();
-      }
+      _renameOrMultiRename(store);
 
       return KeyEventResult.handled;
     }

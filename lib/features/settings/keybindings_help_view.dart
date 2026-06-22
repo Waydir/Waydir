@@ -9,6 +9,7 @@ import '../../i18n/strings.g.dart';
 import '../../ui/theme/app_theme.dart';
 import '../../ui/theme/app_text_styles.dart';
 import '../../ui/widgets/app_modal.dart';
+import 'keybinding_labels.dart';
 
 Future<void> showKeybindingsHelp(BuildContext context) {
   return showDialog<void>(
@@ -18,127 +19,6 @@ Future<void> showKeybindingsHelp(BuildContext context) {
     builder: (ctx) => const _KeybindingsHelpDialog(),
   );
 }
-
-final _groupMeta = <ShortcutGroup, ({String Function() title, IconData icon})>{
-  ShortcutGroup.navigation: (
-    title: () => t.keybindings.categories.navigation,
-    icon: WaydirIconsRegular.compass,
-  ),
-  ShortcutGroup.quickLook: (
-    title: () => t.keybindings.categories.quickLook,
-    icon: WaydirIconsRegular.eye,
-  ),
-  ShortcutGroup.view: (
-    title: () => t.keybindings.categories.view,
-    icon: WaydirIconsRegular.eye,
-  ),
-  ShortcutGroup.tabs: (
-    title: () => t.keybindings.categories.tabs,
-    icon: WaydirIconsRegular.tabs,
-  ),
-  ShortcutGroup.panes: (
-    title: () => t.keybindings.categories.panes,
-    icon: WaydirIconsRegular.columns,
-  ),
-  ShortcutGroup.terminal: (
-    title: () => t.keybindings.categories.terminal,
-    icon: WaydirIconsRegular.terminal,
-  ),
-  ShortcutGroup.fileOps: (
-    title: () => t.keybindings.categories.fileOps,
-    icon: WaydirIconsRegular.copy,
-  ),
-  ShortcutGroup.selection: (
-    title: () => t.keybindings.categories.selection,
-    icon: WaydirIconsRegular.checkSquare,
-  ),
-  ShortcutGroup.search: (
-    title: () => t.keybindings.categories.search,
-    icon: WaydirIconsRegular.magnifyingGlass,
-  ),
-  ShortcutGroup.general: (
-    title: () => t.keybindings.categories.general,
-    icon: WaydirIconsRegular.gearSix,
-  ),
-  ShortcutGroup.plugins: (
-    title: () => t.preferences.plugins.title,
-    icon: WaydirIconsRegular.gearSix,
-  ),
-};
-
-final _groupOrder = ShortcutGroup.values;
-
-String _labelFor(ShortcutDef s) => switch (s.id) {
-  'open_item' => t.keybindings.openItem,
-  'go_up' => t.keybindings.goUp,
-  'go_back' => t.keybindings.goBack,
-  'go_forward' => t.keybindings.goForward,
-  'refresh' => t.keybindings.refresh,
-  'focus_path' => t.keybindings.focusPath,
-  'quick_look' => t.keybindings.quickLook,
-  'quick_look_close' => t.keybindings.quickLookClose,
-  'quick_look_prev_file' => t.keybindings.quickLookPrevFile,
-  'quick_look_next_file' => t.keybindings.quickLookNextFile,
-  'quick_look_prev_file_edit' => t.keybindings.quickLookPrevFileEdit,
-  'quick_look_next_file_edit' => t.keybindings.quickLookNextFileEdit,
-  'quick_look_save' => t.keybindings.quickLookSave,
-  'cursor_up' => t.keybindings.cursorUp,
-  'cursor_down' => t.keybindings.cursorDown,
-  'page_up' => t.keybindings.pageUp,
-  'page_down' => t.keybindings.pageDown,
-  'home' => t.keybindings.home,
-  'end' => t.keybindings.end,
-  'new_tab' => t.keybindings.newTab,
-  'close_tab' => t.keybindings.closeTab,
-  'next_tab' => t.keybindings.nextTab,
-  'prev_tab' => t.keybindings.prevTab,
-  'switch_tab' => t.keybindings.switchTab,
-  'jump_bookmark' => t.keybindings.jumpBookmark,
-  'toggle_dual' => t.keybindings.toggleDual,
-  'switch_pane' => t.keybindings.switchPane,
-  'compare' => t.keybindings.compare,
-  'compare_sync_right' => t.keybindings.compareSyncRight,
-  'compare_sync_left' => t.keybindings.compareSyncLeft,
-  'compare_exit' => t.keybindings.compareExit,
-  'focus_terminal' => t.keybindings.focusTerminal,
-  'toggle_terminal' => t.keybindings.toggleTerminal,
-  'new_terminal_tab' => t.keybindings.newTerminalTab,
-  'close_terminal_tab' => t.keybindings.closeTerminalTab,
-  'insert_relative_paths' => t.keybindings.insertRelativePaths,
-  'insert_absolute_paths' => t.keybindings.insertAbsolutePaths,
-  'terminal_font_increase' => t.keybindings.terminalFontIncrease,
-  'terminal_font_decrease' => t.keybindings.terminalFontDecrease,
-  'terminal_font_reset' => t.keybindings.terminalFontReset,
-  'file_list_zoom_in' => t.keybindings.fileListZoomIn,
-  'file_list_zoom_out' => t.keybindings.fileListZoomOut,
-  'file_list_zoom_reset' => t.keybindings.fileListZoomReset,
-  'toggle_sidebar' => t.keybindings.toggleSidebar,
-  'toggle_view' => t.keybindings.toggleView,
-  'copy' => t.keybindings.copy,
-  'cut' => t.keybindings.cut,
-  'paste' => t.keybindings.paste,
-  'delete' => t.keybindings.delete,
-  'delete_permanent' => t.keybindings.deletePermanent,
-  'rename' => t.keybindings.rename,
-  'new_folder' => t.keybindings.newFolder,
-  'dual_copy' => t.keybindings.dualCopy,
-  'dual_move' => t.keybindings.dualMove,
-  'select_all' => t.keybindings.selectAll,
-  'select_pattern' => t.keybindings.selectPattern,
-  'deselect_all' => t.keybindings.deselectAll,
-  'invert_selection' => t.keybindings.invertSelection,
-  'toggle_select' => t.keybindings.toggleSelect,
-  'save_selection' => t.keybindings.saveSelection,
-  'load_selection' => t.keybindings.loadSelection,
-  'compute_folder_size' => t.keybindings.computeFolderSize,
-  'search' => t.keybindings.search,
-  'recursive_search' => t.keybindings.recursiveSearch,
-  'toggle_hidden' => t.menu.showHidden,
-  'preferences' => t.keybindings.preferences,
-  'help' => t.help.menuLabel,
-  'close_search' => t.keybindings.closeSearch,
-  _ => s.label(),
-};
 
 class _KeybindingsHelpDialog extends StatefulWidget {
   const _KeybindingsHelpDialog();
@@ -161,9 +41,9 @@ class _KeybindingsHelpDialogState extends State<_KeybindingsHelpDialog> {
     final q = _query.trim().toLowerCase();
     final result = <ShortcutGroup, List<ShortcutDef>>{};
     for (final s in AppShortcuts.all) {
-      final label = _labelFor(s).toLowerCase();
+      final label = shortcutLabel(s).toLowerCase();
       final keys = s.displayKeys.toLowerCase();
-      final groupTitle = _groupMeta[s.group]!.title().toLowerCase();
+      final groupTitle = shortcutGroupMeta[s.group]!.title().toLowerCase();
       if (q.isEmpty ||
           label.contains(q) ||
           keys.contains(q) ||
@@ -173,7 +53,7 @@ class _KeybindingsHelpDialogState extends State<_KeybindingsHelpDialog> {
     }
 
     return [
-      for (final g in _groupOrder)
+      for (final g in shortcutGroupOrder)
         if (result.containsKey(g)) (g, result[g]!),
     ];
   }
@@ -325,7 +205,7 @@ class _ShortcutList extends StatelessWidget {
     final items = <Widget>[];
     for (int g = 0; g < groups.length; g++) {
       final (group, entries) = groups[g];
-      final meta = _groupMeta[group]!;
+      final meta = shortcutGroupMeta[group]!;
       items.add(
         _GroupHeader(title: meta.title, icon: meta.icon, isFirst: g == 0),
       );
@@ -396,7 +276,7 @@ class _ShortcutRowState extends State<_ShortcutRow> {
                     children: [
                       Flexible(
                         child: Text(
-                          _labelFor(widget.def),
+                          shortcutLabel(widget.def),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: context.txt.row,
@@ -572,7 +452,7 @@ class _ShortcutCaptureDialogState extends State<_ShortcutCaptureDialog> {
     if (conflict != null) {
       setState(() {
         _candidate = chord;
-        _error = t.keybindings.conflict(action: _labelFor(conflict));
+        _error = t.keybindings.conflict(action: shortcutLabel(conflict));
       });
 
       return KeyEventResult.handled;
@@ -601,7 +481,7 @@ class _ShortcutCaptureDialogState extends State<_ShortcutCaptureDialog> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(_labelFor(widget.def), style: context.txt.rowEmphasis),
+              Text(shortcutLabel(widget.def), style: context.txt.rowEmphasis),
               const SizedBox(height: 12),
               Container(
                 height: 44,
