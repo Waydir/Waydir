@@ -1,21 +1,19 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui' show Color;
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:signals/signals.dart';
 import '../../core/archive/archive_path.dart';
 import '../../core/archive/archive_reader.dart';
 import '../../core/models/file_entry.dart';
-import '../../core/clipboard/file_clipboard.dart';
 import '../../core/fs/file_sort.dart';
 import '../../core/fs/file_system_service.dart';
 import '../../core/fs/fs_worker_pool.dart';
 import '../../core/fs/directory_watcher_service.dart';
 import '../../core/fs/recursive_search.dart';
 import '../../core/fs/sftp_fs.dart';
-import '../../core/fs/smb_share_discovery.dart';
-import '../../core/keyboard/keyboard_shortcuts.dart';
 import '../../core/logging/app_logger.dart';
 import '../../core/platform/platform_paths.dart';
 import '../../core/platform/trash_location.dart';
@@ -28,10 +26,14 @@ import '../git/git_status_store.dart';
 import '../operations/operation_store.dart';
 import '../tags/tag_path.dart';
 import '../tags/tag_store.dart';
+import 'clipboard_controller.dart';
 import 'filter_query.dart';
 import 'folder_size_scanner.dart';
+import 'remote_resolver.dart';
+import 'search_controller.dart';
+import 'selection_controller.dart';
 
-enum ClipboardMode { copy, cut }
+export 'clipboard_controller.dart' show ClipboardMode;
 
 const String kPendingCreatePath = '__pending_create__';
 
@@ -56,12 +58,9 @@ class NavigationStore {
   final selectedPaths = signal<Set<String>>({});
   final cursorIndex = signal(-1);
   final anchorIndex = signal(-1);
-  int _pageRows = 10;
   final history = signal<List<String>>([]);
   final historyIndex = signal(0);
   final isLoading = signal(false);
-  final clipboardPaths = signal<Set<String>>({});
-  final clipboardMode = signal<ClipboardMode?>(null);
   final OperationStore operationStore;
   final gitStatus = GitStatusStore();
   Future<SmbCredentials?> Function(String logical)? requestSmbCredentials;
@@ -69,6 +68,19 @@ class NavigationStore {
   final loadError = signal<String?>(null);
   final trashAccessDenied = signal<bool>(false);
   final accessDenied = signal<bool>(false);
+  late final RemoteResolver _remoteResolver = RemoteResolver(
+    requestSmbCredentials: (logical) async {
+      final request = requestSmbCredentials;
+
+      return request == null ? null : request(logical);
+    },
+    requestSftpCredentials: (logical) async {
+      final request = requestSftpCredentials;
+
+      return request == null ? null : request(logical);
+    },
+    setLoadError: (message) => loadError.value = message,
+  );
   final renamingPath = signal<String?>(null);
   final renameError = signal<String?>(null);
   final pendingCreate = signal<FileEntry?>(null);
@@ -94,10 +106,9 @@ class NavigationStore {
   bool get isTagView => isTagPath(currentPath.value);
   bool get isTrashRoot => currentPath.value == kTrashPath;
 
-  /// Translate a logical smb:// path to its physical gvfs mountpoint when
-  /// possible; pass non-smb paths through unchanged.
-  String _physical(String p) => LocationResolver.logicalToPhysical(p) ?? p;
-  List<String> _physicalList(Iterable<String> ps) => ps.map(_physical).toList();
+  String _physical(String p) => _remoteResolver.physical(p);
+  List<String> _physicalList(Iterable<String> ps) =>
+      _remoteResolver.physicalList(ps);
 
   Future<String?> resolveForOperation(String logical) =>
       _resolvePhysicalDestination(logical);
@@ -113,180 +124,48 @@ class NavigationStore {
     return ArchivePath.resolve(path);
   }
 
-  /// Returns the physical path for [logical], mounting the share first when
-  /// [logical] is smb://. Sets [loadError] and returns null if the share
-  /// can't be reached — callers MUST refuse the op in that case (otherwise
-  /// the unresolved URI is interpreted by `Directory(...)` as a relative
-  /// path and pollutes the process CWD).
-  Future<String?> _resolvePhysicalDestination(String logical) async {
-    if (PlatformPaths.isSftpUri(logical)) {
-      final result = await _resolveSftp(logical);
-      switch (result) {
-        case ResolveSuccess():
-          return result.physicalPath;
-        case ResolveError(:final message):
-          loadError.value = message;
+  Future<String?> _resolvePhysicalDestination(String logical) =>
+      _remoteResolver.resolvePhysicalDestination(logical);
 
-          return null;
-        case ResolveUnsupported():
-          loadError.value = t.errors.sftpNotSupported;
+  Future<ResolveResult> _resolveSmb(String logical) =>
+      _remoteResolver.resolveSmb(logical);
 
-          return null;
-        case ResolveAuthenticationRequired():
-          loadError.value = t.errors.authenticationRequired;
+  Future<ResolveResult> _resolveSftp(String logical) =>
+      _remoteResolver.resolveSftp(logical);
 
-          return null;
-      }
-    }
-    if (!PlatformPaths.isSmbUri(logical)) return logical;
-    final existing = LocationResolver.logicalToPhysical(logical);
-    if (existing != null) return existing;
-    final result = await _resolveSmb(logical);
-    switch (result) {
-      case ResolveSuccess():
-        return result.physicalPath;
-      case ResolveError(:final message):
-        loadError.value = message;
+  Future<List<FileEntry>> _listSmbHostShares(String logical, LocationUri uri) =>
+      _remoteResolver.listSmbHostShares(logical, uri);
 
-        return null;
-      case ResolveUnsupported():
-        loadError.value = t.errors.smbNotSupportedOnPlatform;
-
-        return null;
-      case ResolveAuthenticationRequired():
-        loadError.value = t.errors.authenticationRequired;
-
-        return null;
-    }
-  }
-
-  Future<ResolveResult> _resolveSmb(String logical) async {
-    final result = await LocationResolver.resolve(logical);
-    if (result is! ResolveAuthenticationRequired) return result;
-    final credentials = await requestSmbCredentials?.call(logical);
-    if (credentials == null ||
-        credentials.username.trim().isEmpty ||
-        credentials.password.isEmpty) {
-      return result;
-    }
-
-    return LocationResolver.resolveWithCredentials(logical, credentials);
-  }
-
-  Future<ResolveResult> _resolveSftp(String logical) async {
-    final result = await LocationResolver.resolve(logical);
-    if (result is! ResolveAuthenticationRequired) return result;
-    final credentials = await requestSftpCredentials?.call(logical);
-    if (credentials == null || credentials.username.trim().isEmpty) {
-      return result;
-    }
-
-    return LocationResolver.resolveSftpWithCredentials(logical, credentials);
-  }
-
-  Future<List<FileEntry>> _listSmbHostShares(
-    String logical,
-    LocationUri uri,
-  ) async {
-    final host = uri.host ?? '';
-    if (host.isEmpty) {
-      throw FileSystemException(t.errors.missingSmbHost, logical);
-    }
-    SmbShareListResult result = await SmbShareDiscovery.list(
-      host: host,
-      port: uri.port,
-      credentials: uri.username != null && uri.username!.isNotEmpty
-          ? SmbCredentials(username: uri.username!, password: '')
-          : null,
-    );
-    if (result is SmbShareListAuthRequired) {
-      final creds = await requestSmbCredentials?.call(logical);
-      if (creds != null &&
-          creds.username.trim().isNotEmpty &&
-          creds.password.isNotEmpty) {
-        result = await SmbShareDiscovery.list(
-          host: host,
-          port: uri.port,
-          credentials: creds,
-        );
-      }
-    }
-    switch (result) {
-      case SmbShareListOk(:final shares):
-        final now = DateTime.now();
-
-        return [
-          for (final s in shares)
-            FileEntry(
-              name: s.name,
-              path: '$logical/${s.name}',
-              type: FileItemType.folder,
-              size: 0,
-              modified: now,
-            ),
-        ];
-      case SmbShareListAuthRequired():
-        throw FileSystemException(t.errors.authenticationRequired, logical);
-      case SmbShareListError(:final message):
-        throw FileSystemException(message, logical);
-      case SmbShareListUnsupported():
-        throw FileSystemException(t.errors.smbNotSupportedOnPlatform, logical);
-    }
-  }
-
-  Future<List<FileEntry>> _listWindowsUncShares(
-    String path,
-    String host,
-  ) async {
-    final result = await SmbShareDiscovery.list(host: host);
-    switch (result) {
-      case SmbShareListOk(:final shares):
-        final now = DateTime.now();
-
-        return [
-          for (final s in shares)
-            FileEntry(
-              name: s.name,
-              path: PlatformPaths.join(path, s.name),
-              type: FileItemType.folder,
-              size: 0,
-              modified: now,
-            ),
-        ];
-      case SmbShareListAuthRequired():
-        throw FileSystemException(t.errors.authenticationRequired, path);
-      case SmbShareListError(:final message):
-        throw FileSystemException(message, path);
-      case SmbShareListUnsupported():
-        throw FileSystemException(t.errors.smbNotSupportedOnPlatform, path);
-    }
-  }
+  Future<List<FileEntry>> _listWindowsUncShares(String path, String host) =>
+      _remoteResolver.listWindowsUncShares(path, host);
 
   final DirectoryWatcherService _watcher = DirectoryWatcherService();
 
   final _folderStateCache = <String, _FolderState>{};
 
-  final searchActive = signal(false);
-  final searchQuery = signal('');
-  final searchRecursive = signal(false);
-  final searchContent = signal(false);
-  final searchResults = signal<List<FileEntry>>([]);
-  final isSearching = signal(false);
-  final searchScannedDirs = signal(0);
-  final searchCurrentDir = signal<String?>(null);
-  final searchFocusRequest = signal(0);
   final pathBarFocusRequest = signal(0);
-  final searchPatternError = signal<String?>(null);
   final renameAttempt = signal(0);
   final gridColumns = signal(1);
+  final ClipboardController _clipboardController = ClipboardController();
+  late final SearchController _searchController = SearchController(
+    currentPath: () => currentPath.value,
+    files: () => files.value,
+    showHidden: () => showHidden.value,
+    isTagView: () => isTagView,
+    resolvePhysicalDestination: _resolvePhysicalDestination,
+    filterByTags: _filterByTags,
+    cursorIndex: cursorIndex,
+    anchorIndex: anchorIndex,
+  );
+  late final SelectionController _selectionController = SelectionController(
+    selectedPaths: selectedPaths,
+    cursorIndex: cursorIndex,
+    anchorIndex: anchorIndex,
+    gridColumns: gridColumns,
+    visibleFiles: () => _vf,
+  );
 
-  SearchHandle? _searchHandle;
-  Timer? _searchDebounce;
-  Timer? _searchUiFlush;
   void Function()? _showHiddenDisposer;
-  List<FileEntry>? _pendingSearchResults;
-  int _searchToken = 0;
-  static const _kSearchUiFlushMs = 180;
 
   late final canGoBack = computed(() => historyIndex.value > 0);
   late final canGoForward = computed(
@@ -335,7 +214,10 @@ class NavigationStore {
           list = const [];
         }
       } else {
-        final matcher = _localMatcher(q, _currentSearchMode());
+        final matcher = SearchController.localMatcher(
+          q,
+          _searchController.currentSearchMode(),
+        );
         if (matcher != null) {
           list = list.where((f) => matcher(f.name)).toList();
         } else {
@@ -376,9 +258,21 @@ class NavigationStore {
     return null;
   });
   late final selectedCount = computed(() => selectedPaths.value.length);
-  late final canPaste = computed(
-    () => clipboardPaths.value.isNotEmpty && clipboardMode.value != null,
-  );
+  Signal<Set<String>> get clipboardPaths => _clipboardController.clipboardPaths;
+  Signal<ClipboardMode?> get clipboardMode =>
+      _clipboardController.clipboardMode;
+  Computed<bool> get canPaste => _clipboardController.canPaste;
+  Signal<bool> get searchActive => _searchController.searchActive;
+  Signal<String> get searchQuery => _searchController.searchQuery;
+  Signal<bool> get searchRecursive => _searchController.searchRecursive;
+  Signal<bool> get searchContent => _searchController.searchContent;
+  Signal<List<FileEntry>> get searchResults => _searchController.searchResults;
+  Signal<bool> get isSearching => _searchController.isSearching;
+  Signal<int> get searchScannedDirs => _searchController.searchScannedDirs;
+  Signal<String?> get searchCurrentDir => _searchController.searchCurrentDir;
+  Signal<int> get searchFocusRequest => _searchController.searchFocusRequest;
+  Signal<String?> get searchPatternError =>
+      _searchController.searchPatternError;
 
   NavigationStore({
     required this.operationStore,
@@ -453,7 +347,6 @@ class NavigationStore {
     var first = true;
     _sortDefaultsDisposer = effect(() {
       final s = SettingsStore.instance;
-      // Track the global sort defaults.
       s.sortKey.value;
       s.sortAscending.value;
       s.foldersFirst.value;
@@ -462,8 +355,6 @@ class NavigationStore {
 
         return;
       }
-      // Defaults changed in Preferences: reapply for the current folder
-      // (only matters when it has no stored per-folder override).
       _loadSortFor(currentPath.value);
     });
   }
@@ -555,7 +446,7 @@ class NavigationStore {
       showHidden.value;
       if (searchActive.value &&
           (searchRecursive.value || searchContent.value)) {
-        _scheduleSearchRestart();
+        _searchController.scheduleRestart();
       }
     });
   }
@@ -564,428 +455,23 @@ class NavigationStore {
     pathBarFocusRequest.value = pathBarFocusRequest.value + 1;
   }
 
-  void openSearch({bool recursive = false}) {
-    batch(() {
-      searchActive.value = true;
-      if (recursive) searchRecursive.value = true;
-      searchFocusRequest.value = searchFocusRequest.value + 1;
-    });
-  }
+  void openSearch({bool recursive = false}) =>
+      _searchController.openSearch(recursive: recursive);
 
-  void closeSearch() {
-    _searchToken++;
-    _searchDebounce?.cancel();
-    _searchUiFlush?.cancel();
-    _searchUiFlush = null;
-    _pendingSearchResults = null;
-    _searchHandle?.cancel();
-    _searchHandle = null;
-    batch(() {
-      searchActive.value = false;
-      searchRecursive.value = false;
-      searchContent.value = false;
-      searchQuery.value = '';
-      searchResults.value = [];
-      isSearching.value = false;
-      searchScannedDirs.value = 0;
-      searchCurrentDir.value = null;
-      cursorIndex.value = -1;
-      anchorIndex.value = -1;
-    });
-  }
+  void closeSearch() => _searchController.closeSearch();
 
-  void setSearchQuery(String q) {
-    batch(() {
-      searchQuery.value = q;
-      searchPatternError.value = validateSearchPattern(
-        q.trim(),
-        _currentSearchMode(),
-      );
-      cursorIndex.value = -1;
-      anchorIndex.value = -1;
-    });
-    _scheduleSearchRestart();
-  }
+  void setSearchQuery(String query) => _searchController.setSearchQuery(query);
 
-  void toggleRecursive() {
-    searchRecursive.value = !searchRecursive.value;
-    _scheduleSearchRestart();
-  }
+  void toggleRecursive() => _searchController.toggleRecursive();
 
-  void toggleContent() {
-    if (PlatformPaths.isSftpUri(currentPath.value)) return;
-    if (SettingsStore.instance.searchMode.value == filterSearchMode) return;
-    final enabling = !searchContent.value;
-    batch(() {
-      searchContent.value = enabling;
-      if (enabling && SettingsStore.instance.searchMode.value == 'glob') {
-        SettingsStore.instance.searchMode.value = 'substring';
-        searchPatternError.value = validateSearchPattern(
-          searchQuery.value.trim(),
-          _currentSearchMode(),
-        );
-      }
-    });
-    _scheduleSearchRestart();
-  }
+  void toggleContent() => _searchController.toggleContent();
 
-  void cycleSearchMode() {
-    const order = ['substring', 'glob', 'regex', filterSearchMode];
-    final s = SettingsStore.instance;
-    final idx = order.indexOf(s.searchMode.value);
-    setSearchMode(order[((idx < 0 ? 0 : idx) + 1) % order.length]);
-  }
+  void cycleSearchMode() => _searchController.cycleSearchMode();
 
-  void setSearchMode(String mode) {
-    final s = SettingsStore.instance;
-    if (mode == 'glob' && searchContent.value) return;
-    if (s.searchMode.value == mode) return;
-    batch(() {
-      s.searchMode.value = mode;
-      if (mode == filterSearchMode) searchContent.value = false;
-      searchPatternError.value = validateSearchPattern(
-        searchQuery.value.trim(),
-        _currentSearchMode(),
-      );
-    });
-    _scheduleSearchRestart();
-  }
+  void setSearchMode(String mode) => _searchController.setSearchMode(mode);
 
-  SearchMode _currentSearchMode() {
-    switch (SettingsStore.instance.searchMode.value) {
-      case 'glob':
-        return SearchMode.glob;
-      case 'regex':
-        return SearchMode.regex;
-      default:
-        return SearchMode.substring;
-    }
-  }
-
-  static bool Function(String)? _localMatcher(String query, SearchMode mode) {
-    switch (mode) {
-      case SearchMode.substring:
-        final q = query.toLowerCase();
-
-        return (name) => name.toLowerCase().contains(q);
-      case SearchMode.regex:
-        try {
-          final r = RegExp(query);
-
-          return r.hasMatch;
-        } catch (e) {
-          return null;
-        }
-      case SearchMode.glob:
-        final r = _globToRegExp(query);
-
-        return r?.hasMatch;
-    }
-  }
-
-  static String? validateSearchPattern(String query, SearchMode mode) {
-    if (query.isEmpty) return null;
-    if (SettingsStore.instance.searchMode.value == filterSearchMode) {
-      return parseFilterQuery(query).error;
-    }
-    switch (mode) {
-      case SearchMode.substring:
-        return null;
-      case SearchMode.regex:
-        try {
-          RegExp(query);
-
-          return null;
-        } catch (e) {
-          return t.search.invalidRegex;
-        }
-      case SearchMode.glob:
-        return _globToRegExp(query) == null ? t.search.invalidGlob : null;
-    }
-  }
-
-  static RegExp? _globToRegExp(String glob) {
-    final sb = StringBuffer('^');
-    var i = 0;
-    while (i < glob.length) {
-      final c = glob[i];
-      if (c == '*') {
-        if (i + 1 < glob.length && glob[i + 1] == '*') {
-          sb.write('.*');
-          i += 2;
-        } else {
-          sb.write('[^/]*');
-          i++;
-        }
-      } else if (c == '?') {
-        sb.write('[^/]');
-        i++;
-      } else if (c == '[') {
-        final end = glob.indexOf(']', i + 1);
-        if (end < 0) return null;
-        sb.write(glob.substring(i, end + 1));
-        i = end + 1;
-      } else if ('.+()|^\$\\/'.contains(c)) {
-        sb.write('\\');
-        sb.write(c);
-        i++;
-      } else {
-        sb.write(c);
-        i++;
-      }
-    }
-    sb.write('\$');
-    try {
-      return RegExp(sb.toString(), caseSensitive: false);
-    } catch (e) {
-      return null;
-    }
-  }
-
-  void _scheduleSearchRestart() {
-    _searchDebounce?.cancel();
-    if (searchRecursive.value || searchContent.value) {
-      _searchDebounce = Timer(const Duration(milliseconds: 250), () {
-        _restartRecursiveSearch();
-      });
-
-      return;
-    }
-    _restartRecursiveSearch();
-  }
-
-  Future<void> _restartRecursiveSearch() async {
-    final token = ++_searchToken;
-    _searchHandle?.cancel();
-    _searchHandle = null;
-    _searchUiFlush?.cancel();
-    _searchUiFlush = null;
-    _pendingSearchResults = null;
-    batch(() {
-      searchResults.value = [];
-      searchScannedDirs.value = 0;
-      searchCurrentDir.value = null;
-      isSearching.value = false;
-      cursorIndex.value = -1;
-      anchorIndex.value = -1;
-    });
-    if (!searchActive.value ||
-        (!searchRecursive.value && !searchContent.value)) {
-      return;
-    }
-    final q = searchQuery.value.trim();
-    if (q.isEmpty) return;
-    isSearching.value = true;
-    final acc = <FileEntry>[];
-    final mode = _currentSearchMode();
-    final err = validateSearchPattern(q, mode);
-    searchPatternError.value = err;
-    if (err != null) {
-      isSearching.value = false;
-
-      return;
-    }
-    if (isTagView) {
-      _searchTagView(q, mode);
-
-      return;
-    }
-    final root = await _resolvePhysicalDestination(currentPath.value);
-    if (token != _searchToken) return;
-    if (root == null) {
-      isSearching.value = false;
-
-      return;
-    }
-    final filter = SettingsStore.instance.searchMode.value == filterSearchMode
-        ? parseFilterQuery(q).query
-        : null;
-    final recursiveQuery = filter?.recursiveNameQuery ?? q;
-    if (recursiveQuery.isEmpty && filter == null) {
-      isSearching.value = false;
-
-      return;
-    }
-    if (PlatformPaths.isSftpUri(root)) {
-      if (searchContent.value) {
-        isSearching.value = false;
-
-        return;
-      }
-      final matcher = filter != null && recursiveQuery.isEmpty
-          ? (_) => true
-          : _localMatcher(recursiveQuery, mode);
-      if (matcher == null) {
-        isSearching.value = false;
-
-        return;
-      }
-      _runSftpRecursiveSearch(
-        token: token,
-        root: root,
-        includeHidden: showHidden.value,
-        matcher: matcher,
-        filter: filter,
-      );
-
-      return;
-    }
-    _searchHandle = RecursiveSearch.start(
-      root: root,
-      query: recursiveQuery,
-      includeHidden: showHidden.value,
-      mode: mode,
-      content: searchContent.value,
-      maxDepth: searchRecursive.value ? 0 : 1,
-      onBatch: (b) {
-        if (token != _searchToken) return;
-        final entries = b.map(_logicalEntryFromPhysical);
-        acc.addAll(filter == null ? entries : entries.where(filter.matches));
-        _pendingSearchResults = acc;
-        _scheduleSearchUiFlush();
-      },
-      onProgress: (n, currentDir) {
-        if (token != _searchToken) return;
-        batch(() {
-          searchScannedDirs.value = n;
-          if (currentDir != null) {
-            searchCurrentDir.value =
-                LocationResolver.physicalToLogical(currentDir) ?? currentDir;
-          }
-        });
-      },
-      onDone: () {
-        if (token != _searchToken) return;
-        _searchUiFlush?.cancel();
-        _searchUiFlush = null;
-        if (_pendingSearchResults != null) {
-          searchResults.value = List.of(_pendingSearchResults!);
-          _pendingSearchResults = null;
-        }
-        batch(() {
-          isSearching.value = false;
-          searchCurrentDir.value = null;
-        });
-      },
-      onError: (_) {
-        if (token != _searchToken) return;
-        _searchUiFlush?.cancel();
-        _searchUiFlush = null;
-        _pendingSearchResults = null;
-        batch(() {
-          isSearching.value = false;
-          searchCurrentDir.value = null;
-        });
-      },
-    );
-  }
-
-  void _searchTagView(String query, SearchMode mode) {
-    final filter = SettingsStore.instance.searchMode.value == filterSearchMode
-        ? parseFilterQuery(query).query
-        : null;
-    final nameQuery = filter?.recursiveNameQuery ?? query;
-    final matcher = filter != null && nameQuery.isEmpty
-        ? (String _) => true
-        : _localMatcher(nameQuery, mode);
-    var results = matcher == null
-        ? const <FileEntry>[]
-        : files.value.where((f) => matcher(f.name)).toList();
-    if (filter != null) {
-      results = _filterByTags(results.where(filter.matches).toList(), filter);
-    }
-    batch(() {
-      searchResults.value = results;
-      isSearching.value = false;
-    });
-  }
-
-  Future<void> _runSftpRecursiveSearch({
-    required int token,
-    required String root,
-    required bool includeHidden,
-    required bool Function(String name) matcher,
-    required FilterQuery? filter,
-  }) async {
-    final acc = <FileEntry>[];
-    var scanned = 0;
-
-    Future<void> walk(String dir) async {
-      if (token != _searchToken) return;
-      batch(() {
-        searchScannedDirs.value = scanned;
-        searchCurrentDir.value = dir;
-      });
-      final entries = await FileSystemService.listDirectory(dir);
-      scanned++;
-      for (final entry in entries) {
-        if (token != _searchToken) return;
-        if (!includeHidden && entry.isHidden) continue;
-        if (matcher(entry.name) && (filter == null || filter.matches(entry))) {
-          acc.add(entry);
-          _pendingSearchResults = acc;
-          _scheduleSearchUiFlush();
-        }
-        if (entry.type == FileItemType.folder) {
-          await walk(entry.path);
-        }
-      }
-    }
-
-    try {
-      await walk(root);
-      if (token != _searchToken) return;
-      _searchUiFlush?.cancel();
-      _searchUiFlush = null;
-      _pendingSearchResults = null;
-      batch(() {
-        searchResults.value = List.of(acc);
-        searchScannedDirs.value = scanned;
-        searchCurrentDir.value = null;
-        isSearching.value = false;
-      });
-    } catch (e, st) {
-      if (token != _searchToken) return;
-      log.warn('navigation', 'recursive search failed', error: e, stack: st);
-      _searchUiFlush?.cancel();
-      _searchUiFlush = null;
-      _pendingSearchResults = null;
-      batch(() {
-        searchCurrentDir.value = null;
-        isSearching.value = false;
-      });
-    }
-  }
-
-  FileEntry _logicalEntryFromPhysical(FileEntry entry) {
-    final logical = LocationResolver.physicalToLogical(entry.path);
-    if (logical == null) return entry;
-
-    return FileEntry.raw(
-      name: entry.name,
-      path: logical,
-      realPath: entry.realPath,
-      type: entry.type,
-      size: entry.size,
-      modifiedMs: entry.modifiedMs,
-    );
-  }
-
-  void _scheduleSearchUiFlush() {
-    if (_searchUiFlush?.isActive ?? false) return;
-    final pending = _pendingSearchResults;
-    if (pending != null) {
-      _pendingSearchResults = null;
-      searchResults.value = List.of(pending);
-    }
-    _searchUiFlush = Timer(const Duration(milliseconds: _kSearchUiFlushMs), () {
-      _searchUiFlush = null;
-      final p = _pendingSearchResults;
-      if (p == null) return;
-      _pendingSearchResults = null;
-      searchResults.value = List.of(p);
-    });
-  }
+  static String? validateSearchPattern(String query, SearchMode mode) =>
+      SearchController.validateSearchPattern(query, mode);
 
   Future<void> _ensureSftpConnectedAndNavigate(
     String logical, {
@@ -1092,7 +578,6 @@ class NavigationStore {
 
         return null;
       case LocationScheme.sftp:
-        // Asynchronously resolved via _ensureSftpConnectedAndNavigate.
         return null;
       case LocationScheme.other:
         loadError.value = t.errors.smbNotSupportedOnPlatform;
@@ -1399,12 +884,7 @@ class NavigationStore {
         if (uri.share == null || uri.share!.isEmpty) {
           entries = await _listSmbHostShares(path, uri);
           if (token != _loadToken) return;
-          batch(() {
-            files.value = entries;
-            loadError.value = null;
-            trashAccessDenied.value = false;
-            isLoading.value = false;
-          });
+          _publishEntries(entries);
           _restoreFolderStateIfMatches(path);
           _watcher.stop();
 
@@ -1439,12 +919,7 @@ class NavigationStore {
       } else if (PlatformPaths.windowsUncServerRoot(path) case final host?) {
         entries = await _listWindowsUncShares(path, host);
         if (token != _loadToken) return;
-        batch(() {
-          files.value = entries;
-          loadError.value = null;
-          trashAccessDenied.value = false;
-          isLoading.value = false;
-        });
+        _publishEntries(entries);
         _restoreFolderStateIfMatches(path);
         _watcher.stop();
 
@@ -1453,15 +928,11 @@ class NavigationStore {
         entries = await FileSystemService.listDirectory(path);
       }
       if (token != _loadToken) return;
-      batch(() {
-        files.value = entries;
-        loadError.value = null;
-        trashAccessDenied.value = false;
-        isLoading.value = false;
-      });
+      _publishEntries(entries);
       _restoreFolderStateIfMatches(path);
       _applyPendingSelect();
       if (token == _loadToken) await _loadFileTags(entries);
+      if (token != _loadToken) return;
       if (isTagPath(path) ||
           isTrashPath(path) ||
           PlatformPaths.isNetworkPath(path)) {
@@ -1471,8 +942,6 @@ class NavigationStore {
           path,
           (changed, fullReload) => _onWatcherEvent(path, changed, fullReload),
         );
-        // Covers manual refresh of the same dir (currentPath unchanged, so
-        // the git effect wouldn't re-run on its own).
         gitStatus.watchPath(path);
       }
     } catch (e) {
@@ -1515,6 +984,15 @@ class NavigationStore {
       });
       _watcher.stop();
     }
+  }
+
+  void _publishEntries(List<FileEntry> entries) {
+    batch(() {
+      files.value = entries;
+      loadError.value = null;
+      trashAccessDenied.value = false;
+      isLoading.value = false;
+    });
   }
 
   bool _isPermissionDenied(String path) {
@@ -1699,8 +1177,6 @@ class NavigationStore {
     bool fullReload,
   ) async {
     if (path != currentPath.value) return;
-    // Working-tree changed under the watched dir — refresh git too
-    // (debounced inside the store).
     gitStatus.watchPath(path);
     if (fullReload) {
       _onExternalChange(path);
@@ -2405,9 +1881,7 @@ class NavigationStore {
     _fileTagsDisposer = null;
     _tagDecorations.dispose();
     gitStatus.dispose();
-    _searchDebounce?.cancel();
-    _searchUiFlush?.cancel();
-    _searchHandle?.cancel();
+    _searchController.dispose();
     _watcher.dispose();
     folderSizes.dispose();
     decorations.dispose();
@@ -2415,61 +1889,8 @@ class NavigationStore {
 
   List<FileEntry> get _vf => visibleFiles.value;
 
-  void onSelect(FileSelectionEvent event) {
-    final ctrl = AppShortcuts.isControl;
-    final shift = AppShortcuts.isShift;
-
-    batch(() {
-      if (ctrl && !shift) {
-        final paths = Set<String>.from(selectedPaths.value);
-        if (paths.contains(event.entry.path)) {
-          paths.remove(event.entry.path);
-          if (paths.isNotEmpty) {
-            final lastSelected = _vf.lastWhere(
-              (f) => paths.contains(f.path),
-              orElse: () => event.entry,
-            );
-            anchorIndex.value = _vf.indexOf(lastSelected);
-          } else {
-            anchorIndex.value = -1;
-          }
-        } else {
-          paths.add(event.entry.path);
-          anchorIndex.value = event.index;
-        }
-        selectedPaths.value = paths;
-        cursorIndex.value = event.index;
-      } else if (shift && !ctrl) {
-        int start;
-        if (anchorIndex.value >= 0 &&
-            anchorIndex.value < _vf.length &&
-            selectedPaths.value.contains(_vf[anchorIndex.value].path)) {
-          start = anchorIndex.value;
-        } else if (cursorIndex.value >= 0 &&
-            cursorIndex.value < _vf.length &&
-            selectedPaths.value.contains(_vf[cursorIndex.value].path)) {
-          start = cursorIndex.value;
-          anchorIndex.value = start;
-        } else {
-          start = event.index;
-          anchorIndex.value = event.index;
-        }
-        final end = event.index;
-        final lo = start < end ? start : end;
-        final hi = start < end ? end : start;
-        final paths = <String>{};
-        for (int i = lo; i <= hi; i++) {
-          paths.add(_vf[i].path);
-        }
-        selectedPaths.value = paths;
-        cursorIndex.value = event.index;
-      } else {
-        selectedPaths.value = {event.entry.path};
-        cursorIndex.value = event.index;
-        anchorIndex.value = event.index;
-      }
-    });
-  }
+  void onSelect(FileSelectionEvent event) =>
+      _selectionController.onSelect(event);
 
   void revealInFolder(String path, {String? enteredPath}) {
     final parent = PlatformPaths.parentOf(path);
@@ -2477,77 +1898,6 @@ class NavigationStore {
     closeSearch();
     navigateTo(parent, enteredPath: enteredPath);
     selectedPaths.value = {path};
-  }
-
-  Future<SymlinkOpResult> createSymlink({
-    required String target,
-    required String name,
-  }) async {
-    final trimmedName = name.trim();
-    final trimmedTarget = target.trim();
-    if (!PlatformPaths.isValidFileName(trimmedName)) {
-      return SymlinkOpFailure(t.toast.renameInvalidName);
-    }
-    if (trimmedTarget.isEmpty) {
-      return SymlinkOpFailure(t.toast.symlinkTargetEmpty);
-    }
-    final physicalDir = _physical(currentPath.value);
-    final linkPath = PlatformPaths.join(physicalDir, trimmedName);
-    if (FileSystemEntity.typeSync(linkPath) != FileSystemEntityType.notFound) {
-      return SymlinkOpFailure(t.toast.renameAlreadyExists(name: trimmedName));
-    }
-    try {
-      await FileSystemService.createSymlink(linkPath, trimmedTarget);
-    } catch (e) {
-      return SymlinkOpFailure(e is FileSystemException ? e.message : '$e');
-    }
-    await refresh();
-    final idx = _vf.indexWhere((f) => f.path == linkPath);
-    if (idx >= 0) {
-      batch(() {
-        selectedPaths.value = {linkPath};
-        cursorIndex.value = idx;
-        anchorIndex.value = idx;
-      });
-    }
-
-    return SymlinkOpSuccess(linkPath);
-  }
-
-  Future<SymlinkOpResult> editSymlinkTarget(
-    FileEntry entry,
-    String newTarget,
-  ) async {
-    final trimmed = newTarget.trim();
-    if (trimmed.isEmpty) {
-      return SymlinkOpFailure(t.toast.symlinkTargetEmpty);
-    }
-    final physicalPath = _physical(entry.path);
-    try {
-      await FileSystemService.updateSymlinkTarget(physicalPath, trimmed);
-    } catch (e) {
-      return SymlinkOpFailure(e is FileSystemException ? e.message : '$e');
-    }
-    await refresh();
-
-    return SymlinkOpSuccess(physicalPath);
-  }
-
-  /// Resolves a symlink's target (relative to its own directory when not
-  /// absolute) and reveals it, mirroring [revealInFolder]. Returns false
-  /// when the target can't be found so the caller can surface a toast.
-  bool goToSymlinkTarget(FileEntry entry) {
-    final target = entry.linkTarget;
-    if (target.isEmpty) return false;
-    final resolved = p.isAbsolute(target)
-        ? target
-        : p.normalize(p.join(p.dirname(entry.realPath), target));
-    if (FileSystemEntity.typeSync(resolved) == FileSystemEntityType.notFound) {
-      return false;
-    }
-    revealInFolder(resolved);
-
-    return true;
   }
 
   void onOpen(FileEntry entry) => unawaited(_openEntry(entry));
@@ -2593,148 +1943,30 @@ class NavigationStore {
     unawaited(_openEntry(entry));
   }
 
-  void selectAll() {
-    selectedPaths.value = Set<String>.from(_vf.map((f) => f.path));
-  }
+  void selectAll() => _selectionController.selectAll();
 
-  List<String> selectedNamesForFile() {
-    final selected = selectedPaths.value;
-    if (selected.isEmpty) return const [];
+  List<String> selectedNamesForFile() =>
+      _selectionController.selectedNamesForFile();
 
-    return [
-      for (final entry in _vf)
-        if (selected.contains(entry.path)) entry.name,
-    ];
-  }
+  int selectNamesFromFile(Iterable<String> names) =>
+      _selectionController.selectNamesFromFile(names);
 
-  int selectNamesFromFile(Iterable<String> names) {
-    final wanted = names
-        .map(
-          (name) =>
-              name.endsWith('\r') ? name.substring(0, name.length - 1) : name,
-        )
-        .map((name) => name.startsWith('\uFEFF') ? name.substring(1) : name)
-        .where((name) => name.isNotEmpty)
-        .toSet();
-    if (wanted.isEmpty) {
-      deselectAll();
+  int selectByPattern(String pattern) =>
+      _selectionController.selectByPattern(pattern);
 
-      return 0;
-    }
-    final matched = <String>{};
-    var cursor = -1;
-    for (var i = 0; i < _vf.length; i++) {
-      final entry = _vf[i];
-      if (!wanted.contains(entry.name)) continue;
-      matched.add(entry.path);
-      cursor = cursor < 0 ? i : cursor;
-    }
-    batch(() {
-      selectedPaths.value = matched;
-      cursorIndex.value = cursor;
-      anchorIndex.value = cursor;
-    });
+  void deselectAll() => _selectionController.deselectAll();
 
-    return matched.length;
-  }
+  void invertSelection() => _selectionController.invertSelection();
 
-  /// Selects every visible entry whose name matches the given shell-style
-  /// glob (`*`, `?`, character classes), case-insensitively. Returns the
-  /// number of entries matched.
-  int selectByPattern(String pattern) {
-    final globs = pattern
-        .split(',')
-        .map((g) => g.trim())
-        .where((g) => g.isNotEmpty)
-        .toList();
-    if (globs.isEmpty) return 0;
-    final alternatives = globs.map((glob) {
-      final buf = StringBuffer();
-      for (final ch in glob.split('')) {
-        switch (ch) {
-          case '*':
-            buf.write('.*');
-          case '?':
-            buf.write('.');
-          case '[':
-          case ']':
-            buf.write(ch);
-          default:
-            buf.write(RegExp.escape(ch));
-        }
-      }
-
-      return buf.toString();
-    });
-    final RegExp re;
-    try {
-      re = RegExp('^(?:${alternatives.join('|')})\$', caseSensitive: false);
-    } catch (e) {
-      return 0;
-    }
-    final matched = _vf.where((f) => re.hasMatch(f.name)).toList();
-    selectedPaths.value = Set<String>.from(matched.map((f) => f.path));
-
-    return matched.length;
-  }
-
-  void deselectAll() {
-    batch(() {
-      selectedPaths.value = {};
-      cursorIndex.value = -1;
-      anchorIndex.value = -1;
-    });
-  }
-
-  void invertSelection() {
-    final selected = selectedPaths.value;
-    selectedPaths.value = Set<String>.from(
-      _vf.where((f) => !selected.contains(f.path)).map((f) => f.path),
-    );
-  }
-
-  void toggleSelectAndAdvance() {
-    batch(() {
-      if (cursorIndex.value >= 0 && cursorIndex.value < _vf.length) {
-        final path = _vf[cursorIndex.value].path;
-        final paths = Set<String>.from(selectedPaths.value);
-        if (paths.contains(path) && paths.length > 1) {
-          paths.remove(path);
-        } else {
-          paths.add(path);
-        }
-        selectedPaths.value = paths;
-      }
-      if (cursorIndex.value < _vf.length - 1) {
-        cursorIndex.value++;
-      }
-    });
-  }
+  void toggleSelectAndAdvance() =>
+      _selectionController.toggleSelectAndAdvance();
 
   void onBackgroundTap() => deselectAll();
 
-  void onRectSelect(Set<String> paths, {bool additive = false}) {
-    batch(() {
-      if (additive) {
-        selectedPaths.value = {...selectedPaths.value, ...paths};
-      } else {
-        selectedPaths.value = paths;
-      }
-      if (paths.isNotEmpty) {
-        final idx = _vf.indexWhere((f) => paths.contains(f.path));
-        if (idx >= 0) cursorIndex.value = idx;
-      } else if (!additive) {
-        cursorIndex.value = -1;
-        anchorIndex.value = -1;
-      }
-    });
-  }
+  void onRectSelect(Set<String> paths, {bool additive = false}) =>
+      _selectionController.onRectSelect(paths, additive: additive);
 
-  List<FileEntry> get selectedEntries {
-    final paths = selectedPaths.value;
-
-    return _vf.where((f) => paths.contains(f.path)).toList();
-  }
+  List<FileEntry> get selectedEntries => _selectionController.selectedEntries;
 
   void deleteSelected({bool? toTrash}) async {
     if (isTrashView) return;
@@ -2773,50 +2005,20 @@ class NavigationStore {
   }
 
   void copySelectedPaths() {
-    final paths = selectedPaths.value;
-    if (paths.isEmpty) return;
-    final text = paths.length == 1 ? paths.first : paths.join('\n');
-    Clipboard.setData(ClipboardData(text: text));
+    _clipboardController.copySelectedPaths(selectedPaths.value);
   }
 
-  void onContextMenu(FileSelectionEvent event) {
-    if (!selectedPaths.value.contains(event.entry.path)) {
-      batch(() {
-        selectedPaths.value = {event.entry.path};
-        cursorIndex.value = event.index;
-        anchorIndex.value = event.index;
-      });
-    }
-  }
+  void onContextMenu(FileSelectionEvent event) =>
+      _selectionController.onContextMenu(event);
 
   void copySelected() async {
     if (isTrashView) return;
-    final entries = selectedEntries;
-    if (entries.isEmpty) return;
-    final logical = entries.map((e) => e.path).toList();
-    final physical = entries.map((e) => e.realPath).toList();
-    batch(() {
-      clipboardPaths.value = Set<String>.from(logical);
-      clipboardMode.value = ClipboardMode.copy;
-    });
-    if (!physical.any(PlatformPaths.isSftpUri)) {
-      await FileClipboard.writeFiles(physical, isCut: false);
-    }
+    await _clipboardController.copyEntries(selectedEntries);
   }
 
   void cutSelected() async {
     if (isTrashView) return;
-    final entries = selectedEntries;
-    if (entries.isEmpty) return;
-    final logical = entries.map((e) => e.path).toList();
-    final physical = entries.map((e) => e.realPath).toList();
-    batch(() {
-      clipboardPaths.value = Set<String>.from(logical);
-      clipboardMode.value = ClipboardMode.cut;
-    });
-    if (!physical.any(PlatformPaths.isSftpUri)) {
-      await FileClipboard.writeFiles(physical, isCut: true);
-    }
+    await _clipboardController.cutEntries(selectedEntries);
   }
 
   Future<void> dropFiles(
@@ -2865,11 +2067,7 @@ class NavigationStore {
   }
 
   Future<bool> hasPasteableFiles() async {
-    if (canPaste.value) return true;
-    if (isTrashView) return false;
-    final paths = await FileClipboard.readFilePaths();
-
-    return paths.isNotEmpty;
+    return _clipboardController.hasPasteableFiles(isTrashView: isTrashView);
   }
 
   void paste() async {
@@ -2877,27 +2075,14 @@ class NavigationStore {
     if (isTagView) {
       final id = tagIdFromPath(currentPath.value);
       if (id == null) return;
-      var paths = await FileClipboard.readFilePaths();
-      if (paths.isEmpty) paths = clipboardPaths.value.toList();
+      final paths = await _clipboardController.readAvailablePaths();
       if (paths.isNotEmpty) await addTag(paths, id);
 
       return;
     }
-    final internalPaths = Set<String>.from(clipboardPaths.value);
-    final internalCut = clipboardMode.value == ClipboardMode.cut;
-
-    var paths = await FileClipboard.readFilePaths();
-    if (paths.isEmpty && internalPaths.isNotEmpty) {
-      paths = internalPaths.toList();
-    }
+    final paste = await _clipboardController.readPastePayload();
+    final paths = paste.paths;
     if (paths.isEmpty) return;
-
-    final samePaths =
-        internalPaths.length == paths.length &&
-        internalPaths.containsAll(paths.toSet());
-
-    bool isCut = samePaths && internalCut;
-    if (!isCut) isCut = await FileClipboard.isCutOperation();
 
     final sep = PlatformPaths.isSftpUri(currentPath.value)
         ? '/'
@@ -2914,11 +2099,8 @@ class NavigationStore {
     }).toList();
 
     if (filteredPaths.isEmpty) {
-      if (isCut && samePaths) {
-        batch(() {
-          clipboardPaths.value = {};
-          clipboardMode.value = ClipboardMode.copy;
-        });
+      if (paste.isCut && paste.samePaths) {
+        _clipboardController.clearInternal(mode: ClipboardMode.copy);
       }
 
       return;
@@ -2932,11 +2114,8 @@ class NavigationStore {
         addSources: filteredPaths,
         addInner: archiveLoc.innerPath,
       );
-      if (isCut && samePaths) {
-        batch(() {
-          clipboardPaths.value = {};
-          clipboardMode.value = null;
-        });
+      if (paste.isCut && paste.samePaths) {
+        _clipboardController.clearInternal();
       }
 
       return;
@@ -2944,154 +2123,34 @@ class NavigationStore {
 
     final physicalDest = await _resolvePhysicalDestination(currentPath.value);
     if (physicalDest == null) return;
-    if (isCut) {
+    if (paste.isCut) {
       operationStore.enqueueMove(filteredPaths, physicalDest);
-      if (samePaths) {
-        batch(() {
-          clipboardPaths.value = {};
-          clipboardMode.value = null;
-        });
+      if (paste.samePaths) {
+        _clipboardController.clearInternal();
       }
     } else {
       operationStore.enqueueCopy(filteredPaths, physicalDest);
     }
   }
 
-  void jumpToIndex(int index) {
-    batch(() {
-      if (_vf.isEmpty) return;
-      if (index < 0 || index >= _vf.length) return;
-      cursorIndex.value = index;
-      anchorIndex.value = index;
-      selectedPaths.value = {_vf[index].path};
-    });
-  }
+  void jumpToIndex(int index) => _selectionController.jumpToIndex(index);
 
-  void setPageRows(int rows) {
-    if (rows > 0) _pageRows = rows;
-  }
+  void setPageRows(int rows) => _selectionController.setPageRows(rows);
 
   void setGridColumns(int columns) {
     if (columns > 0) gridColumns.value = columns;
   }
 
-  void moveCursorHorizontally(int delta) {
-    final settings = SettingsStore.instance;
-    if (settings.fileViewMode.value != 'grid') {
-      moveCursor(delta);
+  void moveCursorHorizontally(int delta) =>
+      _selectionController.moveCursorHorizontally(delta);
 
-      return;
-    }
-    if (_vf.isEmpty || delta == 0) return;
-    if (cursorIndex.value < 0) {
-      _initCursor(delta > 0 ? 0 : _vf.length - 1);
+  void moveCursor(int delta) => _selectionController.moveCursor(delta);
 
-      return;
-    }
-    final columns = gridColumns.value.clamp(1, 1000);
-    final col = cursorIndex.value % columns;
-    if (delta < 0 && col == 0) return;
-    if (delta > 0 && col == columns - 1) return;
-    final next = cursorIndex.value + delta;
-    if (next < 0 || next >= _vf.length) return;
-    _applyCursorMove(next);
-  }
+  void moveCursorByPage(int dir) => _selectionController.moveCursorByPage(dir);
 
-  void moveCursor(int delta) {
-    final settings = SettingsStore.instance;
-    final step = settings.fileViewMode.value == 'grid' && delta.abs() == 1
-        ? delta * gridColumns.value.clamp(1, 1000)
-        : delta;
-    if (_vf.isEmpty) return;
-    if (cursorIndex.value < 0) {
-      _initCursor(step > 0 ? 0 : _vf.length - 1);
+  void moveCursorToStart() => _selectionController.moveCursorToStart();
 
-      return;
-    }
-    final next = cursorIndex.value + step;
-    if (next < 0 || next >= _vf.length) return;
-    _applyCursorMove(next);
-  }
-
-  void moveCursorByPage(int dir) {
-    if (_vf.isEmpty) return;
-    if (cursorIndex.value < 0) {
-      _initCursor(dir > 0 ? 0 : _vf.length - 1);
-
-      return;
-    }
-    final step = (_pageRows * 0.8).floor().clamp(1, _pageRows);
-    final next = (cursorIndex.value + dir * step).clamp(0, _vf.length - 1);
-    if (next == cursorIndex.value) return;
-    _applyCursorMove(next);
-  }
-
-  void moveCursorToStart() {
-    if (_vf.isEmpty) return;
-    if (cursorIndex.value < 0) {
-      _initCursor(0);
-
-      return;
-    }
-    _applyCursorMove(0);
-  }
-
-  void moveCursorToEnd() {
-    if (_vf.isEmpty) return;
-    final last = _vf.length - 1;
-    if (cursorIndex.value < 0) {
-      _initCursor(last);
-
-      return;
-    }
-    _applyCursorMove(last);
-  }
-
-  void _initCursor(int index) {
-    batch(() {
-      cursorIndex.value = index;
-      anchorIndex.value = index;
-      selectedPaths.value = {_vf[index].path};
-    });
-  }
-
-  void _applyCursorMove(int next) {
-    final shift = HardwareKeyboard.instance.isShiftPressed;
-    batch(() {
-      if (shift) {
-        final anchor = anchorIndex.value >= 0 && anchorIndex.value < _vf.length
-            ? anchorIndex.value
-            : cursorIndex.value;
-        final cur = cursorIndex.value;
-        final extending = (next - anchor).abs() > (cur - anchor).abs();
-        if (cur >= 0 &&
-            cur < _vf.length &&
-            !selectedPaths.value.contains(_vf[cur].path) &&
-            extending) {
-          final lo = cur < anchor ? cur : anchor;
-          final hi = cur < anchor ? anchor : cur;
-          final paths = Set<String>.from(selectedPaths.value);
-          for (int i = lo; i <= hi; i++) {
-            paths.add(_vf[i].path);
-          }
-          selectedPaths.value = paths;
-
-          return;
-        }
-        final lo = next < anchor ? next : anchor;
-        final hi = next < anchor ? anchor : next;
-        final paths = <String>{};
-        for (int i = lo; i <= hi; i++) {
-          paths.add(_vf[i].path);
-        }
-        selectedPaths.value = paths;
-      } else {
-        selectedPaths.value = {_vf[next].path};
-        anchorIndex.value = next;
-      }
-      cursorIndex.value = next;
-    });
-  }
+  void moveCursorToEnd() => _selectionController.moveCursorToEnd();
 }
 
 class _FolderState {

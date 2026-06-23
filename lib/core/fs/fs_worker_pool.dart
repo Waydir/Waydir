@@ -317,7 +317,6 @@ class FsWorkerPool {
     switch (op) {
       case _Op.list:
         final path = args.first as String;
-        // Directory listing is native-only (Rust). No Dart fallback.
         final native = WaydirCoreLoader.listDir(path);
         if (native == null) {
           throw FileSystemException(t.errors.directoryNotReadable, path);

@@ -375,12 +375,12 @@ class OperationStore {
     if (currentFile != null) task.currentFile = currentFile;
 
     final tb = task.totalBytes;
-    if (progress != null) {
-      // Explicit progress wins over derived file/byte progress.
-    } else if (tb != null && tb > 0) {
-      task.progress = (task.processedBytes / tb).clamp(0.0, 1.0);
-    } else if (task.totalFiles > 0) {
-      task.progress = (task.processedFiles / task.totalFiles).clamp(0.0, 1.0);
+    if (progress == null) {
+      if (tb != null && tb > 0) {
+        task.progress = (task.processedBytes / tb).clamp(0.0, 1.0);
+      } else if (task.totalFiles > 0) {
+        task.progress = (task.processedFiles / task.totalFiles).clamp(0.0, 1.0);
+      }
     }
     _updateTask(task);
   }

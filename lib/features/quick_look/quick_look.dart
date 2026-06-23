@@ -59,7 +59,7 @@ class _QuickLook extends StatefulWidget {
 
 class _QuickLookState extends State<_QuickLook> {
   final _focus = FocusNode();
-  final _editorActive = ValueNotifier<bool>(false);
+  final _editorActive = signal(false);
   final _editorController = CodeEditorController();
   bool _compact = true;
   bool _showInfo = true;
@@ -370,7 +370,7 @@ class _QuickLookState extends State<_QuickLook> {
 }
 
 class _ShortcutBar extends StatelessWidget {
-  final ValueNotifier<bool> editorActive;
+  final Signal<bool> editorActive;
 
   const _ShortcutBar({required this.editorActive});
 
@@ -388,9 +388,9 @@ class _ShortcutBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: editorActive,
-      builder: (context, editing, _) {
+    return SignalBuilder(
+      builder: (context) {
+        final editing = editorActive.value;
         final hints = editing
             ? [
                 _ShortcutHint(
@@ -523,10 +523,10 @@ class _Header extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           if (isMarkdown) ...[
-            ValueListenableBuilder<bool>(
-              valueListenable: editorController.dirty,
-              builder: (context, dirty, _) {
-                final blocked = !markdownRendered && dirty;
+            SignalBuilder(
+              builder: (context) {
+                final blocked =
+                    !markdownRendered && editorController.dirty.value;
 
                 return _HeaderButton(
                   icon: markdownRendered
@@ -684,7 +684,7 @@ Widget _split(Widget preview, FileEntry entry, {required bool showInfo}) {
 
 class _Body extends StatelessWidget {
   final FileEntry? entry;
-  final ValueNotifier<bool> editorActive;
+  final Signal<bool> editorActive;
   final CodeEditorController editorController;
   final bool showInfo;
   final ValueChanged<bool> onCompactChanged;
@@ -749,7 +749,7 @@ class _Body extends StatelessWidget {
 
 class _ProbeLoader extends StatelessWidget {
   final FileEntry entry;
-  final ValueNotifier<bool> editorActive;
+  final Signal<bool> editorActive;
   final CodeEditorController editorController;
   final bool showInfo;
   final ValueChanged<bool> onCompactChanged;

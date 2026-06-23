@@ -92,7 +92,6 @@ bool shellOpenWithAppOnWindows(String appExe, String filePath) {
   final params = '"$filePath"'.toNativeUtf16();
   try {
     final ret = _shellExecuteW!(0, verb, exe, params, nullptr, 1);
-    // ShellExecute returns >32 on success.
 
     return ret > 32;
   } finally {
@@ -137,7 +136,7 @@ void _ensureShlwapi() {
       >('AssocQueryStringW');
 }
 
-// ASSOCSTR values from shlwapi.h
+/// ASSOCSTR values from shlwapi.h
 const assocStrCommand = 1;
 const assocStrExecutable = 2;
 const assocStrFriendlyAppName = 4;
@@ -150,7 +149,6 @@ String? assocQueryStringOnWindows(int str, String assoc) {
   final assocPtr = assoc.toNativeUtf16();
   final sizePtr = calloc<Uint32>();
   try {
-    // First call: ask for the required buffer length (in chars).
     final probe = _assocQueryStringW!(
       0,
       str,

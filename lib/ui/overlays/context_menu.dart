@@ -112,8 +112,6 @@ void showContextMenu({
       builder: (_) => PopupOverlay(
         position: pos,
         width: 180,
-        // Only the root menu carries the dismiss barrier; it sits below the
-        // submenus so an outside click closes the whole cascade.
         autoDismiss: depth == 0,
         onDismiss: dismissAll,
         builder: (_) => _ContextMenuBody(

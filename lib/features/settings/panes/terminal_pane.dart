@@ -7,7 +7,9 @@ import '../../../i18n/strings.g.dart';
 import '../preferences_view.dart';
 
 class TerminalPane extends StatefulWidget {
-  const TerminalPane({super.key});
+  final PreferenceAnchors anchors;
+
+  const TerminalPane({super.key, required this.anchors});
 
   @override
   State<TerminalPane> createState() => _TerminalPaneState();
@@ -47,45 +49,52 @@ class _TerminalPaneState extends State<TerminalPane> {
     final shell = registry.byId('terminal.shell');
     final external = registry.byId('terminal.external');
     final externalCustom = registry.byId('terminal.externalCustomCommand');
+    Widget row(AppSetting<dynamic> setting) {
+      return RegistrySettingRow(setting: setting, anchors: widget.anchors);
+    }
 
     return SettingsPaneScaffold(
       children: [
         SettingsSection(
           anchorId: 'terminal.appearance',
+          anchors: widget.anchors,
           title: t.preferences.terminal.appearanceSection,
           children: [
-            RegistrySettingRow(setting: useSystemFont),
+            row(useSystemFont),
             SignalBuilder(
               builder: (_) {
                 if (useSystemFont.value == true) return const SizedBox.shrink();
 
-                return RegistrySettingRow(setting: fontFamily);
+                return row(fontFamily);
               },
             ),
-            RegistrySettingRow(setting: fontSize),
-            RegistrySettingRow(setting: lineHeight),
+            row(fontSize),
+            row(lineHeight),
           ],
         ),
         SettingsSection(
           anchorId: 'terminal.behavior',
+          anchors: widget.anchors,
           title: t.preferences.terminal.behaviorSection,
-          children: [RegistrySettingRow(setting: copyPasteMode)],
+          children: [row(copyPasteMode)],
         ),
         SettingsSection(
           anchorId: 'terminal.shell',
+          anchors: widget.anchors,
           title: t.preferences.terminal.shellSection,
-          children: [RegistrySettingRow(setting: shell)],
+          children: [row(shell)],
         ),
         SettingsSection(
           anchorId: 'terminal.external',
+          anchors: widget.anchors,
           title: t.preferences.terminal.externalSection,
           children: [
-            RegistrySettingRow(setting: external),
+            row(external),
             SignalBuilder(
               builder: (_) {
                 if (external.value != 'custom') return const SizedBox.shrink();
 
-                return RegistrySettingRow(setting: externalCustom);
+                return row(externalCustom);
               },
             ),
           ],

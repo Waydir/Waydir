@@ -30,11 +30,11 @@ Duration nextPollInterval({
 class PtySession {
   final Terminal terminal;
 
-  // Streaming UTF-8 decoder: the native pty is drained in arbitrary-sized
-  // chunks, so a multibyte codepoint (box-drawing, spinners, emoji — common in
-  // TUIs like codex) can straddle two reads. A stateless decode would mangle
-  // those into replacement chars; the chunked decoder carries the partial
-  // bytes across ticks instead.
+  /// Streaming UTF-8 decoder: the native pty is drained in arbitrary-sized
+  /// chunks, so a multibyte codepoint (box-drawing, spinners, emoji — common in
+  /// TUIs like codex) can straddle two reads. A stateless decode would mangle
+  /// those into replacement chars; the chunked decoder carries the partial
+  /// bytes across ticks instead.
   late final ByteConversionSink _decoder;
 
   int? _id;

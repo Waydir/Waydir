@@ -35,10 +35,10 @@ class _GitStatusBarState extends State<GitStatusBar>
     super.dispose();
   }
 
+  /// Catches git changes made outside the app (terminal commit/checkout)
+  /// while it was unfocused — the directory watcher can't see those.
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Catches git changes made outside the app (terminal commit/checkout)
-    // while it was unfocused — the directory watcher can't see those.
     if (state == AppLifecycleState.resumed) {
       store.refreshCurrent();
     }
@@ -64,13 +64,10 @@ class _GitStatusBarState extends State<GitStatusBar>
           ],
           if (status.ahead > 0) _GitCount('↑${status.ahead}'),
           if (status.behind > 0) _GitCount('↓${status.behind}'),
-          // Real line stats: green +inserted / red -deleted. Plain edits no
-          // longer flash as alarming red.
           if (status.insertions > 0)
             _GitCount('+${status.insertions}', color: AppColors.success),
           if (status.deletions > 0)
             _GitCount('-${status.deletions}', color: AppColors.danger),
-          // New files have no diff vs HEAD — show them separately, muted.
           if (status.untracked > 0) _GitCount('?${status.untracked}'),
           if (status.stash > 0) _StashButton(status: status, store: store),
           if (!status.hasChanges &&
@@ -120,8 +117,6 @@ class _BranchButton extends StatelessWidget {
 
     showContextMenu(
       context: context,
-      // PopupOverlay clamps on-screen, so anchoring at the button's top edge
-      // makes the menu open upward, above the status bar.
       position: Offset(origin.dx, origin.dy),
       items: [
         for (final name in branches)
@@ -182,7 +177,6 @@ class _BranchButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Detached HEAD is easy to commit into and lose — flag it clearly.
     final color = status.detached ? AppColors.warning : AppColors.fgAccent;
 
     return Flexible(

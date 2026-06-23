@@ -115,7 +115,6 @@ class LocationUri {
         !s.startsWith(r'\\.\')) {
       return _parseUnc(s);
     }
-    // Other URI schemes we don't handle natively but want to preserve.
     final schemeMatch = RegExp(r'^[a-zA-Z][a-zA-Z0-9+.\-]*://').firstMatch(s);
     if (schemeMatch != null) {
       return LocationUri._(scheme: LocationScheme.other, raw: s);

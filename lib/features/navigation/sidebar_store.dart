@@ -119,8 +119,6 @@ class SidebarStore {
       next.remove(id);
     }
     hiddenSections.value = next;
-    // Materialize the full order so a lone hidden row can't reorder sections on
-    // the next load (rows without an orderIndex would otherwise sort first).
     await _db.setSidebarOrder(_sectionScope, sectionOrder.value);
     final idx = sectionOrder.value.indexOf(id);
     await _db.setSidebarPref(
@@ -181,8 +179,6 @@ class SidebarStore {
     final order = {...itemOrder.value};
     order[scope] = currentKeys;
     itemOrder.value = order;
-    // Persist the full order alongside the flag so a lone hidden row can't
-    // reorder items on the next load.
     await _db.setSidebarOrder(scope, currentKeys);
     final idx = currentKeys.indexOf(key);
     await _db.setSidebarPref(

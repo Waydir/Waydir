@@ -157,9 +157,6 @@ class SafeFileReplace {
     if (fast == FastCopyResult.cancelled) return false;
 
     const chunkSize = 8 * 1024 * 1024;
-    // Yield to the event loop (so a pending cancel can be delivered) once
-    // per this many bytes, instead of every chunk — far fewer event-loop
-    // turns at cache speed while keeping cancel latency well under a second.
     const yieldEvery = 16 * 1024 * 1024;
     final input = source.openSync(mode: FileMode.read);
     final output = File(destinationPath).openSync(mode: FileMode.write);

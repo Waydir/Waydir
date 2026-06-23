@@ -68,8 +68,6 @@ class _NullAppResolver implements AppResolver {
   Future<bool> canSetDefault() async => false;
 }
 
-// ───────────────────────────── Linux ──────────────────────────────
-
 class LinuxAppResolver implements AppResolver {
   List<_LinuxApp>? _cache;
 
@@ -102,7 +100,7 @@ class LinuxAppResolver implements AppResolver {
         final id = p
             .relative(f.path, from: dir)
             .replaceAll(Platform.pathSeparator, '-');
-        if (apps.containsKey(id)) continue; // earlier dirs win
+        if (apps.containsKey(id)) continue;
         try {
           final entry = DesktopEntry.parse(await f.readAsString());
           if (entry == null || !entry.isLaunchable) continue;
@@ -208,16 +206,14 @@ class _LinuxApp {
   _LinuxApp(this.id, this.entry);
 }
 
-// ───────────────────────────── macOS ──────────────────────────────
-
 class MacAppResolver implements AppResolver {
   List<AppEntry>? _allCache;
 
+  /// Launch Services has no clean CLI to enumerate handlers, so this mirrors
+  /// Finder's "Open With / Other..." by listing installed apps with the
+  /// discoverable default first.
   @override
   Future<List<AppEntry>> appsFor(MimeType mime, String path) async {
-    // Launch Services has no clean CLI to enumerate handlers; offer every
-    // installed app with the default (if discoverable) first, mirroring
-    // Finder's "Open With ▸ Other…".
     final def = await defaultFor(mime, path);
     final all = await allApps();
     if (def == null) return all;
@@ -251,7 +247,6 @@ class MacAppResolver implements AppResolver {
 
   @override
   Future<AppEntry?> defaultFor(MimeType mime, String path) async {
-    // `duti -x` reports the default handler for a UTI when available.
     if (!await _hasDuti() || !mime.isUti) return null;
     try {
       final r = await Process.run('duti', ['-x', mime.value]);
@@ -261,7 +256,6 @@ class MacAppResolver implements AppResolver {
             .map((l) => l.trim())
             .where((l) => l.isNotEmpty)
             .toList();
-        // Last line is typically the bundle path.
         final bundle = lines.lastWhere(
           (l) => l.endsWith('.app'),
           orElse: () => '',
@@ -339,8 +333,6 @@ class MacAppResolver implements AppResolver {
     }
   }
 }
-
-// ──────────────────────────── Windows ─────────────────────────────
 
 class WindowsAppResolver implements AppResolver {
   String _ext(String path) {
@@ -454,7 +446,6 @@ class WindowsAppResolver implements AppResolver {
     if ((exe == null || exe.isEmpty) && (command == null || command.isEmpty)) {
       return null;
     }
-    // Prefer a real exe; the command template is the UWP/registry fallback.
     final launchTarget = (exe != null && exe.isNotEmpty) ? exe : command!;
     final name = (friendly != null && friendly.isNotEmpty)
         ? friendly
@@ -474,8 +465,6 @@ class WindowsAppResolver implements AppResolver {
   Future<void> launch(AppEntry app, List<String> paths) async {
     if (paths.isEmpty) return;
     final target = app.exec;
-    // Preferred path: hand the app + file to the shell, which resolves app
-    // paths and launches classic Win32 apps reliably.
     if (File(target).existsSync()) {
       for (final path in paths) {
         if (shellOpenWithAppOnWindows(target, path)) continue;
@@ -484,7 +473,6 @@ class WindowsAppResolver implements AppResolver {
 
       return;
     }
-    // [target] is a command template such as `"C:\..\app.exe" "%1"`.
     await _runCommandTemplate(target, paths);
   }
 
@@ -584,10 +572,10 @@ class WindowsAppResolver implements AppResolver {
   @override
   Future<bool> canSetDefault() async => false;
 
+  /// Windows protects per-user defaults with UserChoice hashes; the system
+  /// dialog is the supported path.
   @override
   Future<void> setDefault(AppEntry app, MimeType mime) async {
-    // Windows protects the per-user default (UserChoice hash); programmatic
-    // changes are blocked by design. The system dialog is the supported path.
     throw SetDefaultUnsupported(t.openWith.windowsDefaultDialogRequired);
   }
 }

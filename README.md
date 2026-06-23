@@ -33,6 +33,7 @@ Waydir is a native-feeling desktop file manager focused on speed, direct control
 |--------------|----------------|
 | Dual panes and tabs | Move between folders without juggling windows. |
 | Keyboard-first workflow | Navigate, select, preview, copy, move, rename and search without reaching for the mouse. |
+| Command palette | Press `Ctrl+P` to fuzzy-search actions, bookmarks, drives, recent locations, files and plugin commands. |
 | Native Rust core | Large directories, recursive search and trash operations stay off the UI thread. |
 | SMB and SFTP drives | Remote files show up beside local files and behave like part of the same workspace. |
 | Quick Look previews | Tap Space to preview images, PDFs, text, code and file properties. |
@@ -156,6 +157,7 @@ macOS is officially supported and maintained by [@fwitkowski17](https://github.c
 ### Browse and navigate
 
 - Two folders side by side, each with its own draggable tabs.
+- Command palette for fuzzy-searching actions, bookmarks, drives, recent locations, files and plugin commands.
 - Sidebar with your places, drives, bookmarks and network locations.
 - Quick path bar for jumping to any folder.
 - List and grid views with image thumbnails and columns you choose.

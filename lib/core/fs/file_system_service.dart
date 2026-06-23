@@ -387,7 +387,6 @@ class FileSystemService {
 
           return true;
         }
-        // Not a link: followLinks:false already resolved the real type.
         final type = linkType;
         if (type == FileSystemEntityType.notFound) {
           errors.add(TaskError(path: srcPath, message: t.errors.notFound));
@@ -464,9 +463,6 @@ class FileSystemService {
         await decisionWaker!.future;
       }
 
-      // Weighted semaphore: small files share up to _copyConcurrency
-      // permits; a large file grabs them all so it transfers alone and
-      // never competes with another stream for the disk.
       final permits = _copyConcurrency;
       var available = permits;
       final waitQueue = <(int, Completer<void>)>[];
@@ -1068,7 +1064,6 @@ class FileSystemService {
             ErrorMessage(path: src, message: t.errors.notFound),
           );
         } else if (type == FileSystemEntityType.directory) {
-          // Tree enumeration is native-only (Rust). No Dart fallback.
           final native = WaydirCoreLoader.enumerate(src, postorder: false);
           if (native == null) {
             errors.add(

@@ -99,8 +99,6 @@ typedef _TrashListDart = Pointer<Uint8> Function(Pointer<IntPtr>);
 typedef _FreeNative = Void Function(Pointer<Uint8>, IntPtr);
 typedef _FreeDart = void Function(Pointer<Uint8>, int);
 
-// PTY
-
 typedef _PtyOpenNative =
     Uint64 Function(
       Pointer<Utf8>,
@@ -133,8 +131,6 @@ typedef _AbiDart = int Function();
 typedef _StrNative = Pointer<Utf8> Function();
 typedef _StrDart = Pointer<Utf8> Function();
 
-// PDF
-
 typedef _PdfSizesNative =
     Pointer<Uint8> Function(Pointer<Utf8>, Pointer<Utf8>, Pointer<IntPtr>);
 typedef _PdfSizesDart =
@@ -160,8 +156,6 @@ typedef _PdfRenderDart =
       Pointer<Int32>,
       Pointer<IntPtr>,
     );
-
-// SFTP
 
 final class SftpStatStruct extends Struct {
   @Int32()
@@ -1296,8 +1290,8 @@ class WaydirCoreLoader {
     }
   }
 
-  // Resolved once and reused: the pty hot path runs on a timer many times a
-  // second per terminal, so a dlsym per call is pure overhead.
+  /// Resolved once and reused: the pty hot path runs on a timer many times a
+  /// second per terminal, so a dlsym per call is pure overhead.
   static _PtyReadDart? _ptyReadFn;
   static _PtyWriteDart? _ptyWriteFn;
   static _PtyAliveDart? _ptyAliveFn;

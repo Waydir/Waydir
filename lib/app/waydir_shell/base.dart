@@ -35,38 +35,6 @@ mixin _WaydirStateBase on State<WaydirShell> {
 
   NavigationStore get _active => _shell.activeStore.value!;
 
-  String? _lastNotifiedUpdateVersion;
-  void _installUpdateNotification() {
-    _effectDisposers.add(
-      effect(() {
-        final available = UpdateStore.instance.updateAvailable.value;
-        final release = UpdateStore.instance.latestRelease.value;
-        if (!available || release == null) return;
-        if (_lastNotifiedUpdateVersion == release.version) return;
-        _lastNotifiedUpdateVersion = release.version;
-        _notificationStore.add(
-          AppNotification(
-            id: 'update-${release.version}',
-            title: t.update.available,
-            message: t.update.versionLabel(version: release.version),
-            type: NotificationType.persistent,
-            icon: WaydirIconsRegular.arrowUp,
-            accentColor: AppColors.warning,
-            actions: [
-              NotificationAction(
-                label: t.update.btnUpdate,
-                color: AppColors.warning,
-                onTap: () {
-                  if (mounted) showUpdateDialog(context);
-                },
-              ),
-            ],
-          ),
-        );
-      }),
-    );
-  }
-
   void _installRenameErrorEffects() {
     final currentStores = <NavigationStore>{};
     for (final pane in _shell.panes.value) {

@@ -41,7 +41,6 @@ class DesktopEntry {
       final eq = line.indexOf('=');
       if (eq <= 0) continue;
       final key = line.substring(0, eq).trim();
-      // Ignore locale-suffixed keys like Name[de]; keep the base key.
       if (key.contains('[')) continue;
       if (fields.containsKey(key)) continue;
       fields[key] = line.substring(eq + 1).trim();

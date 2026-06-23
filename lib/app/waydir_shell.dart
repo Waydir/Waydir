@@ -12,6 +12,7 @@ import 'package:signals/signals_flutter.dart';
 import '../core/archive/archive_path.dart';
 import '../core/archive/archive_writer.dart';
 import '../core/fs/file_system_service.dart';
+import '../core/fs/recursive_search.dart';
 import '../core/logging/app_logger.dart';
 import '../features/files/sort_menu.dart';
 import '../features/locations/location_resolver.dart';
@@ -25,13 +26,16 @@ import '../core/models/file_operation.dart';
 import '../core/settings/settings_store.dart';
 import '../core/terminal/shell_detector.dart';
 import '../core/terminal/terminal_launch.dart';
-import '../core/update/update_store.dart';
 import '../features/containers/container_store.dart';
 import '../features/containers/wsl_path.dart';
 import '../features/checksum/checksum_dialog.dart';
+import '../features/command_palette/app_command.dart';
+import '../features/command_palette/command_palette_launcher.dart';
+import '../features/command_palette/command_palette_view.dart';
+import '../features/command_palette/command_usage_store.dart';
 import '../features/compare/compare_mode_bar.dart';
+import '../features/drives/drive_store.dart';
 import '../features/help/help_dialog.dart';
-import '../features/update/update_dialog.dart';
 import '../features/navigation/bookmark_store.dart';
 import '../features/navigation/navigation_store.dart';
 import '../features/navigation/sidebar.dart';
@@ -48,6 +52,7 @@ import '../features/plugins/plugin_icons.dart';
 import '../features/plugins/plugin_models.dart';
 import '../features/plugins/plugin_settings_store.dart';
 import '../features/plugins/plugin_store.dart';
+import '../features/settings/keybinding_labels.dart';
 import '../features/settings/preferences_view.dart';
 import '../features/tags/tag_edit_dialog.dart';
 import '../features/tags/tag_path.dart';
@@ -75,6 +80,7 @@ part 'waydir_shell/base.dart';
 part 'waydir_shell/actions.dart';
 part 'waydir_shell/terminal.dart';
 part 'waydir_shell/menus.dart';
+part 'waydir_shell/command_palette.dart';
 part 'waydir_shell/keyboard.dart';
 
 class WaydirShell extends StatefulWidget {
@@ -90,6 +96,7 @@ class _WaydirShellState extends State<WaydirShell>
         _WaydirActionsMixin,
         _WaydirTerminalMixin,
         _WaydirMenuMixin,
+        _WaydirCommandPaletteMixin,
         _WaydirKeyboardMixin {
   @override
   void initState() {
@@ -188,9 +195,9 @@ class _WaydirShellState extends State<WaydirShell>
         _installRenameErrorEffects();
       }),
     );
-    _installUpdateNotification();
     _installPluginEventEffects();
     _maybePromptFullDiskAccess();
+    CommandPaletteLauncher.instance.open = _openCommandPalette;
   }
 
   void _maybePromptFullDiskAccess() {
@@ -205,6 +212,9 @@ class _WaydirShellState extends State<WaydirShell>
 
   @override
   void dispose() {
+    if (CommandPaletteLauncher.instance.open == _openCommandPalette) {
+      CommandPaletteLauncher.instance.open = null;
+    }
     for (final d in _effectDisposers) {
       d();
     }
@@ -469,7 +479,8 @@ class _SidebarHostState extends State<_SidebarHost> {
   static const _railWidth = 52.0;
   static const _minExpanded = 160.0;
   static const _maxExpanded = 400.0;
-  // Drag the expanded sidebar narrower than this and it snaps to the icon rail.
+
+  /// Drag the expanded sidebar narrower than this and it snaps to the icon rail.
   static const _collapseThreshold = 120.0;
   static const _animDuration = Duration(milliseconds: 140);
 
@@ -483,8 +494,6 @@ class _SidebarHostState extends State<_SidebarHost> {
 
   void _onDragStart(DragStartDetails _) {
     final settings = SettingsStore.instance;
-    // Seed the live width from whatever is currently on screen so the handle
-    // tracks the pointer continuously in both directions.
     _dragWidth = settings.sidebarCollapsed.value
         ? _railWidth
         : settings.sidebarWidth.value.clamp(_minExpanded, _maxExpanded);
@@ -498,8 +507,6 @@ class _SidebarHostState extends State<_SidebarHost> {
       _maxExpanded,
     );
 
-    // Collapsed state is derived purely from the live width crossing the
-    // threshold, so collapse and expand are symmetric and repeatable.
     final shouldCollapse = next < _collapseThreshold;
     if (settings.sidebarCollapsed.value != shouldCollapse) {
       settings.sidebarCollapsed.value = shouldCollapse;

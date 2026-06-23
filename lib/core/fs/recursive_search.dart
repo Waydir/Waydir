@@ -169,9 +169,9 @@ class RecursiveSearch {
     });
   }
 
-  // Recursive search runs exclusively in the native (Rust) parallel walker.
-  // There is no Dart fallback by design; a missing native library is a
-  // hard error surfaced to the caller.
+  /// Recursive search runs exclusively in the native (Rust) parallel walker.
+  /// There is no Dart fallback by design; a missing native library is a
+  /// hard error surfaced to the caller.
   static Future<void> _runSearchAsync(
     SendPort mainPort,
     String root,

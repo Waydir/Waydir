@@ -24,7 +24,7 @@ enum _VimMode { normal, insert, visual }
 /// Lets the host observe unsaved state and trigger a save (e.g. to prompt
 /// before closing the preview).
 class CodeEditorController {
-  final dirty = ValueNotifier<bool>(false);
+  final dirty = signal(false);
   Future<bool> Function()? _save;
 
   /// Saves if dirty. Returns true when there is nothing to save or the save
@@ -40,7 +40,7 @@ class CodeEditor extends StatefulWidget {
   final String path;
   final String extension;
   final String initial;
-  final ValueNotifier<bool> editorActive;
+  final Signal<bool> editorActive;
   final CodeEditorController? controller;
 
   const CodeEditor({
@@ -374,8 +374,6 @@ class _CodeEditorState extends State<CodeEditor> {
           wordWrap: wrapLines,
           readOnly: readOnly,
           showCursorWhenReadOnly: readOnly,
-          // re_editor binds Ctrl/Cmd+S to a save intent but ships no action for
-          // it; provide ours so the shortcut actually writes the file.
           shortcutOverrideActions: <Type, Action<Intent>>{
             re.CodeShortcutSaveIntent:
                 CallbackAction<re.CodeShortcutSaveIntent>(

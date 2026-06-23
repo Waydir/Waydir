@@ -39,7 +39,7 @@ import '../tags/tag_edit_dialog.dart';
 import '../tags/tag_path.dart';
 import '../tags/tag_store.dart';
 
-const double _sectionGap = 12;
+const double _sectionGap = 0;
 const double _gutter = 8;
 const double _expandedRightGutter = 4;
 const double _rowPadH = 10;
@@ -563,7 +563,6 @@ class _SidebarState extends State<Sidebar> {
     final bookmarks = _bookmarkStore.bookmarks.value;
     final tags = TagStore.instance.tags.value;
 
-    // Read layout signals so the body re-renders on reorder/visibility edits.
     final sectionOrder = store.sectionOrder.value;
     store.hiddenSections.value;
     store.collapsedSections.value;
@@ -705,6 +704,8 @@ class _SidebarState extends State<Sidebar> {
       }
     }
 
+    children.add(const SizedBox(height: 12));
+
     return ListView(
       controller: _scrollController,
       padding: EdgeInsets.only(bottom: collapsed ? 6 : _sectionGap),
@@ -730,8 +731,6 @@ class _SidebarState extends State<Sidebar> {
   }
 
   Widget _buildEditList(List<_SidebarSection> sections) {
-    // Show every section while editing — including an empty Network — so its
-    // position in the order can be set before any network locations exist.
     return ReorderableListView.builder(
       scrollController: _scrollController,
       padding: const EdgeInsets.symmetric(vertical: 6),

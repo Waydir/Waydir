@@ -12,10 +12,10 @@ import 'quick_look_common.dart';
 
 const _maxRenderWidth = 2400;
 
-// Isolate.run closures must capture only sendable values. Keeping these at the
-// top level means their scope holds nothing but the plain arguments - defining
-// them inside a widget method would drag the surrounding context (Completer,
-// BuildContext, ...) into the message and make it unsendable.
+/// Isolate.run closures must capture only sendable values. Keeping these at the
+/// top level means their scope holds nothing but the plain arguments - defining
+/// them inside a widget method would drag the surrounding context (Completer,
+/// BuildContext, ...) into the message and make it unsendable.
 Future<List<double>?> _pageAspectsInIsolate(String path) =>
     Isolate.run(() => WaydirCoreLoader.pdfPageAspects(path));
 
@@ -86,9 +86,6 @@ class _PdfPageList extends StatelessWidget {
 
         return Stack(
           children: [
-            // Per-page extents are known up front, so feeding them through
-            // itemExtentBuilder lets the ListView compute the exact scroll
-            // range and keeps the scrollbar from jittering as pages render.
             ListView.builder(
               padding: const EdgeInsets.all(_pad),
               itemCount: aspects.length,

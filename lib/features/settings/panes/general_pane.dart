@@ -5,7 +5,9 @@ import '../../../i18n/strings.g.dart';
 import '../preferences_view.dart';
 
 class GeneralPane extends StatelessWidget {
-  const GeneralPane({super.key});
+  final PreferenceAnchors anchors;
+
+  const GeneralPane({super.key, required this.anchors});
 
   @override
   Widget build(BuildContext context) {
@@ -20,35 +22,38 @@ class GeneralPane extends StatelessWidget {
     final typeAheadBuffer = registry.byId('general.typeAheadBuffer');
     final deleteKeyBehavior = registry.byId('general.deleteKeyBehavior');
     final dragMovesByDefault = registry.byId('general.dragMovesByDefault');
+    Widget row(AppSetting<dynamic> setting) {
+      return RegistrySettingRow(setting: setting, anchors: anchors);
+    }
 
     return SettingsPaneScaffold(
       children: [
         SettingsSection(
           anchorId: 'general.startup',
+          anchors: anchors,
           title: t.preferences.general.startupSection,
-          children: [
-            RegistrySettingRow(setting: restoreSession),
-            RegistrySettingRow(setting: defaultPath),
-          ],
+          children: [row(restoreSession), row(defaultPath)],
         ),
         SettingsSection(
           anchorId: 'general.folders',
+          anchors: anchors,
           title: t.preferences.general.foldersSection,
           children: [
-            RegistrySettingRow(setting: rememberFolderState),
-            RegistrySettingRow(setting: rememberFolderSort),
-            RegistrySettingRow(setting: typeAheadBuffer),
+            row(rememberFolderState),
+            row(rememberFolderSort),
+            row(typeAheadBuffer),
           ],
         ),
         SettingsSection(
           anchorId: 'general.fileOps',
+          anchors: anchors,
           title: t.preferences.general.fileOpsSection,
           children: [
-            RegistrySettingRow(setting: deleteKeyBehavior),
-            RegistrySettingRow(setting: confirmDelete),
-            RegistrySettingRow(setting: confirmCopy),
-            RegistrySettingRow(setting: confirmMove),
-            RegistrySettingRow(setting: dragMovesByDefault),
+            row(deleteKeyBehavior),
+            row(confirmDelete),
+            row(confirmCopy),
+            row(confirmMove),
+            row(dragMovesByDefault),
           ],
         ),
       ],
