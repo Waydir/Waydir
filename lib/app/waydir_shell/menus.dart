@@ -168,6 +168,17 @@ mixin _WaydirMenuMixin
     }
   }
 
+  Future<void> _resolveSymlink(NavigationStore store, FileEntry entry) async {
+    final result = await store.resolveSymlink(entry);
+    if (!mounted) return;
+    switch (result) {
+      case SymlinkOpSuccess():
+        showToast(context: context, message: t.toast.symlinkResolved);
+      case SymlinkOpFailure(message: final message):
+        showToast(context: context, message: message);
+    }
+  }
+
   List<ContextMenuItem> _backgroundPluginItems() {
     final contributions = PluginStore.instance.backgroundContributions();
 
@@ -415,6 +426,12 @@ mixin _WaydirMenuMixin
           icon: WaydirIconsRegular.link,
           label: t.menu.editSymlinkTarget,
           action: 'edit_symlink_target',
+        ),
+      if (isSingleSymlink)
+        ContextMenuItem(
+          icon: WaydirIconsRegular.link,
+          label: t.menu.resolveSymlink,
+          action: 'resolve_symlink',
         ),
       if (!hasNetworkPath)
         ContextMenuItem(
@@ -1406,6 +1423,11 @@ mixin _WaydirMenuMixin
         final entries = store.selectedEntries;
         if (entries.length == 1 && entries.first.isSymlink) {
           unawaited(_editSymlinkTarget(store, entries.first));
+        }
+      case 'resolve_symlink':
+        final entries = store.selectedEntries;
+        if (entries.length == 1 && entries.first.isSymlink) {
+          unawaited(_resolveSymlink(store, entries.first));
         }
       case 'trash':
         _confirmAndDelete(forceTrash: true);

@@ -12,6 +12,7 @@ enum TaskType {
   extract,
   compress,
   archiveEdit,
+  resolveSymlink,
   plugin,
 }
 
@@ -143,6 +144,9 @@ class TaskLabel {
         name: p.basename(task.destination ?? ''),
       ),
       TaskType.archiveEdit => t.tasks.updatingArchive,
+      TaskType.resolveSymlink => t.tasks.resolvingSymlink(
+        name: task.options['linkName'] ?? p.basename(task.sources.first),
+      ),
       TaskType.plugin => task.options['title'] ?? task.sources.first,
     };
   }

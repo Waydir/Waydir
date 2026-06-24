@@ -202,6 +202,9 @@ class Translations$menu$en {
 	/// en: 'Edit Symlink Target…'
 	String get editSymlinkTarget => 'Edit Symlink Target…';
 
+	/// en: 'Resolve Symlink'
+	String get resolveSymlink => 'Resolve Symlink';
+
 	/// en: 'Open in New Tab'
 	String get openInNewTab => 'Open in New Tab';
 
@@ -1374,6 +1377,15 @@ class Translations$toast$en {
 	/// en: 'Target can't be empty'
 	String get symlinkTargetEmpty => 'Target can\'t be empty';
 
+	/// en: 'Symlink resolved'
+	String get symlinkResolved => 'Symlink resolved';
+
+	/// en: 'Could not resolve symlink: $message'
+	String symlinkResolveFailed({required Object message}) => 'Could not resolve symlink: ${message}';
+
+	/// en: 'Resolve cancelled'
+	String get symlinkResolveCancelled => 'Resolve cancelled';
+
 	/// en: 'Renamed $count files'
 	String multiRenameSuccess({required Object count}) => 'Renamed ${count} files';
 
@@ -2319,6 +2331,9 @@ class Translations$tasks$en {
 
 	/// en: 'Updating archive'
 	String get updatingArchive => 'Updating archive';
+
+	/// en: 'Resolving $name'
+	String resolvingSymlink({required Object name}) => 'Resolving ${name}';
 
 	late final Translations$tasks$status$en status = Translations$tasks$status$en.internal(_root);
 }
@@ -4176,6 +4191,7 @@ extension on Translations {
 			'menu.goToTarget' => 'Go to Target',
 			'menu.createSymlinkTo' => 'Create Symlink to This…',
 			'menu.editSymlinkTarget' => 'Edit Symlink Target…',
+			'menu.resolveSymlink' => 'Resolve Symlink',
 			'menu.openInNewTab' => 'Open in New Tab',
 			'menu.removeBookmark' => 'Remove Bookmark',
 			'menu.addBookmark' => 'Add to Bookmarks',
@@ -4655,16 +4671,14 @@ extension on Translations {
 			'keybindings.quickLookNextFileEdit' => 'Next file while editing',
 			'keybindings.quickLookSave' => 'Save changes',
 			'keybindings.cursorUp' => 'Move up',
+			_ => null,
+		} ?? switch (path) {
 			'keybindings.cursorDown' => 'Move down',
 			'keybindings.pageUp' => 'Move up one page',
 			'keybindings.pageDown' => 'Move down one page',
 			'keybindings.home' => 'Jump to start',
-			_ => null,
-		} ?? switch (path) {
 			'keybindings.end' => 'Jump to end',
 			'keybindings.newTab' => 'New tab',
-			_ => null,
-		} ?? switch (path) {
 			'keybindings.closeTab' => 'Close tab',
 			'keybindings.nextTab' => 'Next tab',
 			'keybindings.prevTab' => 'Previous tab',
@@ -4809,6 +4823,9 @@ extension on Translations {
 			'toast.symlinkUpdated' => 'Symlink target updated',
 			'toast.symlinkTargetNotFound' => 'Target not found',
 			'toast.symlinkTargetEmpty' => 'Target can\'t be empty',
+			'toast.symlinkResolved' => 'Symlink resolved',
+			'toast.symlinkResolveFailed' => ({required Object message}) => 'Could not resolve symlink: ${message}',
+			'toast.symlinkResolveCancelled' => 'Resolve cancelled',
 			'toast.multiRenameSuccess' => ({required Object count}) => 'Renamed ${count} files',
 			'toast.multiRenamePartial' => ({required Object succeeded, required Object total, required Object details}) => 'Renamed ${succeeded} of ${total} (${details})',
 			'toast.multiRenameCollisions' => ({required Object count}) => '${count} already existed',
@@ -5123,6 +5140,7 @@ extension on Translations {
 			'tasks.extractingMultiple' => ({required Object count}) => 'Extracting ${count} archives',
 			'tasks.compressingTo' => ({required Object name}) => 'Compressing to ${name}',
 			'tasks.updatingArchive' => 'Updating archive',
+			'tasks.resolvingSymlink' => ({required Object name}) => 'Resolving ${name}',
 			'tasks.status.waiting' => 'Waiting...',
 			'tasks.status.scanning' => 'Scanning files...',
 			'tasks.status.conflicts' => ({required Object count}) => '${count} conflicts',
@@ -5167,6 +5185,8 @@ extension on Translations {
 			'openWith.setDefaultFailed' => 'Could not set the default application',
 			'openWith.unsupportedPlatform' => 'Unsupported platform',
 			'openWith.xdgMimeFailed' => 'xdg-mime failed',
+			_ => null,
+		} ?? switch (path) {
 			'openWith.dutiRequired' => 'Setting the default app on macOS requires the "duti" tool',
 			'openWith.bundleIdReadFailed' => 'Could not read app bundle id',
 			'openWith.windowsDefaultDialogRequired' => 'Use the system "Open with" dialog to change the default on Windows',

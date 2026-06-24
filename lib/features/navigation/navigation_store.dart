@@ -2,17 +2,20 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' show Color;
+import 'package:collection/collection.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:signals/signals.dart';
 import '../../core/archive/archive_path.dart';
 import '../../core/archive/archive_reader.dart';
 import '../../core/models/file_entry.dart';
+import '../../core/models/file_operation.dart';
 import '../../core/fs/file_sort.dart';
 import '../../core/fs/file_system_service.dart';
 import '../../core/fs/fs_worker_pool.dart';
 import '../../core/fs/directory_watcher_service.dart';
 import '../../core/fs/recursive_search.dart';
+import '../../core/fs/safe_file_replace.dart';
 import '../../core/fs/sftp_fs.dart';
 import '../../core/logging/app_logger.dart';
 import '../../core/platform/platform_paths.dart';
@@ -1972,18 +1975,135 @@ class NavigationStore {
     return SymlinkOpSuccess(physicalPath);
   }
 
-  bool goToSymlinkTarget(FileEntry entry) {
+  String _resolveLinkTarget(FileEntry entry) {
     final target = entry.linkTarget;
-    if (target.isEmpty) return false;
-    final resolved = p.isAbsolute(target)
+    if (target.isEmpty) return '';
+
+    return p.isAbsolute(target)
         ? target
         : p.normalize(p.join(p.dirname(entry.realPath), target));
-    if (FileSystemEntity.typeSync(resolved) == FileSystemEntityType.notFound) {
+  }
+
+  bool goToSymlinkTarget(FileEntry entry) {
+    final resolved = _resolveLinkTarget(entry);
+    if (resolved.isEmpty ||
+        FileSystemEntity.typeSync(resolved) == FileSystemEntityType.notFound) {
       return false;
     }
     revealInFolder(resolved);
 
     return true;
+  }
+
+  Future<FileTask> _awaitTaskTerminal(String id) {
+    final completer = Completer<FileTask>();
+    void Function()? dispose;
+    dispose = effect(() {
+      final task = operationStore.tasks.value.firstWhereOrNull(
+        (t) => t.id == id,
+      );
+      if (task == null) return;
+      if (task.status == TaskStatus.completed ||
+          task.status == TaskStatus.failed ||
+          task.status == TaskStatus.cancelled) {
+        if (!completer.isCompleted) completer.complete(task);
+      }
+    });
+    unawaited(completer.future.whenComplete(() => dispose?.call()));
+
+    return completer.future;
+  }
+
+  void _removeDirIfExists(String path) {
+    try {
+      final dir = Directory(path);
+      if (dir.existsSync()) dir.deleteSync(recursive: true);
+    } catch (e, st) {
+      log.warn(
+        'navigation',
+        'failed to remove symlink staging dir',
+        error: e,
+        stack: st,
+      );
+    }
+  }
+
+  Future<SymlinkOpResult> resolveSymlink(FileEntry entry) async {
+    if (!entry.isSymlink) {
+      return SymlinkOpFailure(t.toast.symlinkTargetNotFound);
+    }
+    final resolvedTarget = _resolveLinkTarget(entry);
+    if (resolvedTarget.isEmpty ||
+        FileSystemEntity.typeSync(resolvedTarget) ==
+            FileSystemEntityType.notFound) {
+      return SymlinkOpFailure(t.toast.symlinkTargetNotFound);
+    }
+    final linkPath = _physical(entry.path);
+    final stagingDir = SafeFileReplace.temporarySiblingPath(linkPath);
+    final taskId = operationStore.enqueueSymlinkResolve(
+      resolvedTarget,
+      stagingDir,
+      linkName: p.basename(linkPath),
+    );
+    final task = await _awaitTaskTerminal(taskId);
+    if (task.status == TaskStatus.cancelled) {
+      _removeDirIfExists(stagingDir);
+
+      return SymlinkOpFailure(t.toast.symlinkResolveCancelled);
+    }
+    if (task.status != TaskStatus.completed || task.errors.isNotEmpty) {
+      _removeDirIfExists(stagingDir);
+
+      return SymlinkOpFailure(
+        t.toast.symlinkResolveFailed(
+          message: task.errors.isNotEmpty
+              ? task.errors.first.message
+              : t.errors.workerExitedUnexpectedly,
+        ),
+      );
+    }
+    try {
+      final staged = Directory(stagingDir).listSync(followLinks: false);
+      if (staged.length != 1) {
+        throw FileSystemException(
+          t.errors.workerExitedUnexpectedly,
+          stagingDir,
+        );
+      }
+      final copiedPath = staged.first.path;
+      final copiedType = FileSystemEntity.typeSync(
+        copiedPath,
+        followLinks: false,
+      );
+      Link(linkPath).deleteSync();
+      switch (copiedType) {
+        case FileSystemEntityType.directory:
+          Directory(copiedPath).renameSync(linkPath);
+        case FileSystemEntityType.file:
+          File(copiedPath).renameSync(linkPath);
+        default:
+          Link(copiedPath).renameSync(linkPath);
+      }
+    } catch (e) {
+      return SymlinkOpFailure(
+        t.toast.symlinkResolveFailed(
+          message: e is FileSystemException ? e.message : '$e',
+        ),
+      );
+    } finally {
+      _removeDirIfExists(stagingDir);
+    }
+    await refresh();
+    final idx = _vf.indexWhere((f) => f.path == entry.path);
+    if (idx >= 0) {
+      batch(() {
+        selectedPaths.value = {entry.path};
+        cursorIndex.value = idx;
+        anchorIndex.value = idx;
+      });
+    }
+
+    return SymlinkOpSuccess(linkPath);
   }
 
   void onOpen(FileEntry entry) => unawaited(_openEntry(entry));
