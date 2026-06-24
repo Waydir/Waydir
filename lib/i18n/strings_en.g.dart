@@ -193,6 +193,18 @@ class Translations$menu$en {
 	/// en: 'Open Location'
 	String get openLocation => 'Open Location';
 
+	/// en: 'Go to Target'
+	String get goToTarget => 'Go to Target';
+
+	/// en: 'Create Symlink to This…'
+	String get createSymlinkTo => 'Create Symlink to This…';
+
+	/// en: 'Edit Symlink Target…'
+	String get editSymlinkTarget => 'Edit Symlink Target…';
+
+	/// en: 'Resolve Symlink'
+	String get resolveSymlink => 'Resolve Symlink';
+
 	/// en: 'Open in New Tab'
 	String get openInNewTab => 'Open in New Tab';
 
@@ -1227,6 +1239,18 @@ class Translations$quickLook$en {
 	/// en: 'File'
 	String get typeFile => 'File';
 
+	/// en: 'Symlink (Folder)'
+	String get typeSymlinkFolder => 'Symlink (Folder)';
+
+	/// en: 'Symlink (File)'
+	String get typeSymlinkFile => 'Symlink (File)';
+
+	/// en: 'Target'
+	String get target => 'Target';
+
+	/// en: 'missing'
+	String get targetMissing => 'missing';
+
 	/// en: 'Dimensions'
 	String get dimensions => 'Dimensions';
 
@@ -1340,6 +1364,27 @@ class Translations$toast$en {
 
 	/// en: 'Could not rename: $message'
 	String renameError({required Object message}) => 'Could not rename: ${message}';
+
+	/// en: 'Symlink created'
+	String get symlinkCreated => 'Symlink created';
+
+	/// en: 'Symlink target updated'
+	String get symlinkUpdated => 'Symlink target updated';
+
+	/// en: 'Target not found'
+	String get symlinkTargetNotFound => 'Target not found';
+
+	/// en: 'Target can't be empty'
+	String get symlinkTargetEmpty => 'Target can\'t be empty';
+
+	/// en: 'Symlink resolved'
+	String get symlinkResolved => 'Symlink resolved';
+
+	/// en: 'Could not resolve symlink: $message'
+	String symlinkResolveFailed({required Object message}) => 'Could not resolve symlink: ${message}';
+
+	/// en: 'Resolve cancelled'
+	String get symlinkResolveCancelled => 'Resolve cancelled';
 
 	/// en: 'Renamed $count files'
 	String multiRenameSuccess({required Object count}) => 'Renamed ${count} files';
@@ -1630,6 +1675,9 @@ class Translations$toolbar$en {
 	/// en: 'New Folder'
 	String get newFolder => 'New Folder';
 
+	/// en: 'New Symlink…'
+	String get newSymlink => 'New Symlink…';
+
 	/// en: 'Operations'
 	String get operations => 'Operations';
 
@@ -1810,8 +1858,32 @@ class Translations$dialog$en {
 	/// en: 'Cancel'
 	String get cancel => 'Cancel';
 
+	/// en: 'Save'
+	String get save => 'Save';
+
 	/// en: 'Folder name'
 	String get folderNameHint => 'Folder name';
+
+	/// en: 'Create Symlink'
+	String get createSymlinkTitle => 'Create Symlink';
+
+	/// en: 'Target'
+	String get symlinkTargetHint => 'Target';
+
+	/// en: 'Choose Folder…'
+	String get chooseFolder => 'Choose Folder…';
+
+	/// en: 'Choose File…'
+	String get chooseFile => 'Choose File…';
+
+	/// en: 'Link name'
+	String get symlinkNameHint => 'Link name';
+
+	/// en: 'Link to $name'
+	String symlinkDefaultName({required Object name}) => 'Link to ${name}';
+
+	/// en: 'Edit Symlink Target'
+	String get editSymlinkTargetTitle => 'Edit Symlink Target';
 
 	/// en: 'Close'
 	String get close => 'Close';
@@ -2035,6 +2107,9 @@ class Translations$errors$en {
 
 	// Translations
 
+	/// en: 'Creating symlinks on Windows requires Developer Mode or running as administrator.'
+	String get symlinkPrivilegeRequired => 'Creating symlinks on Windows requires Developer Mode or running as administrator.';
+
 	/// en: 'Permission denied'
 	String get permissionDenied => 'Permission denied';
 
@@ -2256,6 +2331,9 @@ class Translations$tasks$en {
 
 	/// en: 'Updating archive'
 	String get updatingArchive => 'Updating archive';
+
+	/// en: 'Resolving $name'
+	String resolvingSymlink({required Object name}) => 'Resolving ${name}';
 
 	late final Translations$tasks$status$en status = Translations$tasks$status$en.internal(_root);
 }
@@ -4110,6 +4188,10 @@ extension on Translations {
 			'menu.openInTerminal' => 'Open in Terminal',
 			'menu.rename' => 'Rename',
 			'menu.openLocation' => 'Open Location',
+			'menu.goToTarget' => 'Go to Target',
+			'menu.createSymlinkTo' => 'Create Symlink to This…',
+			'menu.editSymlinkTarget' => 'Edit Symlink Target…',
+			'menu.resolveSymlink' => 'Resolve Symlink',
 			'menu.openInNewTab' => 'Open in New Tab',
 			'menu.removeBookmark' => 'Remove Bookmark',
 			'menu.addBookmark' => 'Add to Bookmarks',
@@ -4589,12 +4671,12 @@ extension on Translations {
 			'keybindings.quickLookNextFileEdit' => 'Next file while editing',
 			'keybindings.quickLookSave' => 'Save changes',
 			'keybindings.cursorUp' => 'Move up',
+			_ => null,
+		} ?? switch (path) {
 			'keybindings.cursorDown' => 'Move down',
 			'keybindings.pageUp' => 'Move up one page',
 			'keybindings.pageDown' => 'Move down one page',
 			'keybindings.home' => 'Jump to start',
-			_ => null,
-		} ?? switch (path) {
 			'keybindings.end' => 'Jump to end',
 			'keybindings.newTab' => 'New tab',
 			'keybindings.closeTab' => 'Close tab',
@@ -4698,6 +4780,10 @@ extension on Translations {
 			'quickLook.created' => 'Created',
 			'quickLook.typeFolder' => 'Folder',
 			'quickLook.typeFile' => 'File',
+			'quickLook.typeSymlinkFolder' => 'Symlink (Folder)',
+			'quickLook.typeSymlinkFile' => 'Symlink (File)',
+			'quickLook.target' => 'Target',
+			'quickLook.targetMissing' => 'missing',
 			'quickLook.dimensions' => 'Dimensions',
 			'quickLook.camera' => 'Camera',
 			'quickLook.lens' => 'Lens',
@@ -4733,6 +4819,13 @@ extension on Translations {
 			'toast.renameAlreadyExists' => ({required Object name}) => 'An item named \'${name}\' already exists',
 			'toast.renameInvalidName' => 'Invalid name',
 			'toast.renameError' => ({required Object message}) => 'Could not rename: ${message}',
+			'toast.symlinkCreated' => 'Symlink created',
+			'toast.symlinkUpdated' => 'Symlink target updated',
+			'toast.symlinkTargetNotFound' => 'Target not found',
+			'toast.symlinkTargetEmpty' => 'Target can\'t be empty',
+			'toast.symlinkResolved' => 'Symlink resolved',
+			'toast.symlinkResolveFailed' => ({required Object message}) => 'Could not resolve symlink: ${message}',
+			'toast.symlinkResolveCancelled' => 'Resolve cancelled',
 			'toast.multiRenameSuccess' => ({required Object count}) => 'Renamed ${count} files',
 			'toast.multiRenamePartial' => ({required Object succeeded, required Object total, required Object details}) => 'Renamed ${succeeded} of ${total} (${details})',
 			'toast.multiRenameCollisions' => ({required Object count}) => '${count} already existed',
@@ -4840,6 +4933,7 @@ extension on Translations {
 			'toolbar.refresh' => 'Refresh',
 			'toolbar.viewOptions' => 'View Options',
 			'toolbar.newFolder' => 'New Folder',
+			'toolbar.newSymlink' => 'New Symlink…',
 			'toolbar.operations' => 'Operations',
 			'toolbar.notifications' => 'Notifications',
 			'toolbar.search' => 'Search',
@@ -4903,7 +4997,15 @@ extension on Translations {
 			'statusBar.zoomReset' => 'Reset zoom',
 			'dialog.create' => 'Create',
 			'dialog.cancel' => 'Cancel',
+			'dialog.save' => 'Save',
 			'dialog.folderNameHint' => 'Folder name',
+			'dialog.createSymlinkTitle' => 'Create Symlink',
+			'dialog.symlinkTargetHint' => 'Target',
+			'dialog.chooseFolder' => 'Choose Folder…',
+			'dialog.chooseFile' => 'Choose File…',
+			'dialog.symlinkNameHint' => 'Link name',
+			'dialog.symlinkDefaultName' => ({required Object name}) => 'Link to ${name}',
+			'dialog.editSymlinkTargetTitle' => 'Edit Symlink Target',
 			'dialog.close' => 'Close',
 			'dialog.delete' => 'Delete',
 			'dialog.moveToTrash' => 'Move to Trash',
@@ -4966,6 +5068,7 @@ extension on Translations {
 			'operations.target' => ({required Object size, required Object date}) => 'Target:  ${size} · ${date}',
 			'operations.newer' => '  ← newer',
 			'operations.applyToAll' => ({required Object count}) => 'Apply to all remaining conflicts (${count})',
+			'errors.symlinkPrivilegeRequired' => 'Creating symlinks on Windows requires Developer Mode or running as administrator.',
 			'errors.permissionDenied' => 'Permission denied',
 			'errors.authenticationRequired' => 'Authentication required',
 			'errors.noSpace' => 'No space left on device',
@@ -5037,6 +5140,7 @@ extension on Translations {
 			'tasks.extractingMultiple' => ({required Object count}) => 'Extracting ${count} archives',
 			'tasks.compressingTo' => ({required Object name}) => 'Compressing to ${name}',
 			'tasks.updatingArchive' => 'Updating archive',
+			'tasks.resolvingSymlink' => ({required Object name}) => 'Resolving ${name}',
 			'tasks.status.waiting' => 'Waiting...',
 			'tasks.status.scanning' => 'Scanning files...',
 			'tasks.status.conflicts' => ({required Object count}) => '${count} conflicts',
@@ -5081,6 +5185,8 @@ extension on Translations {
 			'openWith.setDefaultFailed' => 'Could not set the default application',
 			'openWith.unsupportedPlatform' => 'Unsupported platform',
 			'openWith.xdgMimeFailed' => 'xdg-mime failed',
+			_ => null,
+		} ?? switch (path) {
 			'openWith.dutiRequired' => 'Setting the default app on macOS requires the "duti" tool',
 			'openWith.bundleIdReadFailed' => 'Could not read app bundle id',
 			'openWith.windowsDefaultDialogRequired' => 'Use the system "Open with" dialog to change the default on Windows',

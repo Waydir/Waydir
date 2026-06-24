@@ -128,6 +128,24 @@ class OperationStore {
   void enqueueMove(List<String> sources, String destination) =>
       _enqueueTransfer(TaskType.move, sources, destination);
 
+  String enqueueSymlinkResolve(
+    String resolvedTarget,
+    String stagingDir, {
+    required String linkName,
+  }) {
+    final task = FileTask(
+      id: '${_idCounter++}',
+      type: TaskType.resolveSymlink,
+      sources: [resolvedTarget],
+      destination: stagingDir,
+      options: {'linkName': linkName},
+      startTime: DateTime.now(),
+    );
+    _enqueue(task);
+
+    return task.id;
+  }
+
   Future<void> _enqueueTransfer(
     TaskType type,
     List<String> sources,
@@ -661,6 +679,8 @@ class OperationStore {
         entryPoint = FileSystemService.compressWorker;
       case TaskType.archiveEdit:
         entryPoint = FileSystemService.archiveEditWorker;
+      case TaskType.resolveSymlink:
+        entryPoint = FileSystemService.copyWorker;
       case TaskType.plugin:
         throw StateError('plugin tasks are executed by the plugin runner');
     }
@@ -1112,6 +1132,8 @@ class OperationStore {
         return WaydirIconsRegular.fileZip;
       case TaskType.archiveEdit:
         return WaydirIconsRegular.archive;
+      case TaskType.resolveSymlink:
+        return WaydirIconsRegular.link;
       case TaskType.plugin:
         return WaydirIconsRegular.gearSix;
     }

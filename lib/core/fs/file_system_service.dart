@@ -199,6 +199,27 @@ class FileSystemService {
   static Future<void> createDirectory(String path) =>
       FsWorkerPool.instance.createDirectory(path);
 
+  static Future<void> createSymlink(String linkPath, String target) async {
+    try {
+      await FsWorkerPool.instance.createSymlink(linkPath, target);
+    } on FileSystemException catch (e) {
+      throw FileSystemException(_friendlyError(e), linkPath);
+    }
+  }
+
+  /// A symlink can't be edited in place; "editing" its target means
+  /// unlinking and relinking under the same name.
+  static Future<void> updateSymlinkTarget(
+    String linkPath,
+    String newTarget,
+  ) async {
+    try {
+      await FsWorkerPool.instance.updateSymlinkTarget(linkPath, newTarget);
+    } on FileSystemException catch (e) {
+      throw FileSystemException(_friendlyError(e), linkPath);
+    }
+  }
+
   static Future<void> openInTerminal(String directory) =>
       TerminalService.openInDirectory(
         directory,
@@ -2148,6 +2169,9 @@ class FileSystemService {
 
   static String _friendlyError(Object e) {
     final msg = e.toString();
+    if (e is FileSystemException && e.osError?.errorCode == 1314) {
+      return t.errors.symlinkPrivilegeRequired;
+    }
     if (_isPermissionError(e, msg)) return t.errors.permissionDenied;
     if (e is FileSystemException) {
       if (msg.contains('No space left') ||

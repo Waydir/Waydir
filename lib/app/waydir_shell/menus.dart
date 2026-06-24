@@ -53,6 +53,11 @@ mixin _WaydirMenuMixin
         action: 'new_folder',
       ),
       ContextMenuItem(
+        icon: WaydirIconsRegular.link,
+        label: t.toolbar.newSymlink,
+        action: 'new_symlink',
+      ),
+      ContextMenuItem(
         icon: WaydirIconsRegular.arrowClockwise,
         label: t.toolbar.refresh,
         action: 'refresh',
@@ -100,6 +105,8 @@ mixin _WaydirMenuMixin
         store.paste();
       case 'new_folder':
         store.startCreate();
+      case 'new_symlink':
+        unawaited(_createSymlink(store));
       case 'refresh':
         store.refresh();
       case 'select_all':
@@ -108,6 +115,67 @@ mixin _WaydirMenuMixin
         _openInTerminal(store.currentPath.value);
       case 'properties':
         _openFolderProperties(store.currentPath.value);
+    }
+  }
+
+  Future<void> _createSymlink(NavigationStore store, {String? to}) async {
+    final request = await showCreateSymlinkDialog(
+      context: context,
+      initialTarget: to ?? '',
+      initialName: to == null
+          ? ''
+          : t.dialog.symlinkDefaultName(name: p.basename(to)),
+    );
+    if (request == null || !mounted) return;
+    final result = await store.createSymlink(
+      target: request.target,
+      name: request.name,
+    );
+    if (!mounted) return;
+    switch (result) {
+      case SymlinkOpSuccess():
+        showToast(context: context, message: t.toast.symlinkCreated);
+      case SymlinkOpFailure(message: final message):
+        showToast(context: context, message: message);
+    }
+  }
+
+  Future<void> _editSymlinkTarget(
+    NavigationStore store,
+    FileEntry entry,
+  ) async {
+    final newTarget = await showRenameDialog(
+      context,
+      title: t.dialog.editSymlinkTargetTitle,
+      initialValue: entry.linkTarget,
+      icon: WaydirIconsRegular.link,
+      confirmLabel: t.dialog.save,
+    );
+    if (newTarget == null || !mounted) return;
+    final result = await store.editSymlinkTarget(entry, newTarget);
+    if (!mounted) return;
+    switch (result) {
+      case SymlinkOpSuccess():
+        showToast(context: context, message: t.toast.symlinkUpdated);
+      case SymlinkOpFailure(message: final message):
+        showToast(context: context, message: message);
+    }
+  }
+
+  void _goToSymlinkTarget(NavigationStore store, FileEntry entry) {
+    if (!store.goToSymlinkTarget(entry)) {
+      showToast(context: context, message: t.toast.symlinkTargetNotFound);
+    }
+  }
+
+  Future<void> _resolveSymlink(NavigationStore store, FileEntry entry) async {
+    final result = await store.resolveSymlink(entry);
+    if (!mounted) return;
+    switch (result) {
+      case SymlinkOpSuccess():
+        showToast(context: context, message: t.toast.symlinkResolved);
+      case SymlinkOpFailure(message: final message):
+        showToast(context: context, message: message);
     }
   }
 
@@ -151,6 +219,11 @@ mixin _WaydirMenuMixin
           !PlatformPaths.isNetworkPath(e.path) &&
           !FileSystemService.isInsideArchive(e.realPath),
     );
+    final canSymlink =
+        count == 1 &&
+        !PlatformPaths.isRemoteUri(entries.first.realPath) &&
+        !FileSystemService.isInsideArchive(entries.first.realPath);
+    final isSingleSymlink = canSymlink && entries.first.isSymlink;
 
     final openWithItems = isSingleFile
         ? _openWithItemsFor(entries.first)
@@ -280,6 +353,12 @@ mixin _WaydirMenuMixin
           label: t.menu.openLocation,
           action: 'open_location',
         ),
+      if (isSingleSymlink)
+        ContextMenuItem(
+          icon: WaydirIconsRegular.arrowSquareOut,
+          label: t.menu.goToTarget,
+          action: 'go_to_target',
+        ),
       if (isSingleFolder) ...[
         ContextMenuItem(
           icon: WaydirIconsRegular.arrowSquareOut,
@@ -315,6 +394,12 @@ mixin _WaydirMenuMixin
           label: t.menu.copyPath,
           action: 'copy_path',
         ),
+      if (canSymlink)
+        ContextMenuItem(
+          icon: WaydirIconsRegular.link,
+          label: t.menu.createSymlinkTo,
+          action: 'create_symlink_to',
+        ),
       if (canVerifyChecksum)
         ContextMenuItem(
           icon: WaydirIconsRegular.checkSquare,
@@ -335,6 +420,18 @@ mixin _WaydirMenuMixin
           icon: WaydirIconsRegular.pencilSimple,
           label: t.menu.multiRename,
           action: 'multi_rename',
+        ),
+      if (isSingleSymlink)
+        ContextMenuItem(
+          icon: WaydirIconsRegular.link,
+          label: t.menu.editSymlinkTarget,
+          action: 'edit_symlink_target',
+        ),
+      if (isSingleSymlink)
+        ContextMenuItem(
+          icon: WaydirIconsRegular.link,
+          label: t.menu.resolveSymlink,
+          action: 'resolve_symlink',
         ),
       if (!hasNetworkPath)
         ContextMenuItem(
@@ -1305,6 +1402,11 @@ mixin _WaydirMenuMixin
         store.paste();
       case 'copy_path':
         store.copySelectedPaths();
+      case 'create_symlink_to':
+        final entries = store.selectedEntries;
+        if (entries.length == 1) {
+          unawaited(_createSymlink(store, to: entries.first.realPath));
+        }
       case 'verify_checksum':
         final entries = store.selectedEntries;
         if (entries.length == 1 && entries.first.type == FileItemType.file) {
@@ -1317,6 +1419,16 @@ mixin _WaydirMenuMixin
         store.startRename();
       case 'multi_rename':
         _multiRename(store);
+      case 'edit_symlink_target':
+        final entries = store.selectedEntries;
+        if (entries.length == 1 && entries.first.isSymlink) {
+          unawaited(_editSymlinkTarget(store, entries.first));
+        }
+      case 'resolve_symlink':
+        final entries = store.selectedEntries;
+        if (entries.length == 1 && entries.first.isSymlink) {
+          unawaited(_resolveSymlink(store, entries.first));
+        }
       case 'trash':
         _confirmAndDelete(forceTrash: true);
       case 'delete_permanent':
@@ -1334,6 +1446,11 @@ mixin _WaydirMenuMixin
         final entries = store.selectedEntries;
         if (entries.length == 1) {
           store.revealInFolder(entries.first.path);
+        }
+      case 'go_to_target':
+        final entries = store.selectedEntries;
+        if (entries.length == 1) {
+          _goToSymlinkTarget(store, entries.first);
         }
       case 'open_in_new_tab':
         final entries = store.selectedEntries;

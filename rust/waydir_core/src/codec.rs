@@ -12,6 +12,8 @@ pub(crate) struct Entry {
     pub name: Vec<u8>,
     pub path: Vec<u8>,
     pub disk_path: std::path::PathBuf,
+    pub is_symlink: bool,
+    pub link_target: Vec<u8>,
 }
 
 pub(crate) fn put_u32(buf: &mut Vec<u8>, v: u32) {
@@ -29,8 +31,11 @@ pub(crate) fn put_u64(buf: &mut Vec<u8>, v: u64) {
 
 /// Fixed-size portion of a serialised record. Layout (big-endian):
 /// u8 is_dir, i64 size, i64 mtime_ms, i64 created_ms, i64 added_ms, u32 mode,
-/// u32 uid, u32 gid, u32 name_len, u32 path_len, then name + path bytes.
-pub(crate) const RECORD_HEAD: usize = 1 + 8 + 8 + 8 + 8 + 4 + 4 + 4 + 4 + 4;
+/// u32 uid, u32 gid, u32 name_len, u32 path_len, u8 is_symlink,
+/// u32 link_target_len, then name + path + link_target bytes. The symlink
+/// fields are appended after the original head so every existing offset
+/// stays put.
+pub(crate) const RECORD_HEAD: usize = 1 + 8 + 8 + 8 + 8 + 4 + 4 + 4 + 4 + 4 + 1 + 4;
 
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn put_record(
@@ -45,6 +50,8 @@ pub(crate) fn put_record(
     gid: u32,
     name: &[u8],
     path: &[u8],
+    is_symlink: bool,
+    link_target: &[u8],
 ) {
     buf.push(if is_dir { 0 } else { 1 });
     put_i64(buf, size);
@@ -56,14 +63,17 @@ pub(crate) fn put_record(
     put_u32(buf, gid);
     put_u32(buf, name.len() as u32);
     put_u32(buf, path.len() as u32);
+    buf.push(if is_symlink { 1 } else { 0 });
+    put_u32(buf, link_target.len() as u32);
     buf.extend_from_slice(name);
     buf.extend_from_slice(path);
+    buf.extend_from_slice(link_target);
 }
 
 pub(crate) fn serialise(entries: &[Entry]) -> Vec<u8> {
     let body: usize = entries
         .iter()
-        .map(|e| RECORD_HEAD + e.name.len() + e.path.len())
+        .map(|e| RECORD_HEAD + e.name.len() + e.path.len() + e.link_target.len())
         .sum();
     let mut buf = Vec::with_capacity(8 + body);
     put_u32(&mut buf, MAGIC);
@@ -71,7 +81,7 @@ pub(crate) fn serialise(entries: &[Entry]) -> Vec<u8> {
     for e in entries {
         put_record(
             &mut buf, e.is_dir, e.size, e.mtime_ms, e.created_ms, e.added_ms, e.mode, e.uid,
-            e.gid, &e.name, &e.path,
+            e.gid, &e.name, &e.path, e.is_symlink, &e.link_target,
         );
     }
     buf

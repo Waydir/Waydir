@@ -20,6 +20,7 @@ import '../../ui/theme/app_theme.dart';
 import '../../ui/theme/app_text_styles.dart';
 import '../../ui/widgets/app_icon.dart';
 import '../../i18n/strings.g.dart';
+import '../../ui/dialogs/create_symlink_dialog.dart';
 import '../../ui/overlays/context_menu.dart';
 import '../../ui/overlays/toast.dart';
 
@@ -225,6 +226,7 @@ class _OverflowMenuButtonState extends State<_OverflowMenuButton> {
   static const String _actionBookmark = 'bookmark';
   static const String _actionSearch = 'search';
   static const String _actionNewFolder = 'newFolder';
+  static const String _actionNewSymlink = 'newSymlink';
 
   void _open() {
     final box = context.findRenderObject() as RenderBox;
@@ -261,6 +263,11 @@ class _OverflowMenuButtonState extends State<_OverflowMenuButton> {
           label: t.toolbar.newFolder,
           action: _actionNewFolder,
         ),
+        ContextMenuItem(
+          icon: WaydirIconsRegular.link,
+          label: t.toolbar.newSymlink,
+          action: _actionNewSymlink,
+        ),
         if (pluginTools.isNotEmpty) ContextMenuItem.divider,
         for (final c in pluginTools)
           ContextMenuItem(
@@ -285,9 +292,27 @@ class _OverflowMenuButtonState extends State<_OverflowMenuButton> {
                 : widget.store.openSearch();
           case _actionNewFolder:
             widget.store.startCreate();
+          case _actionNewSymlink:
+            unawaited(_createSymlink());
         }
       },
     );
+  }
+
+  Future<void> _createSymlink() async {
+    final request = await showCreateSymlinkDialog(context: context);
+    if (request == null || !mounted) return;
+    final result = await widget.store.createSymlink(
+      target: request.target,
+      name: request.name,
+    );
+    if (!mounted) return;
+    switch (result) {
+      case SymlinkOpSuccess():
+        showToast(context: context, message: t.toast.symlinkCreated);
+      case SymlinkOpFailure(message: final message):
+        showToast(context: context, message: message);
+    }
   }
 
   @override
