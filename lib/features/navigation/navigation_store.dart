@@ -1900,6 +1900,92 @@ class NavigationStore {
     selectedPaths.value = {path};
   }
 
+  void focusEntry(FileEntry entry) {
+    final parent = PlatformPaths.parentOf(entry.path);
+    if (parent.isEmpty) return;
+    if (parent == currentPath.value) {
+      closeSearch();
+      final idx = _vf.indexWhere((f) => f.path == entry.path);
+      if (idx < 0) return;
+      batch(() {
+        selectedPaths.value = {entry.path};
+        cursorIndex.value = idx;
+        anchorIndex.value = idx;
+      });
+    } else {
+      _pendingInitialSelect = entry.path;
+      navigateTo(parent);
+    }
+  }
+
+  Future<SymlinkOpResult> createSymlink({
+    required String target,
+    required String name,
+  }) async {
+    final trimmedName = name.trim();
+    final trimmedTarget = target.trim();
+    if (!PlatformPaths.isValidFileName(trimmedName)) {
+      return SymlinkOpFailure(t.toast.renameInvalidName);
+    }
+    if (trimmedTarget.isEmpty) {
+      return SymlinkOpFailure(t.toast.symlinkTargetEmpty);
+    }
+    final physicalDir = _physical(currentPath.value);
+    final linkPath = PlatformPaths.join(physicalDir, trimmedName);
+    if (FileSystemEntity.typeSync(linkPath) != FileSystemEntityType.notFound) {
+      return SymlinkOpFailure(t.toast.renameAlreadyExists(name: trimmedName));
+    }
+    try {
+      await FileSystemService.createSymlink(linkPath, trimmedTarget);
+    } catch (e) {
+      return SymlinkOpFailure(e is FileSystemException ? e.message : '$e');
+    }
+    await refresh();
+    final idx = _vf.indexWhere((f) => f.path == linkPath);
+    if (idx >= 0) {
+      batch(() {
+        selectedPaths.value = {linkPath};
+        cursorIndex.value = idx;
+        anchorIndex.value = idx;
+      });
+    }
+
+    return SymlinkOpSuccess(linkPath);
+  }
+
+  Future<SymlinkOpResult> editSymlinkTarget(
+    FileEntry entry,
+    String newTarget,
+  ) async {
+    final trimmed = newTarget.trim();
+    if (trimmed.isEmpty) {
+      return SymlinkOpFailure(t.toast.symlinkTargetEmpty);
+    }
+    final physicalPath = _physical(entry.path);
+    try {
+      await FileSystemService.updateSymlinkTarget(physicalPath, trimmed);
+    } catch (e) {
+      return SymlinkOpFailure(e is FileSystemException ? e.message : '$e');
+    }
+    await refresh();
+
+    return SymlinkOpSuccess(physicalPath);
+  }
+
+  bool goToSymlinkTarget(FileEntry entry) {
+    final target = entry.linkTarget;
+    if (target.isEmpty) return false;
+    final resolved = p.isAbsolute(target)
+        ? target
+        : p.normalize(p.join(p.dirname(entry.realPath), target));
+    if (FileSystemEntity.typeSync(resolved) == FileSystemEntityType.notFound) {
+      return false;
+    }
+    revealInFolder(resolved);
+
+    return true;
+  }
+
   void onOpen(FileEntry entry) => unawaited(_openEntry(entry));
 
   Future<void> _openEntry(FileEntry entry) async {
