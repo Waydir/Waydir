@@ -234,6 +234,16 @@ class FileSystemService {
     int processedFiles = 0;
     final reportClock = Stopwatch()..start();
     var lastReportMs = 0;
+    var isDuplicate = false;
+    final duplicateRootDest = <String, String>{};
+
+    String rootTargetPath(String src, String dest) {
+      final name = src.split(Platform.pathSeparator).last;
+      final base = '$dest${Platform.pathSeparator}$name';
+      if (!isDuplicate) return base;
+
+      return duplicateRootDest[src] ??= _uniqueName(base);
+    }
 
     void emitPrompt(ConflictInfo info) {
       if (promptedSet.add(info.sourcePath)) {
@@ -263,7 +273,7 @@ class FileSystemService {
 
     Future<void> scanEntity(String src, String dest) async {
       final name = src.split(Platform.pathSeparator).last;
-      final targetPath = '$dest${Platform.pathSeparator}$name';
+      final targetPath = rootTargetPath(src, dest);
 
       final type = FileSystemEntity.typeSync(src);
       if (type == FileSystemEntityType.notFound) {
@@ -327,8 +337,11 @@ class FileSystemService {
       final sep = Platform.pathSeparator;
       final srcRoot = _findSourceRoot(srcPath, sourceRoots);
       if (srcRoot != null) {
-        final srcName = srcRoot.split(sep).last;
         final relative = srcPath.substring(srcRoot.length);
+        if (isDuplicate && duplicateRootDest[srcRoot] != null) {
+          return '${duplicateRootDest[srcRoot]}$relative';
+        }
+        final srcName = srcRoot.split(sep).last;
 
         return '$dest$sep$srcName$relative';
       }
@@ -550,6 +563,7 @@ class FileSystemService {
       try {
         if (msg is StartCommand) {
           destination = msg.destination;
+          isDuplicate = msg.options['duplicate'] == '1';
           for (final src in msg.sources) {
             if (cancelled) break;
             sourceRoots.add(src);

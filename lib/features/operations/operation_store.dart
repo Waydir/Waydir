@@ -128,6 +128,57 @@ class OperationStore {
   void enqueueMove(List<String> sources, String destination) =>
       _enqueueTransfer(TaskType.move, sources, destination);
 
+  Future<void> enqueueDuplicate(
+    List<String> sources,
+    String destination,
+  ) async {
+    assert(
+      !destination.startsWith('smb://'),
+      'Unresolved smb:// URI reached operation store as destination — '
+      'callers must translate to a physical mount path before enqueueing.',
+    );
+    if (destination.startsWith('smb://')) return;
+    final List<String> resolved;
+    try {
+      resolved = await FileSystemService.materializeArchiveSources(sources);
+    } catch (e, st) {
+      log.error(
+        'operation',
+        'failed to materialize archive sources',
+        error: e,
+        stack: st,
+      );
+
+      return;
+    }
+    final rejected = <String>[];
+    final filtered = <String>[];
+    for (final s in resolved) {
+      if (await _wouldNestTransferAsync(s, destination)) {
+        rejected.add(s);
+        continue;
+      }
+      filtered.add(s);
+    }
+    if (rejected.isNotEmpty) {
+      _showRejectedTransferNotification(TaskType.copy, rejected);
+    }
+    if (filtered.isEmpty) return;
+
+    final confirm = confirmTransfer;
+    if (confirm != null && !await confirm(TaskType.copy, filtered)) return;
+
+    final task = FileTask(
+      id: '${_idCounter++}',
+      type: TaskType.copy,
+      sources: filtered,
+      destination: destination,
+      options: {'duplicate': '1'},
+      startTime: DateTime.now(),
+    );
+    _enqueue(task);
+  }
+
   Future<void> _enqueueTransfer(
     TaskType type,
     List<String> sources,

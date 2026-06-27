@@ -334,6 +334,12 @@ mixin _WaydirKeyboardMixin
       return KeyEventResult.handled;
     }
 
+    if (AppShortcuts.matches('duplicate', key)) {
+      _duplicateSelected(store);
+
+      return KeyEventResult.handled;
+    }
+
     if (AppShortcuts.matches('insert_relative_paths', key)) {
       unawaited(_insertPathsIntoTerminal(absolute: false));
 

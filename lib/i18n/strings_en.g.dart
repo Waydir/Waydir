@@ -136,6 +136,9 @@ class Translations$menu$en {
 	/// en: 'Paste'
 	String get paste => 'Paste';
 
+	/// en: 'Duplicate'
+	String get duplicate => 'Duplicate';
+
 	/// en: 'Copy Path'
 	String get copyPath => 'Copy Path';
 
@@ -990,6 +993,9 @@ class Translations$keybindings$en {
 	/// en: 'Paste'
 	String get paste => 'Paste';
 
+	/// en: 'Duplicate'
+	String get duplicate => 'Duplicate';
+
 	/// en: 'Delete'
 	String get delete => 'Delete';
 
@@ -1307,6 +1313,9 @@ class Translations$toast$en {
 
 	/// en: 'Copied $count items'
 	String copiedItems({required Object count}) => 'Copied ${count} items';
+
+	/// en: 'Duplicated $count items'
+	String duplicatedItems({required Object count}) => 'Duplicated ${count} items';
 
 	/// en: 'Cut $count items'
 	String cutItems({required Object count}) => 'Cut ${count} items';
@@ -4091,6 +4100,7 @@ extension on Translations {
 			'menu.copy' => 'Copy',
 			'menu.cut' => 'Cut',
 			'menu.paste' => 'Paste',
+			'menu.duplicate' => 'Duplicate',
 			'menu.copyPath' => 'Copy Path',
 			'menu.delete' => 'Delete',
 			'menu.deleteItems' => ({required Object count}) => 'Delete ${count} Items',
@@ -4592,9 +4602,9 @@ extension on Translations {
 			'keybindings.cursorDown' => 'Move down',
 			'keybindings.pageUp' => 'Move up one page',
 			'keybindings.pageDown' => 'Move down one page',
-			'keybindings.home' => 'Jump to start',
 			_ => null,
 		} ?? switch (path) {
+			'keybindings.home' => 'Jump to start',
 			'keybindings.end' => 'Jump to end',
 			'keybindings.newTab' => 'New tab',
 			'keybindings.closeTab' => 'Close tab',
@@ -4625,6 +4635,7 @@ extension on Translations {
 			'keybindings.copy' => 'Copy',
 			'keybindings.cut' => 'Cut',
 			'keybindings.paste' => 'Paste',
+			'keybindings.duplicate' => 'Duplicate',
 			'keybindings.delete' => 'Delete',
 			'keybindings.deletePermanent' => 'Delete permanently',
 			'keybindings.rename' => 'Rename',
@@ -4722,6 +4733,7 @@ extension on Translations {
 			'quickLook.viewRendered' => 'View rendered',
 			'quickLook.saveBeforePreview' => 'Save changes to preview',
 			'toast.copiedItems' => ({required Object count}) => 'Copied ${count} items',
+			'toast.duplicatedItems' => ({required Object count}) => 'Duplicated ${count} items',
 			'toast.cutItems' => ({required Object count}) => 'Cut ${count} items',
 			'toast.selectionSaved' => ({required Object count, required Object path}) => 'Saved ${count} names to ${path}',
 			'toast.selectionLoaded' => ({required Object count}) => 'Selected ${count} visible items',

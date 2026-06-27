@@ -514,6 +514,21 @@ mixin _WaydirActionsMixin on State<WaydirShell>, _WaydirStateBase {
     }
   }
 
+  Future<void> _duplicateSelected(NavigationStore store) async {
+    if (store.isTrashView) return;
+    final entries = _dualPaneEntries(store);
+    if (entries.isEmpty) return;
+    final dest = await store.resolveForOperation(store.currentPath.value);
+    if (dest == null) return;
+    final sources = entries.map((e) => e.realPath).toList();
+    _operationStore.enqueueDuplicate(sources, dest);
+    if (!mounted) return;
+    showToast(
+      context: context,
+      message: t.toast.duplicatedItems(count: entries.length),
+    );
+  }
+
   void _toggleViewMode() {
     final mode = SettingsStore.instance.fileViewMode;
     mode.value = mode.value == 'grid' ? 'list' : 'grid';
