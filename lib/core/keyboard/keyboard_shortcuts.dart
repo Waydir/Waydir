@@ -598,6 +598,14 @@ class AppShortcuts {
       editable: false,
     ),
     ShortcutDef(
+      id: 'duplicate',
+      label: () => '',
+      group: ShortcutGroup.fileOps,
+      key: LogicalKeyboardKey.keyD,
+      ctrl: true,
+      shift: true,
+    ),
+    ShortcutDef(
       id: 'delete',
       label: () => '',
       group: ShortcutGroup.fileOps,

@@ -103,6 +103,7 @@ String shortcutLabel(ShortcutDef s) => switch (s.id) {
   'copy' => t.keybindings.copy,
   'cut' => t.keybindings.cut,
   'paste' => t.keybindings.paste,
+  'duplicate' => t.keybindings.duplicate,
   'delete' => t.keybindings.delete,
   'delete_permanent' => t.keybindings.deletePermanent,
   'rename' => t.keybindings.rename,

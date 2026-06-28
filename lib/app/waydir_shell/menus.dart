@@ -308,6 +308,12 @@ mixin _WaydirMenuMixin
         label: t.menu.paste,
         action: 'paste',
       ),
+      ContextMenuItem(
+        icon: WaydirIconsRegular.copy,
+        label: t.menu.duplicate,
+        action: 'duplicate',
+        shortcut: AppShortcuts.getById('duplicate').displayKeys,
+      ),
       if (count == 1) ContextMenuItem.divider,
       if (count == 1)
         ContextMenuItem(
@@ -1303,6 +1309,8 @@ mixin _WaydirMenuMixin
         _extractSelected(toOwnFolder: true);
       case 'paste':
         store.paste();
+      case 'duplicate':
+        unawaited(_duplicateSelected(store));
       case 'copy_path':
         store.copySelectedPaths();
       case 'verify_checksum':

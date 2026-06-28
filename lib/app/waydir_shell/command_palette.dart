@@ -61,6 +61,11 @@ mixin _WaydirCommandPaletteMixin
       _cmd('cut', () => _cutSelectedWithToast(store), enabled: hasTarget),
       _cmd('paste', store.paste, enabled: store.canPaste.value),
       _cmd(
+        'duplicate',
+        () => unawaited(_duplicateSelected(store)),
+        enabled: hasTarget,
+      ),
+      _cmd(
         'delete',
         () => _confirmAndDelete(forceTrash: true),
         enabled: hasTarget,
