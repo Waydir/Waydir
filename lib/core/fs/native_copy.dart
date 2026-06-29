@@ -2,6 +2,7 @@ import 'dart:ffi';
 import 'dart:io';
 
 import 'package:ffi/ffi.dart';
+import 'package:win32/win32.dart';
 
 import '../logging/app_logger.dart';
 
@@ -35,8 +36,9 @@ typedef _CloneDart = int Function(Pointer<Utf8>, Pointer<Utf8>, int);
 enum FastCopyResult { done, unsupported, cancelled }
 
 /// Best-effort native fast-copy. Uses copy_file_range on Linux (server-side
-/// / reflink copy) and clonefile on macOS (APFS copy-on-write). Returns
-/// false on any failure so the caller falls back to a portable copy.
+/// / reflink copy), clonefile on macOS (APFS copy-on-write) and CopyFileEx on
+/// Windows (kernel-side buffered copy). Returns unsupported on any failure so
+/// the caller falls back to a portable copy.
 ///
 /// On Linux [destinationPath] is created/truncated. On macOS it MUST NOT
 /// exist (clonefile requirement) — callers copy into a fresh temp sibling,
@@ -50,6 +52,7 @@ class NativeCopy {
     try {
       if (Platform.isLinux) return DynamicLibrary.open('libc.so.6');
       if (Platform.isMacOS) return DynamicLibrary.process();
+      if (Platform.isWindows) return null;
     } catch (e, st) {
       log.warn(
         'fs.copy',
@@ -68,6 +71,11 @@ class NativeCopy {
     void Function(int bytes)? onProgress,
     bool Function()? shouldCancel,
   }) async {
+    if (Platform.isWindows) {
+      return _windowsCopyFileEx(sourcePath, destinationPath, onProgress)
+          ? FastCopyResult.done
+          : FastCopyResult.unsupported;
+    }
     final lib = _lib;
     if (lib == null) return FastCopyResult.unsupported;
     if (Platform.isLinux) {
@@ -115,6 +123,48 @@ class NativeCopy {
       return ok;
     } catch (e, st) {
       log.warn('fs.copy', 'mac clonefile failed', error: e, stack: st);
+
+      return false;
+    } finally {
+      calloc.free(s);
+      calloc.free(d);
+    }
+  }
+
+  static bool _windowsCopyFileEx(
+    String src,
+    String dst,
+    void Function(int bytes)? onProgress,
+  ) {
+    final s = src.toNativeUtf16();
+    final d = dst.toNativeUtf16();
+    try {
+      final ok =
+          CopyFileEx(
+            s,
+            d,
+            nullptr,
+            nullptr,
+            nullptr,
+            COPY_FILE_FAIL_IF_EXISTS,
+          ) !=
+          0;
+      if (ok && onProgress != null) {
+        try {
+          onProgress(File(src).lengthSync());
+        } catch (e, st) {
+          log.warn(
+            'fs.copy',
+            'fast copy progress stat failed',
+            error: e,
+            stack: st,
+          );
+        }
+      }
+
+      return ok;
+    } catch (e, st) {
+      log.warn('fs.copy', 'windows CopyFileEx failed', error: e, stack: st);
 
       return false;
     } finally {

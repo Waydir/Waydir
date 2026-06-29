@@ -350,7 +350,10 @@ class FileSystemService {
       return '$dest$sep$name';
     }
 
-    Future<bool> processCopyItem(String srcPath) async {
+    Future<bool> processCopyItem(
+      String srcPath, {
+      bool useAsyncIo = false,
+    }) async {
       var resolution =
           runtimeApplyAll ??
           runtimeResolutions[srcPath] ??
@@ -424,6 +427,7 @@ class FileSystemService {
               maybeReport(fileName);
             },
             isCancelled: () => cancelled,
+            useAsyncIo: useAsyncIo,
           );
         } else if (type == FileSystemEntityType.directory) {
           if (!Directory(dstPath).existsSync()) {
@@ -507,7 +511,10 @@ class FileSystemService {
 
         inFlight.add(() async {
           try {
-            final handled = await processCopyItem(srcPath);
+            final handled = await processCopyItem(
+              srcPath,
+              useAsyncIo: !exclusive,
+            );
             if (handled) {
               pendingConflicts.remove(srcPath);
               processedFiles++;
@@ -1840,6 +1847,7 @@ class FileSystemService {
     String dstPath, {
     void Function(int bytes)? onProgress,
     bool Function()? isCancelled,
+    bool useAsyncIo = false,
   }) async {
     await _withTransientRetry(
       () => SafeFileReplace.copyFile(
@@ -1847,6 +1855,7 @@ class FileSystemService {
         dstPath,
         onProgress: onProgress,
         isCancelled: isCancelled,
+        useAsyncIo: useAsyncIo,
       ),
     );
   }

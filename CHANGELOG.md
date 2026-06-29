@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Duplicate selected files and folders in place with `Ctrl+Shift+D`, available from the keyboard, command palette and context menu.
 
+### Changed
+- Faster file copying, especially on Windows and when copying lots of small files.
+
 ## [0.21.0] - 2026-06-22
 
 ### Added
