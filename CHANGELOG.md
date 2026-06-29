@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Tree view for browsing folders inline from the file list.
+
 ## [0.22.0] - 2026-06-29
 
 ### Added
