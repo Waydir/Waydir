@@ -3194,8 +3194,8 @@ class Translations$fileView$columns$en {
 	/// en: 'Location'
 	String get location => 'Location';
 
-	/// en: 'Kind'
-	String get kind => 'Kind';
+	/// en: 'Format'
+	String get kind => 'Format';
 
 	/// en: 'Date created'
 	String get dateCreated => 'Date created';
@@ -4778,7 +4778,7 @@ extension on Translations {
 			'fileView.columns.size' => 'Size',
 			'fileView.columns.dateModified' => 'Date modified',
 			'fileView.columns.location' => 'Location',
-			'fileView.columns.kind' => 'Kind',
+			'fileView.columns.kind' => 'Format',
 			'fileView.columns.dateCreated' => 'Date created',
 			'fileView.columns.dateAdded' => 'Date added',
 			'fileView.columns.permissions' => 'Permissions',
