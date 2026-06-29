@@ -1386,6 +1386,14 @@ mixin _WaydirMenuMixin
                   ),
                 ),
                 ContextMenuItem(
+                  icon: WaydirIconsRegular.treeStructure,
+                  label: t.toolbar.treeView,
+                  action: 'view_tree',
+                  toggleSignal: computed(
+                    () => SettingsStore.instance.fileViewMode.value == 'tree',
+                  ),
+                ),
+                ContextMenuItem(
                   icon: WaydirIconsRegular.squaresFour,
                   label: t.toolbar.gridView,
                   action: 'view_grid',
@@ -1408,6 +1416,8 @@ mixin _WaydirMenuMixin
                     _shell.toggleDual();
                   case 'view_list':
                     SettingsStore.instance.fileViewMode.value = 'list';
+                  case 'view_tree':
+                    SettingsStore.instance.fileViewMode.value = 'tree';
                   case 'view_grid':
                     SettingsStore.instance.fileViewMode.value = 'grid';
                   case 'toggle_hidden':
@@ -1557,6 +1567,12 @@ mixin _WaydirMenuMixin
             label: t.toolbar.listView,
             onSelected: () {
               SettingsStore.instance.fileViewMode.value = 'list';
+            },
+          ),
+          PlatformMenuItem(
+            label: t.toolbar.treeView,
+            onSelected: () {
+              SettingsStore.instance.fileViewMode.value = 'tree';
             },
           ),
           PlatformMenuItem(

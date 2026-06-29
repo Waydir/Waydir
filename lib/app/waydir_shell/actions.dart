@@ -531,7 +531,11 @@ mixin _WaydirActionsMixin on State<WaydirShell>, _WaydirStateBase {
 
   void _toggleViewMode() {
     final mode = SettingsStore.instance.fileViewMode;
-    mode.value = mode.value == 'grid' ? 'list' : 'grid';
+    mode.value = switch (mode.value) {
+      'list' => 'tree',
+      'tree' => 'grid',
+      _ => 'list',
+    };
   }
 
   void _toggleSidebarCollapsed() {

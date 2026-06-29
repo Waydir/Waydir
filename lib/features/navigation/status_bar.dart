@@ -105,7 +105,7 @@ class _StatusViewModeToggle extends StatelessWidget {
 
     return SignalBuilder(
       builder: (context) {
-        final grid = settings.fileViewMode.value == 'grid';
+        final mode = settings.fileViewMode.value;
 
         return Row(
           mainAxisSize: MainAxisSize.min,
@@ -113,13 +113,19 @@ class _StatusViewModeToggle extends StatelessWidget {
             _StatusViewModeButton(
               icon: WaydirIconsRegular.list,
               tooltip: t.toolbar.listView,
-              active: !grid,
+              active: mode == 'list',
               onTap: () => settings.fileViewMode.value = 'list',
+            ),
+            _StatusViewModeButton(
+              icon: WaydirIconsRegular.treeStructure,
+              tooltip: t.toolbar.treeView,
+              active: mode == 'tree',
+              onTap: () => settings.fileViewMode.value = 'tree',
             ),
             _StatusViewModeButton(
               icon: WaydirIconsRegular.squaresFour,
               tooltip: t.toolbar.gridView,
-              active: grid,
+              active: mode == 'grid',
               onTap: () => settings.fileViewMode.value = 'grid',
             ),
           ],

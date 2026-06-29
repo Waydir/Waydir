@@ -981,8 +981,8 @@ class Translations$keybindings$en {
 	/// en: 'Toggle sidebar'
 	String get toggleSidebar => 'Toggle sidebar';
 
-	/// en: 'Toggle list/grid view'
-	String get toggleView => 'Toggle list/grid view';
+	/// en: 'Toggle list/tree/grid view'
+	String get toggleView => 'Toggle list/tree/grid view';
 
 	/// en: 'Copy'
 	String get copy => 'Copy';
@@ -1668,6 +1668,9 @@ class Translations$toolbar$en {
 
 	/// en: 'List view'
 	String get listView => 'List view';
+
+	/// en: 'Tree view'
+	String get treeView => 'Tree view';
 
 	/// en: 'Grid view'
 	String get gridView => 'Grid view';
@@ -3613,8 +3616,8 @@ class Translations$help$groups$gettingStarted$interface$en {
 	/// en: 'The Interface'
 	String get title => 'The Interface';
 
-	/// en: 'The window is built from a few simple parts. - **Sidebar** - bookmarks, drives and remote locations. Toggle it with `Ctrl+B`. - **Tab strip** - one tab per open folder. - **Breadcrumb bar** - the current path; click any segment to jump there. - **File list** - the main view, in list or grid mode. - **Status bar** - item counts, selection size and operation progress.'
-	String get body => 'The window is built from a few simple parts.\n\n- **Sidebar** - bookmarks, drives and remote locations. Toggle it with `Ctrl+B`.\n- **Tab strip** - one tab per open folder.\n- **Breadcrumb bar** - the current path; click any segment to jump there.\n- **File list** - the main view, in list or grid mode.\n- **Status bar** - item counts, selection size and operation progress.';
+	/// en: 'The window is built from a few simple parts. - **Sidebar** - bookmarks, drives and remote locations. Toggle it with `Ctrl+B`. - **Tab strip** - one tab per open folder. - **Breadcrumb bar** - the current path; click any segment to jump there. - **File list** - the main view, in list, tree or grid mode. - **Status bar** - item counts, selection size and operation progress.'
+	String get body => 'The window is built from a few simple parts.\n\n- **Sidebar** - bookmarks, drives and remote locations. Toggle it with `Ctrl+B`.\n- **Tab strip** - one tab per open folder.\n- **Breadcrumb bar** - the current path; click any segment to jump there.\n- **File list** - the main view, in list, tree or grid mode.\n- **Status bar** - item counts, selection size and operation progress.';
 }
 
 // Path: help.groups.gettingStarted.keyboardBasics
@@ -4033,8 +4036,8 @@ class Translations$help$groups$customization$themes$en {
 	/// en: 'Themes & Appearance'
 	String get title => 'Themes & Appearance';
 
-	/// en: 'Make Waydir look the way you like. - Pick a built-in theme or add your own in **Preferences -> Appearance**. - Choose list or grid view, row density and column layout. - Configure date formats, spacing and which columns show. - Resizable columns can be turned on for fine control.'
-	String get body => 'Make Waydir look the way you like.\n\n- Pick a built-in theme or add your own in **Preferences -> Appearance**.\n- Choose list or grid view, row density and column layout.\n- Configure date formats, spacing and which columns show.\n- Resizable columns can be turned on for fine control.';
+	/// en: 'Make Waydir look the way you like. - Pick a built-in theme or add your own in **Preferences -> Appearance**. - Choose list, tree or grid view, row density and column layout. - Configure date formats, spacing and which columns show. - Resizable columns can be turned on for fine control.'
+	String get body => 'Make Waydir look the way you like.\n\n- Pick a built-in theme or add your own in **Preferences -> Appearance**.\n- Choose list, tree or grid view, row density and column layout.\n- Configure date formats, spacing and which columns show.\n- Resizable columns can be turned on for fine control.';
 }
 
 // Path: help.groups.customization.shortcuts
@@ -4485,7 +4488,7 @@ extension on Translations {
 			'help.groups.gettingStarted.welcome.title' => 'Welcome to Waydir',
 			'help.groups.gettingStarted.welcome.body' => 'Waydir is a fast, keyboard-driven file manager. This guide walks through everything from basic navigation to remote servers, the terminal and customization.\n\n- Use the tree on the left to jump between topics.\n- Most actions have a keyboard shortcut, shown inline as `Ctrl+C`.\n- Every shortcut can be rebound in **Preferences -> Keyboard**.\n\nPick a topic to get started, or read straight through from the top.',
 			'help.groups.gettingStarted.interface.title' => 'The Interface',
-			'help.groups.gettingStarted.interface.body' => 'The window is built from a few simple parts.\n\n- **Sidebar** - bookmarks, drives and remote locations. Toggle it with `Ctrl+B`.\n- **Tab strip** - one tab per open folder.\n- **Breadcrumb bar** - the current path; click any segment to jump there.\n- **File list** - the main view, in list or grid mode.\n- **Status bar** - item counts, selection size and operation progress.',
+			'help.groups.gettingStarted.interface.body' => 'The window is built from a few simple parts.\n\n- **Sidebar** - bookmarks, drives and remote locations. Toggle it with `Ctrl+B`.\n- **Tab strip** - one tab per open folder.\n- **Breadcrumb bar** - the current path; click any segment to jump there.\n- **File list** - the main view, in list, tree or grid mode.\n- **Status bar** - item counts, selection size and operation progress.',
 			'help.groups.gettingStarted.keyboardBasics.title' => 'Keyboard-First Basics',
 			'help.groups.gettingStarted.keyboardBasics.body' => 'Waydir is designed to be driven from the keyboard.\n\n- `↑` / `↓` move the cursor; `Enter` opens; `Backspace` goes up.\n- Start typing to jump to a matching file (type-ahead).\n- `Ctrl+F` searches, `Space` previews, `F2` renames.\n- Almost nothing requires the mouse - and every binding is customizable.',
 			'help.groups.navigating.title' => 'Navigating',
@@ -4550,7 +4553,7 @@ extension on Translations {
 			'help.groups.remote.git.body' => 'Waydir surfaces Git information for folders under version control.\n\n- Changed, staged and untracked files are marked in the list.\n- The current branch is shown for the folder.\n- Status updates as you work in the repository.',
 			'help.groups.customization.title' => 'Customization',
 			'help.groups.customization.themes.title' => 'Themes & Appearance',
-			'help.groups.customization.themes.body' => 'Make Waydir look the way you like.\n\n- Pick a built-in theme or add your own in **Preferences -> Appearance**.\n- Choose list or grid view, row density and column layout.\n- Configure date formats, spacing and which columns show.\n- Resizable columns can be turned on for fine control.',
+			'help.groups.customization.themes.body' => 'Make Waydir look the way you like.\n\n- Pick a built-in theme or add your own in **Preferences -> Appearance**.\n- Choose list, tree or grid view, row density and column layout.\n- Configure date formats, spacing and which columns show.\n- Resizable columns can be turned on for fine control.',
 			'help.groups.customization.shortcuts.title' => 'Keyboard Shortcuts',
 			'help.groups.customization.shortcuts.body' => 'Almost every action can be rebound to a key of your choosing.\n\n- Open **Preferences -> Keyboard** to see and edit all shortcuts.\n- Conflicts are flagged so two actions never fight over a key.\n- Reset a single binding, or all of them, back to the defaults at any time.',
 			'help.groups.customization.plugins.title' => 'Plugins',
@@ -4631,7 +4634,7 @@ extension on Translations {
 			'keybindings.fileListZoomOut' => 'Zoom out file list',
 			'keybindings.fileListZoomReset' => 'Reset file list zoom',
 			'keybindings.toggleSidebar' => 'Toggle sidebar',
-			'keybindings.toggleView' => 'Toggle list/grid view',
+			'keybindings.toggleView' => 'Toggle list/tree/grid view',
 			'keybindings.copy' => 'Copy',
 			'keybindings.cut' => 'Cut',
 			'keybindings.paste' => 'Paste',
@@ -4862,6 +4865,7 @@ extension on Translations {
 			'toolbar.saveSelection' => 'Save Selection…',
 			'toolbar.loadSelection' => 'Load Selection…',
 			'toolbar.listView' => 'List view',
+			'toolbar.treeView' => 'Tree view',
 			'toolbar.gridView' => 'Grid view',
 			'toolbar.more' => 'More',
 			'notifications.title' => 'Notifications',

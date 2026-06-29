@@ -130,6 +130,9 @@ class NavigationStore {
   final pathBarFocusRequest = signal(0);
   final renameAttempt = signal(0);
   final gridColumns = signal(1);
+  final treeExpandedPaths = signal<Set<String>>({});
+  final treeLoadingPaths = signal<Set<String>>({});
+  final treeChildren = signal<Map<String, List<FileEntry>>>({});
   final ClipboardController _clipboardController = ClipboardController();
   late final SearchController _searchController = SearchController(
     currentPath: () => currentPath.value,
@@ -146,7 +149,7 @@ class NavigationStore {
     cursorIndex: cursorIndex,
     anchorIndex: anchorIndex,
     gridColumns: gridColumns,
-    visibleFiles: () => _vf,
+    visibleFiles: () => _selectionFiles,
   );
 
   void Function()? _showHiddenDisposer;
@@ -220,6 +223,41 @@ class NavigationStore {
     );
 
     return pending != null ? [pending, ...list] : list;
+  });
+  late final treeRows = computed(() {
+    final expanded = treeExpandedPaths.value;
+    final loading = treeLoadingPaths.value;
+    final children = treeChildren.value;
+    final rows = <FileTreeRow>[];
+
+    void append(FileEntry entry, int depth) {
+      final isFolder = entry.type == FileItemType.folder;
+      final path = entry.path;
+      final isExpanded = isFolder && expanded.contains(path);
+      rows.add(
+        FileTreeRow(
+          entry: entry,
+          depth: depth,
+          expanded: isExpanded,
+          loading: loading.contains(path),
+        ),
+      );
+      if (!isExpanded) return;
+      final rawChildren = children[path] ?? const <FileEntry>[];
+      final visibleChildren = showHidden.value
+          ? rawChildren
+          : rawChildren.where((f) => !f.isHidden).toList();
+      final sortedChildren = sortCurrent(visibleChildren);
+      for (final child in sortedChildren) {
+        append(child, depth + 1);
+      }
+    }
+
+    for (final entry in visibleFiles.value) {
+      append(entry, 0);
+    }
+
+    return rows;
   });
   late final folderCount = computed(
     () => visibleFiles.value.where((f) => f.type == FileItemType.folder).length,
@@ -622,6 +660,7 @@ class NavigationStore {
     }
     closeSearch();
     folderSizes.cancelAll();
+    _clearTreeState();
     if (addToHistory) {
       history.value = history.value.sublist(0, historyIndex.value + 1)
         ..add(normalized);
@@ -1219,6 +1258,101 @@ class NavigationStore {
     sortFolders: SettingsStore.instance.sortFolders.value,
     folderSize: _folderSizeFor,
   );
+
+  bool toggleTreeCursorFolder() {
+    if (SettingsStore.instance.fileViewMode.value != 'tree') return false;
+    final idx = cursorIndex.value;
+    final rows = treeRows.value;
+    if (idx < 0 || idx >= rows.length) return false;
+    final entry = rows[idx].entry;
+    if (entry.type != FileItemType.folder) return false;
+    toggleTreeFolder(entry);
+
+    return true;
+  }
+
+  void toggleTreeFolder(FileEntry entry) {
+    if (entry.type != FileItemType.folder) return;
+    final path = entry.path;
+    final expanded = Set<String>.from(treeExpandedPaths.value);
+    if (expanded.remove(path)) {
+      treeExpandedPaths.value = expanded;
+
+      return;
+    }
+    expanded.add(path);
+    treeExpandedPaths.value = expanded;
+    if (!treeChildren.value.containsKey(path)) {
+      _loadTreeChildren(entry);
+    }
+  }
+
+  void _clearTreeState() {
+    treeExpandedPaths.value = {};
+    treeLoadingPaths.value = {};
+    treeChildren.value = {};
+  }
+
+  Future<void> refreshTreePath(String path) async {
+    if (!treeChildren.value.containsKey(path) &&
+        !treeExpandedPaths.value.contains(path)) {
+      return;
+    }
+    await _loadTreeChildrenPath(path);
+  }
+
+  Future<void> _loadTreeChildren(FileEntry entry) =>
+      _loadTreeChildrenPath(entry.path);
+
+  Future<void> _loadTreeChildrenPath(String path) async {
+    if (treeLoadingPaths.value.contains(path)) return;
+    treeLoadingPaths.value = {...treeLoadingPaths.value, path};
+    try {
+      final entries = await _listTreeChildrenPath(path);
+      treeChildren.value = {...treeChildren.value, path: entries};
+    } catch (e, st) {
+      log.warn('navigation', 'tree child listing failed', error: e, stack: st);
+      treeChildren.value = {...treeChildren.value, path: const <FileEntry>[]};
+    } finally {
+      final loading = Set<String>.from(treeLoadingPaths.value)..remove(path);
+      treeLoadingPaths.value = loading;
+    }
+  }
+
+  Future<List<FileEntry>> _listTreeChildrenPath(String path) async {
+    if (isTrashPath(path)) return _loadTrash(path);
+    if (PlatformPaths.isSmbUri(path)) {
+      final uri = LocationUri.parse(path);
+      if (uri.share == null || uri.share!.isEmpty) {
+        return _listSmbHostShares(path, uri);
+      }
+      final physical = await _resolvePhysicalDestination(path);
+      if (physical == null) return const [];
+      final raw = await FileSystemService.listDirectory(physical);
+
+      return [
+        for (final e in raw)
+          FileEntry.raw(
+            name: e.name,
+            path: '$path/${e.name}',
+            realPath: e.path,
+            type: e.type,
+            size: e.size,
+            modifiedMs: e.modifiedMs,
+            createdMs: e.createdMs,
+            addedMs: e.addedMs,
+            mode: e.mode,
+            uid: e.uid,
+            gid: e.gid,
+          ),
+      ];
+    }
+    if (PlatformPaths.windowsUncServerRoot(path) case final host?) {
+      return _listWindowsUncShares(path, host);
+    }
+
+    return FileSystemService.listDirectory(path);
+  }
 
   int? _folderSizeFor(FileEntry entry) =>
       folderSizes.sizes.value[entry.realPath];
@@ -1871,7 +2005,12 @@ class NavigationStore {
     decorations.dispose();
   }
 
-  List<FileEntry> get _vf => visibleFiles.value;
+  List<FileEntry> get _selectionFiles =>
+      SettingsStore.instance.fileViewMode.value == 'tree'
+      ? [for (final row in treeRows.value) row.entry]
+      : visibleFiles.value;
+
+  List<FileEntry> get _vf => _selectionFiles;
 
   void onSelect(FileSelectionEvent event) =>
       _selectionController.onSelect(event);

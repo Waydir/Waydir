@@ -15,6 +15,20 @@ class FileSelectionEvent {
   const FileSelectionEvent({required this.entry, required this.index});
 }
 
+class FileTreeRow {
+  final FileEntry entry;
+  final int depth;
+  final bool expanded;
+  final bool loading;
+
+  const FileTreeRow({
+    required this.entry,
+    required this.depth,
+    this.expanded = false,
+    this.loading = false,
+  });
+}
+
 class FileEntry {
   final String name;
   final String path;

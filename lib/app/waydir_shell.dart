@@ -127,19 +127,32 @@ class _WaydirShellState extends State<WaydirShell>
                   task.type == TaskType.trashRestore ||
                   task.type == TaskType.trashDelete;
               final isRemoval =
-                  task.type == TaskType.delete || task.type == TaskType.trash;
+                  task.type == TaskType.move ||
+                  task.type == TaskType.delete ||
+                  task.type == TaskType.trash;
+              final treeRefreshTargets = <String>{};
+              final destination = task.destination;
+              if (destination != null && destination.isNotEmpty) {
+                treeRefreshTargets.add(destination);
+                if (destLogical != null) treeRefreshTargets.add(destLogical);
+              }
               final removalMatches =
                   isRemoval &&
                   task.sources.any((s) {
                     final d = p.dirname(s);
+                    final logical = LocationResolver.physicalToLogical(d);
+                    treeRefreshTargets.add(d);
+                    if (logical != null) treeRefreshTargets.add(logical);
 
-                    return d == cp ||
-                        LocationResolver.physicalToLogical(d) == cp;
+                    return d == cp || logical == cp;
                   });
               if (destMatches ||
                   (isTrashTask && store.isTrashView) ||
                   removalMatches) {
                 store.refresh();
+              }
+              for (final target in treeRefreshTargets) {
+                if (target != cp) unawaited(store.refreshTreePath(target));
               }
             }
             if (task.errors.isNotEmpty &&

@@ -11,6 +11,7 @@ import '../../core/settings/settings_store.dart';
 import '../../features/files/file_view.dart'
     show
         FileList,
+        FileTree,
         OpenInNewTabCallback,
         BackgroundContextMenuCallback,
         FileContextMenuCallback,
@@ -267,7 +268,8 @@ class _TabContent extends StatelessWidget {
             final rowDecorations = store.decorations.byPath.value;
             final recursive =
                 store.searchActive.value && store.searchRecursive.value;
-            if (SettingsStore.instance.fileViewMode.value == 'grid') {
+            final viewMode = SettingsStore.instance.fileViewMode.value;
+            if (viewMode == 'grid') {
               return FileGrid(
                 files: files,
                 currentPath: currentPath,
@@ -290,6 +292,37 @@ class _TabContent extends StatelessWidget {
                 onPageRows: store.setPageRows,
                 onGridColumns: store.setGridColumns,
                 onRectSelect: onRectSelect,
+                rowDecorations: rowDecorations,
+              );
+            }
+
+            if (viewMode == 'tree') {
+              return FileTree(
+                rows: store.treeRows.value,
+                currentPath: currentPath,
+                onSelect: store.onSelect,
+                onOpen: store.onOpen,
+                onToggleFolder: store.toggleTreeFolder,
+                onBackgroundTap: store.onBackgroundTap,
+                onBackgroundContextMenu: onBackgroundContextMenu,
+                onContextMenu: onContextMenu,
+                onMenuAction: onMenuAction,
+                onDropFiles: store.dropFiles,
+                selectedPaths: selected,
+                cursorIndex: cursorIndex,
+                cutPaths: cutPaths,
+                renamingPath: store.renamingPath.value,
+                renameAttempt: store.renameAttempt.value,
+                onRenameSubmit: store.commitRename,
+                onRenameCancel: store.cancelRename,
+                onCloseSearch: store.closeSearch,
+                onOpenInNewTab: onOpenInNewTab,
+                onRectSelect: onRectSelect,
+                sortColumn: store.sortKey.value,
+                sortAscending: store.sortAscending.value,
+                onSortColumn: store.cycleSortColumn,
+                onPageRows: store.setPageRows,
+                folderSizes: store.folderSizes.displaySizes.value,
                 rowDecorations: rowDecorations,
               );
             }

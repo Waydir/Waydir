@@ -340,6 +340,10 @@ mixin _WaydirKeyboardMixin
       return KeyEventResult.handled;
     }
 
+    if (ctrl && !shift && !alt && key == LogicalKeyboardKey.enter) {
+      if (store.toggleTreeCursorFolder()) return KeyEventResult.handled;
+    }
+
     if (AppShortcuts.matches('insert_relative_paths', key)) {
       unawaited(_insertPathsIntoTerminal(absolute: false));
 

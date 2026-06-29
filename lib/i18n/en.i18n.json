@@ -452,7 +452,7 @@
         },
         "interface": {
           "title": "The Interface",
-          "body": "The window is built from a few simple parts.\n\n- **Sidebar** - bookmarks, drives and remote locations. Toggle it with `Ctrl+B`.\n- **Tab strip** - one tab per open folder.\n- **Breadcrumb bar** - the current path; click any segment to jump there.\n- **File list** - the main view, in list or grid mode.\n- **Status bar** - item counts, selection size and operation progress."
+          "body": "The window is built from a few simple parts.\n\n- **Sidebar** - bookmarks, drives and remote locations. Toggle it with `Ctrl+B`.\n- **Tab strip** - one tab per open folder.\n- **Breadcrumb bar** - the current path; click any segment to jump there.\n- **File list** - the main view, in list, tree or grid mode.\n- **Status bar** - item counts, selection size and operation progress."
         },
         "keyboardBasics": {
           "title": "Keyboard-First Basics",
@@ -591,7 +591,7 @@
         "title": "Customization",
         "themes": {
           "title": "Themes & Appearance",
-          "body": "Make Waydir look the way you like.\n\n- Pick a built-in theme or add your own in **Preferences -> Appearance**.\n- Choose list or grid view, row density and column layout.\n- Configure date formats, spacing and which columns show.\n- Resizable columns can be turned on for fine control."
+          "body": "Make Waydir look the way you like.\n\n- Pick a built-in theme or add your own in **Preferences -> Appearance**.\n- Choose list, tree or grid view, row density and column layout.\n- Configure date formats, spacing and which columns show.\n- Resizable columns can be turned on for fine control."
         },
         "shortcuts": {
           "title": "Keyboard Shortcuts",
@@ -687,7 +687,7 @@
     "fileListZoomOut": "Zoom out file list",
     "fileListZoomReset": "Reset file list zoom",
     "toggleSidebar": "Toggle sidebar",
-    "toggleView": "Toggle list/grid view",
+    "toggleView": "Toggle list/tree/grid view",
     "copy": "Copy",
     "cut": "Cut",
     "paste": "Paste",
@@ -969,6 +969,7 @@
     "saveSelection": "Save Selection…",
     "loadSelection": "Load Selection…",
     "listView": "List view",
+    "treeView": "Tree view",
     "gridView": "Grid view",
     "more": "More"
   },

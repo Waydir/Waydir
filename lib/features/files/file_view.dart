@@ -53,6 +53,8 @@ const _kHeaderHeight = 24.0;
 const _kResizeHandleWidth = 8.0;
 const _kColumnWidthsNameKey = 'name';
 const _kColumnWidthsLocationKey = 'location';
+const _kTreeIndentWidth = 14.0;
+const _kTreeDisclosureWidth = 18.0;
 
 /// Optional, user-toggleable file-list columns (Name and the recursive-search
 /// Location column are not part of this set). Order here is the display order.
@@ -257,6 +259,8 @@ class FileList extends StatefulWidget {
   final ValueChanged<int>? onPageRows;
   final Map<String, int> folderSizes;
   final Map<String, RowDecoration> rowDecorations;
+  final List<FileTreeRow>? treeRows;
+  final ValueChanged<FileEntry>? onToggleTreeFolder;
 
   const FileList({
     super.key,
@@ -264,6 +268,8 @@ class FileList extends StatefulWidget {
     required this.currentPath,
     this.folderSizes = const {},
     this.rowDecorations = const {},
+    this.treeRows,
+    this.onToggleTreeFolder,
     required this.onSelect,
     required this.onOpen,
     this.sortColumn = SortKey.name,
@@ -292,6 +298,98 @@ class FileList extends StatefulWidget {
   State<FileList> createState() => _FileListState();
 }
 
+class FileTree extends StatelessWidget {
+  final List<FileTreeRow> rows;
+  final String currentPath;
+  final FileSelectCallback onSelect;
+  final FileOpenCallback onOpen;
+  final BackgroundTapCallback? onBackgroundTap;
+  final BackgroundContextMenuCallback? onBackgroundContextMenu;
+  final FileContextMenuCallback? onContextMenu;
+  final FileMenuActionCallback? onMenuAction;
+  final FileDropCallback? onDropFiles;
+  final Set<String> selectedPaths;
+  final int cursorIndex;
+  final Set<String> cutPaths;
+  final String? renamingPath;
+  final int renameAttempt;
+  final RenameSubmitCallback? onRenameSubmit;
+  final RenameCancelCallback? onRenameCancel;
+  final VoidCallback? onCloseSearch;
+  final OpenInNewTabCallback? onOpenInNewTab;
+  final RubberBandSelectCallback? onRectSelect;
+  final SortKey sortColumn;
+  final bool sortAscending;
+  final void Function(SortKey key)? onSortColumn;
+  final ValueChanged<int>? onPageRows;
+  final Map<String, int> folderSizes;
+  final Map<String, RowDecoration> rowDecorations;
+  final ValueChanged<FileEntry> onToggleFolder;
+
+  const FileTree({
+    super.key,
+    required this.rows,
+    required this.currentPath,
+    required this.onSelect,
+    required this.onOpen,
+    required this.onToggleFolder,
+    this.folderSizes = const {},
+    this.rowDecorations = const {},
+    this.sortColumn = SortKey.name,
+    this.sortAscending = true,
+    this.onSortColumn,
+    this.onBackgroundTap,
+    this.onBackgroundContextMenu,
+    this.onContextMenu,
+    this.onMenuAction,
+    this.onDropFiles,
+    this.selectedPaths = const {},
+    this.cursorIndex = -1,
+    this.cutPaths = const {},
+    this.renamingPath,
+    this.renameAttempt = 0,
+    this.onRenameSubmit,
+    this.onRenameCancel,
+    this.onCloseSearch,
+    this.onOpenInNewTab,
+    this.onRectSelect,
+    this.onPageRows,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FileList(
+      files: [for (final row in rows) row.entry],
+      treeRows: rows,
+      currentPath: currentPath,
+      onSelect: onSelect,
+      onOpen: onOpen,
+      onToggleTreeFolder: onToggleFolder,
+      onBackgroundTap: onBackgroundTap,
+      onBackgroundContextMenu: onBackgroundContextMenu,
+      onContextMenu: onContextMenu,
+      onMenuAction: onMenuAction,
+      onDropFiles: onDropFiles,
+      selectedPaths: selectedPaths,
+      cursorIndex: cursorIndex,
+      cutPaths: cutPaths,
+      renamingPath: renamingPath,
+      renameAttempt: renameAttempt,
+      onRenameSubmit: onRenameSubmit,
+      onRenameCancel: onRenameCancel,
+      onCloseSearch: onCloseSearch,
+      onOpenInNewTab: onOpenInNewTab,
+      onRectSelect: onRectSelect,
+      sortColumn: sortColumn,
+      sortAscending: sortAscending,
+      onSortColumn: onSortColumn,
+      onPageRows: onPageRows,
+      folderSizes: folderSizes,
+      rowDecorations: rowDecorations,
+    );
+  }
+}
+
 class _FileListState extends State<FileList> {
   final _scrollController = ScrollController();
   final _hScrollController = ScrollController();
@@ -311,6 +409,9 @@ class _FileListState extends State<FileList> {
 
   double get _listTopPadding => _rowG;
   double get _listHorizontalPadding => _listHorizontalSpacing;
+  List<FileEntry> get _displayFiles => widget.treeRows == null
+      ? widget.files
+      : [for (final row in widget.treeRows!) row.entry];
 
   double _measureWidth(String text, TextStyle style) {
     if (text.isEmpty) return 0;
@@ -332,13 +433,14 @@ class _FileListState extends State<FileList> {
   Map<FileColumn, double> _computeColumnWidths(
     BuildContext context,
     List<FileColumn> columns,
+    List<FileEntry> files,
   ) {
     final muted = context.txt.muted;
     final headerStyle = context.txt.fieldLabel;
     final widths = <FileColumn, double>{};
     for (final col in columns) {
       var longest = fileColumnLabel(col);
-      for (final e in widget.files) {
+      for (final e in files) {
         final v = fileColumnText(
           col,
           e,
@@ -423,7 +525,7 @@ class _FileListState extends State<FileList> {
         localPosition.dy + _scrollController.offset - _listTopPadding;
     if (adjustedY < 0) return -1;
     final index = (adjustedY / _itemExt).floor();
-    if (index < 0 || index >= widget.files.length) return -1;
+    if (index < 0 || index >= _displayFiles.length) return -1;
 
     final relativeY = adjustedY % _itemExt;
     if (relativeY >= _rowH) return -1;
@@ -441,7 +543,7 @@ class _FileListState extends State<FileList> {
     final index = _rowAt(localPosition);
     String? folder;
     if (index >= 0) {
-      final entry = widget.files[index];
+      final entry = _displayFiles[index];
       if (entry.type == FileItemType.folder) folder = entry.path;
     }
     if (folder != _hoveredFolderPath || !_isDragOver) {
@@ -463,8 +565,9 @@ class _FileListState extends State<FileList> {
 
   void _revealSelectedRow() {
     final index = widget.cursorIndex;
-    if (index < 0 || index >= widget.files.length) return;
-    final key = '$index:${widget.files[index].path}';
+    final files = _displayFiles;
+    if (index < 0 || index >= files.length) return;
+    final key = '$index:${files[index].path}';
     if (key == _lastRevealedKey) return;
     _lastRevealedKey = key;
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -532,8 +635,13 @@ class _FileListState extends State<FileList> {
           if (mounted) _reportPageRows();
         });
 
+        final displayFiles = _displayFiles;
         final columns = _visibleColumns();
-        final automaticColumnWidths = _computeColumnWidths(context, columns);
+        final automaticColumnWidths = _computeColumnWidths(
+          context,
+          columns,
+          displayFiles,
+        );
         final resizableColumns =
             SettingsStore.instance.columnWidthMode.value == 'resizable';
         final persistedColumnWidths = parseColumnWidths(
@@ -545,7 +653,16 @@ class _FileListState extends State<FileList> {
           builder: (context, constraints) {
             _viewportWidth = constraints.maxWidth;
 
-            final iconSlot = 16 * _scale + 6;
+            final maxTreeDepth = widget.treeRows == null
+                ? 0
+                : widget.treeRows!.fold<int>(
+                    0,
+                    (max, row) => row.depth > max ? row.depth : max,
+                  );
+            final treeLeading = widget.treeRows == null
+                ? 0.0
+                : maxTreeDepth * _kTreeIndentWidth + _kTreeDisclosureWidth;
+            final iconSlot = 16 * _scale + 6 + treeLeading;
             final rowChrome =
                 _listHorizontalPadding * 2 +
                 _kScrollbarGutterWidth +
@@ -657,11 +774,11 @@ class _FileListState extends State<FileList> {
                             Expanded(
                               child: RubberBandLayer(
                                 scrollController: _scrollController,
-                                itemCount: widget.files.length,
+                                itemCount: displayFiles.length,
                                 itemExtent: _itemExt,
                                 rowHeight: _rowH,
                                 topPadding: _listTopPadding,
-                                pathAt: (i) => widget.files[i].path,
+                                pathAt: (i) => displayFiles[i].path,
                                 rowAt: _rowAt,
                                 canStartSelectionAt: _canStartRubberBandAt,
                                 onSelectionChanged: widget.onRectSelect,
@@ -687,9 +804,9 @@ class _FileListState extends State<FileList> {
                                     final index = _rowAt(pos);
                                     String? target;
                                     if (index >= 0 &&
-                                        widget.files[index].type ==
+                                        displayFiles[index].type ==
                                             FileItemType.folder) {
-                                      target = widget.files[index].path;
+                                      target = displayFiles[index].path;
                                     }
                                     final paths = await pathsFromSession(
                                       event.session,
@@ -736,90 +853,105 @@ class _FileListState extends State<FileList> {
                                                 _listHorizontalPadding +
                                                 _kScrollbarGutterWidth,
                                           ),
-                                          itemCount: widget.files.length,
+                                          itemCount: displayFiles.length,
                                           itemExtent: _itemExt,
                                           addAutomaticKeepAlives: false,
                                           addRepaintBoundaries: false,
                                           addSemanticIndexes: false,
-                                          itemBuilder: (context, i) =>
-                                              RepaintBoundary(
-                                                child: Padding(
-                                                  padding: EdgeInsets.only(
-                                                    bottom: _rowG,
-                                                  ),
-                                                  child: _ListRow(
-                                                    rowHeight: _rowH,
-                                                    iconSize: 16 * _scale,
-                                                    dateFmt: _dateFmt,
-                                                    recentDatesRelative:
-                                                        _recentDatesRelative,
-                                                    entry: widget.files[i],
-                                                    folderSize:
-                                                        widget
-                                                            .folderSizes[widget
-                                                            .files[i]
-                                                            .realPath],
-                                                    rowDecoration:
-                                                        widget
-                                                            .rowDecorations[widget
-                                                            .files[i]
-                                                            .path] ??
-                                                        widget
-                                                            .rowDecorations[widget
-                                                            .files[i]
-                                                            .realPath],
-                                                    index: i,
-                                                    nameWidth: nameWidth,
-                                                    locationWidth:
-                                                        locationWidth,
-                                                    selected: widget
-                                                        .selectedPaths
-                                                        .contains(
-                                                          widget.files[i].path,
-                                                        ),
-                                                    selectedPaths:
-                                                        widget.selectedPaths,
-                                                    isCut: widget.cutPaths
-                                                        .contains(
-                                                          widget.files[i].path,
-                                                        ),
-                                                    isDraggingSelected: widget
-                                                        .selectedPaths
-                                                        .isNotEmpty,
-                                                    isFolderDragOver:
-                                                        _hoveredFolderPath ==
-                                                        widget.files[i].path,
-                                                    isRenaming:
-                                                        widget.renamingPath ==
-                                                        widget.files[i].path,
-                                                    renameAttempt:
-                                                        widget.renameAttempt,
-                                                    onRenameSubmit:
-                                                        widget.onRenameSubmit,
-                                                    onRenameCancel:
-                                                        widget.onRenameCancel,
-                                                    onSelect: widget.onSelect,
-                                                    onOpen: widget.onOpen,
-                                                    onContextMenu:
-                                                        widget.onContextMenu,
-                                                    onMenuAction:
-                                                        widget.onMenuAction,
-                                                    recursive: recursive,
-                                                    columns: columns,
-                                                    columnWidths: columnWidths,
-                                                    location: recursive
-                                                        ? _compactLocation(
-                                                            widget
-                                                                .files[i]
-                                                                .path,
-                                                            widget.currentPath,
-                                                          )
-                                                        : null,
-                                                    onOpenInNewTab:
-                                                        widget.onOpenInNewTab,
-                                                  ),
-                                                ),
+                                          itemBuilder: (context, i) => RepaintBoundary(
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                bottom: _rowG,
                                               ),
+                                              child: _ListRow(
+                                                rowHeight: _rowH,
+                                                iconSize: 16 * _scale,
+                                                dateFmt: _dateFmt,
+                                                recentDatesRelative:
+                                                    _recentDatesRelative,
+                                                entry: displayFiles[i],
+                                                folderSize:
+                                                    widget
+                                                        .folderSizes[displayFiles[i]
+                                                        .realPath],
+                                                rowDecoration:
+                                                    widget
+                                                        .rowDecorations[displayFiles[i]
+                                                        .path] ??
+                                                    widget
+                                                        .rowDecorations[displayFiles[i]
+                                                        .realPath],
+                                                index: i,
+                                                nameWidth: nameWidth,
+                                                locationWidth: locationWidth,
+                                                selected: widget.selectedPaths
+                                                    .contains(
+                                                      displayFiles[i].path,
+                                                    ),
+                                                selectedPaths:
+                                                    widget.selectedPaths,
+                                                isCut: widget.cutPaths.contains(
+                                                  displayFiles[i].path,
+                                                ),
+                                                isDraggingSelected: widget
+                                                    .selectedPaths
+                                                    .isNotEmpty,
+                                                isFolderDragOver:
+                                                    _hoveredFolderPath ==
+                                                    displayFiles[i].path,
+                                                isRenaming:
+                                                    widget.renamingPath ==
+                                                    displayFiles[i].path,
+                                                renameAttempt:
+                                                    widget.renameAttempt,
+                                                onRenameSubmit:
+                                                    widget.onRenameSubmit,
+                                                onRenameCancel:
+                                                    widget.onRenameCancel,
+                                                onSelect: widget.onSelect,
+                                                onOpen: widget.onOpen,
+                                                onContextMenu:
+                                                    widget.onContextMenu,
+                                                onMenuAction:
+                                                    widget.onMenuAction,
+                                                recursive: recursive,
+                                                treeMode:
+                                                    widget.treeRows != null,
+                                                treeDepth:
+                                                    widget.treeRows?[i].depth ??
+                                                    0,
+                                                treeExpanded:
+                                                    widget
+                                                        .treeRows?[i]
+                                                        .expanded ??
+                                                    false,
+                                                treeLoading:
+                                                    widget
+                                                        .treeRows?[i]
+                                                        .loading ??
+                                                    false,
+                                                onToggleTree:
+                                                    widget.onToggleTreeFolder ==
+                                                        null
+                                                    ? null
+                                                    : () =>
+                                                          widget
+                                                              .onToggleTreeFolder!(
+                                                            displayFiles[i],
+                                                          ),
+                                                columns: columns,
+                                                columnWidths: columnWidths,
+                                                location: recursive
+                                                    ? _compactLocation(
+                                                        displayFiles[i].path,
+                                                        widget.currentPath,
+                                                      )
+                                                    : null,
+                                                onOpenInNewTab:
+                                                    widget.onOpenInNewTab,
+                                              ),
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -842,7 +974,7 @@ class _FileListState extends State<FileList> {
                     controller: _scrollController,
                   ),
                 ),
-                if (widget.files.isEmpty)
+                if (displayFiles.isEmpty)
                   Positioned.fill(
                     child: IgnorePointer(
                       ignoring: !widget.recursiveResults,
@@ -1298,6 +1430,11 @@ class _ListRow extends StatefulWidget {
   final OpenInNewTabCallback? onOpenInNewTab;
   final int? folderSize;
   final RowDecoration? rowDecoration;
+  final bool treeMode;
+  final int treeDepth;
+  final bool treeExpanded;
+  final bool treeLoading;
+  final VoidCallback? onToggleTree;
 
   const _ListRow({
     required this.entry,
@@ -1328,6 +1465,11 @@ class _ListRow extends StatefulWidget {
     this.recentDatesRelative = true,
     this.location,
     this.onOpenInNewTab,
+    this.treeMode = false,
+    this.treeDepth = 0,
+    this.treeExpanded = false,
+    this.treeLoading = false,
+    this.onToggleTree,
   });
 
   @override
@@ -1336,6 +1478,7 @@ class _ListRow extends StatefulWidget {
 
 class _ListRowState extends State<_ListRow> {
   bool _hovered = false;
+  bool _treeDisclosureHovered = false;
   bool _dragging = false;
   DateTime? _lastTap;
   TextEditingController? _renameController;
@@ -1504,6 +1647,67 @@ class _ListRowState extends State<_ListRow> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildTreePrefix(bool isFolder) {
+    if (!widget.treeMode) return const SizedBox.shrink();
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(width: widget.treeDepth * _kTreeIndentWidth),
+        SizedBox(
+          width: _kTreeDisclosureWidth,
+          height: widget.rowHeight,
+          child: isFolder
+              ? MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  onEnter: (_) => setState(() => _treeDisclosureHovered = true),
+                  onExit: (_) => setState(() => _treeDisclosureHovered = false),
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: widget.onToggleTree,
+                    child: Center(
+                      child: Container(
+                        width: 16,
+                        height: 16,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: _treeDisclosureHovered
+                              ? AppColors.bgHoverStrong
+                              : Colors.transparent,
+                          border: Border.all(
+                            color: _treeDisclosureHovered
+                                ? AppColors.borderColor
+                                : Colors.transparent,
+                          ),
+                        ),
+                        child: widget.treeLoading
+                            ? SizedBox(
+                                width: 10,
+                                height: 10,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 1.5,
+                                  color: AppColors.fgSubtle,
+                                ),
+                              )
+                            : Icon(
+                                widget.treeExpanded
+                                    ? WaydirIconsRegular.caretDown
+                                    : WaydirIconsRegular.caretRight,
+                                size: 12,
+                                color: _treeDisclosureHovered
+                                    ? AppColors.fg
+                                    : AppColors.fgSubtle,
+                              ),
+                      ),
+                    ),
+                  ),
+                )
+              : const SizedBox.shrink(),
+        ),
+      ],
     );
   }
 
@@ -1716,6 +1920,7 @@ class _ListRowState extends State<_ListRow> {
             opacity: opacity,
             child: Row(
               children: [
+                _buildTreePrefix(isFolder),
                 _buildIconWithBadge(context, e, isFolder),
                 const SizedBox(width: 6),
                 SizedBox(
@@ -1816,6 +2021,7 @@ class _ListRowState extends State<_ListRow> {
             opacity: opacity,
             child: Row(
               children: [
+                _buildTreePrefix(isFolder),
                 _buildIconWithBadge(context, e, isFolder),
                 const SizedBox(width: 6),
                 SizedBox(
