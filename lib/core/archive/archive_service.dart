@@ -43,9 +43,11 @@ class ArchiveService {
           path: virtualPath,
           type: FileItemType.file,
           size: e.size,
-          modified: e.mtimeSeconds > 0
-              ? DateTime.fromMillisecondsSinceEpoch(e.mtimeSeconds * 1000)
-              : archiveModified,
+          modified:
+              e.modified ??
+              (e.mtimeSeconds > 0
+                  ? DateTime.fromMillisecondsSinceEpoch(e.mtimeSeconds * 1000)
+                  : archiveModified),
         );
       }
     }

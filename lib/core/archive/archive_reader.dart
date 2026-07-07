@@ -15,12 +15,14 @@ class ArchiveEntry {
   final int size;
   final bool isDir;
   final int mtimeSeconds;
+  final DateTime? modified;
 
   const ArchiveEntry({
     required this.path,
     required this.size,
     required this.isDir,
     required this.mtimeSeconds,
+    this.modified,
   });
 }
 
@@ -48,17 +50,53 @@ class ArchiveReader {
     return false;
   }
 
+  static bool _isZipLike(String archivePath) {
+    final lower = archivePath.toLowerCase();
+
+    return lower.endsWith('.zip') ||
+        lower.endsWith('.jar') ||
+        lower.endsWith('.war') ||
+        lower.endsWith('.apk') ||
+        lower.endsWith('.xpi') ||
+        lower.endsWith('.whl') ||
+        lower.endsWith('.crx') ||
+        lower.endsWith('.epub');
+  }
+
+  static DateTime? _zipModified(int value) {
+    if (value <= 0) return null;
+    final year = ((value >> 25) & 0x7f) + 1980;
+    final month = (value >> 21) & 0x0f;
+    final day = (value >> 16) & 0x1f;
+    final hours = (value >> 11) & 0x1f;
+    final minutes = (value >> 5) & 0x3f;
+    final seconds = (value << 1) & 0x3e;
+    if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+
+    return DateTime(year, month, day, hours, minutes, seconds);
+  }
+
+  static DateTime? _entryModified(String archivePath, ArchiveFile entry) {
+    final value = entry.lastModTime;
+    if (value <= 0) return null;
+    if (_isZipLike(archivePath)) return _zipModified(value);
+
+    return DateTime.fromMillisecondsSinceEpoch(value * 1000);
+  }
+
+  static void _applyModified(File file, DateTime? modified) {
+    if (modified == null) return;
+    try {
+      file.setLastModifiedSync(modified);
+    } on FileSystemException catch (_) {
+      return;
+    }
+  }
+
   static Archive _readArchive(String archivePath) {
     final lower = archivePath.toLowerCase();
     try {
-      if (lower.endsWith('.zip') ||
-          lower.endsWith('.jar') ||
-          lower.endsWith('.war') ||
-          lower.endsWith('.apk') ||
-          lower.endsWith('.xpi') ||
-          lower.endsWith('.whl') ||
-          lower.endsWith('.crx') ||
-          lower.endsWith('.epub')) {
+      if (_isZipLike(archivePath)) {
         return ZipDecoder().decodeStream(InputFileStream(archivePath));
       } else if (lower.endsWith('.tar')) {
         return TarDecoder().decodeStream(InputFileStream(archivePath));
@@ -91,6 +129,7 @@ class ArchiveReader {
     for (final entry in archive) {
       final raw = entry.name;
       final isDir = !entry.isFile || raw.endsWith('/');
+      final modified = _entryModified(archivePath, entry);
       final name = _normalize(raw);
       if (name.isNotEmpty) {
         entries.add(
@@ -98,7 +137,10 @@ class ArchiveReader {
             path: name,
             size: entry.size,
             isDir: isDir,
-            mtimeSeconds: entry.lastModTime,
+            mtimeSeconds: modified != null
+                ? modified.millisecondsSinceEpoch ~/ 1000
+                : entry.lastModTime,
+            modified: modified,
           ),
         );
       }
@@ -125,6 +167,7 @@ class ArchiveReader {
           file.parent.createSync(recursive: true);
           final data = entry.content as List<int>;
           file.writeAsBytesSync(data);
+          _applyModified(file, _entryModified(archivePath, entry));
         }
         break;
       }
@@ -164,6 +207,7 @@ class ArchiveReader {
 
       found = true;
       final isDir = !entry.isFile || raw.endsWith('/');
+      final modified = _entryModified(archivePath, entry);
       if (isDir) {
         Directory(dest).createSync(recursive: true);
         continue;
@@ -173,6 +217,7 @@ class ArchiveReader {
       file.parent.createSync(recursive: true);
       final data = entry.content as List<int>;
       file.writeAsBytesSync(data);
+      _applyModified(file, modified);
     }
 
     if (!found) {
@@ -219,6 +264,7 @@ class ArchiveReader {
       final dest = resolveDest(epath, isDir);
       if (dest == null) continue;
 
+      final modified = _entryModified(archivePath, entry);
       if (isDir) {
         Directory(dest).createSync(recursive: true);
         continue;
@@ -228,6 +274,7 @@ class ArchiveReader {
       file.parent.createSync(recursive: true);
       final data = entry.content as List<int>;
       file.writeAsBytesSync(data);
+      _applyModified(file, modified);
     }
   }
 }

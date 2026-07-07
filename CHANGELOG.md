@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Tree view for browsing folders inline from the file list.
 
+### Fixed
+- Grid navigation in Quick Look.
+- Cmd+W can close the last macOS window.
+- Extracted files keep their original modified dates.
+
 ## [0.22.0] - 2026-06-29
 
 ### Added

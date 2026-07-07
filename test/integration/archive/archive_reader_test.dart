@@ -11,13 +11,17 @@ void main() {
   group('ArchiveReader', () {
     late Directory tmp;
     late String zipPath;
+    late DateTime sourceModified;
 
     setUp(() {
       tmp = Directory.systemTemp.createTempSync('waydir_arcreader');
       final src = Directory(p.join(tmp.path, 'src', 'sub'))
         ..createSync(recursive: true);
-      File(p.join(tmp.path, 'src', 'a.txt')).writeAsStringSync('hello');
+      sourceModified = DateTime(2021, 3, 4, 5, 6, 8);
+      final a = File(p.join(tmp.path, 'src', 'a.txt'))
+        ..writeAsStringSync('hello');
       File(p.join(src.path, 'b.txt')).writeAsStringSync('world');
+      a.setLastModifiedSync(sourceModified);
       zipPath = p.join(tmp.path, 'sample.zip');
       final r = Process.runSync('zip', [
         '-qr',
@@ -40,6 +44,14 @@ void main() {
       final dest = p.join(tmp.path, 'out', 'b.txt');
       ArchiveReader.extractEntry(zipPath, 'sub/b.txt', dest);
       expect(File(dest).readAsStringSync(), 'world');
+    });
+
+    test('preserves modified time when extracting zip entries', () {
+      final out = p.join(tmp.path, 'mtime');
+      ArchiveReader.extractAll(zipPath, out);
+      final extracted = File(p.join(out, 'a.txt')).lastModifiedSync();
+      final delta = extracted.difference(sourceModified).inSeconds.abs();
+      expect(delta <= 2, isTrue);
     });
 
     test('extractTree stages a single file under its basename', () {

@@ -5,6 +5,7 @@ import 'package:signals/signals_flutter.dart';
 
 import '../../core/keyboard/keyboard_shortcuts.dart';
 import '../../core/models/file_entry.dart';
+import '../../core/settings/settings_store.dart';
 import '../../features/files/file_icons.dart';
 import '../../features/navigation/navigation_store.dart';
 import '../../i18n/strings.g.dart';
@@ -147,6 +148,14 @@ class _QuickLookState extends State<_QuickLook> {
     return KeyEventResult.handled;
   }
 
+  KeyEventResult _stepCursorHorizontally(int delta, bool isRepeat) {
+    if (isRepeat && !_acceptCursorRepeat()) return KeyEventResult.handled;
+    if (!isRepeat) _lastCursorRepeatAt = null;
+    widget.store.moveCursorHorizontally(delta);
+
+    return KeyEventResult.handled;
+  }
+
   KeyEventResult _handleKey(FocusNode node, KeyEvent event) {
     final isRepeat = event is KeyRepeatEvent;
     if (event is! KeyDownEvent && !isRepeat) return KeyEventResult.ignored;
@@ -176,6 +185,19 @@ class _QuickLookState extends State<_QuickLook> {
       _requestClose();
 
       return KeyEventResult.handled;
+    }
+    final gridMode = SettingsStore.instance.fileViewMode.value == 'grid';
+    if (gridMode &&
+        !AppShortcuts.isControl &&
+        !AppShortcuts.isAlt &&
+        key == LogicalKeyboardKey.arrowRight) {
+      return _stepCursorHorizontally(1, isRepeat);
+    }
+    if (gridMode &&
+        !AppShortcuts.isControl &&
+        !AppShortcuts.isAlt &&
+        key == LogicalKeyboardKey.arrowLeft) {
+      return _stepCursorHorizontally(-1, isRepeat);
     }
     if (AppShortcuts.matches('quick_look_next_file', key) ||
         AppShortcuts.matches('quick_look_next_file_edit', key)) {

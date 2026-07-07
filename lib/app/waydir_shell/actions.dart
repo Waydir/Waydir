@@ -551,7 +551,14 @@ mixin _WaydirActionsMixin on State<WaydirShell>, _WaydirStateBase {
     final tabsStore = _shell.activePane.value!.tabs;
     if (tabsStore.tabs.value.length > 1) {
       tabsStore.closeTab(tabsStore.activeTab.value.id);
+
+      return;
     }
+    final totalTabs = _shell.panes.value.fold<int>(
+      0,
+      (total, pane) => total + pane.tabs.tabs.value.length,
+    );
+    if (Platform.isMacOS && totalTabs <= 1) appWindow.close();
   }
 
   void _selectNextTab() {
