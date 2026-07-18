@@ -150,12 +150,14 @@ class SafeFileReplace {
     bool Function()? isCancelled,
     bool useAsyncIo = false,
   }) async {
-    final fast = await NativeCopy.tryFastCopy(
-      source.path,
-      destinationPath,
-      onProgress: onProgress,
-      shouldCancel: isCancelled,
-    );
+    final fast = Platform.isWindows && useAsyncIo
+        ? FastCopyResult.unsupported
+        : await NativeCopy.tryFastCopy(
+            source.path,
+            destinationPath,
+            onProgress: onProgress,
+            shouldCancel: isCancelled,
+          );
     if (fast == FastCopyResult.done) return true;
     if (fast == FastCopyResult.cancelled) return false;
 
@@ -209,41 +211,18 @@ class SafeFileReplace {
     return completed;
   }
 
-  /// Stream-based copy. Reads/writes go through Dart's IO thread pool, so
-  /// several concurrent copies overlap instead of serializing on the isolate
-  /// thread the way the synchronous loop does. Used for small concurrent files.
   static Future<bool> _copyToPathAsync(
     File source,
     String destinationPath, {
     void Function(int bytes)? onProgress,
     bool Function()? isCancelled,
   }) async {
-    final output = File(destinationPath).openWrite();
-    var completed = true;
-    Object? error;
-    StackTrace? stack;
+    if (isCancelled?.call() ?? false) return false;
+    await source.copy(destinationPath);
+    if (isCancelled?.call() ?? false) return false;
+    onProgress?.call(await source.length());
 
-    try {
-      await for (final chunk in source.openRead()) {
-        if (isCancelled != null && isCancelled()) {
-          completed = false;
-          break;
-        }
-        output.add(chunk);
-        onProgress?.call(chunk.length);
-      }
-    } catch (e, st) {
-      error = e;
-      stack = st;
-    } finally {
-      await output.close();
-    }
-
-    if (error != null) {
-      Error.throwWithStackTrace(error, stack!);
-    }
-
-    return completed;
+    return true;
   }
 
   static void _copyBasicMetadata(File source, File destination) {

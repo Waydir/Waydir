@@ -62,6 +62,8 @@ class FileSystemService {
     return n.clamp(2, 4);
   }();
 
+  static final int _deleteConcurrency = Platform.numberOfProcessors.clamp(2, 4);
+
   static RenameResult rename(String oldPath, String newName) {
     if (!PlatformPaths.isValidFileName(newName)) {
       return const RenameInvalidName();
@@ -1034,7 +1036,9 @@ class FileSystemService {
     mainSendPort.send(workerReceivePort.sendPort);
 
     bool cancelled = false;
-    List<String> allPaths = [];
+    final allPaths = <String>[];
+    final allPathSet = <String>{};
+    final pathTypes = <String, FileSystemEntityType>{};
     int totalFiles = 0;
     List<TaskError> errors = [];
     int processedFiles = 0;
@@ -1053,6 +1057,13 @@ class FileSystemService {
         );
         lastReportMs = reportClock.elapsedMilliseconds;
       }
+    }
+
+    void addDeletePath(String path, FileSystemEntityType type) {
+      if (!allPathSet.add(path)) return;
+      allPaths.add(path);
+      pathTypes[path] = type;
+      totalFiles++;
     }
 
     void scanForDelete(List<String> sources) {
@@ -1080,34 +1091,37 @@ class FileSystemService {
             continue;
           }
           for (final e in FileEntryCodec.decode(native)) {
-            allPaths.add(e.path);
-            totalFiles++;
+            addDeletePath(
+              e.path,
+              e.type == FileItemType.folder
+                  ? FileSystemEntityType.directory
+                  : FileSystemEntityType.file,
+            );
           }
-          allPaths.add(src);
-          totalFiles++;
+          addDeletePath(src, FileSystemEntityType.directory);
         } else {
-          allPaths.add(src);
-          totalFiles++;
+          addDeletePath(src, type);
         }
       }
     }
 
     Future<void> executeDelete() async {
-      final sorted = List<String>.from(allPaths);
-      sorted.sort((a, b) => b.length.compareTo(a.length));
+      final byDepth = <int, List<String>>{};
+      for (final path in allPaths) {
+        (byDepth[p.split(path).length] ??= <String>[]).add(path);
+      }
+      final depths = byDepth.keys.toList()..sort((a, b) => b.compareTo(a));
 
-      for (final path in sorted) {
-        if (cancelled) break;
-
+      Future<void> deletePath(String path) async {
         try {
-          await _withTransientRetry(() {
-            final type = FileSystemEntity.typeSync(path, followLinks: false);
+          await _withTransientRetry(() async {
+            final type = pathTypes[path];
             if (type == FileSystemEntityType.link) {
-              Link(path).deleteSync();
+              await Link(path).delete();
             } else if (type == FileSystemEntityType.directory) {
-              Directory(path).deleteSync(recursive: false);
+              await Directory(path).delete(recursive: false);
             } else if (type == FileSystemEntityType.file) {
-              File(path).deleteSync();
+              await File(path).delete();
             }
           });
         } catch (e) {
@@ -1116,9 +1130,24 @@ class FileSystemService {
 
         processedFiles++;
         maybeReport(path.split(Platform.pathSeparator).last);
-        if (processedFiles % 4 == 0) {
-          await Future.delayed(Duration.zero);
+      }
+
+      for (final depth in depths) {
+        if (cancelled) break;
+        final paths = byDepth[depth]!;
+        var next = 0;
+
+        Future<void> run() async {
+          while (!cancelled && next < paths.length) {
+            final path = paths[next++];
+            await deletePath(path);
+          }
         }
+
+        await Future.wait([
+          for (var i = 0; i < _deleteConcurrency && i < paths.length; i++)
+            run(),
+        ]);
       }
 
       mainSendPort.send(TaskDoneMessage(cancelled: cancelled, errors: errors));
@@ -1293,26 +1322,50 @@ class FileSystemService {
     }
 
     Future<void> executeTrashEntries() async {
-      final repo = TrashRepository.instance;
-      for (final entry in entries) {
-        if (cancelled) break;
-        try {
-          if (type == TaskType.trashRestore) {
-            await repo.restore(entry);
-          } else {
-            await repo.deletePermanently(entry);
-          }
-        } catch (e) {
-          final message = _friendlyError(e);
-          errors.add(TaskError(path: entry.virtualPath, message: message));
-          mainSendPort.send(
-            ErrorMessage(path: entry.virtualPath, message: message),
+      if (PlatformPaths.isWindows && !cancelled) {
+        final nativeEntries = entries
+            .where((entry) => entry.nativeId != null)
+            .toList();
+        final ids = [for (final entry in nativeEntries) entry.nativeId!];
+        final failures = type == TaskType.trashRestore
+            ? WaydirCoreLoader.trashRestore(ids)
+            : WaydirCoreLoader.trashPurge(ids);
+        final entriesById = {
+          for (final entry in nativeEntries) entry.nativeId!: entry,
+        };
+        for (final failure in failures) {
+          final entry = entriesById[failure.path];
+          final path = entry?.virtualPath ?? kTrashPath;
+          final message = _friendlyError(
+            FileSystemException(failure.message, path),
           );
+          errors.add(TaskError(path: path, message: message));
+          mainSendPort.send(ErrorMessage(path: path, message: message));
         }
-        processedFiles++;
-        maybeReport(entry.displayName);
-        if (processedFiles % 4 == 0) {
-          await Future.delayed(Duration.zero);
+        processedFiles = nativeEntries.length;
+        maybeReport('');
+      } else {
+        final repo = TrashRepository.instance;
+        for (final entry in entries) {
+          if (cancelled) break;
+          try {
+            if (type == TaskType.trashRestore) {
+              await repo.restore(entry);
+            } else {
+              await repo.deletePermanently(entry);
+            }
+          } catch (e) {
+            final message = _friendlyError(e);
+            errors.add(TaskError(path: entry.virtualPath, message: message));
+            mainSendPort.send(
+              ErrorMessage(path: entry.virtualPath, message: message),
+            );
+          }
+          processedFiles++;
+          maybeReport(entry.displayName);
+          if (processedFiles % 4 == 0) {
+            await Future.delayed(Duration.zero);
+          }
         }
       }
 

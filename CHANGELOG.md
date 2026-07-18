@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Grid navigation in Quick Look.
 - Cmd+W can close the last macOS window.
 - Extracted files keep their original modified dates.
+- Delete operation edge cases and safe file replace.
 
 ## [0.22.0] - 2026-06-29
 
