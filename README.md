@@ -77,6 +77,20 @@ Grab the latest build from [Releases](https://github.com/Waydir/Waydir/releases)
 | Windows | `.exe` installer or portable `.zip` |
 | macOS | `.dmg` package |
 
+### Nix
+
+Install directly from GitHub:
+
+```bash
+nix profile install github:mikolajbadyl/waydir
+```
+
+From a local checkout:
+
+```bash
+nix profile install .
+```
+
 ### Ubuntu / Debian
 
 Repository install, with updates via `apt upgrade`:
