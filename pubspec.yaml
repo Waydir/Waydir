@@ -43,7 +43,7 @@ dependencies:
   archive: ^4.0.9
   crypto: ^3.0.7
   http: ^1.6.0
-  flutter_markdown_plus: ^1.0.7
+  flutter_markdown_plus: ^1.0.12
   file_picker: ^11.0.2
   re_editor: ^0.9.0
   re_highlight: ^0.0.3
